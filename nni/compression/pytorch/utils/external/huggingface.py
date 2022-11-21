@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from __future__ import annotations
-
 import logging
 import re
 from typing import Tuple
@@ -21,7 +19,7 @@ except ImportError:
 else:
     TRANSFORMERS_INSTALLED = True
 
-from nni.compression.pytorch.utils.attr import get_nested_attr
+from nni.algorithms.compression.v2.pytorch.utils.attr import get_nested_attr
 
 _logger = logging.getLogger(__name__)
 
@@ -75,6 +73,14 @@ class HuggingfaceModelParser:
         return False
 
     @classmethod
+    def is_attention_layer(cls, module_name: str) -> bool:
+        attention_patterns = [cls.TRANSFORMER_PREFIX + att_prefix for att_prefix in cls.ATTENTION]
+        for att_pattern in attention_patterns:
+            if re.match(att_pattern, module_name) is not None:
+                return True
+        return False
+
+    @classmethod
     def is_ffn(cls, module_name: str, ffn_num: int = 1) -> bool:
         if cls.is_attention(module_name):
             return False
@@ -90,20 +96,20 @@ class HuggingfaceModelParser:
 
     @classmethod
     def get_num_heads(cls, module_name: str, model: Module) -> int:
-        if cls.is_attention(module_name, include_output=True):
+        if cls.is_attention(module_name, include_output=True) or cls.is_attention_layer(module_name):
             for pattern in cls.ATTENTION:
                 match = re.search(pattern, module_name)
                 if match:
                     attention_module_name = module_name[0: match.span()[1]]
                     module = get_nested_attr(model, attention_module_name)
-                    if hasattr(module, 'num_attention_heads'):
-                        num_heads = module.num_attention_heads
+                    if hasattr(module, 'self') and hasattr(getattr(module, 'self'), 'num_attention_heads'):
+                        num_heads = module.self.num_attention_heads
                     elif hasattr(module, 'num_heads'):
                         num_heads = module.num_heads
                     elif hasattr(module, 'n_heads'):
                         num_heads = module.n_heads
                     else:
-                        warn_msg = f'Can not get the heads number of attention layer : {attention_module_name}.'
+                        warn_msg = f'Can not get the heads number of attention layer : `{attention_module_name}`.'
                         _logger.warning(warn_msg)
                         num_heads = 0
                     return num_heads
@@ -120,7 +126,7 @@ class HuggingfaceBertParser(HuggingfaceModelParser):
     QKVO = QKV + ('attention.output.dense',)
     FFN1 = ('intermediate.dense',)
     FFN2 = ('output.dense',)
-    ATTENTION = ('attention.self',)
+    ATTENTION = ('attention',)
 
 
 class HuggingfaceBartParser(HuggingfaceModelParser):

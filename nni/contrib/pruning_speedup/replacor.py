@@ -11,8 +11,8 @@ from typing import Dict, List
 import torch
 
 from nni.compression.pytorch.speedup.infer_mask import AutoMaskInference
-from nni.algorithms.compression.v2.pytorch.utils.attr import get_nested_attr
-from nni.algorithms.compression.v2.pytorch.utils.external.huggingface import parser_factory
+from nni.compression.pytorch.utils.attr import get_nested_attr
+from nni.compression.pytorch.utils.external.huggingface import parser_factory
 
 _logger = logging.getLogger(__name__)
 
