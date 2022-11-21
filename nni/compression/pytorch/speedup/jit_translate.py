@@ -803,7 +803,7 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
     c_node = node.key_node
 
     schema = c_node.schema()
-    op_with_overload = schema[6:schema.find('(')]
+    op_with_overload = schema[6:schema.find('(')] # the magic number 6 means cut off `aten::` or `prim::`
     if op_with_overload in table_fix_schema:
         positional_num, keyword_list, special_treat = table_fix_schema[op_with_overload]
     elif torch.__version__ < '1.9.0':
