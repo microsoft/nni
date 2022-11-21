@@ -9,11 +9,7 @@ import torch
 
 from nni.compression.pytorch.speedup.infer_mask import AutoMaskInference
 from nni.algorithms.compression.v2.pytorch.utils.attr import get_nested_attr
-
-try:
-    from nni.algorithms.compression.v2.pytorch.utils.external.huggingface import parser_factory
-except ImportError:
-    pass
+from nni.algorithms.compression.v2.pytorch.utils.external.huggingface import parser_factory
 
 _logger = logging.getLogger(__name__)
 
@@ -47,12 +43,12 @@ def _fill_one_on_dims(mask: torch.Tensor, dims: int | List[int]) -> torch.Tensor
     return new_mask
 
 
-class CustomizedReplacer:
+class CustomizedReplacor:
     def replace_modules(self, model, auto_inferences: Dict[str, AutoMaskInference]):
         pass
 
 
-class TransformersAttentionReplacer(CustomizedReplacer):
+class TransformersAttentionReplacor(CustomizedReplacor):
     def __init__(self, model) -> None:
         self.parser = parser_factory(model)
         if self.parser is None:

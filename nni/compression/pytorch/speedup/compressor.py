@@ -6,6 +6,7 @@ import copy
 import logging
 from pathlib import Path
 import queue
+from typing import List
 
 import torch
 import torch.nn as nn
@@ -13,6 +14,7 @@ import torch.nn as nn
 from nni.common.graph_utils import build_module_graph
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import get_module_by_name
+from nni.contrib.pruning_speedup.replacor import CustomizedReplacor
 from .compress_modules import replace_module
 from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
@@ -59,7 +61,8 @@ class ModelSpeedup:
     """
 
     def __init__(self, model, dummy_input, masks_file, map_location=None,
-                 batch_dim=0, confidence=8, customized_replace_func=None):
+                 batch_dim=0, confidence=8, customized_replace_func=None,
+                 customized_replacors=None):
         assert confidence > 1
         # The auto inference will change the values of the parameters in the model
         # so we need make a copy before the mask inference
@@ -92,6 +95,7 @@ class ModelSpeedup:
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}
         self.customized_replace_func = customized_replace_func if customized_replace_func is not None else {}
+        self.customized_replacors: List[CustomizedReplacor] = customized_replacors if customized_replacors is not None else []
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
         """
@@ -410,11 +414,9 @@ class ModelSpeedup:
         NOTE: ```func``` type cannot be replaced as it is not a module, thus, one limitation
         is that ```func``` should be not required to be replaced.
         """
-        from nni.contrib.pruning_speedup.replacer import TransformersAttentionReplacer
-        replacer = TransformersAttentionReplacer(self.bound_model)
-
         with torch.no_grad():
-            replacer.replace_modules(self.bound_model, self.auto_inferences)
+            for replacor in self.customized_replacors:
+                replacor.replace_modules(self.bound_model, self.auto_inferences)
             for unique_name in self.auto_inferences:
                 self.replace_submodule(unique_name)
 
