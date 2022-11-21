@@ -6,7 +6,7 @@ import logging
 import torch
 import numpy as np
 from nni.compression.pytorch.compressor import PrunerModuleWrapper
-from nni.algorithms.compression.v2.pytorch.base import PrunerModuleWrapper as PrunerModuleWrapper_v2
+from nni.compression.pytorch.base import PrunerModuleWrapper as PrunerModuleWrapper_v2
 from .utils import get_module_by_name
 
 

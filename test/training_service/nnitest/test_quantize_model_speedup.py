@@ -9,7 +9,7 @@ from torchvision import datasets, transforms
 import unittest
 from unittest import TestCase, main
 
-from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+from nni.compression.pytorch.quantization import QAT_Quantizer
 from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
 
 torch.manual_seed(0)

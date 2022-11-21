@@ -11,8 +11,8 @@ import os
 from pathlib import Path
 
 import nni
-from nni.algorithms.compression.v2.pytorch.pruning import PruningScheduler
-from nni.algorithms.compression.v2.pytorch.pruning.tools import AGPTaskGenerator
+from nni.compression.pytorch.pruning import PruningScheduler
+from nni.compression.pytorch.pruning.tools import AGPTaskGenerator
 from nni.compression.pytorch.utils import count_flops_params
 from .config.utils import parse_params, parse_basic_pruner
 

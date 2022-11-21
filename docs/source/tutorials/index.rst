@@ -114,23 +114,6 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Users can easily customize a basic pruner in NNI. A large number of basic modules have been pro...">
-
-.. only:: html
-
-  .. image:: /tutorials/images/thumb/sphx_glr_pruning_customize_thumb.png
-    :alt: Customize Basic Pruner
-
-  :ref:`sphx_glr_tutorials_pruning_customize.py`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Customize Basic Pruner</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="This is the 101 tutorial of Neural Architecture Search (NAS) on NNI. In this tutorial, we will ...">
 
 .. only:: html
@@ -194,7 +177,6 @@ Tutorials
    /tutorials/pruning_quick_start_mnist
    /tutorials/quantization_customize
    /tutorials/nasbench_as_dataset
-   /tutorials/pruning_customize
    /tutorials/hello_nas
    /tutorials/darts
    /tutorials/pruning_bert_glue

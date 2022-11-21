@@ -57,7 +57,7 @@ async function runProcess(): Promise<Error | null> {
     try {
         dispatcher.sendCommand('FE', '1');
     } catch (error) {
-        rejectCommandType = error;
+        rejectCommandType = error as Error;
     }
 
     return deferred.promise;
