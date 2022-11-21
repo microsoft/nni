@@ -76,7 +76,7 @@ def _get_node_downloader():
         _arch = platform.machine()
 
     if _arch.startswith('glibc'):
-        node_legacy_version = 'v18.12.1'  # We might not upgrade glibc version for legacy builds every time.
+        node_legacy_version = 'v18.12.1'  # We might not upgrade node version for legacy builds every time.
         node_spec = f'node-{node_legacy_version}-{sys.platform}-x64'
         node_download_url = f'https://nni.blob.core.windows.net/cache/toolchain/node-{node_legacy_version}-{sys.platform}-{_arch}.tar.gz'
         node_extractor = lambda data: tarfile.open(fileobj=BytesIO(data), mode='r:gz')
