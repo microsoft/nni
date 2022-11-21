@@ -13,7 +13,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
 
 import nni
-from nni.algorithms.compression.v2.pytorch import LightningEvaluator, TorchEvaluator
+from nni.compression.pytorch import LightningEvaluator, TorchEvaluator
 
 from .simple_torch_model import training_model, evaluating_model
 from .simple_lightning_model import MNISTDataModule

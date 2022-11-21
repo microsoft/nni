@@ -22,13 +22,6 @@ The performance of systems, such as database, tensor operator implementaion, oft
 * :doc:`Tuning the performance of RocksDB <rocksdb_examples>`
 * :doc:`Tuning Tensor Operators automatically <op_evo_examples>`
 
-Model Compression
------------------
-
-The following one shows how to apply knowledge distillation on NNI model compression. More use cases and solutions will be added in the future.
-
-* :doc:`Knowledge distillation with NNI model compression <kd_example>`
-
 Feature Engineering
 -------------------
 
@@ -43,4 +36,3 @@ Performance comparison and analysis can help users decide a proper algorithm (e.
 
 * :doc:`Neural Architecture Search Comparison <nas_comparison>`
 * :doc:`Hyper-parameter Tuning Algorithm Comparsion <hpo_comparison>`
-* :doc:`Model Compression Algorithm Comparsion <model_compress_comp>`
