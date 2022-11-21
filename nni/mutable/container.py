@@ -77,10 +77,10 @@ class MutableList(Mutable):
                 rv.append(mutable)
         return rv
 
-    def contains(self, sample: Sample) -> SampleValidationError | None:
+    def check_contains(self, sample: Sample) -> SampleValidationError | None:
         for index, mutable in enumerate(self):
             if isinstance(mutable, Mutable):
-                exception = mutable.contains(sample)
+                exception = mutable.check_contains(sample)
                 if exception is not None:
                     exception.paths.insert(0, '[' + str(index) + ']')
                     return exception
@@ -271,10 +271,10 @@ class MutableDict(Mutable):
                 rv[key] = mutable
         return rv
 
-    def contains(self, sample: Sample) -> SampleValidationError | None:
+    def check_contains(self, sample: Sample) -> SampleValidationError | None:
         for key, value in self.items():
             if isinstance(value, Mutable):
-                exception = value.contains(sample)
+                exception = value.check_contains(sample)
                 if exception is not None:
                     exception.paths.insert(0, key)
                     return exception
