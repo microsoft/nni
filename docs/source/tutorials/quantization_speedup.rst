@@ -105,7 +105,7 @@ Usage
     criterion = F.nll_loss
     dummy_input = torch.rand(32, 1, 28, 28).to(device)
 
-    from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+    from nni.compression.pytorch.quantization import QAT_Quantizer
     quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input)
     quantizer.compress()
 
@@ -174,9 +174,9 @@ finetuning the model by using QAT
 
  .. code-block:: none
 
-    Average test loss: 0.6058, Accuracy: 8534/10000 (85%)
-    Average test loss: 0.1585, Accuracy: 9508/10000 (95%)
-    Average test loss: 0.0920, Accuracy: 9717/10000 (97%)
+    Average test loss: 0.3398, Accuracy: 8982/10000 (90%)
+    Average test loss: 0.1530, Accuracy: 9532/10000 (95%)
+    Average test loss: 0.1065, Accuracy: 9673/10000 (97%)
 
 
 
@@ -207,7 +207,7 @@ export model and get calibration_config
 
  .. code-block:: none
 
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0029], device='cuda:0'), 'weight_zero_point': tensor([97.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0'), 'weight_zero_point': tensor([115.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 7.800363063812256}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0010], device='cuda:0'), 'weight_zero_point': tensor([121.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 13.914573669433594}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([125.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 11.657418251037598}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 7.897384166717529}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 14.337020874023438}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 11.884227752685547}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 9.330422401428223}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0031], device='cuda:0'), 'weight_zero_point': tensor([120.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0'), 'weight_zero_point': tensor([112.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.270780563354492}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0010], device='cuda:0'), 'weight_zero_point': tensor([131.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 14.321571350097656}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0014], device='cuda:0'), 'weight_zero_point': tensor([112.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 14.133180618286133}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 10.405377388000488}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 14.843622207641602}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 14.523283004760742}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 12.40306568145752}}
 
 
 
@@ -237,8 +237,8 @@ build tensorRT engine to make a real speedup
 
  .. code-block:: none
 
-    Loss: 0.09235906448364258  Accuracy: 97.19%
-    Inference elapsed_time (whole dataset): 0.03632998466491699s
+    Loss: 0.10724755859375  Accuracy: 96.64%
+    Inference elapsed_time (whole dataset): 0.03695106506347656s
 
 
 
@@ -300,7 +300,7 @@ input tensor: ``torch.randn(128, 3, 32, 32)``
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  13.658 seconds)
+   **Total running time of the script:** ( 1 minutes  4.471 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_speedup.py:
