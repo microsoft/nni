@@ -412,7 +412,7 @@ class ModelSpeedup:
         """
         from nni.contrib.pruning_speedup.replacer import TransformersAttentionReplacer
         replacer = TransformersAttentionReplacer(self.bound_model)
-        print(type(replacer.parser))
+
         with torch.no_grad():
             replacer.replace_modules(self.bound_model, self.auto_inferences)
             for unique_name in self.auto_inferences:

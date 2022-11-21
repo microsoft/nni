@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import logging
 import re
 from typing import Dict, List
 
@@ -14,9 +15,36 @@ try:
 except ImportError:
     pass
 
+_logger = logging.getLogger(__name__)
+
 
 def _endwith(s: str, suffixes: List[str]):
-    return all(s.endswith(suffix) for suffix in suffixes)
+    return any(s.endswith(suffix) for suffix in suffixes)
+
+
+def _prune_head_idxs(mask: torch.Tensor, num_heads: int) -> List[int]:
+    head_mask = (mask.reshape([num_heads, -1]).sum(-1) == 0.)
+    return torch.arange(len(head_mask))[head_mask].long().tolist()
+
+
+def _remained_idxs(mask: torch.Tensor, num_heads: int) -> List[int]:
+    repeats = mask.shape[0] // num_heads
+    remained = (mask.reshape([num_heads, -1]).sum(-1) != 0.).repeat_interleave(repeats)
+    return torch.arange(len(mask))[remained].long().tolist()
+
+
+def _fill_one_on_dims(mask: torch.Tensor, dims: int | List[int]) -> torch.Tensor:
+    dims = dims if isinstance(dims, list) else [dims]
+    dims = [d if d >= 0 else d + len(mask.shape) for d in dims]
+    new_mask = torch.ones_like(mask)
+    for i in range(len(mask.shape)):
+        if i in dims:
+            continue
+        dim_mask = (mask.sum([_ for _ in range(len(mask.shape)) if _ != i]) == 0.)
+        new_mask = new_mask.transpose(0, i)
+        new_mask[torch.arange(len(dim_mask))[dim_mask].long().tolist()] = 0.
+        new_mask = new_mask.transpose(0, i)
+    return new_mask
 
 
 class CustomizedReplacer:
@@ -43,24 +71,39 @@ class TransformersAttentionReplacer(CustomizedReplacer):
                     attention_name_dict[attention_layer_name].append(unique_name)
         # prune heads
         for attention_layer_name, qkvo_names in attention_name_dict.items():
-            attention_layer = get_nested_attr(model, attention_layer_name)
             qkvo_flatten_head_mask: torch.Tensor | None = None
             for name in qkvo_names:
                 if _endwith(name, self.parser.QKVO):
+                    info_msg = f'Find QKVO layer `{name}`, try to prune head.'
+                    _logger.info(info_msg)
                     if _endwith(name, self.parser.QKV):
                         _, out_masks, _ = auto_inferences[name].get_masks()
-                        flatten_head_mask = torch.sum(out_masks, dim=[_ for _ in range(len(out_masks.shape) - 1)])
-                        out_masks.fill_(1)
+                        flatten_head_mask = torch.sum(out_masks, dim=[_ for _ in range(len(out_masks.shape) - 1)]).detach()
                     else:
                         in_masks, _, _ = auto_inferences[name].get_masks()
-                        flatten_head_mask = torch.sum(in_masks[0], dim=[_ for _ in range(len(in_masks[0].shape) - 1)])
-                        in_masks[0].fill_(1)
-                    if qkvo_flatten_head_mask:
+                        flatten_head_mask = torch.sum(in_masks[0], dim=[_ for _ in range(len(in_masks[0].shape) - 1)]).detach()
+                    if qkvo_flatten_head_mask is not None:
                         qkvo_flatten_head_mask += flatten_head_mask
                     else:
                         qkvo_flatten_head_mask = flatten_head_mask
-            if qkvo_flatten_head_mask:
-                head_mask = qkvo_flatten_head_mask.reshape([self.parser.get_num_heads(attention_layer_name, model), -1]).sum(-1).bool()
-                head_idxs = torch.arange(len(head_mask))[head_mask].long().tolist()
-                print(f'prune {attention_layer_name} head {head_idxs}')
+            if qkvo_flatten_head_mask is not None:
+                original_num_heads = self.parser.get_num_heads(attention_layer_name, model)
+                head_idxs = _prune_head_idxs(qkvo_flatten_head_mask, original_num_heads)
+                info_msg = f'Prune {attention_layer_name} head {head_idxs}'
+                _logger.info(info_msg)
+                attention_layer = get_nested_attr(model, attention_layer_name)
                 attention_layer.prune_heads(head_idxs)  # type: ignore
+                # replace autoinfer masks with ones, assume QKVO are all Linear
+                remained_idxs = _remained_idxs(qkvo_flatten_head_mask, original_num_heads)
+                for name in qkvo_names:
+                    if _endwith(name, self.parser.QKVO):
+                        if _endwith(name, self.parser.QKV):
+                            mask = auto_inferences[name].weight_mask['weight'][remained_idxs]
+                            auto_inferences[name].weight_mask['weight'] = _fill_one_on_dims(mask, 0)
+                            mask = auto_inferences[name].output_mask.transpose(0, -1)[remained_idxs].transpose(0, -1)
+                            auto_inferences[name].output_mask = _fill_one_on_dims(mask, -1)
+                        else:
+                            mask = auto_inferences[name].weight_mask['weight'][:, remained_idxs]
+                            auto_inferences[name].weight_mask['weight'] = _fill_one_on_dims(mask, 1)
+                            mask = auto_inferences[name].in_masks[0].transpose(0, -1)[remained_idxs].transpose(0, -1)
+                            auto_inferences[name].in_masks[0] = _fill_one_on_dims(mask, -1)
