@@ -88,7 +88,7 @@ class ConcreteTracer(TracerBase):
         _orig_is_not:               ([], False, None),
         _orig_contains:             ([], False, None),
         _orig_index:                ([], False, None),
-        
+
         # force-traced function
         torch.rand:                 ([], True, None),
         torch.randn:                ([], True, None),
@@ -97,7 +97,7 @@ class ConcreteTracer(TracerBase):
         torch.randn_like:           ([], True, None),
         torch.randint_like:         ([], True, None),
         torch.randperm:             ([], True, None),
-        
+
         # method
         Sequential.__getitem__:     ([], False, operator.getitem),
         Sequential.__len__:         ([], False, _orig_len),
@@ -120,8 +120,8 @@ class ConcreteTracer(TracerBase):
         ParameterDict.__len__:      ([], False, _orig_len),
         ParameterDict.__iter__:     ([], False, iter),
         ParameterDict.__contains__: ([], False, _orig_contains),
-        
-        # do not need to use torch.functional
+
+        # special treat to `split`
         torch.split:                ([], False, None),
         torch._C._VariableFunctions.split: ([], False, None),
         torch._C._TensorBase.split: ([], False, None),
