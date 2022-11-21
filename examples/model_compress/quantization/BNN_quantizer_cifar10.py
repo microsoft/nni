@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.algorithms.compression.pytorch.quantization import BNNQuantizer
+from nni.compression.pytorch.quantization import BNNQuantizer
 
 
 class VGG_Cifar10(nn.Module):

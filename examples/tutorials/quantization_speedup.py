@@ -85,7 +85,7 @@ optimizer = SGD(model.parameters(), lr=0.01, momentum=0.5)
 criterion = F.nll_loss
 dummy_input = torch.rand(32, 1, 28, 28).to(device)
 
-from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+from nni.compression.pytorch.quantization import QAT_Quantizer
 quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input)
 quantizer.compress()
 
