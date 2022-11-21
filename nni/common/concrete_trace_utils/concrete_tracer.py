@@ -128,7 +128,8 @@ class ConcreteTracer(TracerBase):
     }
     for name in dir(torch.nn.functional):
         attr = getattr(torch.nn.functional, name)
-        if callable(attr) and not _orig_isinstance(attr, Type) and not name.startswith('__') and getattr(attr, '__module__', None) != 'torch.nn.modules.utils':
+        if callable(attr) and not _orig_isinstance(attr, Type) and not name.startswith('__')\
+            and getattr(attr, '__module__', None) not in ('typing', 'torch.nn.modules.utils'):
             if attr not in default_autowrap_leaf_function:
                 default_autowrap_leaf_function[attr] = ([], False, getattr(torch.functional, name, None))
             if hasattr(attr, '__module__') and attr.__module__ != 'torch.nn.functional':
