@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import { Stack, Callout, Link, IconButton } from '@fluentui/react';
 import { useId } from '@uifabric/react-hooks';
 import { EXPERIMENT } from '@static/datamodel';
@@ -20,7 +20,7 @@ export const BasicInfo = (): any => {
 
     const closeLogPanel = useCallback(() => setShowLogPanel(false), []);
     const ShowLogPanel = useCallback(() => setShowLogPanel(true), []);
-
+    const { bestAccuracy } = useContext(BestMetricContext);
     return (
         <div>
             <Stack horizontal horizontalAlign='space-between' className='marginTop'>
@@ -73,16 +73,12 @@ export const BasicInfo = (): any => {
                             </div>
                         ) : null}
                     </Stack>
-                    <BestMetricContext.Consumer>
-                        {(value): React.ReactNode => (
-                            <Stack className='bestMetric'>
-                                <p className='marginTop'>Best metric</p>
-                                <div className={EXPERIMENT.status}>
-                                    {isNaN(value.bestAccuracy) ? 'N/A' : value.bestAccuracy.toFixed(6)}
-                                </div>
-                            </Stack>
-                        )}
-                    </BestMetricContext.Consumer>
+                    <Stack className='bestMetric'>
+                        <p className='marginTop'>Best metric</p>
+                        <div className={EXPERIMENT.status}>
+                            {isNaN(bestAccuracy) ? 'N/A' : bestAccuracy.toFixed(6)}
+                        </div>
+                    </Stack>
                 </div>
                 <div className='basic'>
                     <p>Start time</p>

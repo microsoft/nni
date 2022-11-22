@@ -169,64 +169,52 @@ export const EditExperimentParam = (): any => {
         }
     }
 
+    let editClassName = '';
+    if (field === 'maxExperimentDuration') {
+        editClassName = isShowPencil ? 'noEditDuration' : 'editDuration';
+    }
     return (
-        <AppContext.Consumer>
-            {(values): React.ReactNode => {
-                return (
-                    <EditExpeParamContext.Consumer>
-                        {(value): React.ReactNode => {
-                            let editClassName = '';
-                            if (value.field === 'maxExperimentDuration') {
-                                editClassName = isShowPencil ? 'noEditDuration' : 'editDuration';
-                            }
-                            return (
-                                <React.Fragment>
-                                    <div className={`${editClassName} editparam`}>
-                                        <div className='title'>{value.title}</div>
-                                        <input
-                                            className={`${value.field} editparam-Input`}
-                                            ref={DurationInputRef}
-                                            disabled={isShowPencil ? true : false}
-                                            value={editInputVal}
-                                            onChange={setInputVal}
-                                        />
-                                        {isShowPencil && title === 'Max duration' && (
-                                            <span>{convertUnit(values.maxDurationUnit)}</span>
-                                        )}
-                                        {!isShowPencil && title === 'Max duration' && (
-                                            <Dropdown
-                                                selectedKey={unit}
-                                                options={durationUnit}
-                                                className='editparam-dropdown'
-                                                onChange={updateUnit}
-                                            />
-                                        )}
-                                        {isShowPencil && (
-                                            <span className='edit cursor' onClick={hidePencil}>
-                                                {Edit}
-                                            </span>
-                                        )}
-                                        {!isShowPencil && (
-                                            <span className='series'>
-                                                <span className='confirm cursor' onClick={confirmEdit}>
-                                                    {CheckMark}
-                                                </span>
-                                                <span className='cancel cursor' onClick={cancelEdit}>
-                                                    {Cancel}
-                                                </span>
-                                            </span>
-                                        )}
+        <React.Fragment>
+            <div className={`${editClassName} editparam`}>
+                <div className='title'>{title}</div>
+                <input
+                    className={`${field} editparam-Input`}
+                    ref={DurationInputRef}
+                    disabled={isShowPencil ? true : false}
+                    value={editInputVal}
+                    onChange={setInputVal}
+                />
+                {isShowPencil && title === 'Max duration' && (
+                    <span>{convertUnit(maxDurationUnit)}</span>
+                )}
+                {!isShowPencil && title === 'Max duration' && (
+                    <Dropdown
+                        selectedKey={unit}
+                        options={durationUnit}
+                        className='editparam-dropdown'
+                        onChange={updateUnit}
+                    />
+                )}
+                {isShowPencil && (
+                    <span className='edit cursor' onClick={hidePencil}>
+                        {Edit}
+                    </span>
+                )}
+                {!isShowPencil && (
+                    <span className='series'>
+                        <span className='confirm cursor' onClick={confirmEdit}>
+                            {CheckMark}
+                        </span>
+                        <span className='cancel cursor' onClick={cancelEdit}>
+                            {Cancel}
+                        </span>
+                    </span>
+                )}
 
-                                        {isShowSucceedInfo && (
-                                            <MessageInfo className='info' typeInfo={typeInfo} info={info} />
-                                        )}
-                                    </div>
-                                </React.Fragment>
-                            );
-                        }}
-                    </EditExpeParamContext.Consumer>
-                );
-            }}
-        </AppContext.Consumer>
+                {isShowSucceedInfo && (
+                    <MessageInfo className='info' typeInfo={typeInfo} info={info} />
+                )}
+            </div>
+        </React.Fragment>
     );
 };
