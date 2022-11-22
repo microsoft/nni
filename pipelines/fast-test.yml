@@ -174,7 +174,7 @@ stages:
 
   - job: ubuntu_legacy
     pool:
-      vmImage: ubuntu-20.04
+      vmImage: ubuntu-18.04
 
     steps:
     - template: templates/install-dependencies.yml
@@ -196,6 +196,7 @@ stages:
       displayName: Python unit test
 
     - script: |
+        export PATH=${PWD}/toolchain/node/bin:$PATH
         npm --prefix ts/nni_manager run test
       displayName: TypeScript unit test
 
