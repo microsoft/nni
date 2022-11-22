@@ -9,9 +9,7 @@ interface DefaultMetricProps {
 
 const DefaultMetric = (props: DefaultMetricProps): any => {
     const accuracy = TRIALS.getTrial(props.trialId).accuracy;
-    return (
-        <div className='succeed-padding'>{accuracy !== undefined ? formatAccuracy(accuracy) : '--'}</div>
-    );
+    return <div className='succeed-padding metric'>{accuracy !== undefined ? formatAccuracy(accuracy) : '--'}</div>;
 };
 
 export default DefaultMetric;

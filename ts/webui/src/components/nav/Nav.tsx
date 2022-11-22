@@ -58,18 +58,20 @@ const NavCon = (props: NavProps): any => {
     useEffect(() => {
         axios(`${MANAGER_IP}/version`, {
             method: 'GET'
-        }).then(res => {
-            if (res.status === 200) {
-                let formatVersion = res.data;
-                // 2.0 will get 2.0.0 by node, so delete .0 to get real version
-                if (formatVersion.endsWith('.0')) {
-                    formatVersion = formatVersion.slice(0, -2);
+        })
+            .then(res => {
+                if (res.status === 200) {
+                    let formatVersion = res.data;
+                    // 2.0 will get 2.0.0 by node, so delete .0 to get real version
+                    if (formatVersion.endsWith('.0')) {
+                        formatVersion = formatVersion.slice(0, -2);
+                    }
+                    setVersion(formatVersion);
                 }
-                setVersion(formatVersion);
-            }
-        }).catch(error => {
-            setVersion('ERROR'); // TODO 测试这块有没有问题，一个404的api返回status是200.。。
-        });
+            })
+            .catch(error => {
+                setVersion('ERROR'); // TODO 测试这块有没有问题，一个404的api返回status是200.。。
+            });
     }, []);
 
     const refreshProps: IContextualMenuProps = {

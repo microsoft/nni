@@ -20,6 +20,6 @@ const IconButtonTemplet = (props: ButtonProps): any => {
             </DefaultButton>
         </div>
     );
-}
+};
 
 export default IconButtonTemplet;

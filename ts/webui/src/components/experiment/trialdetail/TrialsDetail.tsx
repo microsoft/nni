@@ -22,7 +22,7 @@ import '@style/common/trialStatus.css';
  */
 
 const TrialsDetail = (): any => {
-    const {changeExpandRowIDs} = useContext(AppContext);
+    const { changeExpandRowIDs } = useContext(AppContext);
     const [whichChart, setChart] = useState('Default metric' as string);
     const handleWhichTabs = (item: any): void => {
         setChart(item.props.headerText);
@@ -61,11 +61,7 @@ const TrialsDetail = (): any => {
                         <Duration source={TRIALS.notWaittingTrials()} />
                     </PivotItem>
                     {/* <PivotItem tab={this.titleOfIntermediate} key="4"> */}
-                    <PivotItem
-                        headerText='Intermediate result'
-                        itemIcon='StackedLineChart'
-                        key='Intermediate result'
-                    >
+                    <PivotItem headerText='Intermediate result' itemIcon='StackedLineChart' key='Intermediate result'>
                         {/* *why this graph has small footprint? */}
                         <Intermediate source={TRIALS.allTrialsIntermediateChart()} />
                     </PivotItem>
@@ -76,10 +72,7 @@ const TrialsDetail = (): any => {
                 <TableList tableSource={source} />
             </div>
         </React.Fragment>
-    )
-}
+    );
+};
 
 export default TrialsDetail;
-
-
-

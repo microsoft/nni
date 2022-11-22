@@ -66,8 +66,8 @@ const ExperimentSummaryPanel = (props: ExpPanelProps): any => {
         return function () {
             window.clearTimeout(refreshId);
             window.removeEventListener('resize', onWindowResize);
-        }
-    }, []);// DidMount and willUnMount component
+        };
+    }, []); // DidMount and willUnMount component
     const monacoEditorHeight = caclMonacoEditorHeight(expPanelHeight);
 
     return (

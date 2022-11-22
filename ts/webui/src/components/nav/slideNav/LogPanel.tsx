@@ -63,7 +63,7 @@ const LogPanel = (props: LogPanelProps): any => {
         return function () {
             window.clearTimeout(timerId);
             window.removeEventListener('resize', setLogPanelHeight);
-        }
+        };
     }, []);
 
     const { closePanel, activeTab } = props;
@@ -110,18 +110,14 @@ interface PivotProps {
     loading: boolean;
     height: number;
     downloadLog: () => void;
-    close: ()=> void;
+    close: () => void;
 }
 
 export const PivotItemContent = (props: PivotProps): any => {
-    const {content, loading, height, downloadLog, close} = props;
+    const { content, loading, height, downloadLog, close } = props;
     return (
         <div className='panel logMargin'>
-            <MonacoHTML
-                content={content || 'Loading...'}
-                loading={loading}
-                height={height}
-            />
+            <MonacoHTML content={content || 'Loading...'} loading={loading} height={height} />
             <Stack horizontal className='buttons'>
                 <StackItem grow={12} className='download'>
                     <PrimaryButton text='Download' onClick={downloadLog} />
@@ -132,5 +128,5 @@ export const PivotItemContent = (props: PivotProps): any => {
             </Stack>
         </div>
     );
-}
+};
 export default LogPanel;

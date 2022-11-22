@@ -48,7 +48,7 @@ const Intermediate = (props: IntermediateProps): any => {
     const drawIntermediate = (source: AllTrialsIntermediateChart[]): void => {
         if (source.length > 0) {
             setLength(source.length);
-            setDetailSource(source)
+            setDetailSource(source);
             const xAxis: number[] = [];
             // find having most intermediate number
             source.sort((a, b) => {
@@ -78,10 +78,10 @@ const Intermediate = (props: IntermediateProps): any => {
                                 <div>Trial ID: ${trialId}</div>
                                 <div>Intermediate: ${data.data}</div>
                                 <div>Parameters: <pre>${JSON.stringify(
-                            reformatRetiariiParameter(parameter),
-                            null,
-                            4
-                        )}</pre>
+                                    reformatRetiariiParameter(parameter),
+                                    null,
+                                    4
+                                )}</pre>
                                 </div>
                             </div>
                         `;

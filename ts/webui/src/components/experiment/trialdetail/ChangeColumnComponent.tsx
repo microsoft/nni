@@ -8,7 +8,6 @@ import { Storage } from '@model/localStorage';
  * and currently it uses localstorage to store the customized results
  */
 
-
 interface ChangeColumnProps {
     allColumns: SimpleColumn[]; // all column List
     selectedColumns: string[]; // user selected column list
@@ -125,7 +124,6 @@ const ChangeColumnComponent = (props: ChangeColumnProps): any => {
             </Dialog>
         </div>
     );
-
 };
 
 export default ChangeColumnComponent;

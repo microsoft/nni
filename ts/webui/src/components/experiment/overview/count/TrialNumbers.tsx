@@ -1,12 +1,13 @@
-import React, { useContext } from 'react';
-import { Stack, IStackTokens } from '@fluentui/react';
+// import React, { useContext } from 'react';
+import React from 'react';
+import { Stack, IStackTokens, ProgressIndicator } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
-import { CONTROLTYPE, MAX_TRIAL_NUMBERS } from '@static/const';
-import { EditExperimentParam } from './EditExperimentParam';
-import ProgressBar from './ProgressBar';
-import { EditExpeParamContext } from './context';
-import { AppContext } from '@/App';
-import { leftProgress, rightEditParam } from './commonStyle';
+// import { CONTROLTYPE, MAX_TRIAL_NUMBERS } from '@static/const';
+// import { EditExperimentParam } from './EditExperimentParam';
+// import ProgressBar from './ProgressBar';
+// import { EditExpeParamContext } from './context';
+// import { AppContext } from '@/App';
+// import { leftProgress, rightEditParam } from './commonStyle';
 
 const line1Tokens: IStackTokens = {
     childrenGap: 60
@@ -24,44 +25,45 @@ export const TrialCount = (): any => {
     const maxTrialNum = EXPERIMENT.maxTrialNumber;
     // support type [0, 1], not 98%
     const bar2Percent = bar2 / maxTrialNum;
-    const { updateOverviewPage } = useContext(AppContext);
+    // const { updateOverviewPage } = useContext(AppContext);
     return (
         <React.Fragment>
-            <ProgressBar
-                tooltip={`${bar2.toString()} trials`}
-                percent={bar2Percent}
-                latestVal={String(bar2)}
-                presetVal={String(maxTrialNum)}
-            />
-            <Stack horizontal className='marginTop'>
-                <div style={leftProgress}>
-                    <Stack horizontal className='status-count' tokens={line1Tokens}>
-                        <div>
-                            <span>Running</span>
-                            <p>{count.get('RUNNING')}</p>
-                        </div>
-                        <div>
-                            <span>Succeeded</span>
-                            <p>{count.get('SUCCEEDED')}</p>
-                        </div>
-                        <div>
-                            <span>Stopped</span>
-                            <p>{stoppedCount}</p>
-                        </div>
-                    </Stack>
-                    <Stack horizontal className='status-count marginTop' tokens={line2Tokens}>
-                        <div>
-                            <span>Failed</span>
-                            <p>{count.get('FAILED')}</p>
-                        </div>
-                        <div>
-                            <span>Waiting</span>
-                            <p>{count.get('WAITING')}</p>
-                        </div>
-                    </Stack>
-                </div>
+            <Stack horizontal horizontalAlign='space-between' tokens={line1Tokens} className='count marginTop'>
+                <div>
+                    <span className='font-untheme size16 count-succeed'>Succeeded</span>
+                    <p className='size24 font-numbers-color succeed-trials-number'>{count.get('SUCCEEDED')}</p>
 
-                <div style={rightEditParam}>
+                    <ProgressIndicator
+                        className={`${EXPERIMENT.status} fluent-progress`}
+                        percentComplete={bar2Percent}
+                        barHeight={8}
+                    />
+                    <div>
+                        <span className='complete-tirals'>{bar2}</span>
+                        <span className='font-untheme'>/{maxTrialNum}</span>
+                    </div>
+                </div>
+                <div>
+                    <div className='border run'></div>
+                    <div className='font-untheme trial-status-style'>Running</div>
+                    <p className='size18 font-numbers-color'>{count.get('RUNNING')}</p>
+
+                    <div className='border stop marginTop'></div>
+                    <div className='font-untheme trial-status-style'>Stopped</div>
+                    <p className='size18 font-numbers-color'>{stoppedCount}</p>
+                </div>
+                <div className='numbers'>
+                    <div className='border wait'></div>
+                    <div className='font-untheme trial-status-style'>Waiting</div>
+                    <p className='size18 font-numbers-color'>{count.get('WAITING')}</p>
+
+                    <div className='border failed marginTop'></div>
+                    <div className='font-untheme trial-status-style'>Failed</div>
+                    <p className='size18 font-numbers-color'>{count.get('FAILED')}</p>
+                </div>
+            </Stack>
+
+            {/* <div style={rightEditParam}>
                     <EditExpeParamContext.Provider
                         value={{
                             title: MAX_TRIAL_NUMBERS,
@@ -93,8 +95,7 @@ export const TrialCount = (): any => {
                             <EditExperimentParam />
                         </EditExpeParamContext.Provider>
                     </div>
-                </div>
-            </Stack>
+                </div> */}
         </React.Fragment>
     );
 };

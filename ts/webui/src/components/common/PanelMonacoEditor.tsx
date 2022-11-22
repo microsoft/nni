@@ -29,7 +29,7 @@ const PanelMonacoEditor = (props: LogPanelProps): any => {
     useEffect(() => {
         window.addEventListener('resize', setLogPanelHeight);
         return window.removeEventListener('resize', setLogPanelHeight); // return function === componentWillUnmount
-    }, []);// [] === componentDidMount
+    }, []); // [] === componentDidMount
 
     const { hideConfigPanel, panelName, panelContent } = props;
     const monacoEditorHeight = caclMonacoEditorHeight(panelInnerHeight);

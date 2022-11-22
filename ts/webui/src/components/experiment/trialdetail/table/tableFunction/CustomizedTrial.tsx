@@ -30,24 +30,24 @@ interface CustomizeState {
     changeMap: Map<string, string | number>; // store change key: value
 }
 const warning =
-            'The parameters you set are not in our search space, this may cause the tuner to crash, Are' +
-            ' you sure you want to continue submitting?';
+    'The parameters you set are not in our search space, this may cause the tuner to crash, Are' +
+    ' you sure you want to continue submitting?';
 
-const Customize = ((props: CustomizeProps): any => {
-    const {closeCustomizeModal,copyTrialId,visible} = props;
+const Customize = (props: CustomizeProps): any => {
+    const { closeCustomizeModal, copyTrialId, visible } = props;
     const searchSpace = EXPERIMENT.searchSpace;
     // const [searchSpace, setSearchSpace] = useState(EXPERIMENT.searchSpace);
     const [isShowSubmitSucceed, setIsShowSubmitSucceed] = useState(false);
-    const [isShowSubmitFailed,setIsShowSubmitFailed] = useState(false);
+    const [isShowSubmitFailed, setIsShowSubmitFailed] = useState(false);
     const [isShowWarning, setIsShowWarning] = useState(false);
     const [copyTrialParameter, setCopyTrialParameter] = useState({});
     const [customParameters, setCustomParameters] = useState({});
-    const [customID,setCustomID] = useState(NaN);
+    const [customID, setCustomID] = useState(NaN);
     const [changeMap, setChangeMap] = useState(new Map());
 
     const getFinalVal = (event: React.ChangeEvent<HTMLInputElement>): void => {
         const { name, value } = event.target;
-        setChangeMap(changeMap.set(name, value))
+        setChangeMap(changeMap.set(name, value));
     };
 
     // [submit click] user add a new trial [submit a trial]
@@ -144,7 +144,7 @@ const Customize = ((props: CustomizeProps): any => {
         setChangeMap(new Map());
         closeCustomizeModal();
     };
-    
+
     const closeFailedHint = (): void => {
         // also close customized trial modal
         setIsShowSubmitFailed(false);
@@ -157,7 +157,7 @@ const Customize = ((props: CustomizeProps): any => {
     //     const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
     //     setCopyTrialParameter(originCopyTrialPara);
     // }, [copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined, copyTrialId]);// 怀疑第二个条件 copyTrialId无效，可以去掉，是class组件更新的避坑写法
-    
+
     return (
         <Stack>
             <Dialog
@@ -261,7 +261,7 @@ const Customize = ((props: CustomizeProps): any => {
             </Dialog>
         </Stack>
     );
-});
+};
 
 // class  extends React.Component<CustomizeProps, CustomizeState> {
 

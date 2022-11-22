@@ -16,7 +16,7 @@ import {
 import DefaultMetric from './DefaultMetric';
 import OpenRow from '@/components/common/ExpandableDetails/OpenRow';
 import CopyButton from '@components/common/CopyButton';
-import { convertDuration, copyAndSort } from '@static/function';
+import { formatTimeStyle, copyAndSort } from '@static/function';
 import { TRIALS } from '@static/datamodel';
 import { SortInfo } from '@static/interface';
 import { DETAILTABS } from '@components/nav/slideNav/NNItabs';
@@ -33,8 +33,8 @@ interface SuccessTableProps {
 
 const tooltipStr = (
     <React.Fragment>
-        The experiment is running, please wait for the final metric patiently. You could also find status of trial
-        job with <span>{DETAILTABS}</span> button.
+        The experiment is running, please wait for the final metric patiently. You could also find status of trial job
+        with <span>{DETAILTABS}</span> button.
     </React.Fragment>
 );
 
@@ -55,9 +55,9 @@ const SuccessTable = (props: SuccessTableProps): any => {
         const newItems = copyAndSort(source, currColumn.fieldName!, currColumn.isSortedDescending);
         setColumns(newColumns);
         setSource(newItems);
-        setSortInfo( { field: currColumn.fieldName!, isDescend: currColumn.isSortedDescending });
+        setSortInfo({ field: currColumn.fieldName!, isDescend: currColumn.isSortedDescending });
     };
-    
+
     const successTableColumns: IColumn[] = [
         {
             key: '_expand',
@@ -85,26 +85,26 @@ const SuccessTable = (props: SuccessTableProps): any => {
             name: 'Trial No.',
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
-            minWidth: 60,
-            maxWidth: 80,
+            minWidth: 108,
+            maxWidth: 143,
             isResizable: true,
             data: 'number',
             onColumnClick: onColumnClick,
-            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>{item.sequenceId}</div>
+            onRender: (item: any): React.ReactNode => <div className='No succeed-padding'>{item.sequenceId}</div>
         },
         {
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: 90,
-            maxWidth: 100,
+            minWidth: 130,
+            maxWidth: 196,
             isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
             onColumnClick: onColumnClick,
             onRender: (item: any): React.ReactNode => (
                 <Stack horizontal className='idCopy'>
-                    <div className='succeed-padding'>{item.id}</div>
+                    <div className='succeed-padding id'>{item.id}</div>
                     <CopyButton value={item.id} />
                 </Stack>
             )
@@ -112,35 +112,35 @@ const SuccessTable = (props: SuccessTableProps): any => {
         {
             name: 'Duration',
             key: 'duration',
-            minWidth: 70,
-            maxWidth: 120,
+            minWidth: 120,
+            maxWidth: 179,
             isResizable: true,
             fieldName: 'duration',
             data: 'number',
             onColumnClick: onColumnClick,
             onRender: (item: any): React.ReactNode => (
-                <div className='durationsty succeed-padding'>
-                    <div>{convertDuration(item.duration)}</div>
+                <div className='duration-global-color duration-list succeed-padding'>
+                    <div dangerouslySetInnerHTML={{ __html: formatTimeStyle(item.duration) }} />
                 </div>
             )
         },
         {
             name: 'Status',
             key: 'status',
-            minWidth: 88,
-            maxWidth: 120,
+            minWidth: 145,
+            maxWidth: 209,
             isResizable: true,
             fieldName: 'status',
             onRender: (item: any): React.ReactNode => (
-                <div className={`${item.status} commonStyle succeed-padding`}>{item.status}</div>
+                <span className={`${item.status} size16 succeed-padding`}>{item.status}</span>
             )
         },
         {
             name: 'Default metric',
             key: 'accuracy',
             fieldName: 'accuracy',
-            minWidth: 100,
-            maxWidth: 166,
+            minWidth: 132,
+            maxWidth: 192,
             isResizable: true,
             data: 'number',
             onColumnClick: onColumnClick,
@@ -203,7 +203,7 @@ const SuccessTable = (props: SuccessTableProps): any => {
                     columns={columns}
                     items={keepSortedSource}
                     setKey='set'
-                    compact={true}
+                    // compact={true}
                     onRenderRow={onRenderRow}
                     onRenderDetailsHeader={onRenderDetailsHeader}
                     selectionMode={0} // close selector function

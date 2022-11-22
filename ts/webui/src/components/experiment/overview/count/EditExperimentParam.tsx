@@ -176,7 +176,7 @@ export const EditExperimentParam = (): any => {
     return (
         <React.Fragment>
             <div className={`${editClassName} editparam`}>
-                <div className='title'>{title}</div>
+                <span className='title'>{title}</span>
                 <input
                     className={`${field} editparam-Input`}
                     ref={DurationInputRef}
@@ -184,9 +184,7 @@ export const EditExperimentParam = (): any => {
                     value={editInputVal}
                     onChange={setInputVal}
                 />
-                {isShowPencil && title === 'Max duration' && (
-                    <span>{convertUnit(maxDurationUnit)}</span>
-                )}
+                {isShowPencil && title === 'Max duration' && <span>{convertUnit(maxDurationUnit)}</span>}
                 {!isShowPencil && title === 'Max duration' && (
                     <Dropdown
                         selectedKey={unit}
@@ -211,9 +209,7 @@ export const EditExperimentParam = (): any => {
                     </span>
                 )}
 
-                {isShowSucceedInfo && (
-                    <MessageInfo className='info' typeInfo={typeInfo} info={info} />
-                )}
+                {isShowSucceedInfo && <MessageInfo className='info' typeInfo={typeInfo} info={info} />}
             </div>
         </React.Fragment>
     );
