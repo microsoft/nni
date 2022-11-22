@@ -28,12 +28,8 @@ interface SimpleColumn {
 //    onChange: () => void;
 //}
 const ChangeColumnComponent = (props: ChangeColumnProps): any => {
-    const { selectedColumns, allColumns, minSelected } = props;
+    const { selectedColumns, allColumns, minSelected, onHideDialog } = props;
     const [currentSelected, setCurrentSelected] = useState(selectedColumns as string[]);
-    const makeChangeHandler = (label: string): any => {
-        return (ev: any, checked: boolean): void => onCheckboxChange(ev, label, checked);
-    };
-
     const onCheckboxChange = (
         ev: React.FormEvent<HTMLElement | HTMLInputElement> | undefined,
         label: string,
@@ -50,6 +46,9 @@ const ChangeColumnComponent = (props: ChangeColumnProps): any => {
             const result = source.filter(item => item !== label);
             setCurrentSelected(result);
         }
+    };
+    const makeChangeHandler = (label: string): any => {
+        return (ev: any, checked: boolean): void => onCheckboxChange(ev, label, checked);
     };
 
     const saveUserSelectColumn = (): void => {
@@ -71,21 +70,17 @@ const ChangeColumnComponent = (props: ChangeColumnProps): any => {
             );
             storage.setValue();
         }
-        hideDialog();
+        onHideDialog();
     };
 
     // user exit dialog
     const cancelOption = (): void => {
         // reset select column
         setCurrentSelected(selectedColumns); // todo: useeffect 里写回调; 或者延时函数里关闭窗口
-        hideDialog(); // todo 测试这里写入数据是否正常
+        onHideDialog(); // todo 测试这里写入数据是否正常
         // this.setState({ currentSelected: this.props.selectedColumns }, () => {
         //     this.hideDialog();
         // });
-    };
-
-    const hideDialog = (): void => {
-        props.onHideDialog();
     };
 
     return (

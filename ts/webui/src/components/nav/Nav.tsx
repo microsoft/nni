@@ -69,8 +69,9 @@ const NavCon = (props: NavProps): any => {
                     setVersion(formatVersion);
                 }
             })
-            .catch(error => {
-                setVersion('ERROR'); // TODO 测试这块有没有问题，一个404的api返回status是200.。。
+            .catch(_error => {
+                // TODO 测试这块有没有问题，一个404的api返回status是200.。。
+                setVersion('ERROR');
             });
     }, []);
 

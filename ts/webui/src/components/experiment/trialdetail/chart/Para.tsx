@@ -112,6 +112,14 @@ const Para = (props: ParaProps) => {
         });
     };
 
+    const getRange = (): [number, number] => {
+        // Documentation is lacking.
+        // Reference: https://github.com/syntagmatic/parallel-coordinates/issues/308
+        // const range = this.pcs.height() - this.pcs.margin().top - this.pcs.margin().bottom;
+        const range = chartMulineStyle.height - innerChartMargins.top - innerChartMargins.bottom;
+        return [range, 1];
+    };
+
     const convertToD3Scale = (axis: SingleAxis, initRange: boolean = true): any => {
         const padLinear = ([x0, x1], k = 0.1): [number, number] => {
             const dx = ((x1 - x0) * k) / 2;
@@ -138,14 +146,6 @@ const Para = (props: ParaProps) => {
             scaleInst = scaleInst.range(getRange());
         }
         return scaleInst;
-    };
-
-    const getRange = (): [number, number] => {
-        // Documentation is lacking.
-        // Reference: https://github.com/syntagmatic/parallel-coordinates/issues/308
-        // const range = this.pcs.height() - this.pcs.margin().top - this.pcs.margin().bottom;
-        const range = chartMulineStyle.height - innerChartMargins.top - innerChartMargins.bottom;
-        return [range, 1];
     };
 
     const _updateDisplayedColumns = (displayedColumns: string[]): void => {

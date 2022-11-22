@@ -22,29 +22,27 @@ require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
 
-type SearchOptionType = 'id' | 'trialnum' | 'status' | 'parameters';
-
 const defaultDisplayedColumns = ['sequenceId', 'id', 'duration', 'status', 'latestAccuracy'];
 
 interface TableListProps {
     tableSource: Trial[];
 }
 
-interface TableListState {
-    displayedItems: any[];
-    displayedColumns: string[];
-    columns: IColumn[];
-    searchType: SearchOptionType;
-    searchText: string;
-    selectedRowIds: string[];
-    customizeColumnsDialogVisible: boolean;
-    compareDialogVisible: boolean;
-    intermediateDialogTrial: Trial[] | undefined;
-    copiedTrialId: string | undefined;
-    sortInfo: SortInfo;
-    searchItems: Array<SearchItems>;
-    relation: Map<string, string>;
-}
+// interface TableListState {
+//     displayedItems: any[];
+//     displayedColumns: string[];
+//     columns: IColumn[];
+//     searchType: SearchOptionType;
+//     searchText: string;
+//     selectedRowIds: string[];
+//     customizeColumnsDialogVisible: boolean;
+//     compareDialogVisible: boolean;
+//     intermediateDialogTrial: Trial[] | undefined;
+//     copiedTrialId: string | undefined;
+//     sortInfo: SortInfo;
+//     searchItems: Array<SearchItems>;
+//     relation: Map<string, string>;
+// }
 
 function TableList(props: TableListProps): any {
     const { tableSource } = props;
@@ -64,18 +62,12 @@ function TableList(props: TableListProps): any {
     // const [intermediateDialogTrial, setIntermediateDialogTrial] = useState(undefined as Trial[]); // 类型不好写
     const [intermediateDialogTrial, setIntermediateDialogTrial] = useState([] as Trial[]); // 类型不好写
     const [copiedTrialId, setCopiedTrialId] = useState(undefined);
-    const [sortInfo, setSortInfo] = useState({ field: '', isDescend: true });
+    const [sortInfo, setSortInfo] = useState({ field: '', isDescend: true } as SortInfo);
     const [searchItems, setSearchItems] = useState([] as SearchItems[]);
     const relation = parametersType();
     // const [relation, setRelation] = useState(parametersType());
     // relation 在旧版本中是不是没用到再次声明，只一次
     const _expandedTrialIds = new Set<string>();
-
-    useEffect(() => {
-        _updateTableSource();
-
-        // },[tableSource, sortInfo, searchItems]); // TODO总数据源，表格排序规则触发页面更新, 看代码 searchItmes不用写进来
-    }, [tableSource, sortInfo, selectedRowIds]); // 总数据源，表格排序规则触发页面更新, 看代码 searchItmes不用写进来
 
     /* Table basic function related methods */
 
@@ -120,6 +112,42 @@ function TableList(props: TableListProps): any {
         setDisplayedColumns(newDisplayedItems);
     };
 
+    const _renderOperationColumn = (record: any): React.ReactNode => {
+        const runningTrial: boolean = ['RUNNING', 'UNKNOWN'].includes(record.status) ? false : true;
+        const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED', 'VIEWED'].includes(EXPERIMENT.status);
+        return (
+            <Stack className='detail-button' horizontal>
+                <PrimaryButton
+                    className='detail-button-operation'
+                    title='Intermediate'
+                    onClick={(): void => {
+                        const trial = tableSource.find(trial => trial.id === record.id) as Trial;
+                        setIntermediateDialogTrial([trial]);
+                    }}
+                >
+                    {LineChart}
+                </PrimaryButton>
+                {runningTrial ? (
+                    <PrimaryButton className='detail-button-operation' disabled={true} title='kill'>
+                        {blocked}
+                    </PrimaryButton>
+                ) : (
+                    <KillJobIndex trialId={record.id} />
+                )}
+                <PrimaryButton
+                    className='detail-button-operation'
+                    title='Customized trial'
+                    onClick={(): void => {
+                        setCopiedTrialId(record.id);
+                    }}
+                    disabled={disabledAddCustomizedTrial}
+                >
+                    {copy}
+                </PrimaryButton>
+            </Stack>
+        );
+    };
+
     const _buildColumnsFromTableItems = (tableItems: any[]): IColumn[] => {
         const columns: IColumn[] = [
             // select trial function
@@ -152,8 +180,6 @@ function TableList(props: TableListProps): any {
                                     item._checked = !!checked;
                                 }
                             });
-                            console.info('latestSelectedRowIds', latestSelectedRowIds);
-                            console.info('id', record.id);
                             setDisplayedItems(latestDisplayedItems);
                             setSelectedRowIds(latestSelectedRowIds);
                         }}
@@ -299,45 +325,15 @@ function TableList(props: TableListProps): any {
         setDisplayedColumns(displayedColumns);
     };
 
-    const _renderOperationColumn = (record: any): React.ReactNode => {
-        const runningTrial: boolean = ['RUNNING', 'UNKNOWN'].includes(record.status) ? false : true;
-        const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED', 'VIEWED'].includes(EXPERIMENT.status);
-        return (
-            <Stack className='detail-button' horizontal>
-                <PrimaryButton
-                    className='detail-button-operation'
-                    title='Intermediate'
-                    onClick={(): void => {
-                        const trial = tableSource.find(trial => trial.id === record.id) as Trial;
-                        setIntermediateDialogTrial([trial]);
-                    }}
-                >
-                    {LineChart}
-                </PrimaryButton>
-                {runningTrial ? (
-                    <PrimaryButton className='detail-button-operation' disabled={true} title='kill'>
-                        {blocked}
-                    </PrimaryButton>
-                ) : (
-                    <KillJobIndex trialId={record.id} />
-                )}
-                <PrimaryButton
-                    className='detail-button-operation'
-                    title='Customized trial'
-                    onClick={(): void => {
-                        setCopiedTrialId(record.id);
-                    }}
-                    disabled={disabledAddCustomizedTrial}
-                >
-                    {copy}
-                </PrimaryButton>
-            </Stack>
-        );
-    };
-
     const changeSearchFilterList = (arr: Array<SearchItems>): void => {
         setSearchItems(arr);
     };
+
+    useEffect(() => {
+        _updateTableSource();
+
+        // },[tableSource, sortInfo, searchItems]); // TODO总数据源，表格排序规则触发页面更新, 看代码 searchItmes不用写进来
+    }, [tableSource, sortInfo, selectedRowIds]); // 总数据源，表格排序规则触发页面更新, 看代码 searchItmes不用写进来
 
     return (
         <div id='tableList'>

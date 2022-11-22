@@ -103,10 +103,13 @@ const generateGraph = (
     const graph = generateGraphConfig(hasBestCurve, finalKey);
     if (bestCurveEnabled) {
         (graph as any).series = [
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
             generateBestCurveSeries(trials, finalKey, optimizeMode),
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
             generateScatterSeries(trials, finalKey)
         ];
     } else {
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         (graph as any).series = [generateScatterSeries(trials, finalKey)];
     }
     return graph;

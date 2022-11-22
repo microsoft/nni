@@ -10,10 +10,6 @@ interface LogPanelProps {
     panelContent: string;
 }
 
-interface LogPanelState {
-    panelInnerHeight: number;
-}
-
 /**
  * search space
  * config

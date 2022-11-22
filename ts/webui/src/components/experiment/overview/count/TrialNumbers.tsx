@@ -12,9 +12,6 @@ import { EXPERIMENT, TRIALS } from '@static/datamodel';
 const line1Tokens: IStackTokens = {
     childrenGap: 60
 };
-const line2Tokens: IStackTokens = {
-    childrenGap: 80
-};
 
 export const TrialCount = (): any => {
     const count = TRIALS.countStatus();

@@ -20,6 +20,7 @@ const ExperimentSummaryPanel = (props: ExpPanelProps): any => {
     // experiment -> experimentSummaryData
     const [experiment, setExperiment] = useState('' as string);
     const [expPanelHeight, setExpPanelHeight] = useState(window.innerHeight as number);
+    let refreshId: number = 0; // TODO: use list rather than number
 
     const getExperimentContent = (): void => {
         const experimentData = JSON.parse(JSON.stringify(props.experimentProfile));
@@ -58,7 +59,6 @@ const ExperimentSummaryPanel = (props: ExpPanelProps): any => {
         setExpPanelHeight(window.innerHeight);
     };
 
-    let refreshId: number = 0; // TODO: use list rather than number
     useEffect(() => {
         getExperimentContent();
         refreshId = window.setInterval(getExperimentContent, 10000);

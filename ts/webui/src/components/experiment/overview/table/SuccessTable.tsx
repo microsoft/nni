@@ -39,7 +39,17 @@ const tooltipStr = (
 );
 
 const SuccessTable = (props: SuccessTableProps): any => {
+    const { trialIds, expandRowIDs, updateOverviewPage, changeExpandRowIDs } = props;
+    // 这个不应该是准确的吗？怎么是any呢
+    const [source, setSource] = useState(TRIALS.table(trialIds) as Array<any>);
+    const [sortInfo, setSortInfo] = useState({ field: '', isDescend: false } as SortInfo);
+
+    const expandTrialId = (_event: any, id: string): void => {
+        changeExpandRowIDs(id);
+        updateOverviewPage();
+    };
     const onColumnClick = (_ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         const newColumns: IColumn[] = columns.slice();
         const currColumn: IColumn = newColumns.filter(item => getColumn.key === item.key)[0];
         newColumns.forEach((newCol: IColumn) => {
@@ -53,11 +63,11 @@ const SuccessTable = (props: SuccessTableProps): any => {
         });
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const newItems = copyAndSort(source, currColumn.fieldName!, currColumn.isSortedDescending);
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         setColumns(newColumns);
         setSource(newItems);
         setSortInfo({ field: currColumn.fieldName!, isDescend: currColumn.isSortedDescending });
     };
-
     const successTableColumns: IColumn[] = [
         {
             key: '_expand',
@@ -147,15 +157,7 @@ const SuccessTable = (props: SuccessTableProps): any => {
             onRender: (item: any): React.ReactNode => <DefaultMetric trialId={item.id} />
         }
     ];
-    const { trialIds, expandRowIDs, updateOverviewPage, changeExpandRowIDs } = props;
     const [columns, setColumns] = useState(successTableColumns as IColumn[]);
-    // 这个不应该是准确的吗？怎么是any呢
-    const [source, setSource] = useState(TRIALS.table(trialIds) as Array<any>);
-    const [sortInfo, setSortInfo] = useState({ field: '', isDescend: false } as SortInfo);
-    useEffect(() => {
-        setSource(TRIALS.table(trialIds));
-    }, [trialIds]);
-
     const keepSortedSource = copyAndSort(source, sortInfo.field, sortInfo.isDescend);
     const isNoneData = source.length === 0 ? true : false;
 
@@ -175,15 +177,15 @@ const SuccessTable = (props: SuccessTableProps): any => {
         );
     };
 
-    const onRenderRow: IDetailsListProps['onRenderRow'] = props => {
-        if (props) {
+    const onRenderRow: IDetailsListProps['onRenderRow'] = rows => {
+        if (rows) {
             return (
                 <div>
                     <div>
-                        <DetailsRow {...props} />
+                        <DetailsRow {...rows} />
                     </div>
                     {Array.from(expandRowIDs).map(
-                        item => item === props.item.id && <OpenRow key={item} trialId={item} />
+                        item => item === rows.item.id && <OpenRow key={item} trialId={item} />
                     )}
                 </div>
             );
@@ -191,10 +193,9 @@ const SuccessTable = (props: SuccessTableProps): any => {
         return null;
     };
 
-    const expandTrialId = (_event: any, id: string): void => {
-        changeExpandRowIDs(id);
-        updateOverviewPage();
-    };
+    useEffect(() => {
+        setSource(TRIALS.table(trialIds));
+    }, [trialIds]);
 
     return (
         <div id='succTable'>
