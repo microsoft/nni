@@ -14,7 +14,7 @@ import torch.nn as nn
 from nni.common.graph_utils import build_module_graph
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import get_module_by_name
-from nni.contrib.pruning_speedup.replacor import CustomizedReplacor
+from nni.compression.pytorch.utils.external.replacor import CustomizedReplacor
 from .compress_modules import replace_module
 from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
@@ -57,7 +57,14 @@ class ModelSpeedup:
                 in_mask, out_mask, weight_mask = masks
                 # prune the ori_module to a new smaller module according to the mask
                 return new_small_module
-
+    customized_replacors
+        ``customized_replacors`` is a list of ``CustomizedReplacor``.
+        Call a ``Module`` that does not contain a ``Module`` as a leaf-module,
+        a ``Module`` that contains a ``Module`` as a hyper-module, then replacor is used to replace the hyper-module.
+        The difference between the replacor and replace function is that replacor can perform more efficient replacements
+        to hyper-module, and replace function is used to replace leaf-module.
+        In ``ModelSpeedup.compress``, replacors are first to be called to replace the hyper-modules before
+        replacing all leaf-modules by replace functions.
     """
 
     def __init__(self, model, dummy_input, masks_file, map_location=None,
