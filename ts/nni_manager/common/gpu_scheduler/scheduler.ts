@@ -6,17 +6,12 @@
  **/
 
 import { getLogger } from 'common/log';
+import type { TrialKeeper } from 'common/trial_keeper/keeper';
 import { GpuSystemInfo, collectGpuInfo as origCollectGpuInfo } from './collect_info';
 
 const logger = getLogger('GpuScheduler');
 
 let collectGpuInfo = origCollectGpuInfo;  // for ut
-
-export interface ScheduleRestrictions {
-    onlyAcceptIndices?: number[];
-    rejectActiveGpus?: boolean;
-    rejectComputeActiveGpus?: boolean;
-}
 
 interface SchedulerGpuInfo {
     index: number;
@@ -102,17 +97,17 @@ export class GpuScheduler {
      *
      *  The `restrictions` parameter may contain following options:
      *
-     *  - onlyAcceptIndices:
+     *  - onlyUseIndices:
      *
      *      Limit usable GPUs by index.
      *      This is `gpuIndices` in experiment config.
      *
-     *  - rejectActiveGpus:
+     *  - rejectActive:
      *
      *      Do not use GPUs with running processes.
      *      This is reversed `useActiveGpu` in experiment config.
      *
-     *  - rejectComputeActiveGpus:
+     *  - rejectComputeActive:
      *
      *      Do not use GPUs with CUDA processes, but still use GPUs with graphics processes.
      *      This is useful for desktop systems with graphical interface.
@@ -121,12 +116,11 @@ export class GpuScheduler {
             experimentId: string,
             trialId: string,
             gpuNumber: number,
-            restrictions?: ScheduleRestrictions
+            restrictions?: TrialKeeper.GpuRestrictions
         ): Promise<Record<string, string> | null> {
 
-        if (!gpuNumber) {  // such case should be handled at client side
-            logger.error(`gpuNumber is ${gpuNumber}`);
-            return null;
+        if (gpuNumber === 0) {
+            return { 'CUDA_VISIBLE_DEVICES': '' };
         }
 
         if (gpuNumber >= this.gpus.length) {
@@ -201,15 +195,15 @@ export class GpuScheduler {
         }
     }
 
-    private sortGpus(restrict: ScheduleRestrictions): SchedulerGpuInfo[] {
+    private sortGpus(restrict: TrialKeeper.GpuRestrictions): SchedulerGpuInfo[] {
         let gpus = this.gpus.slice();  // copy for in-place sort
-        if (restrict.onlyAcceptIndices) {
-            gpus = gpus.filter(gpu => restrict.onlyAcceptIndices!.includes(gpu.index));
+        if (restrict.onlyUseIndices) {
+            gpus = gpus.filter(gpu => restrict.onlyUseIndices!.includes(gpu.index));
         }
-        if (restrict.rejectActiveGpus) {
+        if (restrict.rejectActive) {
             gpus = gpus.filter(gpu => !gpu.active);
         }
-        if (restrict.rejectComputeActiveGpus) {
+        if (restrict.rejectComputeActive) {
             gpus = gpus.filter(gpu => !gpu.computeActive);
         }
 
