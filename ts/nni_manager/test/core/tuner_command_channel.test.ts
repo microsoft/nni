@@ -61,7 +61,7 @@ async function testError(): Promise<void> {
 
     // we have set heartbeat interval to 10ms, so pause for 30ms should make it timeout
     client1.ws.pause();
-    await setTimeout(heartbeatInterval * (process.platform === 'win32' ? 10 : 3));
+    await setTimeout(heartbeatInterval * 3);
     client1.ws.resume();
 
     assert.notEqual(catchedError, undefined);
