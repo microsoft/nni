@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import json
+import logging
 import os
 
 from ..command_channel.http import HttpChannel
@@ -14,6 +15,9 @@ def get_next_parameter():
     _channel.send(req)
 
     res = _channel.receive()
+    if res is None:
+        logging.getLogger(__name__).error('Command channel is closed')
+        return None
     assert res['type'] == 'parameter'
     return json.loads(res['parameter'])
 
