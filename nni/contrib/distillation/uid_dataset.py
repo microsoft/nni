@@ -104,7 +104,7 @@ class AugmentationDataset(_UidDataset):
     """
     def __init__(self, dataset: Dataset, transform: Callable[[Any], Any], seed: int | None = None,
                  get_rngs_state: Callable | None = None, set_rngs_state: Callable | None = None,
-                 manual_seed: Callable[[int]] | None = None,
+                 manual_seed: Callable | None = None,
                  aux_dataset_cls: Type[_UidDataset] | None = None, *aux_args, **aux_kwargs):
         if isinstance(dataset, _UidDataset) and aux_dataset_cls is None:
             _dataset = dataset
