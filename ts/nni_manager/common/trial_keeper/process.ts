@@ -89,6 +89,8 @@ export class TrialProcess {
      *
      *  (FIXME) On Windows, always do force kill.
      *
+     *  (FIXME) This only kills the trial process. If the trial has child processes, they are not touched by NNI.
+     *
      *  The returned promise is resolved together with onStop() callback.
      **/
     public async kill(timeout?: number): Promise<void> {

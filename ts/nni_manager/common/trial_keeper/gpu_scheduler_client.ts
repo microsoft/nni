@@ -40,7 +40,7 @@ export class GpuSchedulerClient {
     }
 
     public async schedule(trialId: string, gpuNumber?: number, restrictions?: TrialKeeper.GpuRestrictions):
-        Promise<Record<string, string> | null> {
+            Promise<Record<string, string> | null> {
 
         if (gpuNumber === undefined) {
             return {};

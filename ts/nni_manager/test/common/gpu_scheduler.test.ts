@@ -4,6 +4,7 @@
 import assert from 'assert/strict';
 
 import type { GpuSystemInfo } from 'common/gpu_scheduler/collect_info';
+import type { TrialKeeper } from 'common/trial_keeper/keeper';
 import { GpuScheduler, UnitTestHelpers as Helpers } from 'common/gpu_scheduler/scheduler';
 
 let scheduler: GpuScheduler;
@@ -34,6 +35,8 @@ describe('## gpu scheduler ##', () => {
 
     it('prefer idle', () => testActivePriority());
     it('prefer lower load', () => testUtilPriority());
+
+    it('zero gpu', () => testZeroGpu());
 });
 
 async function testInit(): Promise<void> {
@@ -43,11 +46,11 @@ async function testInit(): Promise<void> {
 }
 
 async function testScheduleSmall(): Promise<void> {
-    const idx1 = await scheduler.schedule('small', '1', 0.5);  // [0]
-    const idx2 = await scheduler.schedule('small', '2', 0.5);  // [1]
-    const idx3 = await scheduler.schedule('small', '3', 0.5);  // [2]
-    const idx4 = await scheduler.schedule('small', '4', 0.6);  // null
-    const idx5 = await scheduler.schedule('small', '5', 0.5);  // [0]
+    const idx1 = await schedule('small', '1', 0.5);  // [0]
+    const idx2 = await schedule('small', '2', 0.5);  // [1]
+    const idx3 = await schedule('small', '3', 0.5);  // [2]
+    const idx4 = await schedule('small', '4', 0.6);  // null
+    const idx5 = await schedule('small', '5', 0.5);  // [0]
 
     assert.equal(idx4, null);
 
@@ -67,9 +70,9 @@ async function testReleaseSmall(): Promise<void> {
 }
 
 async function testScheduleLarge(): Promise<void> {
-    const idx1 = await scheduler.schedule('large1', 'x', 2);  // [0,1]
-    const idx2 = await scheduler.schedule('large2', 'x', 2);  // null
-    const idx3 = await scheduler.schedule('large3', 'x', 1);  // [2]
+    const idx1 = await schedule('large1', 'x', 2);  // [0,1]
+    const idx2 = await schedule('large2', 'x', 2);  // null
+    const idx3 = await schedule('large3', 'x', 1);  // [2]
 
     assert.notEqual(idx1, null);
     assert.equal(idx1!.length, 2);
@@ -93,11 +96,11 @@ async function testReleaseLarge(): Promise<void> {
 }
 
 async function testScheduleHybrid(): Promise<void> {
-    const idx1 = await scheduler.schedule('small', '1', 0.5);  // [0]
-    const idx2 = await scheduler.schedule('large', '1', 1);  // [1]
-    const idx3 = await scheduler.schedule('large', '2', 2);  // null
+    const idx1 = await schedule('small', '1', 0.5);  // [0]
+    const idx2 = await schedule('large', '1', 1);  // [1]
+    const idx3 = await schedule('large', '2', 2);  // null
     scheduler.release('large', '1');
-    const idx4 = await scheduler.schedule('large', '3', 2);  // [1,2]
+    const idx4 = await schedule('large', '3', 2);  // [1,2]
 
     assert.notEqual(idx1, null);
     assert.equal(idx1!.length, 1);
@@ -118,9 +121,9 @@ async function testScheduleHybrid(): Promise<void> {
 }
 
 async function testRestrictIndex(): Promise<void> {
-    const idx1 = await scheduler.schedule('r', '1', 0.5, { onlyAcceptIndices: [ 1 ] });
-    const idx2 = await scheduler.schedule('r', '2', 2, { onlyAcceptIndices: [ 1, 2 ] });
-    const idx3 = await scheduler.schedule('r', '3', 1, { onlyAcceptIndices: [ 1, 2 ] });
+    const idx1 = await schedule('r', '1', 0.5, { onlyUseIndices: [ 1 ] });
+    const idx2 = await schedule('r', '2', 2, { onlyUseIndices: [ 1, 2 ] });
+    const idx3 = await schedule('r', '3', 1, { onlyUseIndices: [ 1, 2 ] });
 
     assert.deepEqual(idx1, [ 1 ]);
     assert.equal(idx2, null);
@@ -136,9 +139,9 @@ async function testRestrictActive(): Promise<void> {
     ];
     await scheduler.update();
 
-    const idx1 = await scheduler.schedule('r', '1', 1, { rejectActiveGpus: true });
-    const idx2 = await scheduler.schedule('r', '2', 1, { rejectActiveGpus: true });
-    const idx3 = await scheduler.schedule('r', '3', 1, { rejectComputeActiveGpus: true });
+    const idx1 = await schedule('r', '1', 1, { rejectActive: true });
+    const idx2 = await schedule('r', '2', 1, { rejectActive: true });
+    const idx3 = await schedule('r', '3', 1, { rejectComputeActive: true });
 
     assert.deepEqual(idx1, [ 2 ]);
     assert.equal(idx2, null);
@@ -154,9 +157,9 @@ async function testActivePriority(): Promise<void> {
     ];
     await scheduler.update();
 
-    const idx1 = await scheduler.schedule('p', '1', 1);
-    const idx2 = await scheduler.schedule('p', '2', 1);
-    const idx3 = await scheduler.schedule('p', '3', 1);
+    const idx1 = await schedule('p', '1', 1);
+    const idx2 = await schedule('p', '2', 1);
+    const idx3 = await schedule('p', '3', 1);
 
     assert.deepEqual(idx1, [ 2 ]);
     assert.deepEqual(idx2, [ 0 ]);
@@ -172,13 +175,34 @@ async function testUtilPriority(): Promise<void> {
     gpuInfo.processes = [];
     await scheduler.update();
 
-    const idx1 = await scheduler.schedule('p', '1', 1);
-    const idx2 = await scheduler.schedule('p', '2', 1);
-    const idx3 = await scheduler.schedule('p', '3', 1);
+    const idx1 = await schedule('p', '1', 1);
+    const idx2 = await schedule('p', '2', 1);
+    const idx3 = await schedule('p', '3', 1);
 
     assert.deepEqual(idx1, [ 1 ]);
     assert.deepEqual(idx2, [ 0 ]);
     assert.deepEqual(idx3, [ 2 ]);
 
     scheduler.releaseAll('p');
+}
+
+async function testZeroGpu(): Promise<void> {
+    const idx = await schedule('z', '1', 0);
+    assert.deepEqual(idx, []);
+}
+
+async function schedule(expId: string, trialId: string, gpuNum: number, restrict?: TrialKeeper.GpuRestrictions):
+        Promise<number[] | null> {
+
+    const env = await scheduler.schedule(expId, trialId, gpuNum, restrict);
+    if (env === null) {
+        return null;
+    }
+
+    const indices = env['CUDA_VISIBLE_DEVICES'];
+    if (indices === '') {
+        return [];
+    }
+
+    return indices.split(',').map(Number);
 }

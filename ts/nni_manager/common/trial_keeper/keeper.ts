@@ -17,7 +17,7 @@ import { HttpChannelServer } from 'common/command_channel/http';
 import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
 import { TrialProcess, TrialProcessOptions } from './process';
-import { GpuSchedulerClient } from './scheduler';
+import { GpuSchedulerClient } from './gpu_scheduler_client';
 
 export declare namespace TrialKeeper {
     export interface TrialOptions {

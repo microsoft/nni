@@ -17,6 +17,8 @@ describe('## trial keeper : trial process ##', () => {
     it('graceful kill', () => testGracefulKill());
     it('force kill', () => testForceKill());
 
+    //it('kill process tree', () => testKillTree());
+
     after(afterHook);
 });
 
@@ -135,6 +137,45 @@ async function testKillHelper(trialId: string, script: string, stdout?: string, 
     }
 }
 
+async function testKillTree(): Promise<void> {
+    const script = `
+from subprocess import Popen
+proc = Popen(['python', '-c', 'import time ; time.sleep(600)'])
+print(proc.pid, flush=True)
+while True:
+    pass
+`
+
+    await fs.writeFile(path.join(tmpDir, `trial_test_tree.py`), script);
+    options.command = `python trial_test_tree.py`;
+
+    const proc = new TrialProcess('test_tree');
+    await proc.spawn(options);
+
+    await setTimeout(100);
+    const stdout = await fs.readFile(path.join(tmpDir, 'trial.stdout'), { encoding: 'utf8' });
+    const pid = Number(stdout.trim());
+
+    assert.ok(isAlive(pid));
+
+    await proc.kill(100);
+    const stopped = new Deferred<void>();
+    proc.onStop((_time, _code, _signal) => { stopped.resolve(); });
+    await stopped.promise;
+
+    await setTimeout(100);
+    assert.ok(!isAlive(pid));
+}
+
+function isAlive(pid: number): boolean {
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (_e) {
+        return false;
+    }
+}
+
 /* environment */
 
 let tmpDir: string;
@@ -144,8 +185,8 @@ const options: TrialProcessOptions = {
     codeDirectory: '',
     outputDirectory: '',
     commandChannelUrl: '',
-    gpuIndices: undefined,
     platform: 'ut',
+    environmentVariables: {},
 };
 
 async function beforeHook(): Promise<void> {
