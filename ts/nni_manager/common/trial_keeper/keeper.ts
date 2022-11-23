@@ -59,6 +59,7 @@ export class TrialKeeper {
         });
     }
 
+    // TODO: support user configurable init command
     public async start(): Promise<void> {
         await Promise.all([
             this.gpuScheduler.start(),
@@ -113,7 +114,6 @@ export class TrialKeeper {
             platform: this.platform,
             sequenceId: options.sequenceId,
             environmentVariables: gpuEnv,
-            //gpuIndices: gpus ?? undefined,  // change null to undefined
         }
 
         const success = await trial.spawn(procOptions);
