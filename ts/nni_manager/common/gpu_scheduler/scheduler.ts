@@ -82,6 +82,7 @@ export class GpuScheduler {
             return;
         }
         if (info.gpuNumber !== this.gpus.length) {
+            // TODO: according to yuge's experience this do might happen
             throw new Error(`GpuScheduler: GPU number changed from ${this.gpus.length} to ${info.gpuNumber}`);
         }
 
@@ -89,10 +90,10 @@ export class GpuScheduler {
     }
 
     /**
-     *  Schedule a trial and return allocated GPU indices.
+     *  Schedule a trial and return its GPU-related environment variables.
      *
-     *  If the trial cannot be scheduled for now, return `null`.
-     *  If the trial requires more then physical GPUs, throw error.
+     *  If the trial cannot be scheduled, return `null`.
+     *  (TODO: it might need more advanced failure handling)
      *
      *  This scheduler does NOT monitor the trial's life span.
      *  The caller must invokes `release()` or `releaseAll()` later.
@@ -120,11 +121,17 @@ export class GpuScheduler {
             experimentId: string,
             trialId: string,
             gpuNumber: number,
-            restrictions?: ScheduleRestrictions): Promise<number[] | null> {
+            restrictions?: ScheduleRestrictions
+        ): Promise<Record<string, string> | null> {
+
+        if (!gpuNumber) {  // such case should be handled at client side
+            logger.error(`gpuNumber is ${gpuNumber}`);
+            return null;
+        }
 
         if (gpuNumber >= this.gpus.length) {
             // TODO: push this message to web portal
-            logger.error(`GpuScheduler: Only have ${this.gpus.length} GPUs, requesting ${gpuNumber}`);
+            logger.error(`Only have ${this.gpus.length} GPUs, requesting ${gpuNumber}`);
             return null;
         }
 
@@ -138,7 +145,7 @@ export class GpuScheduler {
             gpu.util += gpuNumber;
             this.trials.push({ gpuIndex: gpu.index, experimentId, trialId, util: gpuNumber });
             logger.debug(`Scheduled ${experimentId}/${trialId} -> ${gpu.index}`);
-            return [ gpu.index ];
+            return { 'CUDA_VISIBLE_DEVICES': String(gpu.index) };
 
         } else {
             const n = Math.round(gpuNumber);
@@ -151,13 +158,16 @@ export class GpuScheduler {
                 this.trials.push({ gpuIndex: gpu.index, experimentId, trialId, util: 1 });
                 indices.push(gpu.index);
             }
+            indices.sort((a, b) => (a - b));
             logger.debug(`Scheduled ${experimentId}/${trialId} ->`, indices);
-            return indices.sort((a, b) => (a - b));
+            return { 'CUDA_VISIBLE_DEVICES': indices.join(',') };
         }
     }
 
     /**
-     *  Release a trial's allocated GPUs
+     *  Release a trial's allocated GPUs.
+     *
+     *  If the trial does not exist, silently do nothing.
      **/
     public async release(experimentId: string, trialId: string): Promise<void> {
         this.releaseByFilter(trial => (trial.experimentId === experimentId && trial.trialId === trialId));

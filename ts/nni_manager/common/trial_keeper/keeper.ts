@@ -12,11 +12,12 @@ import { EventEmitter } from 'events';
 import fs from 'fs/promises';
 import path from 'path';
 
+import type { Command } from 'common/command_channel/interface';
 import { HttpChannelServer } from 'common/command_channel/http';
 import globals from 'common/globals';
-import { GpuScheduler } from 'common/gpu_scheduler';
 import { Logger, getLogger } from 'common/log';
-import { TrialProcess } from './process';
+import { TrialProcess, TrialProcessOptions } from './process';
+import { GpuSchedulerClient } from './scheduler';
 
 export declare namespace TrialKeeper {
     export interface TrialOptions {
@@ -40,7 +41,7 @@ export class TrialKeeper {
     private channels: HttpChannelServer;
     private dirs: Map<string, string> = new Map();
     private emitter: EventEmitter = new EventEmitter();
-    private gpuScheduler: GpuScheduler | null = null;
+    private gpuScheduler: GpuSchedulerClient;
     private log: Logger;
     private platform: string;
     private trials: Map<string, TrialProcess> = new Map();
@@ -50,39 +51,26 @@ export class TrialKeeper {
         this.platform = platform;
         this.log = getLogger(`TrialKeeper.${environmentId}`);
 
+        this.gpuScheduler = new GpuSchedulerClient(enableGpuScheduler);
+
         this.channels = new HttpChannelServer(this.envId, `/env/${this.envId}`);
-
-        if (enableGpuScheduler) {
-            this.gpuScheduler = new GpuScheduler();
-        }
-
         this.channels.onReceive((trialId, command) => {
-            if (command.type === 'request_parameter') {
-                this.emitter.emit('request-parameter', trialId);
-            } else if (command.type === 'metric') {
-                this.emitter.emit('metric', trialId, command.metric);
-            } else {
-                this.log.error('Received bad command:', trialId, command);
-            }
+            this.emitter.emit('command', trialId, command);
         });
     }
 
     public async start(): Promise<void> {
-        await this.channels.start();
-
-        if (this.gpuScheduler !== null) {
-            await this.gpuScheduler.init();
-        }
+        await Promise.all([
+            this.gpuScheduler.start(),
+            this.channels.start(),
+        ]);
     }
 
     public async shutdown(): Promise<void> {
-        let promises: Promise<void> = [];
-
-        promises.push(this.channels.shutdown());
-
-        if (this.gpuScheduler !== null) {
-            promises.push(this.gpuScheduler.shutdown());
-        }
+        let promises: Promise<void>[] = [
+            this.gpuScheduler.shutdown(),
+            this.channels.shutdown(),
+        ];
 
         const trials = Array.from(this.trials.values());
         promises = promises.concat(trials.map(trial => trial.kill()));
@@ -94,27 +82,14 @@ export class TrialKeeper {
         this.dirs.set(name, path);
     }
 
+    // FIXME: the method name will be changed when we support distributed trials
     public async createTrial(options: TrialKeeper.TrialOptions): Promise<string | null> {
         const trialId = options.id;
 
-        let gpus: number[] | null = null;
-        if (options.gpuNumber) {
-            if (this.gpuScheduler === null) {
-                this.log.error('GPU scheduler is not enabled');
-                return null;
-            }
-            gpus = await this.gpuScheduler.schedule(
-                globals.args.experimentId,
-                trialId,
-                options.gpuNumber,
-                options.gpuRestrictions
-            );
-            if (gpus === null) {
-                this.log.info('No GPU available');
-                return null;
-            }
-        } else if (options.gpuNumber === 0) {
-            gpus = [];  // hide all gpus
+        const gpuEnv = await this.gpuScheduler.schedule(trialId, options.gpuNumber, options.gpuRestrictions);
+        if (gpuEnv === null) {
+            this.log.info('No GPU available');
+            return null;
         }
 
         // TODO: move this to globals.paths
@@ -127,16 +102,18 @@ export class TrialKeeper {
         });
         trial.onStop((timestamp, exitCode, _signal) => {
             this.emitter.emit('trial-stop', trialId, timestamp, exitCode);
+            this.gpuScheduler.release(trialId);  // TODO: fire and forget, handle exception?
         });
 
-        const procOptions = {
+        const procOptions: TrialProcessOptions = {
             command: options.command,
             codeDirectory: this.dirs.get(options.codeDirectoryName)!,
             outputDirectory: outputDir,
             commandChannelUrl: this.channels.getChannelUrl(trialId),
-            gpuIndices: gpus ?? undefined,  // change null to undefined
             platform: this.platform,
             sequenceId: options.sequenceId,
+            environmentVariables: gpuEnv,
+            //gpuIndices: gpus ?? undefined,  // change null to undefined
         }
 
         const success = await trial.spawn(procOptions);
@@ -152,8 +129,7 @@ export class TrialKeeper {
         await this.trials.get(trialId)!.kill();
     }
 
-    public async sendParameter(trialId: string, parameter: any): Promise<void> {
-        const command = { type: 'parameter', parameter };
+    public async sendCommand(trialId: string, command: Command): Promise<void> {
         this.channels.send(trialId, command);
     }
 
@@ -165,11 +141,7 @@ export class TrialKeeper {
         this.emitter.on('trial-stop', callback);
     }
 
-    public onRequestParameter(callback: (trialId: string) => void): void {
-        this.emitter.on('request-parameter', callback);
-    }
-
-    public onMetric(callback: (trialId: string, metric: any) => void): void {
-        this.emitter.on('metric', callback);
+    public onReceiveCommand(callback: (trialId: string, command: Command) => void): void {
+        this.emitter.on('command', callback);
     }
 }

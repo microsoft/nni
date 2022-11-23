@@ -22,9 +22,9 @@ export interface TrialProcessOptions {
     codeDirectory: string;
     outputDirectory: string;
     commandChannelUrl: string;
-    gpuIndices?: number[];
     platform: string;
     sequenceId?: number;
+    environmentVariables: Record<string, string>;
 }
 
 interface TrialProcessInfo {
@@ -151,7 +151,7 @@ export class TrialProcess {
 
     private buildEnv(opts: TrialProcessOptions): Record<string, string> {
         // TODO: use a config file instead of environment varaibles for better debuggability
-        const env: Record<string, string> = Object.assign({}, process.env as any);
+        const env: Record<string, string> = { ...(process.env as any), ...opts.environmentVariables };
         env['NNI_CODE_DIR'] = opts.codeDirectory;
         env['NNI_EXP_ID'] = globals.args.experimentId;
         env['NNI_OUTPUT_DIR'] = opts.outputDirectory;
@@ -160,9 +160,6 @@ export class TrialProcess {
         env['NNI_TRIAL_COMMAND_CHANNEL'] = opts.commandChannelUrl;
         env['NNI_TRIAL_JOB_ID'] = this.id;
         env['NNI_TRIAL_SEQ_ID'] = String(opts.sequenceId ?? -1);
-        if (opts.gpuIndices !== undefined) {
-            env['CUDA_VISIBLE_DEVICES'] = opts.gpuIndices.join(',');
-        }
         this.log.trace('Env:', env);
         return env;
     }
