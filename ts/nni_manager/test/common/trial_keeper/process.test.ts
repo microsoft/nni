@@ -32,7 +32,7 @@ describe('## trial keeper : trial process ##', () => {
  *    - The callbacks are invoked in correct order.
  **/
 async function testNormal() {
-    options.command = `python -c 'import os ; print(os.environ["NNI_TRIAL_JOB_ID"]) ; exit(2)'`;
+    options.command = `python -c "import os ; print(os.environ['NNI_TRIAL_JOB_ID']) ; exit(2)"`;
 
     const started = new Deferred<void>();
     let reportedStartTime: any = null;
