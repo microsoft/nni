@@ -73,9 +73,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.8954, Accuracy: 6995/10000 (70%)
-    Average test loss: 0.3259, Accuracy: 9046/10000 (90%)
-    Average test loss: 0.2125, Accuracy: 9354/10000 (94%)
+    Average test loss: 0.6440, Accuracy: 8230/10000 (82%)
+    Average test loss: 0.2512, Accuracy: 9272/10000 (93%)
+    Average test loss: 0.1569, Accuracy: 9542/10000 (95%)
 
 
 
@@ -122,7 +122,7 @@ finetuning the model by using QAT
 
 .. code-block:: default
 
-    from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+    from nni.compression.pytorch.quantization import QAT_Quantizer
     dummy_input = torch.rand(32, 1, 28, 28).to(device)
     quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input)
     quantizer.compress()
@@ -195,9 +195,9 @@ QAT is a training-aware quantizer, it will update scale and zero point during tr
 
  .. code-block:: none
 
-    Average test loss: 0.1858, Accuracy: 9438/10000 (94%)
-    Average test loss: 0.1420, Accuracy: 9564/10000 (96%)
-    Average test loss: 0.1213, Accuracy: 9632/10000 (96%)
+    Average test loss: 0.1209, Accuracy: 9629/10000 (96%)
+    Average test loss: 0.1032, Accuracy: 9696/10000 (97%)
+    Average test loss: 0.0909, Accuracy: 9736/10000 (97%)
 
 
 
@@ -226,7 +226,7 @@ export model and get calibration_config
 
  .. code-block:: none
 
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0039], device='cuda:0'), 'weight_zero_point': tensor([82.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0019], device='cuda:0'), 'weight_zero_point': tensor([127.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 18.87591552734375}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0010], device='cuda:0'), 'weight_zero_point': tensor([123.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 26.67470932006836}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0'), 'weight_zero_point': tensor([129.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 21.60409164428711}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 18.998125076293945}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 27.000442504882812}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 22.2519588470459}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 17.8553524017334}}
+    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0032], device='cuda:0'), 'weight_zero_point': tensor([92.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0022], device='cuda:0'), 'weight_zero_point': tensor([110.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 11.599255561828613}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0010], device='cuda:0'), 'weight_zero_point': tensor([113.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 26.364503860473633}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0013], device='cuda:0'), 'weight_zero_point': tensor([124.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 26.364498138427734}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 11.658699989318848}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 26.645591735839844}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 26.877971649169922}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 16.9318904876709}}
 
 
 
@@ -255,8 +255,8 @@ build tensorRT engine to make a real speedup, for more information about speedup
 
  .. code-block:: none
 
-    Loss: 0.12193695755004882  Accuracy: 96.38%
-    Inference elapsed_time (whole dataset): 0.036092281341552734s
+    Loss: 0.09197621383666992  Accuracy: 97.29%
+    Inference elapsed_time (whole dataset): 0.036701202392578125s
 
 
 
@@ -264,7 +264,7 @@ build tensorRT engine to make a real speedup, for more information about speedup
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  39.686 seconds)
+   **Total running time of the script:** ( 1 minutes  46.013 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_quick_start_mnist.py:

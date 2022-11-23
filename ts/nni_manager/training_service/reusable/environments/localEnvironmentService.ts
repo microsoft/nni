@@ -71,7 +71,7 @@ export class LocalEnvironmentService extends EnvironmentService {
                     }
                 }
             } catch (error) {
-                this.log.error(`Update job status exception, error is ${error.message}`);
+                this.log.error(`Update job status exception, error is ${(error as any).message}`);
             }
         });
     }
