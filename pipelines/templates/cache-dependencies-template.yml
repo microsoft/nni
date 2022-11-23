@@ -70,7 +70,7 @@ steps:
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'))
 
 - script: |
-    yarn --cwd ts/nni_manager install
+    npm --prefix ts/nni_manager install
   displayName: Install NNI Manager dependencies
 
 - script: |
