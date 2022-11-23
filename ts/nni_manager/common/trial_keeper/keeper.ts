@@ -56,6 +56,9 @@ export class TrialKeeper {
         this.channels = new HttpChannelServer(this.envId, `/env/${this.envId}`);
         this.channels.onReceive((trialId, command) => {
             this.emitter.emit('command', trialId, command);
+            if (command.type !== 'request_parameter' && command.type !== 'metric') {
+                this.log.warning(`Unexpected command from trial ${trialId}:`, command);
+            }
         });
     }
 
@@ -84,13 +87,13 @@ export class TrialKeeper {
     }
 
     // FIXME: the method name will be changed when we support distributed trials
-    public async createTrial(options: TrialKeeper.TrialOptions): Promise<string | null> {
+    public async createTrial(options: TrialKeeper.TrialOptions): Promise<boolean> {
         const trialId = options.id;
 
         const gpuEnv = await this.gpuScheduler.schedule(trialId, options.gpuNumber, options.gpuRestrictions);
         if (gpuEnv === null) {
             this.log.info('No GPU available');
-            return null;
+            return false;
         }
 
         // TODO: move this to globals.paths
@@ -119,9 +122,9 @@ export class TrialKeeper {
         const success = await trial.spawn(procOptions);
         if (success) {
             this.trials.set(trialId, trial);
-            return trialId;
+            return true;
         } else {
-            return null;
+            return false;
         }
     }
 
@@ -141,7 +144,11 @@ export class TrialKeeper {
         this.emitter.on('trial-stop', callback);
     }
 
-    public onReceiveCommand(callback: (trialId: string, command: Command) => void): void {
-        this.emitter.on('command', callback);
+    public onReceiveCommand(commandType: string, callback: (trialId: string, command: Command) => void): void {
+        this.emitter.on('command', (trialId, command) => {
+            if (command.type === commandType) {
+                callback(trialId, command);
+            }
+        });
     }
 }
