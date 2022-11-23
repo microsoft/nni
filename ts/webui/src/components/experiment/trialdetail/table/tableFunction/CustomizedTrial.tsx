@@ -157,7 +157,7 @@ const Customize = (props: CustomizeProps): any => {
             const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
             setCopyTrialParameter(originCopyTrialPara);
         }
-    // }, [copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined, copyTrialId]); // 报错
+        // }, [copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined, copyTrialId]); // 报错
     }, []);
     // 怀疑第二个条件 copyTrialId无效，可以去掉，是class组件更新的避坑写法, 必须实测
 
