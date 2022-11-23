@@ -12,7 +12,7 @@ import torch
 
 from nni.compression.pytorch.speedup.infer_mask import AutoMaskInference
 from nni.compression.pytorch.utils.attr import get_nested_attr
-from nni.compression.pytorch.utils.external.huggingface import parser_factory
+from nni.compression.pytorch.utils.external.huggingface import parser_factory, HuggingfaceModelParser
 
 _logger = logging.getLogger(__name__)
 
@@ -52,17 +52,32 @@ class CustomizedReplacor:
 
 
 class TransformersAttentionReplacor(CustomizedReplacor):
-    def __init__(self, model) -> None:
-        self.parser = parser_factory(model)
+    """
+    This replacor is used to prune huggingface transformers attention heads,
+    it base on ``HuggingfaceModelParser`` to find the attention module,
+    and prune heads with attention module built-in ``prune_heads`` interface.
+
+    Parameters
+    ----------
+    model
+        The transformer model, now nni officially support bert, bart, t5, vit.
+    parser
+        The model parser used to find the attention module.
+        If the model passed in is not bert, bart, t5 or vit,
+        please inherit ``nni.compression.pytorch.utils.external.huggingface.HuggingfaceModelParser``
+        to customize a new model parser and pass in.
+    """
+    def __init__(self, model: torch.nn.Module, parser: HuggingfaceModelParser | None = None):
+        self.parser = parser_factory(model) if parser is None else parser
         if self.parser is None:
             err_msg = f'Can not get the model parser of {type(model)}'
             raise RuntimeError(err_msg)
 
-    def replace_modules(self, model, auto_inferences: Dict[str, AutoMaskInference]):
+    def replace_modules(self, model: torch.nn.Module, auto_inferences: Dict[str, AutoMaskInference]):
         # Note: This replace function base on prune_heads interface in Huggingface transformers.
         attention_name_dict = defaultdict(list)
         attention_patterns = [self.parser.TRANSFORMER_PREFIX + att_p for att_p in self.parser.ATTENTION]
-        # find layers who has attention layer name prefix
+        # find layers which has attention layer name prefix
         for unique_name, _ in auto_inferences.items():
             if self.parser.is_attention(unique_name):
                 for attention_pattern in attention_patterns:
@@ -70,6 +85,7 @@ class TransformersAttentionReplacor(CustomizedReplacor):
                     attention_name_dict[attention_layer_name].append(unique_name)
         # prune heads
         for attention_layer_name, qkvo_names in attention_name_dict.items():
+            # qkvo_flatten_head_mask is the sum of qkv output mask and o input mask
             qkvo_flatten_head_mask: torch.Tensor | None = None
             for name in qkvo_names:
                 if _endwith(name, self.parser.QKVO):

@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 import logging
 import re
 from typing import Tuple
@@ -22,32 +24,6 @@ else:
 from nni.algorithms.compression.v2.pytorch.utils.attr import get_nested_attr
 
 _logger = logging.getLogger(__name__)
-
-
-# huggingface transformers pretrained model parser supported: bart, bert, t5
-def parser_factory(model: Module) -> HuggingfaceModelParser | None:
-    if TRANSFORMERS_INSTALLED and isinstance(model, PreTrainedModel):
-        cls2parser = {
-            BartConfig: HuggingfaceBartParser,
-            BertConfig: HuggingfaceBertParser,
-            T5Config: HuggingfaceT5Parser
-        }
-        type2parser = {
-            'bart': HuggingfaceBartParser,
-            'bert': HuggingfaceBertParser,
-            't5': HuggingfaceT5Parser
-        }
-
-        if hasattr(model, 'config_class'):
-            parser = cls2parser.get(getattr(model, 'config_class'))
-        elif hasattr(model, 'model_type'):
-            parser = type2parser.get(getattr(model, 'model_type'))
-        else:
-            parser = None
-
-        return parser
-    else:
-        return None
 
 
 class HuggingfaceModelParser:
@@ -145,3 +121,29 @@ class HuggingfaceT5Parser(HuggingfaceModelParser):
     FFN1 = ('DenseReluDense.wi',)
     FFN2 = ('DenseReluDense.wo',)
     ATTENTION = ('SelfAttention', 'EncDecAttention')
+
+
+# huggingface transformers pretrained model parser supported: bart, bert, t5
+def parser_factory(model: Module) -> HuggingfaceModelParser | None:
+    if TRANSFORMERS_INSTALLED and isinstance(model, PreTrainedModel):
+        cls2parser = {
+            BartConfig: HuggingfaceBartParser,
+            BertConfig: HuggingfaceBertParser,
+            T5Config: HuggingfaceT5Parser
+        }
+        type2parser = {
+            'bart': HuggingfaceBartParser,
+            'bert': HuggingfaceBertParser,
+            't5': HuggingfaceT5Parser
+        }
+
+        if hasattr(model, 'config_class'):
+            parser = cls2parser.get(getattr(model, 'config_class'))
+        elif hasattr(model, 'model_type'):
+            parser = type2parser.get(getattr(model, 'model_type'))
+        else:
+            parser = None
+
+        return parser
+    else:
+        return None
