@@ -19,6 +19,7 @@ import { Logger, getLogger } from 'common/log';
 
 export interface TrialProcessOptions {
     command: string;
+    shell?: string;
     codeDirectory: string;
     outputDirectory: string;
     commandChannelUrl: string;
@@ -54,8 +55,12 @@ export class TrialProcess {
      *  Note that the trial is considered "success" here even if the trial command is ill-formed
      *  or it returns non-zero code immediately.
      *
-     *  This is because the command is run in a shell
-     *  and this method only checks if the shell is successfully launched.
+     *  This is because the command is run in a shell and
+     *  this method only checks if the shell is successfully launched.
+     *
+     *  If `options.shell` is empty or not set, it will use "/bin/bash" on UNIX,
+     *  or "ComSpec" environment variable on Windows (default behavior of Node.js).
+     *  When the shell is powershell, the exit code is likely to be 0/1 instead of concrete number.
      **/
     public async spawn(options: TrialProcessOptions): Promise<boolean> {
         // might change for log collection
@@ -63,11 +68,18 @@ export class TrialProcess {
         const stderr = fs.createWriteStream(path.join(options.outputDirectory, 'trial.stderr'));
         await Promise.all([ events.once(stdout, 'open'), events.once(stderr, 'open') ]);
 
+        let shell: string | boolean = true;
+        if (options.shell) {
+            shell = options.shell;
+        } else if (process.platform !== 'win32') {
+            shell = '/bin/bash';
+        }
+
         const spawnOptions: SpawnOptions = {
             cwd: options.codeDirectory,
             env: this.buildEnv(options),
             stdio: [ 'ignore', stdout, stderr ],
-            shell: (process.platform === 'win32' ? true : '/bin/bash'),
+            shell: shell,
         };
 
         this.proc = child_process.spawn(options.command, spawnOptions);
@@ -142,6 +154,8 @@ export class TrialProcess {
      *
      *  If the trial stopped proactively (including exited during a SIGINT handler),
      *  exitCode will be a number; otherwise it will be null.
+     *
+     *  Note: When the shell is powershell, the exit code is likely to be 0/1 instead of concrete number.
      **/
     public onStop(callback: (timestamp: number, exitCode: number | null, signal: string | null) => void): void {
         this.stopped.promise.then(() => {

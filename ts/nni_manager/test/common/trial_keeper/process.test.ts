@@ -63,7 +63,11 @@ async function testNormal() {
     await started.promise;
     await stopped.promise;
 
-    assert.equal(exitCode, 2);
+    if (process.platform === 'win32') {
+        assert.notEqual(exitCode, 0);
+    } else {
+        assert.equal(exitCode, 2);
+    }
 
     assert.ok(reportedStartTime < reportedStopTime);
     assert.ok(realStartTime < realStopTime);
