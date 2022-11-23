@@ -72,7 +72,14 @@ steps:
 - script: |
     cd ts/nni_manager
     npm install
-  displayName: Install NNI Manager dependencies
+  displayName: Install NNI manager dependencies
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'legacy')))
+
+- script: |
+    # make pack_dependencies.py happy
+    mkdir ts/nni_manager/node_modules
+  displayName: (Legacy) Skip NNI manager dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
 
 - script: |
     yarn --cwd ts/webui install
