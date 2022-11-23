@@ -755,11 +755,19 @@ class ActivationPruner(EvaluatorBasedPruner):
                 _module = _module.module
             batch_dims, batch_num = get_output_batch_dims(output, _module)  # type: ignore
             activation = self._activation_trans(output, batch_dims)
+            if self.is_ddp_model:
+                import torch.distributed as dist
+                batch_num = torch.tensor([batch_num]).to(activation.device)
+                activation = activation.clone()
+
+                dist.all_reduce(batch_num, op=dist.ReduceOp.SUM)
+                dist.all_reduce(activation, op=dist.ReduceOp.SUM)
+
             if len(buffer) == 1:
                 buffer.append(torch.zeros_like(activation))
             if buffer[0] < self.training_steps:
                 buffer[1] += activation.to(buffer[1].device)  # type: ignore
-                buffer[0] += batch_num
+                buffer[0] += batch_num.item()
         return collect_activation
 
     def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
@@ -1023,6 +1031,12 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
         buffer.append(0)
 
         def collect_taylor(grad: Tensor):
+            if self.is_ddp_model:
+                import torch.distributed as dist
+                grad = grad.clone()
+                size = dist.get_world_size()
+                dist.all_reduce(grad, op=dist.ReduceOp.SUM)
+                grad /= size
             if len(buffer) == 1:
                 buffer.append(torch.zeros_like(grad))
             if buffer[0] < self.training_steps:
@@ -1077,7 +1091,7 @@ class ADMMPruner(EvaluatorBasedPruner):
     __doc__ = r"""
     Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
     by decomposing the original nonconvex problem into two subproblems that can be solved iteratively.
-    In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively. 
+    In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively.
 
     During the process of solving these two subproblems, the weights of the original model will be changed.
     Then a fine-grained pruning will be applied to prune the model according to the config list given.

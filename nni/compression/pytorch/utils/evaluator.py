@@ -32,6 +32,7 @@ else:
 import nni
 from nni.common import is_traceable
 from .constructor_helper import OptimizerConstructHelper, LRSchedulerConstructHelper
+from .check_ddp import check_ddp_model, reset_ddp_model
 
 _logger = logging.getLogger(__name__)
 
@@ -180,6 +181,13 @@ class Evaluator:
         Unbind the model bound by ``bind_model``. Then ``Evaluator`` can be reused by binding a new model by `bind_model`.
         """
         raise NotImplementedError
+
+    def rewrap_ddp_model(self, model):
+        errmsg = "model is None, no need to rewrap model to DistributedDatapallel model"
+        assert model is not None, errmsg
+        is_ddp_model, ddp_params = check_ddp_model(model)
+
+        return reset_ddp_model(model, ddp_params) if is_ddp_model else model
 
     def patch_loss(self, patch: Callable[[Tensor], Tensor]):
         """
@@ -394,7 +402,7 @@ class LightningEvaluator(Evaluator):
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
 
-        self.model = model
+        self.model = self.rewrap_ddp_model(model)
         self._ori_model_attr.update({
             'training_step': model.training_step,
             'configure_optimizers': model.configure_optimizers,
@@ -694,7 +702,7 @@ class TorchEvaluator(Evaluator):
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
 
-        self.model = model
+        self.model = self.rewrap_ddp_model(model)
         self._param_names_map = param_names_map
         # initialize optimizers & lr_schedulers for the bound model here
         self._optimizers = [helper.call(model, param_names_map) for helper in self._optimizer_helpers]
@@ -861,7 +869,7 @@ class TransformersEvaluator(Evaluator):
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
 
-        self.model = model
+        self.model = self.rewrap_ddp_model(model)
 
         # re-initialized Trainer
         args = list(self.traced_trainer.trace_args)
