@@ -755,9 +755,10 @@ class ActivationPruner(EvaluatorBasedPruner):
                 _module = _module.module
             batch_dims, batch_num = get_output_batch_dims(output, _module)  # type: ignore
             activation = self._activation_trans(output, batch_dims)
+            batch_num = torch.tensor([batch_num]).to(activation.device)
             if self.is_ddp_model:
                 import torch.distributed as dist
-                batch_num = torch.tensor([batch_num]).to(activation.device)
+                batch_num = batch_num.clone()
                 activation = activation.clone()
 
                 dist.all_reduce(batch_num, op=dist.ReduceOp.SUM)
