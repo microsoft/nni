@@ -44,7 +44,7 @@ export class RestManager {
     }
 
     public getFullUrl(protocol: string, ...parts: string[]): string {
-        const root = `${protocol}://localhost:${global.nni.args.port}/`;
+        const root = `${protocol}://127.0.0.1:${global.nni.args.port}/`;
         return root + this.urlJoin(global.nni.args.urlPrefix, ...parts);
     }
 }

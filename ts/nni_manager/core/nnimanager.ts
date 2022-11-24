@@ -506,9 +506,9 @@ class NNIManager implements Manager {
 
         let tunerWs: string;
         if (globals.args.urlPrefix) {
-            tunerWs = `ws://localhost:${globals.args.port}/${globals.args.urlPrefix}/tuner`;
+            tunerWs = `ws://127.0.0.1:${globals.args.port}/${globals.args.urlPrefix}/tuner`;
         } else {
-            tunerWs = `ws://localhost:${globals.args.port}/tuner`;
+            tunerWs = `ws://127.0.0.1:${globals.args.port}/tuner`;
         }
 
         if (globals.args.tunerCommandChannel) {
