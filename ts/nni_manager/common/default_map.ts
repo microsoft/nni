@@ -2,18 +2,7 @@
 // Licensed under the MIT license.
 
 export class DefaultMap<K, V> extends Map<K, V> {
-    constructor(_defaultFactory: any) {
-        super();
-    }
-
-    public get(key: K): V {
-        return key as any;
-    }
-}
-
-/*
-export class DefaultMap<K, V> extends Map<K, V> {
-    private defaultFactory() => V;
+    private defaultFactory: () => V;
 
     constructor(defaultFactory: () => V) {
         super();
@@ -26,9 +15,8 @@ export class DefaultMap<K, V> extends Map<K, V> {
             return value;
         }
 
-        const default = this.defaultFactory();
-        this.set(key, default);
-        return default;
+        const defaultValue = this.defaultFactory();
+        this.set(key, defaultValue);
+        return defaultValue;
     }
 }
-*/

@@ -36,6 +36,11 @@ export class LocalTrainingServiceV3 implements TrainingServiceV3 {
         this.log.info('All trials stopped');
     }
 
+    /**
+     *  Note:
+     *  The directory is not copied, so changes in code directory will affect new trials.
+     *  This is different from all other training services.
+     **/
     public async uploadDirectory(directoryName: string, path: string): Promise<void> {
         this.log.info(`Register directory ${directoryName} = ${path}`);
         this.trialKeeper.registerDirectory(directoryName, path);
