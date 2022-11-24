@@ -39,7 +39,7 @@ async function testStart(): Promise<void> {
         serverReceivedCommands[channelId].push(command);
     });
     await server.start();
-    assert.equal(server.getChannelUrl('1'), `http://localhost:${port}/ut/1`);
+    assert.equal(server.getChannelUrl('1'), `http://127.0.0.1:${port}/ut/1`);
 }
 
 async function testReceive(id: string): Promise<void> {

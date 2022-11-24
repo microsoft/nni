@@ -39,7 +39,7 @@ describe('Unit test for rest handler', () => {
         restServer = new RestServer(0, '');
         await restServer.start();
         const port = UnitTestHelpers.getPort(restServer);
-        ROOT_URL = `http://localhost:${port}/api/v1/nni`;
+        ROOT_URL = `http://127.0.0.1:${port}/api/v1/nni`;
         globals.rest.registerExpressRouter('/api/v1/nni', createRestHandler());
     });
 

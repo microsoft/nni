@@ -120,7 +120,7 @@ class Client {
     constructor(name: string) {
         this.name = name;
         const port = (server.address() as any).port;
-        this.ws = new WebSocket(`ws://localhost:${port}`);
+        this.ws = new WebSocket(`ws://127.0.0.1:${port}`);
         this.ws.on('message', (data, _isBinary) => {
             this.received.push(data.toString());
         });

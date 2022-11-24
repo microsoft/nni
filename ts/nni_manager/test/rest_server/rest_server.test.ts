@@ -117,7 +117,7 @@ async function beforeHook() {
     await configRestServer();
 
     const netronPort = await mock_netron_server.start();
-    netronHost = `localhost:${netronPort}`;
+    netronHost = `127.0.0.1:${netronPort}`;
     UnitTestHelpers.setNetronUrl('http://' + netronHost);
 }
 
@@ -140,7 +140,7 @@ async function configRestServer(urlPrefix?: string): Promise<void> {
     await restServer.start();
     const port = UnitTestHelpers.getPort(restServer);
 
-    endPointWithoutPrefix = `http://localhost:${port}`;
+    endPointWithoutPrefix = `http://127.0.0.1:${port}`;
     endPoint = urlJoin(endPointWithoutPrefix, urlPrefix ?? '');
 }
 
