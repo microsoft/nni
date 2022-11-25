@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Stack, PrimaryButton, Toggle, IStackTokens } from '@fluentui/react';
-import { TooltipForIntermediate, EventMap, AllTrialsIntermediateChart } from '@static/interface';
+import { TooltipForIntermediate, AllTrialsIntermediateChart } from '@static/interface';
 import { reformatRetiariiParameter } from '@static/function';
 import ReactEcharts from 'echarts-for-react';
 import 'echarts/lib/component/tooltip';
@@ -19,36 +19,16 @@ const Intermediate = (props: IntermediateProps): any => {
     let minValInput!: HTMLInputElement | null;
     let maxValInput!: HTMLInputElement | null;
 
-    const [detailSource, setDetailSource] = useState([] as AllTrialsIntermediateChart[]);
+    // const [detailSource, setDetailSource] = useState([] as AllTrialsIntermediateChart[]);
     const [interSource, setInterSource] = useState({} as object);
     const [filterSource, setFilterSource] = useState([] as AllTrialsIntermediateChart[]);
-    const [eachIntermediateNum, setEachIntermediateNum] = useState(1 as number);
+    // const [eachIntermediateNum, setEachIntermediateNum] = useState(1 as number);
     const [isLoadconfirmBtn, setIsLoadconfirmBtn] = useState(false as boolean);
     const [isFilter, setIsFilter] = useState(false as boolean);
-    const [length, setLength] = useState(100000 as number);
-    // const [startMediaY, setStartMediaY] = useState(0 as number);
-    // const [endMediaY, setEndMediaY] = useState(100 as number);
-
     const { source } = props;
-
-    useEffect(() => {
-        if (isFilter === true) {
-            const pointVal = pointInput !== null ? pointInput.value : '';
-            const minVal = minValInput !== null ? minValInput.value : '';
-            if (pointVal === '' && minVal === '') {
-                drawIntermediate(source);
-            } else {
-                drawIntermediate(filterSource);
-            }
-        } else {
-            drawIntermediate(source);
-        }
-    }, [isFilter, source]); // TODO: filter变化，source变化，测试
 
     const drawIntermediate = (source: AllTrialsIntermediateChart[]): void => {
         if (source.length > 0) {
-            setLength(source.length);
-            setDetailSource(source)
             const xAxis: number[] = [];
             // find having most intermediate number
             source.sort((a, b) => {
@@ -78,10 +58,10 @@ const Intermediate = (props: IntermediateProps): any => {
                                 <div>Trial ID: ${trialId}</div>
                                 <div>Intermediate: ${data.data}</div>
                                 <div>Parameters: <pre>${JSON.stringify(
-                            reformatRetiariiParameter(parameter),
-                            null,
-                            4
-                        )}</pre>
+                                    reformatRetiariiParameter(parameter),
+                                    null,
+                                    4
+                                )}</pre>
                                 </div>
                             </div>
                         `;
@@ -175,13 +155,20 @@ const Intermediate = (props: IntermediateProps): any => {
             drawIntermediate(props.source);
         }
     };
-    // const intermediateDataZoom = (e: EventMap): void => {
-    //     if (e.batch !== undefined) {
-    //         setStartMediaY(e.batch[0].start !== null ? e.batch[0].start : 0);
-    //         setEndMediaY(e.batch[0].end !== null ? e.batch[0].end : 100);
-    //     }
-    // };
-    // const IntermediateEvents = { dataZoom: intermediateDataZoom };
+
+    useEffect(() => {
+        if (isFilter === true) {
+            const pointVal = pointInput !== null ? pointInput.value : '';
+            const minVal = minValInput !== null ? minValInput.value : '';
+            if (pointVal === '' && minVal === '') {
+                drawIntermediate(source);
+            } else {
+                drawIntermediate(filterSource);
+            }
+        } else {
+            drawIntermediate(source);
+        }
+    }, [isFilter, source]); // TODO: filter变化，source变化，测试
 
     return (
         <div>
@@ -221,7 +208,6 @@ const Intermediate = (props: IntermediateProps): any => {
                     option={interSource}
                     style={{ width: '100%', height: 400, margin: '0 auto' }}
                     notMerge={true} // update now
-                    // onEvents={IntermediateEvents}
                 />
                 <div className='fontColor333 xAxis'># Intermediate result</div>
             </div>

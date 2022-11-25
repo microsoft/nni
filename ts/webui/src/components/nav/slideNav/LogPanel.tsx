@@ -8,6 +8,32 @@ import '@style/logPanel.scss';
 
 // TODO: the same as the file ExperimentSummaryPanel.tsx, should clear the timerIdList rather than only the timer Id
 
+// child component
+interface PivotProps {
+    content: string;
+    loading: boolean;
+    height: number;
+    downloadLog: () => void;
+    close: () => void;
+}
+
+export const PivotItemContent = (props: PivotProps): any => {
+    const { content, loading, height, downloadLog, close } = props;
+    return (
+        <div className='panel logMargin'>
+            <MonacoHTML content={content || 'Loading...'} loading={loading} height={height} />
+            <Stack horizontal className='buttons'>
+                <StackItem grow={12} className='download'>
+                    <PrimaryButton text='Download' onClick={downloadLog} />
+                </StackItem>
+                <StackItem grow={12} className='close'>
+                    <DefaultButton text='Close' onClick={close} />
+                </StackItem>
+            </Stack>
+        </div>
+    );
+};
+
 interface LogPanelProps {
     closePanel: () => void;
     activeTab?: string;
@@ -63,7 +89,7 @@ const LogPanel = (props: LogPanelProps): any => {
         return function () {
             window.clearTimeout(timerId);
             window.removeEventListener('resize', setLogPanelHeight);
-        }
+        };
     }, []);
 
     const { closePanel, activeTab } = props;
@@ -104,33 +130,4 @@ const LogPanel = (props: LogPanelProps): any => {
     );
 };
 
-// child component
-interface PivotProps {
-    content: string;
-    loading: boolean;
-    height: number;
-    downloadLog: () => void;
-    close: ()=> void;
-}
-
-export const PivotItemContent = (props: PivotProps): any => {
-    const {content, loading, height, downloadLog, close} = props;
-    return (
-        <div className='panel logMargin'>
-            <MonacoHTML
-                content={content || 'Loading...'}
-                loading={loading}
-                height={height}
-            />
-            <Stack horizontal className='buttons'>
-                <StackItem grow={12} className='download'>
-                    <PrimaryButton text='Download' onClick={downloadLog} />
-                </StackItem>
-                <StackItem grow={12} className='close'>
-                    <DefaultButton text='Close' onClick={close} />
-                </StackItem>
-            </Stack>
-        </div>
-    );
-}
 export default LogPanel;

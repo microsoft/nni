@@ -19,16 +19,8 @@ interface LogPanelProps {
  * model
  */
 
-// init const 
- const blacklist = [
-    'id',
-    'logDir',
-    'startTime',
-    'endTime',
-    'experimentName',
-    'searchSpace',
-    'trainingServicePlatform'
-];
+// init const
+const blacklist = ['id', 'logDir', 'startTime', 'endTime', 'experimentName', 'searchSpace', 'trainingServicePlatform'];
 
 const TrialConfigPanel = (props: LogPanelProps): any => {
     const [panelInnerHeight, setPanelInnerHeight] = useState(window.innerHeight as number);
@@ -42,10 +34,10 @@ const TrialConfigPanel = (props: LogPanelProps): any => {
 
     useEffect(() => {
         window.addEventListener('resize', setLogPanelHeight);
-        return function() {
+        return function () {
             window.removeEventListener('resize', setLogPanelHeight);
-        }
-    },[]);
+        };
+    }, []);
 
     const { hideConfigPanel, panelName } = props;
     const monacoEditorHeight = caclMonacoEditorHeight(panelInnerHeight);

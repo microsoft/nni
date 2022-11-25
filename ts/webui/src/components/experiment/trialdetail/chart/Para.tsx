@@ -32,7 +32,7 @@ const innerChartMargins = {
     left: 28
 };
 
-// TODO: class 全局变量，需要调试 
+// TODO: class 全局变量，需要调试
 let pcs: any;
 
 const Para = (props: ParaProps) => {
@@ -44,11 +44,13 @@ const Para = (props: ParaProps) => {
     const [noChart, setNoChart] = useState(true);
     const [customizeColumnsDialogVisible, setCustomizeColumnsDialogVisible] = useState(false);
     const [availableDimensions, setAvailableDimensions] = useState([] as string[]);
-    const [chosenDimensions, setChosenDimensions] = useState(localStorage.getItem(`${EXPERIMENT.profile.id}_paraColumns`) !== null &&
-        getValue(`${EXPERIMENT.profile.id}_paraColumns`) !== null
-        ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        JSON.parse(getValue(`${EXPERIMENT.profile.id}_paraColumns`)!)
-        : []);
+    const [chosenDimensions, setChosenDimensions] = useState(
+        localStorage.getItem(`${EXPERIMENT.profile.id}_paraColumns`) !== null &&
+            getValue(`${EXPERIMENT.profile.id}_paraColumns`) !== null
+            ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              JSON.parse(getValue(`${EXPERIMENT.profile.id}_paraColumns`)!)
+            : []
+    );
 
     // get percent value number
     const percentNum = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
@@ -68,7 +70,7 @@ const Para = (props: ParaProps) => {
     // select all final keys
     const updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
-            setPrimaryMetricKey(item.key)
+            setPrimaryMetricKey(item.key);
         }
     };
 
@@ -96,7 +98,7 @@ const Para = (props: ParaProps) => {
                 </div>
             );
         }
-    }
+    };
 
     const getTrialsAsObjectList = (inferredSearchSpace: MultipleAxes, inferredMetricSpace: MultipleAxes): {}[] => {
         return trials.map(s => {
@@ -108,7 +110,15 @@ const Para = (props: ParaProps) => {
             }
             return ret;
         });
-    }
+    };
+
+    const getRange = (): [number, number] => {
+        // Documentation is lacking.
+        // Reference: https://github.com/syntagmatic/parallel-coordinates/issues/308
+        // const range = this.pcs.height() - this.pcs.margin().top - this.pcs.margin().bottom;
+        const range = chartMulineStyle.height - innerChartMargins.top - innerChartMargins.bottom;
+        return [range, 1];
+    };
 
     const convertToD3Scale = (axis: SingleAxis, initRange: boolean = true): any => {
         const padLinear = ([x0, x1], k = 0.1): [number, number] => {
@@ -136,25 +146,17 @@ const Para = (props: ParaProps) => {
             scaleInst = scaleInst.range(getRange());
         }
         return scaleInst;
-    }
-
-    const getRange = (): [number, number] => {
-        // Documentation is lacking.
-        // Reference: https://github.com/syntagmatic/parallel-coordinates/issues/308
-        // const range = this.pcs.height() - this.pcs.margin().top - this.pcs.margin().bottom;
-        const range = chartMulineStyle.height - innerChartMargins.top - innerChartMargins.bottom;
-        return [range, 1];
-    }
+    };
 
     const _updateDisplayedColumns = (displayedColumns: string[]): void => {
         setChosenDimensions(displayedColumns);
-    }
+    };
     /**
-    * Render the parallel coordinates. Using trial data as base and leverage
-    * information from search space at a best effort basis.
-    * @param source Array of trial data
-    * @param searchSpace Search space
-    */
+     * Render the parallel coordinates. Using trial data as base and leverage
+     * information from search space at a best effort basis.
+     * @param source Array of trial data
+     * @param searchSpace Search space
+     */
     const renderParallelCoordinates = (): void => {
         const percent = parseFloat(selectedPercent);
         const inferredSearchSpace = TRIALS.inferredSearchSpace(searchSpace);
@@ -226,17 +228,14 @@ const Para = (props: ParaProps) => {
         if (firstRun) {
             pcs = ParCoords()(paraRef.current);
         }
-        pcs
-            .data(convertedTrials)
-            .dimensions(
-                dimensions
-                    .filter(([d, _]) => chosenDimensions.length === 0 || chosenDimensions.includes(d))
-                    .reduce((obj, entry) => ({ ...obj, [entry[0]]: entry[1] }), {})
-            );
+        pcs.data(convertedTrials).dimensions(
+            dimensions
+                .filter(([d, _]) => chosenDimensions.length === 0 || chosenDimensions.includes(d))
+                .reduce((obj, entry) => ({ ...obj, [entry[0]]: entry[1] }), {})
+        );
 
         if (firstRun) {
-            pcs
-                .margin(innerChartMargins)
+            pcs.margin(innerChartMargins)
                 .alphaOnBrushed(0.2)
                 .smoothness(0.1)
                 .brushMode('1D-axes')
@@ -254,7 +253,7 @@ const Para = (props: ParaProps) => {
 
         // set new available dims
         setAvailableDimensions(dimensions.map(e => e[0]));
-    }
+    };
 
     useEffect(() => {
         // FIXME: redundant update(comment for componentDidUpdate)
@@ -262,7 +261,7 @@ const Para = (props: ParaProps) => {
         // return function clearPCS() {
         //     pcs = undefined;
         // };
-    // }, [chosenDimensions, selectedPercent, userSelectOptimizeMode, primaryMetricKey, trials, searchSpace]); // 百分比变化触发页面更新
+        // }, [chosenDimensions, selectedPercent, userSelectOptimizeMode, primaryMetricKey, trials, searchSpace]); // 百分比变化触发页面更新
     }, [chosenDimensions, selectedPercent, metricGraphMode, primaryMetricKey, trials, searchSpace]); // 百分比变化触发页面更新
 
     return (
@@ -271,7 +270,7 @@ const Para = (props: ParaProps) => {
                 <DefaultButton
                     text='Add/Remove axes'
                     onClick={(): void => {
-                        setCustomizeColumnsDialogVisible(true)
+                        setCustomizeColumnsDialogVisible(true);
                     }}
                     styles={{ root: { marginRight: 10 } }}
                 />

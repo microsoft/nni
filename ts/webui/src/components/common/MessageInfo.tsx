@@ -15,7 +15,6 @@ const MessageInfo = (props: MessageInfoProps): any => {
             {info}
         </MessageBar>
     );
-
 };
 
 export default MessageInfo;

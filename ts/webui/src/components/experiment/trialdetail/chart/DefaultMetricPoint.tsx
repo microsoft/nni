@@ -41,10 +41,10 @@ const formatAccuracy = (accuracy: number | undefined): number => {
         return 0;
     }
     return accuracy;
-}
+};
 
 const generateGraphConfig = (hasBestCurve: boolean, finalKey: string): any => {
-    return{
+    return {
         grid: {
             left: '8%'
         },
@@ -54,14 +54,16 @@ const generateGraphConfig = (hasBestCurve: boolean, finalKey: string): any => {
             confine: true, // confirm always show tooltip box rather than hidden by background
             formatter: (data: TooltipForAccuracy): React.ReactNode => `
                 <div class="tooldetailAccuracy">
-                    <div>Trial No.: ${data.data[0]}</div>
-                    <div>Trial ID: ${data.data[2]}</div>
-                    <div>${finalKey}: ${data.data[1]}</div>
-                    <div>Parameters: <pre>${JSON.stringify(
+                    <div class='trial-No'>No. ${data.data[0]}</div>
+                    <div class='main'>
+                    <div><span>Trial ID: </span>${data.data[2]}</div>
+                    <div><span>${finalKey}: </span>${data.data[1]}</div>
+                    <div><span>Parameters: </span><pre>${JSON.stringify(
                         reformatRetiariiParameter(data.data[3]),
                         null,
                         4
                     )}</pre></div>
+                    <div>
                 </div>
             `
         },
@@ -84,17 +86,30 @@ const generateGraphConfig = (hasBestCurve: boolean, finalKey: string): any => {
             scale: true
         },
         series: undefined
-}};
+    };
+};
 
-const generateGraph = (trialIds: string[], hasBestCurve: boolean, finalKey: string, bestCurveEnabled: boolean, optimizeMode: string): any => {
+const generateGraph = (
+    trialIds: string[],
+    hasBestCurve: boolean,
+    finalKey: string,
+    bestCurveEnabled: boolean,
+    optimizeMode: string
+): any => {
     const trials = TRIALS.getTrials(trialIds).filter(trial => trial.sortable);
     if (trials.length === 0) {
         return EmptyGraph;
     }
     const graph = generateGraphConfig(hasBestCurve, finalKey);
     if (bestCurveEnabled) {
-        (graph as any).series = [generateBestCurveSeries(trials, finalKey, optimizeMode), generateScatterSeries(trials, finalKey)];
+        (graph as any).series = [
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            generateBestCurveSeries(trials, finalKey, optimizeMode),
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            generateScatterSeries(trials, finalKey)
+        ];
     } else {
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         (graph as any).series = [generateScatterSeries(trials, finalKey)];
     }
     return graph;
@@ -111,12 +126,7 @@ const generateScatterSeries = (trials: Trial[], finalKey: string): any => {
             trial.parameter
         ]);
     } else {
-        data = trials.map(trial => [
-            trial.sequenceId,
-            formatAccuracy(trial.accuracy),
-            trial.id,
-            trial.parameter
-        ]);
+        data = trials.map(trial => [trial.sequenceId, formatAccuracy(trial.accuracy), trial.id, trial.parameter]);
     }
 
     return {
@@ -129,12 +139,7 @@ const generateScatterSeries = (trials: Trial[], finalKey: string): any => {
 const generateBestCurveSeries = (trials: Trial[], finalKey: string, optimizeMode: string): any => {
     let best = trials[0];
     const data = [
-        [
-            best.sequenceId,
-            best.acc === undefined ? 0 : formatAccuracy(best.acc[finalKey]),
-            best.id,
-            best.parameter
-        ]
+        [best.sequenceId, best.acc === undefined ? 0 : formatAccuracy(best.acc[finalKey]), best.id, best.parameter]
     ];
     for (let i = 1; i < trials.length; i++) {
         const trial = trials[i];
@@ -286,7 +291,7 @@ const DefaultPoint = (props: DefaultPointProps) => {
     if (trials.length > 0) {
         dictDropdown = trials[0].accuracyNumberTypeDictKeys;
     }
-    
+
     return (
         <div>
             {hasBestCurve && (
@@ -324,9 +329,11 @@ const DefaultPoint = (props: DefaultPointProps) => {
                     theme='nni_theme'
                     // notMerge={true} // update now
                     lazyUpdate={true}
-                    onEvents={{click: pointClick}}
+                    onEvents={{ click: pointClick }}
                 />
-                <div className='default-metric-noData fontColor333'>{defaultMetricOption === EmptyGraph ? 'No data' : ''}</div>
+                <div className='default-metric-noData fontColor333'>
+                    {defaultMetricOption === EmptyGraph ? 'No data' : ''}
+                </div>
             </div>
         </div>
     );

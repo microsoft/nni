@@ -19,35 +19,61 @@ interface CustomizeProps {
     closeCustomizeModal: () => void;
 }
 
-interface CustomizeState {
-    isShowSubmitSucceed: boolean;
-    isShowSubmitFailed: boolean;
-    isShowWarning: boolean;
-    searchSpace: object;
-    copyTrialParameter: object; // user click the trial's parameters
-    customParameters: object; // customized trial, maybe user change trial's parameters
-    customID: number; // submit customized trial succeed, return the new customized trial id
-    changeMap: Map<string, string | number>; // store change key: value
-}
+// interface CustomizeState {
+//     isShowSubmitSucceed: boolean;
+//     isShowSubmitFailed: boolean;
+//     isShowWarning: boolean;
+//     searchSpace: object;
+//     copyTrialParameter: object; // user click the trial's parameters
+//     customParameters: object; // customized trial, maybe user change trial's parameters
+//     customID: number; // submit customized trial succeed, return the new customized trial id
+//     changeMap: Map<string, string | number>; // store change key: value
+// }
 const warning =
-            'The parameters you set are not in our search space, this may cause the tuner to crash, Are' +
-            ' you sure you want to continue submitting?';
+    'The parameters you set are not in our search space, this may cause the tuner to crash, Are' +
+    ' you sure you want to continue submitting?';
 
-const Customize = ((props: CustomizeProps): any => {
-    const {closeCustomizeModal,copyTrialId,visible} = props;
+const Customize = (props: CustomizeProps): any => {
+    const { closeCustomizeModal, copyTrialId, visible } = props;
     const searchSpace = EXPERIMENT.searchSpace;
     // const [searchSpace, setSearchSpace] = useState(EXPERIMENT.searchSpace);
     const [isShowSubmitSucceed, setIsShowSubmitSucceed] = useState(false);
-    const [isShowSubmitFailed,setIsShowSubmitFailed] = useState(false);
+    const [isShowSubmitFailed, setIsShowSubmitFailed] = useState(false);
     const [isShowWarning, setIsShowWarning] = useState(false);
     const [copyTrialParameter, setCopyTrialParameter] = useState({});
     const [customParameters, setCustomParameters] = useState({});
-    const [customID,setCustomID] = useState(NaN);
+    const [customID, setCustomID] = useState(NaN);
     const [changeMap, setChangeMap] = useState(new Map());
 
     const getFinalVal = (event: React.ChangeEvent<HTMLInputElement>): void => {
         const { name, value } = event.target;
-        setChangeMap(changeMap.set(name, value))
+        setChangeMap(changeMap.set(name, value));
+    };
+
+    const submitCustomize = (customized: Record<string, any>): void => {
+        // delete `tag` key
+        for (const i in customized) {
+            if (i === 'tag') {
+                delete customized[i];
+            }
+        }
+        axios(`${MANAGER_IP}/trial-jobs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            data: customized
+        })
+            .then(res => {
+                if (res.status === 200) {
+                    setIsShowSubmitSucceed(true);
+                    setCustomID(res.data.sequenceId);
+                    closeCustomizeModal();
+                } else {
+                    setIsShowSubmitFailed(true);
+                }
+            })
+            .catch(() => {
+                setIsShowSubmitFailed(true);
+            });
     };
 
     // [submit click] user add a new trial [submit a trial]
@@ -112,39 +138,13 @@ const Customize = ((props: CustomizeProps): any => {
         setIsShowWarning(false);
     };
 
-    const submitCustomize = (customized: Record<string, any>): void => {
-        // delete `tag` key
-        for (const i in customized) {
-            if (i === 'tag') {
-                delete customized[i];
-            }
-        }
-        axios(`${MANAGER_IP}/trial-jobs`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            data: customized
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    setIsShowSubmitSucceed(true);
-                    setCustomID(res.data.sequenceId);
-                    closeCustomizeModal();
-                } else {
-                    setIsShowSubmitFailed(true);
-                }
-            })
-            .catch(() => {
-                setIsShowSubmitFailed(true);
-            });
-    };
-
     const closeSucceedHint = (): void => {
         // also close customized trial modal
         setIsShowSubmitSucceed(false);
         setChangeMap(new Map());
         closeCustomizeModal();
     };
-    
+
     const closeFailedHint = (): void => {
         // also close customized trial modal
         setIsShowSubmitFailed(false);
@@ -152,12 +152,15 @@ const Customize = ((props: CustomizeProps): any => {
         closeCustomizeModal();
     };
 
-    // useEffect(() => {
-    //     // 感觉这个组件是多余的，为什么要考虑更新的问题呢，实测明白下
-    //     const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
-    //     setCopyTrialParameter(originCopyTrialPara);
-    // }, [copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined, copyTrialId]);// 怀疑第二个条件 copyTrialId无效，可以去掉，是class组件更新的避坑写法
-    
+    useEffect(() => {
+        if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
+            const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
+            setCopyTrialParameter(originCopyTrialPara);
+        }
+        // }, [copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined, copyTrialId]); // 报错
+    }, []);
+    // 怀疑第二个条件 copyTrialId无效，可以去掉，是class组件更新的避坑写法, 必须实测
+
     return (
         <Stack>
             <Dialog
@@ -261,7 +264,7 @@ const Customize = ((props: CustomizeProps): any => {
             </Dialog>
         </Stack>
     );
-});
+};
 
 // class  extends React.Component<CustomizeProps, CustomizeState> {
 

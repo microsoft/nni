@@ -37,12 +37,12 @@ const PaginationTable = (props: IDetailsListProps): any => {
             setCurrentPage(latestCurrentPage);
             setItemsOnPage(_obtainPaginationSlice(itemsPerPage, currentPage, items));
         }
-    }
+    };
 
     const _onPageSelect = (event: any): void => {
         setCurrentPage(event.selected);
         setItemsOnPage(_obtainPaginationSlice(itemsPerPage, event.selected, items));
-    }
+    };
 
     useEffect(() => {
         setItemsOnPage(_obtainPaginationSlice(itemsPerPage, currentPage, items));
