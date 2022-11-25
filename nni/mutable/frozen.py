@@ -3,6 +3,10 @@
 
 from __future__ import annotations
 
+"""Utilities to freeze mutables upon its creation (either before or after),
+such that when a proper context is provided, the mutables should look exactly the same as its frozen version.
+"""
+
 __all__ = [
     'ensure_frozen', 'frozen_context', 'frozen_factory',
 ]
@@ -105,7 +109,7 @@ class frozen_context(ContextStack):
     --------
     ::
         def some_func():
-            print(current_frozen_context()['learning_rate'])  # 0.1
+            print(frozen_context.current()['learning_rate'])  # 0.1
 
         with frozen_context({'learning_rate': 0.1}):
             some_func()
@@ -194,7 +198,7 @@ class frozen_factory:
 
     Parameters
     ----------
-    callable
+    function
         The function to be invoked.
     sample
         The sample to be used as the frozen context.
@@ -207,8 +211,8 @@ class frozen_factory:
 
     # NOTE: mutations on ``init_args`` and ``init_kwargs`` themselves are not supported.
 
-    def __init__(self, callable: Callable[..., Any], sample: Sample | frozen_context):
-        self.callable = callable
+    def __init__(self, function: Callable[..., Any], sample: Sample | frozen_context):
+        self.function = function
         if not isinstance(sample, frozen_context):
             self.sample = frozen_context(sample)
         else:
@@ -216,8 +220,7 @@ class frozen_factory:
 
     def __call__(self, *init_args, **init_kwargs):
         with self.sample:
-            return self.callable(*init_args, **init_kwargs)
+            return self.function(*init_args, **init_kwargs)
 
     def __repr__(self):
-        return f'frozen_factory(callable={self.callable}, arch={self.arch})'
-
+        return f'frozen_factory(function={self.function}, sample={self.sample.value})'

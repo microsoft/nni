@@ -359,6 +359,7 @@ def auto_label(name: str | label | None = None, scope: label_scope | None = None
 
     # Fake a label scope and return its name directly.
     with label_scope(name) as scope:
+        assert scope.path is not None
         return cast(str, label(scope.path))
 
 
