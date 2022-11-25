@@ -14,7 +14,7 @@ import torch.nn as nn
 from nni.common.graph_utils import build_module_graph
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import get_module_by_name
-from nni.compression.pytorch.utils.external.replacor import CustomizedReplacor
+from nni.compression.pytorch.utils.external.replacer import CustomizedReplacer
 from .compress_modules import replace_module
 from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
@@ -57,19 +57,19 @@ class ModelSpeedup:
                 in_mask, out_mask, weight_mask = masks
                 # prune the ori_module to a new smaller module according to the mask
                 return new_small_module
-    customized_replacors
-        ``customized_replacors`` is a list of ``CustomizedReplacor``.
+    customized_replacers
+        ``customized_replacers`` is a list of ``CustomizedReplacer``.
         Call a ``Module`` that does not contain a ``Module`` as a leaf-module,
-        a ``Module`` that contains a ``Module`` as a hyper-module, then replacor is used to replace the hyper-module.
-        The difference between the replacor and replace function is that replacor can perform more efficient replacements
+        a ``Module`` that contains a ``Module`` as a hyper-module, then replacer is used to replace the hyper-module.
+        The difference between the replacer and replace function is that replacer can perform more efficient replacements
         to hyper-module, and replace function is used to replace leaf-module.
-        In ``ModelSpeedup.compress``, replacors are first to be called to replace the hyper-modules before
+        In ``ModelSpeedup.compress``, replacers are first to be called to replace the hyper-modules before
         replacing all leaf-modules by replace functions.
     """
 
     def __init__(self, model, dummy_input, masks_file, map_location=None,
                  batch_dim=0, confidence=8, customized_replace_func=None,
-                 customized_replacors=None):
+                 customized_replacers=None):
         assert confidence > 1
         # The auto inference will change the values of the parameters in the model
         # so we need make a copy before the mask inference
@@ -102,7 +102,7 @@ class ModelSpeedup:
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}
         self.customized_replace_func = customized_replace_func if customized_replace_func is not None else {}
-        self.customized_replacors: List[CustomizedReplacor] = customized_replacors if customized_replacors is not None else []
+        self.customized_replacers: List[CustomizedReplacer] = customized_replacers if customized_replacers is not None else []
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
         """
@@ -422,8 +422,8 @@ class ModelSpeedup:
         is that ```func``` should be not required to be replaced.
         """
         with torch.no_grad():
-            for replacor in self.customized_replacors:
-                replacor.replace_modules(self.bound_model, self.auto_inferences)
+            for replacer in self.customized_replacers:
+                replacer.replace_modules(self.bound_model, self.auto_inferences)
             for unique_name in self.auto_inferences:
                 self.replace_submodule(unique_name)
 

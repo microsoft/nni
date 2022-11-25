@@ -4,7 +4,7 @@
 """
 This is an example for pruning speedup the huggingface transformers.
 Now nni officially support speedup bert, bart, t5, vit attention heads.
-For other transforms attention or even any hyper-module, users could customize by implementation a Replacor.
+For other transforms attention or even any hyper-module, users could customize by implementation a Replacer.
 """
 
 import torch
@@ -14,7 +14,7 @@ from transformers.models.bert.modeling_bert import BertForSequenceClassification
 
 from nni.compression.pytorch.pruning import L1NormPruner
 from nni.compression.pytorch.speedup import ModelSpeedup
-from nni.compression.pytorch.utils.external.replacor import TransformersAttentionReplacor
+from nni.compression.pytorch.utils.external.replacer import TransformersAttentionReplacer
 
 config = BertConfig()
 model = BertForSequenceClassification(config)
@@ -29,8 +29,8 @@ pruner = L1NormPruner(model, config_list)
 _, masks = pruner.compress()
 pruner._unwrap_model()
 
-replacor = TransformersAttentionReplacor(model)
-ModelSpeedup(model, torch.randint(0, 30000, [4, 128]), masks, customized_replacors=[replacor]).speedup_model()
+replacer = TransformersAttentionReplacer(model)
+ModelSpeedup(model, torch.randint(0, 30000, [4, 128]), masks, customized_replacers=[replacer]).speedup_model()
 
 print(model(**{'input_ids': torch.randint(0, 30000, [4, 128])}))
 print(model)

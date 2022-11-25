@@ -46,14 +46,14 @@ def _fill_one_on_dims(mask: torch.Tensor, dims: int | List[int]) -> torch.Tensor
     return new_mask
 
 
-class CustomizedReplacor:
+class CustomizedReplacer:
     def replace_modules(self, model, auto_inferences: Dict[str, AutoMaskInference]):
         pass
 
 
-class TransformersAttentionReplacor(CustomizedReplacor):
+class TransformersAttentionReplacer(CustomizedReplacer):
     """
-    This replacor is used to prune huggingface transformers attention heads,
+    This replacer is used to prune huggingface transformers attention heads,
     it base on ``HuggingfaceModelParser`` to find the attention module,
     and prune heads with attention module built-in ``prune_heads`` interface.
 
