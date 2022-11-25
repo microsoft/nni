@@ -253,16 +253,11 @@ class App extends React.Component<{}, AppState> {
     };
 
     // for details table in the detail page
-    public changeExpandRowIDsDetailTable = (id: string, type?: string): void => {
+    public changeExpandRowIDsDetailTable = (id: string): void => {
         const currentExpandRowIDs = this.state.expandRowIDsDetailTable;
 
         if (!currentExpandRowIDs.has(id)) {
             currentExpandRowIDs.add(id);
-        } else {
-            // TODO: what's the meaning of checking chart?
-            if (!(type !== undefined && type === 'chart')) {
-                currentExpandRowIDs.delete(id);
-            }
         }
 
         this.setState({ expandRowIDsDetailTable: currentExpandRowIDs });
