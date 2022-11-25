@@ -68,14 +68,14 @@ class Constraint(MutableAnnotation):
         """
         return super().leaf_mutables(is_leaf)
 
-    def contains(self, sample: Sample) -> SampleValidationError | None:
+    def check_contains(self, sample: Sample) -> SampleValidationError | None:
         """Override this to implement customized constraint.
         It should return ``None`` if the sample satisfies the constraint.
         Otherwise return a :exc:`~nni.mutable.exception.ConstraintViolation` exception.
 
         See Also
         --------
-        nni.mutable.Mutable.contains
+        nni.mutable.Mutable.check_contains
         """
         raise NotImplementedError()
 
@@ -122,8 +122,7 @@ class Constraint(MutableAnnotation):
         mutables_wo_self = [mutable for mutable in self.simplify().values() if mutable is not self]
         from .container import MutableList
         for _ in MutableList(mutables_wo_self).grid(memo, granularity):
-            exc = self.contains(memo)
-            if exc is None:
+            if self.contains(memo):
                 yield self.freeze(memo)
             else:
                 _logger.debug('Constraint violation detected. Skip this grid point: %s', memo)
@@ -157,8 +156,8 @@ class ExpressionConstraint(Constraint):
         yield from self.expression.leaf_mutables(is_leaf)
         yield self
 
-    def contains(self, sample: Sample) -> SampleValidationError | None:
-        exception = self.expression.contains(sample)
+    def check_contains(self, sample: Sample) -> SampleValidationError | None:
+        exception = self.expression.check_contains(sample)
         if exception is not None:
             return exception
         expr_val = self.expression.freeze(sample)
