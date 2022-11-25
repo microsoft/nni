@@ -755,20 +755,11 @@ class ActivationPruner(EvaluatorBasedPruner):
                 _module = _module.module
             batch_dims, batch_num = get_output_batch_dims(output, _module)  # type: ignore
             activation = self._activation_trans(output, batch_dims)
-            batch_num = torch.tensor([batch_num]).to(activation.device)
-            if self.is_ddp_model:
-                import torch.distributed as dist
-                batch_num = batch_num.clone()
-                activation = activation.clone()
-
-                dist.all_reduce(batch_num, op=dist.ReduceOp.SUM)
-                dist.all_reduce(activation, op=dist.ReduceOp.SUM)
-
             if len(buffer) == 1:
                 buffer.append(torch.zeros_like(activation))
             if buffer[0] < self.training_steps:
                 buffer[1] += activation.to(buffer[1].device)  # type: ignore
-                buffer[0] += batch_num.item()
+                buffer[0] += batch_num
         return collect_activation
 
     def _activation_trans(self, output: Tensor, dim: int | list = 0) -> Tensor:
@@ -1032,12 +1023,6 @@ class TaylorFOWeightPruner(EvaluatorBasedPruner):
         buffer.append(0)
 
         def collect_taylor(grad: Tensor):
-            if self.is_ddp_model:
-                import torch.distributed as dist
-                grad = grad.clone()
-                size = dist.get_world_size()
-                dist.all_reduce(grad, op=dist.ReduceOp.SUM)
-                grad /= size
             if len(buffer) == 1:
                 buffer.append(torch.zeros_like(grad))
             if buffer[0] < self.training_steps:

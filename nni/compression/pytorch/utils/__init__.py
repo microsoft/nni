@@ -35,7 +35,8 @@ from .pruning import (
 from .scaling import Scaling
 from .check_ddp import (
     check_ddp_model,
-    reset_ddp_model
+    reset_ddp_model,
+    all_reduce_on_multiple_gpus
 )
 
 # v1

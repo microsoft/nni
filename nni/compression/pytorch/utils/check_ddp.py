@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Dict
+from typing import Dict, List
 import torch
 import torch.nn as nn
-
+import torch.distributed as dist
 
 def check_ddp_model(model: nn.Module):
     is_ddp_model = False
@@ -21,8 +21,10 @@ def check_ddp_model(model: nn.Module):
         ddp_params["find_unused_parameters"] = attr_dicts.get("find_unused_parameters", False)
         ddp_params["check_reduction"] = attr_dicts.get("check_reduction", False)
 
+        # when torch version <= 1.6.0, there is no parameter "gradient_as_bucket_view"
         if "gradient_as_bucket_view" in attr_dicts:
             ddp_params["gradient_as_bucket_view"] = attr_dicts.get("gradient_as_bucket_view", False)
+        # when torch version <= 1.10.0, there is no param "static_graph"
         if "static_graph" in attr_dicts:
             ddp_params["static_graph"] = attr_dicts.get("static_graph", False)
 
@@ -34,3 +36,14 @@ def check_ddp_model(model: nn.Module):
 def reset_ddp_model(model: nn.Module, ddp_params: Dict):
     module = model.module
     return torch.nn.parallel.DistributedDataParallel(module=module, **ddp_params)
+
+
+def all_reduce_on_multiple_gpus(buffer: List):
+    assert len(buffer) == 2
+    buffer_0 = torch.tensor([buffer[0]]).to(buffer[1].device)
+    buffer_1 = buffer[1].clone()
+
+    dist.all_reduce(buffer_0, op=dist.ReduceOp.SUM)
+    dist.all_reduce(buffer_1, op=dist.ReduceOp.SUM)
+
+    return [buffer_0.item(), buffer_1.to(buffer[1].device)]
