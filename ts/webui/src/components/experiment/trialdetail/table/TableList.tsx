@@ -362,7 +362,6 @@ const TableList = (props: TableListProps): any => {
                     trials={intermediateDialogTrial}
                     onHideDialog={(): void => {
                         setIntermediateDialogTrial([]);
-                        // setIntermediateDialogTrial(undefined);
                     }}
                 />
             )}
