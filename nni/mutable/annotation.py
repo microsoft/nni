@@ -143,8 +143,8 @@ class ExpressionConstraint(Constraint):
 
     Examples
     --------
-    >>> a = Discrete([1, 3])
-    >>> b = Discrete([2, 4])
+    >>> a = Categorical([1, 3])
+    >>> b = Categorical([2, 4])
     >>> list(MutableList([a, b, ExpressionConstraint(a + b == 5)]).grid())
     [[1, 4, None], [3, 2, None]]
     """
