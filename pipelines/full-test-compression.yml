@@ -44,8 +44,3 @@ stages:
         cd test/algo
         python -m pytest compression
       displayName: Compression unit test
-
-    - script: |
-        cd test
-        source scripts/model_compression.sh
-      displayName: Model compression test

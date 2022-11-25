@@ -9,7 +9,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 
-from nni.algorithms.compression.pytorch.auto_compress import AbstractAutoCompressionModule
+from nni.compression.pytorch.auto_compress import AbstractAutoCompressionModule
 
 torch.manual_seed(1)
 

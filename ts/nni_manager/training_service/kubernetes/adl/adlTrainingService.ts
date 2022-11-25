@@ -299,7 +299,7 @@ python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{8}' \
             await this.genericK8sClient.deleteDeployment("adaptdl-tensorboard-" + this.experimentId.toLowerCase());
             this.log.info('tensorboard deployment deleted');
         } catch (error) {
-            this.log.error(`tensorboard deployment deletion failed: ${error.message}`);
+            this.log.error(`tensorboard deployment deletion failed: ${(error as any).message}`);
         }
     }
 

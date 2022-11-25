@@ -138,7 +138,7 @@ Roughly test the original model inference speed.
 
  .. code-block:: none
 
-    Original Model - Elapsed Time :  0.1178426742553711
+    Original Model - Elapsed Time :  0.051694393157958984
 
 
 
@@ -202,12 +202,12 @@ Roughly test the model after speedup inference speed.
 
  .. code-block:: none
 
-    Speedup Model - Elapsed Time :  0.003069639205932617
+    Speedup Model - Elapsed Time :  0.003111600875854492
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 79-240
+.. GENERATED FROM PYTHON SOURCE LINES 79-239
 
 For combining usage of ``Pruner`` masks generation with ``ModelSpeedup``,
 please refer to :doc:`Pruning Quick Start <pruning_quick_start_mnist>`.
@@ -226,7 +226,6 @@ you need implement the replace function for module replacement, welcome to contr
 Speedup Results of Examples
 ---------------------------
 
-The code of these experiments can be found :githublink:`here <examples/model_compress/pruning/legacy/speedup/model_speedup.py>`.
 
 These result are tested on the `legacy pruning framework <https://nni.readthedocs.io/en/v2.6/Compression/pruning.html>`_, new results will coming soon.
 
@@ -374,7 +373,7 @@ The latency is measured on one V100 GPU and the input tensor is  ``torch.randn(1
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  15.253 seconds)
+   **Total running time of the script:** ( 0 minutes  10.747 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_speedup.py:

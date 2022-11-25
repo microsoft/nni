@@ -158,7 +158,7 @@ class Experiments:
     def write_file(self):
         '''save config to local file'''
         try:
-            with open(self.experiment_file, 'w') as file:
+            with open(self.experiment_file, 'w', encoding='utf_8') as file:
                 nni.dump(self.experiments, file, indent=4)
         except IOError as error:
             print('Error:', error)
@@ -168,7 +168,7 @@ class Experiments:
         '''load config from local file'''
         if os.path.exists(self.experiment_file):
             try:
-                with open(self.experiment_file, 'r') as file:
+                with open(self.experiment_file, 'r', encoding='utf_8') as file:
                     return nni.load(fp=file)
             except ValueError:
                 return {}

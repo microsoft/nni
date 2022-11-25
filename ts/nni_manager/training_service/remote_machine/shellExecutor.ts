@@ -283,8 +283,8 @@ class ShellExecutor {
                 return;
             }
             assert(sftp !== undefined);
-            sftp.fastPut(localFilePath, remoteFilePath, (fastPutErr: Error) => {
-                sftp.end();
+            sftp.fastPut(localFilePath, remoteFilePath, (fastPutErr: any) => {
+                (sftp as any).end();
                 if (fastPutErr !== undefined && fastPutErr !== null) {
                     this.log.error(`copyFileToRemote(${commandIndex}) fastPutErr: ${fastPutErr}, ${localFilePath}, ${remoteFilePath}`);
                     deferred.reject(fastPutErr);
@@ -341,18 +341,18 @@ class ShellExecutor {
                     dataBuffer += data;
                 })
                     .on('error', (streamErr: Error) => {
-                        sftp.end();
+                        (sftp as any).end();
                         deferred.reject(new NNIError(NNIErrorNames.NOT_FOUND, streamErr.message));
                     })
                     .on('end', () => {
                         // sftp connection need to be released manually once operation is done
-                        sftp.end();
+                        (sftp as any).end();
                         deferred.resolve(dataBuffer);
                     });
             } catch (error) {
-                this.log.error(`getRemoteFileContent(${commandIndex}): ${error.message}`);
-                sftp.end();
-                deferred.reject(new Error(`SFTP error: ${error.message}`));
+                this.log.error(`getRemoteFileContent(${commandIndex}): ${(error as any).message}`);
+                (sftp as any).end();
+                deferred.reject(new Error(`SFTP error: ${(error as any).message}`));
             }
         });
 
