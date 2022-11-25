@@ -25,6 +25,10 @@ export const AppContext = React.createContext({
     bestTrialEntries: '10',
     maxDurationUnit: 'm',
     expandRowIDs: new Set(['']),
+    expandRowIDsDetailTable: new Set(['']),
+    selectedRowIds: [] as string[],
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeSelectedRowIds: (_val: string[]): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     changeColumn: (_val: string[]): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -39,6 +43,8 @@ export const AppContext = React.createContext({
     updateDetailPage: () => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     changeExpandRowIDs: (_val: string, _type?: string): void => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeExpandRowIDsDetailTable: (_val: string, _type?: string): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     startTimer: () => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -57,7 +63,9 @@ interface AppState {
     isillegalFinal: boolean;
     expWarningMessage: string;
     bestTrialEntries: string; // for overview page: best trial entreis
-    expandRowIDs: Set<string>;
+    expandRowIDs: Set<string>; // for overview page: open row
+    expandRowIDsDetailTable: Set<string>; // for overview page: open row
+    selectedRowIds: string[]; // for detail page: selected trial - checkbox
     timerIdList: number[];
 }
 
@@ -77,6 +85,8 @@ class App extends React.Component<{}, AppState> {
             expWarningMessage: '',
             bestTrialEntries: '10',
             expandRowIDs: new Set(),
+            expandRowIDsDetailTable: new Set(),
+            selectedRowIds: [],
             timerIdList: []
         };
     }
@@ -105,7 +115,9 @@ class App extends React.Component<{}, AppState> {
             expWarningMessage,
             bestTrialEntries,
             maxDurationUnit,
-            expandRowIDs
+            expandRowIDs,
+            expandRowIDsDetailTable,
+            selectedRowIds
         } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;
@@ -161,7 +173,11 @@ class App extends React.Component<{}, AppState> {
                                         changeMetricGraphMode: this.changeMetricGraphMode,
                                         changeEntries: this.changeEntries,
                                         expandRowIDs,
+                                        expandRowIDsDetailTable,
+                                        selectedRowIds,
+                                        changeSelectedRowIds: this.changeSelectedRowIds,
                                         changeExpandRowIDs: this.changeExpandRowIDs,
+                                        changeExpandRowIDsDetailTable: this.changeExpandRowIDsDetailTable,
                                         updateOverviewPage: this.updateOverviewPage,
                                         updateDetailPage: this.updateDetailPage, // update current record without fetch api
                                         refreshDetailTable: this.refreshDetailTable, // update record with fetch api
@@ -221,6 +237,7 @@ class App extends React.Component<{}, AppState> {
         this.setState({ columnList: columnList });
     };
 
+    // for succeed table in the overview page
     public changeExpandRowIDs = (id: string, type?: string): void => {
         const currentExpandRowIDs = this.state.expandRowIDs;
 
@@ -235,6 +252,25 @@ class App extends React.Component<{}, AppState> {
         this.setState({ expandRowIDs: currentExpandRowIDs });
     };
 
+    // for details table in the detail page
+    public changeExpandRowIDsDetailTable = (id: string, type?: string): void => {
+        const currentExpandRowIDs = this.state.expandRowIDsDetailTable;
+
+        if (!currentExpandRowIDs.has(id)) {
+            currentExpandRowIDs.add(id);
+        } else {
+            // TODO: what's the meaning of checking chart?
+            if (!(type !== undefined && type === 'chart')) {
+                currentExpandRowIDs.delete(id);
+            }
+        }
+
+        this.setState({ expandRowIDsDetailTable: currentExpandRowIDs });
+    };
+
+    public changeSelectedRowIds = (val: string[]): void => {
+        this.setState({ selectedRowIds: val });
+    };
     public changeMetricGraphMode = (val: 'Maximize' | 'Minimize'): void => {
         this.setState({ metricGraphMode: val });
     };

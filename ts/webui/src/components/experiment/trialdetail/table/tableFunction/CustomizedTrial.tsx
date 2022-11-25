@@ -19,16 +19,6 @@ interface CustomizeProps {
     closeCustomizeModal: () => void;
 }
 
-// interface CustomizeState {
-//     isShowSubmitSucceed: boolean;
-//     isShowSubmitFailed: boolean;
-//     isShowWarning: boolean;
-//     searchSpace: object;
-//     copyTrialParameter: object; // user click the trial's parameters
-//     customParameters: object; // customized trial, maybe user change trial's parameters
-//     customID: number; // submit customized trial succeed, return the new customized trial id
-//     changeMap: Map<string, string | number>; // store change key: value
-// }
 const warning =
     'The parameters you set are not in our search space, this may cause the tuner to crash, Are' +
     ' you sure you want to continue submitting?';
@@ -36,14 +26,13 @@ const warning =
 const Customize = (props: CustomizeProps): any => {
     const { closeCustomizeModal, copyTrialId, visible } = props;
     const searchSpace = EXPERIMENT.searchSpace;
-    // const [searchSpace, setSearchSpace] = useState(EXPERIMENT.searchSpace);
     const [isShowSubmitSucceed, setIsShowSubmitSucceed] = useState(false);
     const [isShowSubmitFailed, setIsShowSubmitFailed] = useState(false);
     const [isShowWarning, setIsShowWarning] = useState(false);
-    const [copyTrialParameter, setCopyTrialParameter] = useState({});
-    const [customParameters, setCustomParameters] = useState({});
-    const [customID, setCustomID] = useState(NaN);
-    const [changeMap, setChangeMap] = useState(new Map());
+    const [copyTrialParameter, setCopyTrialParameter] = useState({}); // origin trial's parameter
+    const [customParameters, setCustomParameters] = useState({}); // edited trial's parameter
+    const [customID, setCustomID] = useState(NaN); // submit customized trial successfully and get a new trial No.
+    const [changeMap, setChangeMap] = useState(new Map()); // store change key: value
 
     const getFinalVal = (event: React.ChangeEvent<HTMLInputElement>): void => {
         const { name, value } = event.target;
@@ -157,9 +146,7 @@ const Customize = (props: CustomizeProps): any => {
             const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
             setCopyTrialParameter(originCopyTrialPara);
         }
-        // }, [copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined, copyTrialId]); // 报错
-    }, []);
-    // 怀疑第二个条件 copyTrialId无效，可以去掉，是class组件更新的避坑写法, 必须实测
+    }, [copyTrialId]);
 
     return (
         <Stack>
@@ -265,24 +252,5 @@ const Customize = (props: CustomizeProps): any => {
         </Stack>
     );
 };
-
-// class  extends React.Component<CustomizeProps, CustomizeState> {
-
-//     componentDidMount(): void {
-//         if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
-//             const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
-//             this.setState(() => ({ copyTrialParameter: originCopyTrialPara }));
-//         }
-//     }
-
-//     componentDidUpdate(prevProps: CustomizeProps): void {
-//         if (this.props.copyTrialId !== prevProps.copyTrialId) {
-//             if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
-//                 const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
-//                 this.setState(() => ({ copyTrialParameter: originCopyTrialPara }));
-//             }
-//         }
-//     }
-// }
 
 export default Customize;

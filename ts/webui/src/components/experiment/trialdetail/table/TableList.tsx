@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { DefaultButton, IColumn, Icon, PrimaryButton, Stack, StackItem, Checkbox } from '@fluentui/react';
 import { Trial } from '@model/trial';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
@@ -8,16 +8,16 @@ import { blocked, copy, LineChart, tableListIcon } from '@components/fluent/Icon
 import Customize from './tableFunction/CustomizedTrial';
 import TensorboardUI from './tableFunction/tensorboard/TensorboardUI';
 import Search from './tableFunction/search/Search';
-import ExpandableDetails from '@components/common/ExpandableDetails/ExpandableIndex';
 import ChangeColumnComponent from '../ChangeColumnComponent';
 import Compare from './tableFunction/CompareIndex';
 import KillJobIndex from './tableFunction/killJob/KillJobIndex';
 import { getTrialsBySearchFilters } from './tableFunction/search/searchFunction';
+import ExpandableDetails from '@components/common/ExpandableDetails/ExpandableIndex';
 import PaginationTable from '@components/common/PaginationTable';
 import CopyButton from '@components/common/CopyButton';
 import TooltipHostIndex from '@components/common/TooltipHostIndex';
 import { getValue } from '@model/localStorage';
-
+import { AppContext } from '@/App';
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
@@ -28,26 +28,10 @@ interface TableListProps {
     tableSource: Trial[];
 }
 
-// interface TableListState {
-//     displayedItems: any[];
-//     displayedColumns: string[];
-//     columns: IColumn[];
-//     searchType: SearchOptionType;
-//     searchText: string;
-//     selectedRowIds: string[];
-//     customizeColumnsDialogVisible: boolean;
-//     compareDialogVisible: boolean;
-//     intermediateDialogTrial: Trial[] | undefined;
-//     copiedTrialId: string | undefined;
-//     sortInfo: SortInfo;
-//     searchItems: Array<SearchItems>;
-//     relation: Map<string, string>;
-// }
-
-function TableList(props: TableListProps): any {
+const TableList = (props: TableListProps): any => {
     const { tableSource } = props;
-    // 通篇的类型跟之前的PR做对比
-    const [displayedItems, setDisplayedItems] = useState([] as any);
+    const { expandRowIDsDetailTable, changeExpandRowIDsDetailTable, selectedRowIds, changeSelectedRowIds } =
+        useContext(AppContext);
     const [displayedColumns, setDisplayedColumns] = useState(
         localStorage.getItem(`${EXPERIMENT.profile.id}_columns`) !== null &&
             getValue(`${EXPERIMENT.profile.id}_columns`) !== null
@@ -58,16 +42,12 @@ function TableList(props: TableListProps): any {
     const [columns, setColumns] = useState([] as IColumn[]);
     const [customizeColumnsDialogVisible, setCustomizeColumnsDialogVisible] = useState(false);
     const [compareDialogVisible, setCompareDialogVisible] = useState(false);
-    const [selectedRowIds, setSelectedRowIds] = useState([] as string[]);
-    // const [intermediateDialogTrial, setIntermediateDialogTrial] = useState(undefined as Trial[]); // 类型不好写
-    const [intermediateDialogTrial, setIntermediateDialogTrial] = useState([] as Trial[]); // 类型不好写
+    const [intermediateDialogTrial, setIntermediateDialogTrial] = useState([] as Trial[]);
     const [copiedTrialId, setCopiedTrialId] = useState(undefined);
     const [sortInfo, setSortInfo] = useState({ field: '', isDescend: true } as SortInfo);
     const [searchItems, setSearchItems] = useState([] as SearchItems[]);
     const relation = parametersType();
-    // const [relation, setRelation] = useState(parametersType());
-    // relation 在旧版本中是不是没用到再次声明，只一次
-    const _expandedTrialIds = new Set<string>();
+    const [displayedItems, setDisplayedItems] = useState([] as any);
 
     /* Table basic function related methods */
 
@@ -76,7 +56,7 @@ function TableList(props: TableListProps): any {
         const newColumns: IColumn[] = columns.slice();
         const currColumn: IColumn = newColumns.filter(currCol => column.key === currCol.key)[0];
         const isSortedDescending = !currColumn.isSortedDescending;
-        setSortInfo({ field: column.key, isDescend: isSortedDescending }); // 测试是否正常
+        setSortInfo({ field: column.key, isDescend: isSortedDescending }); // TODO: some little bugs
     };
 
     const _trialsToTableItems = (trials: Trial[]): any[] => {
@@ -86,7 +66,7 @@ function TableList(props: TableListProps): any {
         const items = trials.map(trial => {
             const ret = trial.tableRecord;
             ret['_checked'] = selectedRowIds.includes(trial.id) ? true : false;
-            ret['_expandDetails'] = _expandedTrialIds.has(trial.id); // hidden field names should start with `_`
+            ret['_expandDetails'] = expandRowIDsDetailTable.has(trial.id); // hidden field names should start with `_`
             for (const [k, v] of trial.parameters(searchSpace)) {
                 ret[`space/${k.baseName}`] = v;
             }
@@ -104,12 +84,7 @@ function TableList(props: TableListProps): any {
     };
 
     const changeSelectTrialIds = (): void => {
-        const newDisplayedItems = displayedItems;
-        newDisplayedItems.forEach(item => {
-            item._checked = false;
-        });
-        setSelectedRowIds([]);
-        setDisplayedColumns(newDisplayedItems);
+        changeSelectedRowIds([]);
     };
 
     const _renderOperationColumn = (record: any): React.ReactNode => {
@@ -164,9 +139,7 @@ function TableList(props: TableListProps): any {
                         label={undefined}
                         checked={record._checked}
                         className='detail-check'
-                        // onChange={this.selectedTrialOnChangeEvent.bind(this, record.id)}
                         onChange={(_ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean): void => {
-                            const latestDisplayedItems = JSON.parse(JSON.stringify(displayedItems));
                             let latestSelectedRowIds = selectedRowIds;
 
                             if (checked === false) {
@@ -174,14 +147,7 @@ function TableList(props: TableListProps): any {
                             } else {
                                 latestSelectedRowIds.push(record.id);
                             }
-
-                            latestDisplayedItems.forEach(item => {
-                                if (item.id === record.id) {
-                                    item._checked = !!checked;
-                                }
-                            });
-                            setDisplayedItems(latestDisplayedItems);
-                            setSelectedRowIds(latestSelectedRowIds);
+                            changeSelectedRowIds(latestSelectedRowIds);
                         }}
                     />
                 )
@@ -199,20 +165,12 @@ function TableList(props: TableListProps): any {
                             styles={{
                                 root: {
                                     transition: 'all 0.2s',
-                                    transform: `rotate(${item._expandDetails ? 90 : 0}deg)`
+                                    transform: `rotate(${expandRowIDsDetailTable.has(item.id) ? 90 : 0}deg)`
                                 }
                             }}
                             onClick={(event): void => {
                                 event.stopPropagation();
-                                const newItem: any = { ...item, _expandDetails: !item._expandDetails };
-                                if (newItem._expandDetails) {
-                                    // preserve to be restored when refreshed
-                                    _expandedTrialIds.add(newItem.id);
-                                } else {
-                                    _expandedTrialIds.delete(newItem.id);
-                                }
-                                const newItems = displayedItems.map(item => (item.id === newItem.id ? newItem : item));
-                                setDisplayedItems(newItems);
+                                changeExpandRowIDsDetailTable(item.id);
                             }}
                             onMouseDown={(e): void => {
                                 e.stopPropagation();
@@ -313,16 +271,16 @@ function TableList(props: TableListProps): any {
         }
         if (items.length > 0) {
             const columns = _buildColumnsFromTableItems(items);
-            setDisplayedItems(items);
             setColumns(columns);
+            setDisplayedItems(items);
         } else {
-            setDisplayedItems([]);
             setColumns([]);
+            setDisplayedItems([]);
         }
     };
 
-    const _updateDisplayedColumns = (displayedColumns: string[]): void => {
-        setDisplayedColumns(displayedColumns);
+    const _updateDisplayedColumns = (value: string[]): void => {
+        setDisplayedColumns(value);
     };
 
     const changeSearchFilterList = (arr: Array<SearchItems>): void => {
@@ -331,9 +289,8 @@ function TableList(props: TableListProps): any {
 
     useEffect(() => {
         _updateTableSource();
-
-        // },[tableSource, sortInfo, searchItems]); // TODO总数据源，表格排序规则触发页面更新, 看代码 searchItmes不用写进来
-    }, [tableSource, sortInfo, selectedRowIds]); // 总数据源，表格排序规则触发页面更新, 看代码 searchItmes不用写进来
+        // { sortInfo.field, sortInfo.isDescend }, displayedItems will cause endless loop
+    }, [tableSource, selectedRowIds, searchItems, sortInfo]);
 
     return (
         <div id='tableList'>
@@ -433,6 +390,6 @@ function TableList(props: TableListProps): any {
             />
         </div>
     );
-}
+};
 
 export default TableList;
