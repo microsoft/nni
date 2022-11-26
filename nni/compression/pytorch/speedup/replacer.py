@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 from typing import Callable, Dict
 
@@ -54,6 +57,7 @@ class BuiltinReplacer:
     def replace_submodule(self, model: torch.nn.Module, unique_name: str, auto_infer: AutoMaskInference):
         module = get_nested_attr(model, unique_name)
         _logger.info("replace module (name: %s, op_type: %s)", unique_name, type(module))
-        replace_function = self.replace_module_func_dict.get(unique_name)
-        compressed_module = replace_function(module, auto_infer.get_masks())
-        set_nested_attr(model, unique_name, compressed_module)
+        replace_function = self.replace_module_func_dict.get(type(module).__name__, None)
+        if replace_function:
+            compressed_module = replace_function(module, auto_infer.get_masks())
+            set_nested_attr(model, unique_name, compressed_module)
