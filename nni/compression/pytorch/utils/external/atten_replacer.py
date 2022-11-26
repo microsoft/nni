@@ -10,6 +10,7 @@ from typing import Dict, List
 
 import torch
 
+from nni.compression.pytorch.speedup.replacer import Replacer
 from nni.compression.pytorch.speedup.infer_mask import AutoMaskInference
 from nni.compression.pytorch.utils.attr import get_nested_attr
 from nni.compression.pytorch.utils.external.huggingface import parser_factory, HuggingfaceModelParser
@@ -46,12 +47,7 @@ def _fill_one_on_dims(mask: torch.Tensor, dims: int | List[int]) -> torch.Tensor
     return new_mask
 
 
-class CustomizedReplacer:
-    def replace_modules(self, model, auto_inferences: Dict[str, AutoMaskInference]):
-        pass
-
-
-class TransformersAttentionReplacer(CustomizedReplacer):
+class TransformersAttentionReplacer(Replacer):
     """
     This replacer is used to prune huggingface transformers attention heads,
     it base on ``HuggingfaceModelParser`` to find the attention module,

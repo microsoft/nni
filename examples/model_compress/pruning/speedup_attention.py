@@ -14,7 +14,7 @@ from transformers.models.bert.modeling_bert import BertForSequenceClassification
 
 from nni.compression.pytorch.pruning import L1NormPruner
 from nni.compression.pytorch.speedup import ModelSpeedup
-from nni.compression.pytorch.utils.external.replacer import TransformersAttentionReplacer
+from nni.compression.pytorch.utils.external.atten_replacer import TransformersAttentionReplacer
 
 config = BertConfig()
 model = BertForSequenceClassification(config)
