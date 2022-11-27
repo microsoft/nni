@@ -42,6 +42,7 @@ class BuiltinReplacer:
         self.replace_module_func_dict = replace_module_func_dict
 
     def replace_modules(self, model, auto_inferences: Dict[str, AutoMaskInference]):
+        replaced_names = []
         for unique_name, auto_infer in auto_inferences.items():
             if has_nested_attr(model, unique_name):
                 module = get_nested_attr(model, unique_name)
@@ -49,10 +50,12 @@ class BuiltinReplacer:
                     _logger.debug("replace module %s, with class type %s", unique_name, type(module))
                     self.replace_submodule(model, unique_name, auto_infer)
                     # prevent secondary replacement
-                    auto_inferences.pop(unique_name)
+                    replaced_names.append(unique_name)
                 else:
                     # Support replace function in the future
                     pass
+        for name in replaced_names:
+            auto_inferences.pop(name)
 
     def replace_submodule(self, model: torch.nn.Module, unique_name: str, auto_infer: AutoMaskInference):
         module = get_nested_attr(model, unique_name)
