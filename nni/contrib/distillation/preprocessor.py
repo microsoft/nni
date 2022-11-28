@@ -55,7 +55,7 @@ class Preprocessor:
         Additional keyword arguments pass to `uid_dataset_cls.__init__`.
         If there are many extra arguments, recommended to directly set `uid_dataset_cls` to None, and then pass in the wrapped `dataset`.
     labels_split_fn
-        Please refer `Preprocessor.preprocess_labels`.
+        Please refer `Preprocessor.generate_distillation_labels`.
     labels_collate_fn
         Please refer `Preprocessor.create_replay_dataloader`.
     """
@@ -102,19 +102,19 @@ class Preprocessor:
         setattr(dataloader, 'collate_fn', collate_fn)
         return dataloader
 
-    def preprocess_labels(self, epochs: int = 1, log_process: bool = True, labels_split_fn: Callable[[Any], List] | None = None):
+    def generate_distillation_labels(self, epochs: int = 1, log_process: bool = True, labels_split_fn: Callable[[Any], List] | None = None):
         """
         Run the `teacher_predict` on the whole dataset, and record the output as distillation labels.
 
         Parameters
         ----------
         epochs
-            By default, 1. It specifies how many epochs used to preprocess distillation labels, usually it can be set to 1.
+            By default, 1. It specifies how many epochs used to generate distillation labels, usually it can be set to 1.
             And in some training methods, such as data augumentation, each time the same meta data selected from dataset
             might be different after augumentation.
             At this time, setting `>1` can run more epochs to obtain multiple epochs of distillation labels.
         log_process
-            If logging during preprocess labels.
+            If logging during generate labels.
         labels_split_fn
             A function used to split the batched output of `teacher_predict` to list of output. If `labels_split_fn` is None,
             `teacher_predict` is expected to return a batched tensor, and it will be auto split on dim 0 by this function.
@@ -123,7 +123,8 @@ class Preprocessor:
             each tensor is the probability with size (100,).
         """
         if self._preprocessed:
-            _logger.info('Preprocessor has been preprocessed.')
+            warn_msg = 'Preprocessor has been generated distillation labels, if more epochs are needed, please set '
+            _logger.warning(warn_msg)
             return
 
         labels_split_fn = labels_split_fn if labels_split_fn is not None else self._labels_split_fn
@@ -153,7 +154,7 @@ class Preprocessor:
 
     def create_replay_dataloader(self, labels_collate_fn: Callable[[List], Any] | None = None):
         """
-        Return a dataloader that concat the original dataset and the preprocessed distillation labels.
+        Return a dataloader that concat the original dataset and the generated distillation labels.
         The iteration of dataloader will return (distil_labels, origin_batch).
 
         Parameters
@@ -171,7 +172,7 @@ class Preprocessor:
 
     def save_checkpoint(self, checkpoint_folder: str | PathLike):
         """
-        Save a checkpoint that can be used to re-initialize the `Preprocessor` and reload the preprocessed distillation labels.
+        Save a checkpoint that can be used to re-initialize the `Preprocessor` and reload the generated distillation labels.
 
         Parameters
         ----------

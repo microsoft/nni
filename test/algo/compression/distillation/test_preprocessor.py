@@ -82,7 +82,7 @@ def test_preprocessor(uid_dataset_cls: str, storage: str):
     #     preprocessor = Preprocessor(teacher_predict=teacher_predict, dataset=uid_dataset, create_dataloader=create_dataloader,
     #                                 keep_in_memory=False, cache_folder=log_dir, cache_mode='hdf5')
 
-    preprocessor.preprocess_labels()
+    preprocessor.generate_distillation_labels()
     distil_dataloader = preprocessor.create_replay_dataloader()
 
     if not uid_dataset_cls == 'augumentation':
