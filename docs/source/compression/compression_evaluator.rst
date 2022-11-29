@@ -64,7 +64,7 @@ Here is an example of how to initialize a :class:`TorchEvaluator <nni.compressio
     from torchvision import datasets, models
 
     import nni
-    from nni.algorithms.compression.v2.pytorch import TorchEvaluator
+    from nni.compression.pytorch import TorchEvaluator
 
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -178,7 +178,7 @@ Here is an example of how to initialize a :class:`LightningEvaluator <nni.compre
     from torchvision import datasets, models
 
     import nni
-    from nni.algorithms.compression.v2.pytorch import LightningEvaluator
+    from nni.compression.pytorch import LightningEvaluator
 
 
     class SimpleLightningModel(pl.LightningModule):

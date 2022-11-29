@@ -136,8 +136,8 @@ class ModelEvaluationEnv(gym.Env[ObservationType, int]):
         if self.cur_step == self.num_steps:
             with _thread_lock:
                 model = get_targeted_model(self.base_model, self.mutators, self.sample)
-            _logger.info(f'New model created: {self.sample}')
-            submit_models(model)
+                _logger.info(f'New model created: {self.sample}')
+                submit_models(model)
             wait_models(model)
             if model.status == ModelStatus.Failed:
                 return self.reset(), 0., False, {}

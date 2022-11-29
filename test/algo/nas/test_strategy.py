@@ -136,6 +136,13 @@ def test_evolution():
     wait_models(*engine.models)
     _reset_execution_engine()
 
+    evolution = strategy.RegularizedEvolution(population_size=5, sample_size=3, cycles=10, mutation_prob=0.5, dedup=True, on_failure='ignore')
+    engine = MockExecutionEngine(failure_prob=0.2)
+    _reset_execution_engine(engine)
+    evolution.run(*_get_model_and_mutators())
+    wait_models(*engine.models)
+    _reset_execution_engine()
+
     evolution = strategy.RegularizedEvolution(population_size=5, sample_size=3, cycles=10, mutation_prob=0.5, on_failure='worst')
     engine = MockExecutionEngine(failure_prob=0.4)
     _reset_execution_engine(engine)

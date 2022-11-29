@@ -141,11 +141,17 @@ def start_experiment(
         rest.post(port, '/experiment', config.json(), url_prefix)
 
     except Exception as e:
-        _logger.error('Create experiment failed')
+        _logger.error('Create experiment failed: %s', e)
         if proc is not None:
             with contextlib.suppress(Exception):
                 proc.kill()
-        raise e
+
+        log = Path(nni_manager_args.experiments_directory, nni_manager_args.experiment_id, 'log', 'nnictl_stderr.log')
+        if log.exists():
+            _logger.warning('NNI manager stderr:')
+            _logger.warning(log.read_text())
+
+        raise
 
     return proc
 

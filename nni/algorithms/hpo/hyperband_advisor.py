@@ -522,6 +522,9 @@ class Hyperband(MsgDispatcherBase):
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
         hyper_params = nni.load(data['hyper_params'])
+        if self.is_created_in_previous_exp(hyper_params['parameter_id']):
+            # The end of the recovered trial is ignored
+            return
         self._handle_trial_end(hyper_params['parameter_id'])
         if data['trial_job_id'] in self.job_id_para_id_map:
             del self.job_id_para_id_map[data['trial_job_id']]
@@ -538,6 +541,9 @@ class Hyperband(MsgDispatcherBase):
         ValueError
             Data type not supported
         """
+        if self.is_created_in_previous_exp(data['parameter_id']):
+            # do not support recovering the algorithm state
+            return
         if 'value' in data:
             data['value'] = nni.load(data['value'])
         # multiphase? need to check
@@ -576,7 +582,10 @@ class Hyperband(MsgDispatcherBase):
                 raise ValueError('Data type not supported: {}'.format(data['type']))
 
     def handle_add_customized_trial(self, data):
-        pass
+        global _next_parameter_id
+        # data: parameters
+        previous_max_param_id = self.recover_parameter_id(data)
+        _next_parameter_id = previous_max_param_id + 1
 
     def handle_import_data(self, data):
         pass

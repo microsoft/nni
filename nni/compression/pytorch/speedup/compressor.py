@@ -16,7 +16,7 @@ from nni.compression.pytorch.utils.utils import get_module_by_name
 from .compress_modules import replace_module
 from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
-from ..utils import rand_like_with_shape
+from ..utils import rand_like_with_shape, check_ddp_model, reset_ddp_model
 
 
 _logger = logging.getLogger(__name__)
@@ -65,6 +65,7 @@ class ModelSpeedup:
         # so we need make a copy before the mask inference
         self.ori_state_dict = copy.deepcopy(model.state_dict())
         self.bound_model = model
+        self.is_ddp_model, self.ddp_params = check_ddp_model(self.bound_model)
         self.inferred_masks = dict()  # key: module_name, value: ModuleMasks
         self.batch_dim = batch_dim
         self.confidence = confidence
@@ -197,7 +198,10 @@ class ModelSpeedup:
                 continue
             # The detach operation here is for the in-place operation. We cannot
             # directly can the backward on the output tensor of an in-place operator.
-            dummy_input.append(self.internal_result[_input].detach())
+            if isinstance(self.internal_result[_input], torch.Tensor):
+                dummy_input.append(self.internal_result[_input].detach())
+            else:
+                dummy_input.append(self.internal_result[_input])
 
             debugnames.append(_input)
 
@@ -369,7 +373,7 @@ class ModelSpeedup:
         for node in self.torch_graph.nodes_py.nodes_op:
             successors = self.torch_graph.find_successors(node.unique_name)
             out_degree[node.unique_name] = len(successors)
-            predecessors = self.torch_graph.find_predecessors(node.unique_name)
+            predecessors = set(self.torch_graph.find_predecessors(node.unique_name))
             in_degree[node.unique_name] = len(predecessors)
             if in_degree[node.unique_name] == 0:
                 visit_queue.put(node)
@@ -390,8 +394,8 @@ class ModelSpeedup:
         while not visit_queue.empty():
             curnode = visit_queue.get()
             self.update_indirect_sparsity(curnode)
-            predecessors = self.torch_graph.find_predecessors(
-                curnode.unique_name)
+            predecessors = set(self.torch_graph.find_predecessors(
+                curnode.unique_name))
             for predecessor in predecessors:
                 out_degree[predecessor] -= 1
                 if out_degree[predecessor] == 0:
@@ -550,3 +554,7 @@ class ModelSpeedup:
         self.replace_compressed_modules()
         self.bound_model.train(training)
         _logger.info("speedup done")
+
+        if self.is_ddp_model:
+            self.bound_model = reset_ddp_model(self.bound_model, self.ddp_params)
+        return self.bound_model

@@ -37,13 +37,15 @@ import { SqlDB } from 'core/sqlDatabase';
 import { initExperimentsManager } from 'extensions/experiments_manager';
 import { NNITensorboardManager } from 'extensions/nniTensorboardManager';
 import { RestServer } from 'rest_server';
-
-import path from 'path';
+import { createRestHandler } from 'rest_server/restHandler';
 
 const logger: Logger = getLogger('main');
 
 async function start(): Promise<void> {
     logger.info('Start NNI manager');
+
+    const restServer = new RestServer(globals.args.port, globals.args.urlPrefix);
+    await restServer.start();
 
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
@@ -53,8 +55,7 @@ async function start(): Promise<void> {
     const ds: DataStore = component.get(DataStore);
     await ds.init();
 
-    const restServer = new RestServer(globals.args.port, globals.args.urlPrefix);
-    await restServer.start();
+    globals.rest.registerExpressRouter('/api/v1/nni', createRestHandler());
 
     initExperimentsManager();
 
