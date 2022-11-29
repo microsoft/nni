@@ -11,7 +11,7 @@ __all__ = [
 
 import logging
 from collections import defaultdict
-from typing import Any, cast
+from typing import Any, List, cast
 
 _last_uid = defaultdict(int)
 
@@ -355,7 +355,7 @@ def auto_label(name: str | label | None = None, scope: label_scope | None = None
         if name is None:
             name = scope.next_label()
         scope.name  # Check if scope is entered.
-        return cast(str, label([*scope.path, name]))
+        return cast(str, label([*cast(List[str], scope.path), name]))
 
     # Fake a label scope and return its name directly.
     with label_scope(name) as scope:
