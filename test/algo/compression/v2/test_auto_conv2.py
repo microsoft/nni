@@ -177,16 +177,14 @@ class AutoConvTestCase(unittest.TestCase):
         pruned_model, masks = pruner.compress()
         pruner._unwrap_model()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
-        traced_model = concrete_trace(model, {'x': dummy_input},
-                autowrap_leaf_class = {
-                    **ConcreteTracer.default_autowrap_leaf_class,
-                    int:        ((), False),
-                    slice:      ((), False),
-                })
-        torch.manual_seed(100)
-        ModelSpeedup(traced_model, masks).run(torch.rand(8, 1, 28, 28))
-        real_sparsity_list = compute_sparsity_compact2origin(TorchModel1(), traced_model, config_list)
+        traced_model = concrete_trace(model, {'x': dummy_input})
+        # torch.manual_seed(100)
+        ModelSpeedup(traced_model, masks).run(torch.rand(3, 1, 28, 28))
 
+        print('before:\n', model)
+        print('after:\n', repr(traced_model))
+
+        real_sparsity_list = compute_sparsity_compact2origin(TorchModel1(), traced_model, config_list)
         print('sparsity_list:', sparsity_list)
         assert 0.45 < sparsity_list[0]['total_sparsity'] < 0.55
 

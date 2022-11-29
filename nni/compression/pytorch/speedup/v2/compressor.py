@@ -111,7 +111,7 @@ class ModelSpeedup(torch.fx.Interpreter):
                 new_obj = obj.clone().detach()
                 if not new_obj.is_contiguous():
                     new_obj = new_obj.contiguous()
-                randomize_tensor(new_obj, start=0.1, end=8.0)
+                randomize_tensor(new_obj, self.randomize_range_float[0], self.randomize_range_float[1])
                 return new_obj
             else:
                 new_obj = obj.clone().detach()
@@ -232,7 +232,7 @@ class ModelSpeedup(torch.fx.Interpreter):
                         sub_module: nn.Module = self.fetch_attr(node.target)
 
                         for _k, v in sub_module.named_parameters():
-                            randomize_tensor(v.data, self.randomize_range_float[0], self.randomize_range_float[1])
+                            randomize_tensor(v, self.randomize_range_float[0], self.randomize_range_float[1])
 
                         for k, v in sub_module.named_parameters():
                             v *= node_info.param_masks_0[k] # in-place addition
