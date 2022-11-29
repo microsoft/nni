@@ -195,5 +195,4 @@ class AutoConvTestCase(unittest.TestCase):
         assert traced_model(dummy_input).shape == torch.Size((5, 5))
 
 if __name__ == '__main__':
-    # unittest.main()
-    AutoConvTestCase().test_l1norm_pruner()
+    unittest.main()
