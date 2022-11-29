@@ -44,8 +44,8 @@ class ModuleWrapper(torch.nn.Module):
 
         # origin layer information
         assert isinstance(module, torch.nn.Module)
-        self.module: torch.nn.Module
         object.__setattr__(self, 'module', module)
+        self.module: torch.nn.Module
         self.module_forward = self.module.forward
         self.name = module_name
         self.config = config if config is not None else {}
@@ -72,6 +72,7 @@ class ModuleWrapper(torch.nn.Module):
 
     @property
     def is_frozen(self) -> bool:
+        # if the wrapper is frozen, should not update any state of this wrapper, i.e., pruning masks or quant scale.
         return self._frozen
 
     def freeze(self):
