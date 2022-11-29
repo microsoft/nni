@@ -24,6 +24,35 @@ from nni.compression.pytorch.speedup.v2.container import Slot, NodeInfo
 
 @compatibility(is_backward_compatible=True)
 class ModelSpeedup(torch.fx.Interpreter):
+    """
+    This class is to speedup the model with provided weight mask.
+
+    Parameters
+    ----------
+    model : pytorch model
+        The model user wants to speedup
+    masks_file : str/dict
+        The path of user provided mask file, or the mask object
+    map_location : str
+        the device on which masks are placed, same to map_location in ```torch.load```
+    batch_dim : int
+        the index of batch dimension in the dummy_input
+    batch_size: the batch_size coefficient of the sparsity inference. This value is
+        actually used as the batchsize of the dummy_input.
+    customized_replace_func: None/Dict
+        If `customized_replace_func` is not None, then we will use the given function to replace the
+        corresponding modules. The `key` of the dict is the opertor types and the `value`
+        is the replace function of corresponding opertor. The replace function should take
+        two input parameters, one is the original module, the second input parameter is tuple
+        of the input mask, output mask and weight mask. This replace function should prune the module
+        accordingly. Here is an example of the replace function(more examples can refer to compress_modules.py)::
+
+            def example_replace(ori_module, masks):
+                in_mask, out_mask, weight_mask = masks
+                # prune the ori_module to a new smaller module according to the mask
+                return new_small_module
+
+    """
     STD_DELTA = 1e-6
     randomize_range_float = (0.1, 8.0)
 
@@ -49,9 +78,6 @@ class ModelSpeedup(torch.fx.Interpreter):
             self.logger.setLevel(logging.INFO)
         else:
             self.logger = logger
-
-    def has_special_handler_indirect(self, node: Node) -> Optional[Callable]:
-        pass
     
     @compatibility(is_backward_compatible=True)
     def store_attr(self, path: str, obj):
@@ -152,14 +178,76 @@ class ModelSpeedup(torch.fx.Interpreter):
             assert mask is None
             return value
 
-
     def tensor_requires_grad(self, obj):
         if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj) and obj.dtype in torch_float_dtype:
             # only float type can require the gradient
             # enable the auto gradient
             obj.requires_grad_(True)
 
-    def propagate_orig(self):
+    # utils for direct update tand indirect update
+    def direct_calc_mask(self, obj):
+        if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj):
+            obj: torch.Tensor
+
+            out_mask = torch.ones_like(obj)
+            if obj.dtype in torch_integer_dtype:
+                same = obj[:] == obj[0]
+                reduced = torch.sum(same, dim=0)
+                is_constant = reduced == obj.size(0)
+                out_mask[:, is_constant] = 0
+            else:
+                std = torch.std(obj, dim=0)
+                mask_pos = std < self.STD_DELTA
+                out_mask[:, mask_pos] = 0
+            return out_mask
+        else:
+            return None
+
+    def indirect_calc_mask(self, mask, obj):
+        if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj):
+            assert isinstance(mask, torch.Tensor) and obj.shape == mask.shape
+            if obj.grad is not None:
+                gradient_sum = torch.sum(torch.abs(obj.grad), dim=0)
+                _grad_zero = gradient_sum == 0
+                new_mask = mask.clone()
+                for batchid in range(obj.size(0)):
+                    # set the same mask value for the whole batche
+                    new_mask[batchid][_grad_zero] = 0
+                return new_mask
+        return mask
+
+    def indirect_update_param_mask(self, output, mask):
+        # Note: output maybe tensor or list/tuple of tensors
+        if isinstance(output, torch.Tensor) and self.tensor_propagate_check(output):
+            assert isinstance(mask, torch.Tensor)
+            if output.grad_fn is not None:
+                output.backward(mask)
+        else:
+            assert not isinstance(mask, torch.Tensor)
+
+    # # pass the gradient to the predecessor nodes
+    def indirect_pass_grad(self, slot_val, out):
+        if isinstance(slot_val, torch.Tensor):
+            assert isinstance(out, torch.Tensor)
+            if self.tensor_propagate_check(slot_val):
+                if slot_val.grad is not None and out.grad is not None:
+                    slot_val.grad.data += out.grad.data
+                elif slot_val.grad is None:
+                    slot_val.grad = out.grad
+                elif slot_val.grad is not None and out.grad is None:
+                    # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
+                    # the size operation of tin will have no gradient
+                    pass
+        else:
+            assert not isinstance(out, torch.Tensor)
+
+    def has_special_handler_direct(self, node: Node) -> Optional[Callable]:
+        return None
+
+    def has_special_handler_indirect(self, node: Node) -> Optional[Callable]:
+        return None
+
+    def propagate_originally(self):
         self.logger.info("propagate original variables")
         for node in self.module.graph.nodes:
             node: Node
@@ -185,29 +273,8 @@ class ModelSpeedup(torch.fx.Interpreter):
                 #     del self.inter_vars[to_delete]
                 pass
 
-    def has_special_handler_direct(self, node: Node) -> Optional[Callable]:
-        return None
-
     def update_direct_sparsity(self):
         # update indirect out mask
-
-        def calc_one_mask(obj):
-            if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj):
-                obj: torch.Tensor
-
-                out_mask = torch.ones_like(obj)
-                if obj.dtype in torch_integer_dtype:
-                    same = obj[:] == obj[0]
-                    reduced = torch.sum(same, dim=0)
-                    is_constant = reduced == obj.size(0)
-                    out_mask[:, is_constant] = 0
-                else:
-                    std = torch.std(obj, dim=0)
-                    mask_pos = std < self.STD_DELTA
-                    out_mask[:, mask_pos] = 0
-                return out_mask
-            else:
-                return None
 
         self.logger.info("update direct sparsity")
 
@@ -224,7 +291,6 @@ class ModelSpeedup(torch.fx.Interpreter):
             handler = self.has_special_handler_direct(node)
             if handler is not None:
                 handler(self, node)
-            # elif node.op in ('call_function', 'call_method', 'call_module'):
             else:
                 with torch.no_grad():
                     if node.op == 'call_module':
@@ -246,50 +312,13 @@ class ModelSpeedup(torch.fx.Interpreter):
 
                     output = getattr(self, node.op)(node.target, args, kwargs)
 
-                    self.slots[node].mask_1 = map_recursive(calc_one_mask, output)
+                    self.slots[node].mask_1 = map_recursive(self.direct_calc_mask, output)
                     self.slots[node].status['mask_1'] += 1
 
             # do memory collect / compression
 
     def update_indirect_sparsity(self):
         # update indirect out mask
-        def calc_indirect_mask(mask, obj):
-            if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj):
-                assert isinstance(mask, torch.Tensor) and obj.shape == mask.shape
-                if obj.grad is not None:
-                    gradient_sum = torch.sum(torch.abs(obj.grad), dim=0)
-                    _grad_zero = gradient_sum == 0
-                    new_mask = mask.clone()
-                    for batchid in range(obj.size(0)):
-                        # set the same mask value for the whole batche
-                        new_mask[batchid][_grad_zero] = 0
-                    return new_mask
-            return mask
-
-        def update_indirect_weight_mask_helper(output, mask):
-            # Note: output maybe tensor or list/tuple of tensors
-            if isinstance(output, torch.Tensor) and self.tensor_propagate_check(output):
-                assert isinstance(mask, torch.Tensor)
-                if output.grad_fn is not None:
-                    output.backward(mask)
-            else:
-                assert not isinstance(mask, torch.Tensor)
-
-        # # pass the gradient to the predecessor nodes
-        def pass_grad(slot_val, out):
-            if isinstance(slot_val, torch.Tensor):
-                assert isinstance(out, torch.Tensor)
-                if self.tensor_propagate_check(slot_val):
-                    if slot_val.grad is not None and out.grad is not None:
-                        slot_val.grad.data += out.grad.data
-                    elif slot_val.grad is None:
-                        slot_val.grad = out.grad
-                    elif slot_val.grad is not None and out.grad is None:
-                        # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
-                        # the size operation of tin will have no gradient
-                        pass
-            else:
-                assert not isinstance(out, torch.Tensor)
 
         self.logger.info("update indirect sparsity")
 
@@ -300,7 +329,7 @@ class ModelSpeedup(torch.fx.Interpreter):
 
             output = map_recursive(self.slot_getter_value_2, node)
             output_masks_1 = map_recursive(self.slot_getter_mask_1, node)
-            output_masks_2 = map_recursive_zip(calc_indirect_mask, output_masks_1, output)
+            output_masks_2 = map_recursive_zip(self.indirect_calc_mask, output_masks_1, output)
 
             self.slots[node].mask_2 = output_masks_2
             self.slots[node].status['mask_2'] += 1
@@ -321,7 +350,7 @@ class ModelSpeedup(torch.fx.Interpreter):
 
             output = getattr(self, node.op)(node.target, args, kwargs)
             
-            map_recursive_zip(update_indirect_weight_mask_helper, output, output_masks_2)
+            map_recursive_zip(self.indirect_update_param_mask, output, output_masks_2)
 
             if node.op == 'call_module':
                 # update the sparsity of the paramters
@@ -336,8 +365,8 @@ class ModelSpeedup(torch.fx.Interpreter):
             arg_values_2 = map_recursive(self.slot_getter_value_2, node.args)
             kwarg_values_2 = map_recursive(self.slot_getter_value_2, node.kwargs)
 
-            map_recursive_zip(pass_grad, arg_values_2, args)
-            map_recursive_zip(pass_grad, kwarg_values_2, kwargs)
+            map_recursive_zip(self.indirect_pass_grad, arg_values_2, args)
+            map_recursive_zip(self.indirect_pass_grad, kwarg_values_2, kwargs)
 
     def replace_compressed_modules(self):
         """
@@ -409,7 +438,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         else:
             return None
 
-    def initialize_speedup(self, args):
+    def initialize_propagate(self, args):
         def model_tensor_randomizer(obj):
             if isinstance(obj, torch.Tensor) and obj.dim() > self.batch_dim:
                 input_shape = list(obj.size())
@@ -458,9 +487,9 @@ class ModelSpeedup(torch.fx.Interpreter):
         # which is more elegent
         fix_mask_conflict(self.masks_file, self.module, args)
 
-        self.initialize_speedup(args)
+        self.initialize_propagate(args)
 
-        self.propagate_orig()
+        self.propagate_originally()
 
         self.update_direct_sparsity()
 
