@@ -295,7 +295,7 @@ class ConcreteTracer(TracerBase):
         use the 'run_target' to actually execute the code, and store the value in 'value' field.
         """
         def upwrapper(obj: Any):
-            while _orig__orig_isinstance(obj, ep.ConcreteProxy):
+            while _orig_isinstance(obj, ep.ConcreteProxy):
                 obj = obj.value
             return obj
         args_unwrapped = ep.map_aggregate_not_proxy(args, upwrapper)
@@ -768,7 +768,7 @@ class ConcreteTracer(TracerBase):
 
         @functools.wraps(_orig_isinstance)
         def isinstance_wrapper(instance, clz):
-            if type(clz) in (tuple, list, _orig__orig_slice, _orig_tuple, _orig_list):
+            if type(clz) in (tuple, list, _orig_slice, _orig_tuple, _orig_list):
                 clz_wrapped = []
                 for type_wrapper, orig_type in self.clz_wrapper_map.items():
                     if type_wrapper in clz:
