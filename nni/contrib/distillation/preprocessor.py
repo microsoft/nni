@@ -164,7 +164,7 @@ class Preprocessor:
             A function used to collate the samples from distillation storage. If `labels_collate_fn` is None,
             the samples are excepted to be tensors and have same size, they will be batched and return.
         """
-        labels_collate_fn = labels_collate_fn if labels_collate_fn is not None else _default_labels_collate_fn
+        labels_collate_fn = labels_collate_fn if labels_collate_fn is not None else self._labels_collate_fn
         if not self._preprocessed:
             raise RuntimeError
         self._dataset.replay()
