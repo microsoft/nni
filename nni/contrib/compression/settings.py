@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-import inspect
 from typing import Any, Dict, List
 
 import torch
@@ -24,10 +23,9 @@ class ModuleSetting:
         target_names: List[str] = customized_setting.get('target_names', module_setting.get('target_names'))
         target_settings = customized_setting.get('target_settings', module_setting.get('target_settings'))
 
-        input_args_names = inspect.getfullargspec(module.forward).args[1:]
         if INPUT_PREFIX in target_names:
             target_names.remove(INPUT_PREFIX)
-            target_names.extend([f'{INPUT_PREFIX}{name}' for name in input_args_names])
+            target_names.append(f'{INPUT_PREFIX}0')
         if OUTPUT_PREFIX in target_names:
             target_names.remove(OUTPUT_PREFIX)
             target_names.append(f'{OUTPUT_PREFIX}0')

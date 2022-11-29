@@ -51,7 +51,7 @@ class ModuleWrapper(torch.nn.Module):
         self.config = config if config is not None else {}
 
         # the arguments' name of self.module.forward
-        self._input_args_names = inspect.getfullargspec(self.module.forward).args[1:]
+        self._input_args_spec = inspect.getfullargspec(self.module.forward)
 
         # create target spaces
         self.pruning_target_spaces: Dict[str, PruningTargetSpace] = {}
@@ -163,23 +163,32 @@ class ModuleWrapper(torch.nn.Module):
             target_spaces[target_name] = target_space
         return target_spaces
 
-    def _transfer_input_name(self, input_name_or_idx: str | int, contx2idx: bool = True) -> str | int:
+    def _transfer_input(self, *args, **kwargs) -> Tuple:
+        # -1 because the first arg of forward is `self`, not in args
+        pos_args_num = len(self._input_args_spec.args) - 1
+        pos_args = args[:pos_args_num]
+        pos_args += (kwargs.pop(k) for k in self._input_args_spec.args[len(pos_args) + 1:])
+        var_args = args[pos_args_num:]
+        kwonly_args = {k: kwargs.pop(k) for k in self._input_args_spec.kwonlyargs}
+        return pos_args, var_args, kwonly_args, kwargs
+
+    def _transfer_args_name(self, input_name_or_idx: str | int, contx2idx: bool = True) -> str | int:
         if contx2idx:
             if isinstance(input_name_or_idx, int) or input_name_or_idx.isdigit():
                 idx = int(input_name_or_idx)
-                assert idx < len(self._input_args_names)
+                assert idx < len(self._input_args_spec.args)
             else:
-                assert input_name_or_idx in self._input_args_names
-                idx = self._input_args_names.index(input_name_or_idx)
+                assert input_name_or_idx in self._input_args_spec.args
+                idx = self._input_args_spec.args.index(input_name_or_idx)
             return idx
         else:
             if isinstance(input_name_or_idx, int) or input_name_or_idx.isdigit():
                 idx = int(input_name_or_idx)
-                assert idx < len(self._input_args_names)
-                contx = self._input_args_names[idx]
+                assert idx < len(self._input_args_spec.args)
+                contx = self._input_args_spec.args[idx]
             else:
                 contx = input_name_or_idx
-                assert contx in self._input_args_names
+                assert contx in self._input_args_spec.args
             return contx
 
     def _apply_mask_helper(self, target: Tensor, target_space: PruningTargetSpace) -> Tensor:
@@ -211,7 +220,7 @@ class ModuleWrapper(torch.nn.Module):
         target_space.hidden_state = target.clone().detach() if isinstance(target, Tensor) else target
         return target
 
-    def patch_helper(self, target_name: str, target: Tensor) -> Tensor:
+    def patch_helper(self, target_name: str, target: Tensor | Any) -> Tensor | Any:
         # apply quantize-dequantize -> apply pruning mask -> record state for distil
         if target_name in self.quantization_target_spaces:
             target = self._apply_quant_helper(target, self.quantization_target_spaces[target_name])
@@ -221,18 +230,22 @@ class ModuleWrapper(torch.nn.Module):
             target = self._distil_observe_helper(target, self.distillation_target_spaces[target_name])
         return target
 
-    def patch_inputs(self, *args, **kwargs) -> Dict[str, Tensor | Any]:
-        # all inputs will convert in kwargs
-        for arg_idx, arg_value in enumerate(args):
-            arg_name = self._transfer_input_name(arg_idx, contx2idx=False)
-            kwargs[arg_name] = arg_value
+    def patch_inputs(self, *args, **kwargs) -> Tuple[List[Any], Dict[str, Any]]:
+        # NOTE: even here has an interface to compress `varargs`, `varkw`, but nni doesn't suppot compress them right now.
+        pos_args, varargs, kwonly_args, varkw = self._transfer_input(*args, **kwargs)
+
+        new_args = []
+        for idx, arg_value in enumerate(pos_args):
+            target_name = f'{INPUT_PREFIX}_{idx + 1}'
+            new_args.append(self.patch_helper(target_name, arg_value))
+        new_args.append(self.patch_helper(f'{INPUT_PREFIX}_{self._input_args_spec.varargs}', varargs))
 
         new_kwargs = {}
-        for arg_name, arg_value in kwargs.items():
-            target_name = f'{INPUT_PREFIX}_{arg_name}'
-            arg_value = self.patch_helper(target_name, arg_value)
-            new_kwargs[arg_name] = arg_value
-        return new_kwargs
+        for key, value in kwonly_args.items():
+            target_name = f'{INPUT_PREFIX}_{key}'
+            new_kwargs[key] = self.patch_helper(target_name, value)
+        new_kwargs.update(self.patch_helper(f'{INPUT_PREFIX}_{self._input_args_spec.varkw}', varkw))
+        return new_args, new_kwargs
 
     def patch_params(self, targets_dict: Dict[str, Tensor]) -> Dict[str, Tensor]:
         new_target_dict = {}
@@ -260,18 +273,18 @@ class ModuleWrapper(torch.nn.Module):
         return new_outputs
 
     def forward(self, *args, **kwargs):
-        inputs = self.patch_inputs(*args, **kwargs)
+        args, kwargs = self.patch_inputs(*args, **kwargs)
 
         params_dict = {}
         params_dict.update({k: v.target for k, v in self.pruning_target_spaces.items() if v.type is TargetType.PARAMETER})
         params_dict.update({k: v.target for k, v in self.quantization_target_spaces.items() if v.type is TargetType.PARAMETER})
         params_dict.update({k: v.target for k, v in self.distillation_target_spaces.items() if v.type is TargetType.PARAMETER})
         params_dict = self.patch_params(params_dict)
-        for target_name, wrapper_param in params_dict.items():
+        for target_name, patched_param in params_dict.items():
             module_param: Tensor = getattr(self.module, target_name)
-            module_param.copy_(wrapper_param)
+            module_param.copy_(patched_param)
 
-        outputs = self.module_forward(**inputs)
+        outputs = self.module_forward(*args, **kwargs)
         outputs = self.patch_outputs(outputs)
         return outputs
 
