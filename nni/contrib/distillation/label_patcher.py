@@ -18,9 +18,9 @@ from .utils import _default_labels_split_fn, _default_labels_collate_fn
 _logger = logging.getLogger(__name__)
 
 
-class Preprocessor:
+class DistilLabelPatcher:
     """
-    Preprocessor is a utility class to generate offline distillation dataloader.
+    DistilLabelPatcher is a utility class to generate offline distillation dataloader.
 
     Parameters
     ----------
@@ -28,7 +28,7 @@ class Preprocessor:
         The teacher predict function, given an input and return the logits/predictions/data that distillation needs.
         Usually, it could be an evaluation mode model.
     dataset
-        The training dataset, it will be wrapped by a `_UidDataset` in preprocessor.
+        The training dataset, it will be wrapped by a `_UidDataset` in this patcher.
         If this dataset is already an instance of `_UidDataset` and `uid_dataset_cls` is None, it will not be wrap again.
         (Reference to what is _UidDataset ...)
     create_dataloader
@@ -55,9 +55,9 @@ class Preprocessor:
         Additional keyword arguments pass to `uid_dataset_cls.__init__`.
         If there are many extra arguments, recommended to directly set `uid_dataset_cls` to None, and then pass in the wrapped `dataset`.
     labels_split_fn
-        Please refer `Preprocessor.generate_distillation_labels`.
+        Please refer `DistilLabelPatcher.generate_distillation_labels`.
     labels_collate_fn
-        Please refer `Preprocessor.create_replay_dataloader`.
+        Please refer `DistilLabelPatcher.create_patched_dataloader`.
     """
     def __init__(self, teacher_predict: Callable[[Any], Any], dataset: Dataset, create_dataloader: Callable[[Dataset], DataLoader],
                  keep_in_memory: bool = False, cache_folder: str | PathLike | None = None, cache_mode: Literal['pickle', 'hdf5'] = 'pickle',
@@ -75,7 +75,7 @@ class Preprocessor:
         self._labels_split_fn = labels_split_fn if labels_split_fn is not None else _default_labels_split_fn
         self._labels_collate_fn = labels_collate_fn if labels_collate_fn is not None else _default_labels_collate_fn
 
-        self._preprocessed = False if checkpoint_folder is None else True
+        self._label_done = False if checkpoint_folder is None else True
 
     def _patched_uid_dataloader(self):
         dataloader = self._create_dataloader(self._dataset)
@@ -122,8 +122,8 @@ class Preprocessor:
             then after `labels_split_fn`, it will be split to a list of tensor with 32 elements,
             each tensor is the probability with size (100,).
         """
-        if self._preprocessed:
-            warn_msg = 'Preprocessor has been generated distillation labels, if more epochs are needed, please set '
+        if self._label_done:
+            warn_msg = 'DistilLabelPatcher has been generated distillation labels, if more epochs are needed, please set '
             _logger.warning(warn_msg)
             return
 
@@ -148,11 +148,11 @@ class Preprocessor:
                     info_msg = f'[epoch {epoch_idx}: {batch_idx + 1} / {total_batch_num}]'
                     _logger.info(info_msg)
 
-        # ready for creating replay dataloader
-        self._preprocessed = True
+        # ready for creating patched dataloader
+        self._label_done = True
         self._dataset.replay()
 
-    def create_replay_dataloader(self, labels_collate_fn: Callable[[List], Any] | None = None):
+    def create_patched_dataloader(self, labels_collate_fn: Callable[[List], Any] | None = None):
         """
         Return a dataloader that concat the original dataset and the generated distillation labels.
         The iteration of dataloader will return (distil_labels, origin_batch).
@@ -160,19 +160,19 @@ class Preprocessor:
         Parameters
         ----------
         labels_collate_fn
-            Use to create replayed dataloader.
+            Use to create patched dataloader.
             A function used to collate the samples from distillation storage. If `labels_collate_fn` is None,
             the samples are excepted to be tensors and have same size, they will be batched and return.
         """
         labels_collate_fn = labels_collate_fn if labels_collate_fn is not None else self._labels_collate_fn
-        if not self._preprocessed:
+        if not self._label_done:
             raise RuntimeError
         self._dataset.replay()
         return self._patched_label_dataloader(labels_collate_fn)
 
     def save_checkpoint(self, checkpoint_folder: str | PathLike):
         """
-        Save a checkpoint that can be used to re-initialize the `Preprocessor` and reload the generated distillation labels.
+        Save a checkpoint that can be used to re-initialize the `DistilLabelPatcher` and reload the generated distillation labels.
 
         Parameters
         ----------

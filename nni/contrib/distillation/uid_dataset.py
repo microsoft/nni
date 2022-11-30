@@ -29,7 +29,7 @@ class _UidDataset(Dataset):
 
     def observe(self):
         """
-        Observe mode means this dataset is on processing by `Preprocessor`
+        Observe mode means this dataset is using to generate distillation labels by `DistilLabelPatcher`.
         """
         self._replay_mode = False
 

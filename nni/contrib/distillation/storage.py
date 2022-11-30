@@ -254,7 +254,7 @@ def create_storage(keep_in_memory: bool = False, cache_folder: str | PathLike | 
 
 
 def _create_temp_folder():
-    temp_folder = tempfile.mkdtemp(prefix='nni_distil_preprocessor_')
+    temp_folder = tempfile.mkdtemp(prefix='nni_distil_')
     info_msg = f'Created temp directory {temp_folder}'
     _logger.info(info_msg)
     return temp_folder

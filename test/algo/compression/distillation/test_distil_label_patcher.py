@@ -9,7 +9,7 @@ import pytest
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-from nni.contrib.distillation.preprocessor import Preprocessor
+from nni.contrib.distillation.label_patcher import DistilLabelPatcher
 from nni.contrib.distillation.uid_dataset import IndexedDataset, HashedDataset, AugmentationDataset
 
 from ..assets.common import log_dir
@@ -61,7 +61,7 @@ def hash(sample: torch.Tensor):
 
 @pytest.mark.parametrize('uid_dataset_cls', ['index', 'hash', 'augumentation'])
 @pytest.mark.parametrize('storage', ['memory', 'file'])
-def test_preprocessor(uid_dataset_cls: str, storage: str):
+def test_distil_label_patcher(uid_dataset_cls: str, storage: str):
     dataset = DemoDataset()
 
     if uid_dataset_cls == 'index':
@@ -72,18 +72,18 @@ def test_preprocessor(uid_dataset_cls: str, storage: str):
         uid_dataset = AugmentationDataset(IndexedDataset(dataset=dataset), transform=transform_fn)
 
     if storage == 'memory':
-        preprocessor = Preprocessor(teacher_predict=teacher_predict, dataset=uid_dataset, create_dataloader=create_dataloader,
-                                    keep_in_memory=True)
+        patcher = DistilLabelPatcher(teacher_predict=teacher_predict, dataset=uid_dataset, create_dataloader=create_dataloader,
+                                     keep_in_memory=True)
     elif storage == 'file':
-        preprocessor = Preprocessor(teacher_predict=teacher_predict, dataset=uid_dataset, create_dataloader=create_dataloader,
-                                    keep_in_memory=False, cache_folder=log_dir, cache_mode='pickle')
+        patcher = DistilLabelPatcher(teacher_predict=teacher_predict, dataset=uid_dataset, create_dataloader=create_dataloader,
+                                     keep_in_memory=False, cache_folder=log_dir, cache_mode='pickle')
     # add this storage back after it is done
     # elif storage == 'hdf5':
-    #     preprocessor = Preprocessor(teacher_predict=teacher_predict, dataset=uid_dataset, create_dataloader=create_dataloader,
-    #                                 keep_in_memory=False, cache_folder=log_dir, cache_mode='hdf5')
+    #     patcher = DistilLabelPatcher(teacher_predict=teacher_predict, dataset=uid_dataset, create_dataloader=create_dataloader,
+    #                                  keep_in_memory=False, cache_folder=log_dir, cache_mode='hdf5')
 
-    preprocessor.generate_distillation_labels()
-    distil_dataloader = preprocessor.create_replay_dataloader()
+    patcher.generate_distillation_labels()
+    distil_dataloader = patcher.create_patched_dataloader()
 
     if not uid_dataset_cls == 'augumentation':
         dataloader = create_dataloader(dataset)
