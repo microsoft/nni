@@ -263,8 +263,6 @@ class App extends React.Component<{}, AppState> {
         }
 
         this.setState({ expandRowIDsDetailTable: currentExpandRowIDs });
-        console.info('---------');
-        console.info(currentExpandRowIDs);
     };
 
     public changeSelectedRowIds = (val: string[]): void => {
