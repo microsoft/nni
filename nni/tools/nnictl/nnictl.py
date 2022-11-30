@@ -11,7 +11,7 @@ from .launcher import create_experiment, resume_experiment, view_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
 from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
     log_trial, experiment_clean, platform_clean, experiment_list, \
-    monitor_experiment, export_trials_data, trial_codegen, webui_url, \
+    monitor_experiment, export_trials_data, webui_url, \
     get_config, log_stdout, log_stderr, search_space_auto_gen, \
     save_experiment, load_experiment
 from .algo_management import algo_reg, algo_unreg, algo_show, algo_list

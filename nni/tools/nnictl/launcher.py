@@ -1,10 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from getpass import getuser
 import logging
 from pathlib import Path
-import tempfile
 
 from colorama import Fore
 import yaml
