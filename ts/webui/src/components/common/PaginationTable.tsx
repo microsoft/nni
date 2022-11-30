@@ -46,7 +46,7 @@ const PaginationTable = (props: IDetailsListProps): any => {
 
     useEffect(() => {
         setItemsOnPage(_obtainPaginationSlice(itemsPerPage, currentPage, items));
-    }, [items]);
+    }, [items, itemsPerPage]);
 
     const detailListProps = {
         ...props,

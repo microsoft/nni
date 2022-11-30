@@ -219,10 +219,8 @@ const Para = (props: ParaProps) => {
         }
 
         if (convertedTrials.length === 0 || dimensions.length <= 1) {
-            console.info('---');
             return;
         }
-        console.info('pcs', pcs);
 
         const firstRun = pcs === undefined;
         if (firstRun) {
