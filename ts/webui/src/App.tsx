@@ -258,9 +258,13 @@ class App extends React.Component<{}, AppState> {
 
         if (!currentExpandRowIDs.has(id)) {
             currentExpandRowIDs.add(id);
+        } else {
+            currentExpandRowIDs.delete(id);
         }
 
         this.setState({ expandRowIDsDetailTable: currentExpandRowIDs });
+        console.info('---------');
+        console.info(currentExpandRowIDs);
     };
 
     public changeSelectedRowIds = (val: string[]): void => {
