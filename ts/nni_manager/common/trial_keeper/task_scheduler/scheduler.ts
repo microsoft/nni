@@ -9,7 +9,7 @@ import { getLogger } from 'common/log';
 import type { TrialKeeper } from 'common/trial_keeper/keeper';
 import { GpuSystemInfo, collectGpuInfo as origCollectGpuInfo } from './collect_info';
 
-const logger = getLogger('GpuScheduler');
+const logger = getLogger('TaskScheduler');
 
 let collectGpuInfo = origCollectGpuInfo;  // for ut
 
@@ -29,7 +29,7 @@ interface SchedulerTrialInfo {
     util: number;
 }
 
-export class GpuScheduler {
+export class TaskScheduler {
     private gpus: SchedulerGpuInfo[] = [];
     private trials: SchedulerTrialInfo[] = [];
 
@@ -41,10 +41,10 @@ export class GpuScheduler {
     public async init(): Promise<void> {
         const info = await collectGpuInfo(true);
         if (info === null) {
-            throw new Error('GpuScheduler: Failed to collect GPU info');
+            throw new Error('TaskScheduler: Failed to collect GPU info');
         }
         if (info.gpuNumber === 0) {
-            throw new Error('GpuScheduler: No GPU found');
+            throw new Error('TaskScheduler: No GPU found');
         }
 
         for (let i = 0; i < info.gpuNumber; i++) {
@@ -72,13 +72,13 @@ export class GpuScheduler {
         const info = await collectGpuInfo(force);
         if (info === null) {
             if (force) {
-                throw new Error('GpuScheduler: Failed to update GPU info');
+                throw new Error('TaskScheduler: Failed to update GPU info');
             }
             return;
         }
         if (info.gpuNumber !== this.gpus.length) {
             // TODO: according to yuge's experience this do might happen
-            throw new Error(`GpuScheduler: GPU number changed from ${this.gpus.length} to ${info.gpuNumber}`);
+            throw new Error(`TaskScheduler: GPU number changed from ${this.gpus.length} to ${info.gpuNumber}`);
         }
 
         this.updateGpus(info);
@@ -246,7 +246,7 @@ export namespace UnitTestHelpers {
         collectGpuInfo = (_?: boolean): any => Promise.resolve(info);
     }
 
-    export function getGpuUtils(scheduler: GpuScheduler): number[] {
+    export function getGpuUtils(scheduler: TaskScheduler): number[] {
         return (scheduler as any).gpus.map((gpu: SchedulerGpuInfo) => gpu.util);
     }
 }

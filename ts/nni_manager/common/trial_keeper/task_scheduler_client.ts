@@ -12,18 +12,18 @@
  **/
 
 import globals from 'common/globals';
-import { GpuScheduler } from 'common/gpu_scheduler';
 import { getLogger } from 'common/log';
 import type { TrialKeeper } from './keeper';
+import { TaskScheduler } from './task_scheduler';
 
-const logger = getLogger('GpuSchedulerClient');
+const logger = getLogger('TaskSchedulerClient');
 
-export class GpuSchedulerClient {
-    private server: GpuScheduler | null = null;
+export class TaskSchedulerClient {
+    private server: TaskScheduler | null = null;
 
     constructor(enable: boolean) {
         if (enable) {
-            this.server = new GpuScheduler();
+            this.server = new TaskScheduler();
         }
     }
 
@@ -50,7 +50,7 @@ export class GpuSchedulerClient {
         }
 
         if (this.server === null) {
-            logger.error(`GPU scheduler is not enabled, but gpuNumber of trial ${trialId} is ${gpuNumber}`);
+            logger.error(`GPU scheduling is not enabled, but gpuNumber of trial ${trialId} is ${gpuNumber}`);
             return null;
         }
         return this.server.schedule(globals.args.experimentId, trialId, gpuNumber, restrictions);

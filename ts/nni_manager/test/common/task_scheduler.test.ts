@@ -3,11 +3,11 @@
 
 import assert from 'assert/strict';
 
-import type { GpuSystemInfo } from 'common/gpu_scheduler/collect_info';
 import type { TrialKeeper } from 'common/trial_keeper/keeper';
-import { GpuScheduler, UnitTestHelpers as Helpers } from 'common/gpu_scheduler/scheduler';
+import type { GpuSystemInfo } from 'common/trial_keeper/task_scheduler/collect_info';
+import { TaskScheduler, UnitTestHelpers as Helpers } from 'common/trial_keeper/task_scheduler/scheduler';
 
-let scheduler: GpuScheduler;
+let scheduler: TaskScheduler;
 
 const gpuInfo: GpuSystemInfo = {
     success: true,
@@ -41,7 +41,7 @@ describe('## gpu scheduler ##', () => {
 
 async function testInit(): Promise<void> {
     Helpers.mockGpuInfo(gpuInfo);
-    scheduler = new GpuScheduler();
+    scheduler = new TaskScheduler();
     await scheduler.init();
 }
 

@@ -4,8 +4,22 @@
 /**
  *  The helper class to implement a "reuse" training service.
  *
+ *  For reuse training services, each machine (or VM) will have a long run daemon, the trial keeper.
+ *  Trial keeper takes responsibility for:
+ *
+ *   1. Spawning and killing trial processes.
+ *   2. Communicating with trials to send/recieve parameters and metrics.
+ *   3. (WIP) Upload and download trial files (trial code, logs, user defined output files, etc).
+ *
+ *  The trial keeper will have a command channel to communicate with the training service.
+ *  The channel protocol and direction (who is server) will be decided by the training service.
+ *
+ *  The design philosophy is to minimize the differences among reuse training services.
+ *  Each training service only needs to launch the trial keeper and establish the command channel,
+ *  and then all other works can be done with sending and receiving uniformed commands.
+ *
  *  TrialKeeper has a very similar interface to TrainingSerivceV3.
- *  In fact the local training service is a thin wrapper over TrialKeeper.
+ *  Check it for method parameters' definition.
  **/
 
 import { EventEmitter } from 'events';
@@ -17,7 +31,7 @@ import { HttpChannelServer } from 'common/command_channel/http';
 import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
 import { TrialProcess, TrialProcessOptions } from './process';
-import { GpuSchedulerClient } from './gpu_scheduler_client';
+import { TaskSchedulerClient } from './task_scheduler_client';
 
 export declare namespace TrialKeeper {
     export interface TrialOptions {
@@ -41,17 +55,17 @@ export class TrialKeeper {
     private channels: HttpChannelServer;
     private dirs: Map<string, string> = new Map();
     private emitter: EventEmitter = new EventEmitter();
-    private gpuScheduler: GpuSchedulerClient;
+    private scheduler: TaskSchedulerClient;
     private log: Logger;
     private platform: string;
     private trials: Map<string, TrialProcess> = new Map();
 
-    constructor(environmentId: string, platform: string, enableGpuScheduler: boolean) {
+    constructor(environmentId: string, platform: string, enableGpuScheduling: boolean) {
         this.envId = environmentId;
         this.platform = platform;
         this.log = getLogger(`TrialKeeper.${environmentId}`);
 
-        this.gpuScheduler = new GpuSchedulerClient(enableGpuScheduler);
+        this.scheduler = new TaskSchedulerClient(enableGpuScheduling);
 
         this.channels = new HttpChannelServer(this.envId, `/env/${this.envId}`);
         this.channels.onReceive((trialId, command) => {
@@ -65,14 +79,14 @@ export class TrialKeeper {
     // TODO: support user configurable init command
     public async start(): Promise<void> {
         await Promise.all([
-            this.gpuScheduler.start(),
+            this.scheduler.start(),
             this.channels.start(),
         ]);
     }
 
     public async shutdown(): Promise<void> {
         let promises: Promise<void>[] = [
-            this.gpuScheduler.shutdown(),
+            this.scheduler.shutdown(),
             this.channels.shutdown(),
         ];
 
@@ -90,9 +104,10 @@ export class TrialKeeper {
     public async createTrial(options: TrialKeeper.TrialOptions): Promise<boolean> {
         const trialId = options.id;
 
-        const gpuEnv = await this.gpuScheduler.schedule(trialId, options.gpuNumber, options.gpuRestrictions);
+        const gpuEnv = await this.scheduler.schedule(trialId, options.gpuNumber, options.gpuRestrictions);
         if (gpuEnv === null) {
-            this.log.info('No GPU available');
+            // TODO: should scheduler report concrete fail reason?
+            this.log.info('Scheduling failed because the GPU constraint cannot be satisfied');
             return false;
         }
 
@@ -106,7 +121,7 @@ export class TrialKeeper {
         });
         trial.onStop((timestamp, exitCode, _signal) => {
             this.emitter.emit('trial-stop', trialId, timestamp, exitCode);
-            this.gpuScheduler.release(trialId);  // TODO: fire and forget, handle exception?
+            this.scheduler.release(trialId);  // TODO: fire and forget, handle exception?
         });
 
         const procOptions: TrialProcessOptions = {
