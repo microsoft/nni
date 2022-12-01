@@ -10,7 +10,6 @@ from pathlib import Path
 
 import nni
 from nni.experiment.config import RemoteConfig, RemoteMachineConfig
-import nni.runtime.platform.test
 from nni.runtime.tuner_command_channel import legacy as protocol
 import json
 
@@ -43,6 +42,8 @@ from torchvision.datasets import MNIST
 from torchvision import transforms
 from torch.utils.data import Dataset
 from sklearn.datasets import load_diabetes
+
+pytestmark = pytest.mark.skip(reason='Will be rewritten.')
 
 
 class _model_cpu(nn.Module):

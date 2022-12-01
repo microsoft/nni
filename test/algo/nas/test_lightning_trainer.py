@@ -3,7 +3,6 @@ import pytest
 
 import nni
 import nni.retiarii.evaluator.pytorch.lightning as pl
-import nni.runtime.platform.test
 import pytorch_lightning
 import torch
 import torch.nn as nn
@@ -13,6 +12,8 @@ from sklearn.datasets import load_diabetes
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.datasets import MNIST
+
+pytestmark = pytest.mark.skip(reason='Will be rewritten.')
 
 debug = False
 

@@ -135,7 +135,7 @@ def report_intermediate_result(metric: TrialMetric | dict[str, Any]) -> None:
         trial_job_id=trial_env_vars.NNI_TRIAL_JOB_ID,
         type='PERIODICAL',
         sequence=_intermediate_seq,
-        value=dump(metric)
+        value=metric
     )
     _intermediate_seq += 1
 
@@ -162,5 +162,5 @@ def report_final_result(metric: TrialMetric | dict[str, Any]) -> None:
         trial_job_id=trial_env_vars.NNI_TRIAL_JOB_ID,
         type='FINAL',
         sequence=0,
-        value=dump(metric)
+        value=metric
     )

@@ -18,9 +18,9 @@ def set_default_trial_command_channel(channel: Optional[TrialCommandChannel] = N
     """
     Set the default trial command channel.
 
-    If no channel is provided:
+    If no channel is provided, we create the channel following these rules:
 
-    - If the environment variable ``NNI_PLATFORM`` is not set, create
+    - If the environment variable ``NNI_PLATFORM`` is not set or is ``unittest``, create
       :class:`~nni.runtime.trial_command_channel.standalone.StandaloneTrialCommandChannel`;
     - Otherwise, create :class:`~nni.runtime.trial_command_channel.local_legacy.LocalLegacyTrialCommandChannel`.
 
@@ -43,7 +43,7 @@ def set_default_trial_command_channel(channel: Optional[TrialCommandChannel] = N
 
         assert dispatcher_env_vars.SDK_PROCESS != 'dispatcher'
 
-        if trial_env_vars.NNI_PLATFORM is None:
+        if trial_env_vars.NNI_PLATFORM is None or trial_env_vars.NNI_PLATFORM == 'unittest':
             from .standalone import StandaloneTrialCommandChannel
             _channel = StandaloneTrialCommandChannel()
         else:
