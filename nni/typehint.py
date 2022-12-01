@@ -69,3 +69,4 @@ class ParameterRecord(TypedDict):
     # but they are undocumented and should not be used by users.
     parameter_index: NotRequired[int]
     trial_job_id: NotRequired[str]
+    version_info: NotRequired[dict]
