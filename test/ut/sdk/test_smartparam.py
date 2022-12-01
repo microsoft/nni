@@ -6,7 +6,6 @@ import os
 os.environ['NNI_PLATFORM'] = 'unittest'
 
 import nni
-import nni.runtime.platform.test as test_platform
 import nni.trial
 
 from unittest import TestCase, main
