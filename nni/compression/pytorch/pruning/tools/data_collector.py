@@ -9,6 +9,8 @@ from torch import Tensor
 from .base import DataCollector, EvaluatorBasedDataCollector
 from .base import TrainerBasedDataCollector
 
+from ...utils import all_reduce_on_multiple_gpus
+
 _logger = logging.getLogger(__name__)
 
 __all__ = ['TargetDataCollector', 'EvaluatorBasedTargetDataCollector', 'EvaluatorBasedHookDataCollector',
@@ -121,5 +123,8 @@ class EvaluatorBasedHookDataCollector(EvaluatorBasedDataCollector):
         for module_name, hooks in self._hooks.items():
             data[module_name] = {}
             for target_name, hook in hooks.items():
-                data[module_name][target_name] = hook.buffer
+                if self.compressor.is_ddp_model:
+                    data[module_name][target_name] = all_reduce_on_multiple_gpus(hook.buffer)
+                else:
+                    data[module_name][target_name] = hook.buffer
         return data

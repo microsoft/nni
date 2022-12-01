@@ -10,6 +10,8 @@ from torch.nn import Module
 from nni.common.graph_utils import TorchModuleGraph
 from nni.compression.pytorch.utils.pruning import get_module_by_name, weighted_modules
 
+from ..utils.check_ddp import check_ddp_model
+
 _logger = logging.getLogger(__name__)
 
 __all__ = ['LayerInfo', 'Compressor']
@@ -90,6 +92,8 @@ class Compressor:
         assert isinstance(model, Module), 'Only support compressing pytorch Module, but the type of model is {}.'.format(type(model))
 
         self.bound_model = model
+        self.is_ddp_model, _ = check_ddp_model(self.bound_model)
+
         self.config_list = config_list
         self.validate_config(model=model, config_list=config_list)
 
