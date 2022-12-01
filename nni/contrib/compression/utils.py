@@ -53,8 +53,8 @@ def canonicalize_settings(module: torch.nn.Module,
                           mode: Literal['pruning', 'quantization', 'distillation'] | None = None) -> Dict[str, Dict[str, Any]]:
     assert mode is not None
     if mode == 'pruning':
-        return PruningSetting.get(module, config)
+        return PruningSetting.get(module, config.get('target_names', None), config.get('target_settings', None))
     if mode == 'quantization':
-        return QuantizationSetting.get(module, config)
+        return QuantizationSetting.get(module, config.get('target_names', None), config.get('target_settings', None))
     if mode == 'distillation':
-        return DistillatoinSetting.get(module, config)
+        return DistillatoinSetting.get(module, config.get('target_names', None), config.get('target_settings', None))
