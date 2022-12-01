@@ -3,9 +3,8 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
-from .common.serializer import dump
 from .runtime.env_vars import trial_env_vars
 from .runtime.trial_command_channel import get_default_trial_command_channel
 from .typehint import Parameters, TrialMetric, ParameterRecord
@@ -135,7 +134,7 @@ def report_intermediate_result(metric: TrialMetric | dict[str, Any]) -> None:
         trial_job_id=trial_env_vars.NNI_TRIAL_JOB_ID,
         type='PERIODICAL',
         sequence=_intermediate_seq,
-        value=metric
+        value=cast(TrialMetric, metric)
     )
     _intermediate_seq += 1
 
@@ -162,5 +161,5 @@ def report_final_result(metric: TrialMetric | dict[str, Any]) -> None:
         trial_job_id=trial_env_vars.NNI_TRIAL_JOB_ID,
         type='FINAL',
         sequence=0,
-        value=metric
+        value=cast(TrialMetric, metric)
     )

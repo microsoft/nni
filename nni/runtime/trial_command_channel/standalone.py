@@ -3,9 +3,10 @@
 
 from __future__ import annotations
 
-import colorama
 import logging
 import warnings
+
+import colorama
 from typing_extensions import Literal
 
 from nni.typehint import TrialMetric
@@ -36,7 +37,7 @@ class StandaloneTrialCommandChannel(TrialCommandChannel):
             parameters={}
         )
 
-    def send_metric(self, type: Literal['INTERMEDIATE', 'FINAL'], parameter_id: int | None,
+    def send_metric(self, type: Literal['PERIODICAL', 'FINAL'], parameter_id: int | None,  # pylint: disable=redefined-builtin
                     trial_job_id: str, sequence: int, value: TrialMetric) -> None:
         if type == 'FINAL':
             _logger.info('Final result: %s', value)

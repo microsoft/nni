@@ -23,6 +23,9 @@ class TrialTestCase(TestCase):
             'parameters': self._trial_params
         })
 
+    def tearDown(self):
+        set_default_trial_command_channel(self._default_channel)
+
     def test_get_next_parameter(self):
         self.assertEqual(nni.get_next_parameter(), self._trial_params)
 

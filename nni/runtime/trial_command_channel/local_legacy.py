@@ -86,7 +86,7 @@ class LocalLegacyTrialCommandChannel(TrialCommandChannel):
         assert isinstance(params, dict) and 'parameters' in params
         return cast(ParameterRecord, params)
 
-    def send_metric(self, type: Literal['INTERMEDIATE', 'FINAL'], parameter_id: int | None,
+    def send_metric(self, type: Literal['PERIODICAL', 'FINAL'], parameter_id: int | None,  # pylint: disable=redefined-builtin
                     trial_job_id: str, sequence: int, value: TrialMetric) -> None:
         dumped_metric = dump({
             'parameter_id': parameter_id,

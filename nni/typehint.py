@@ -7,7 +7,7 @@ Types for static checking.
 
 __all__ = ['Parameters', 'SearchSpace', 'TrialMetric', 'TrialRecord', 'ParameterRecord']
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from typing_extensions import Literal, TypedDict, NotRequired
 
@@ -61,7 +61,7 @@ class ParameterRecord(TypedDict):
 
     Most users don't need to use this class directly.
     """
-    parameter_id: int
+    parameter_id: Optional[int]
     parameters: Parameters
     parameter_source: NotRequired[Literal['algorithm', 'customized', 'resumed']]
 

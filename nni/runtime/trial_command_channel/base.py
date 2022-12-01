@@ -34,7 +34,7 @@ class TrialCommandChannel:
 
     def send_metric(
         self,
-        type: Literal['INTERMEDIATE', 'FINAL'],
+        type: Literal['PERIODICAL', 'FINAL'],  # pylint: disable=redefined-builtin
         parameter_id: int | None,
         trial_job_id: str,
         sequence: int,
@@ -45,7 +45,7 @@ class TrialCommandChannel:
         Parameters
         ----------
         type
-            Type of the metric. Must be ``'INTERMEDIATE'`` or ``'FINAL'``.
+            Type of the metric. Must be ``'PERIODICAL'`` or ``'FINAL'``.
         parameter_id
             ID of the parameter. Could be ``None`` if no parameter is associated with the metric.
         trial_job_id
