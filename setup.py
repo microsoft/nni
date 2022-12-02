@@ -290,7 +290,6 @@ _temp_files = [
     'test/model_path/',
     'test/temp.json',
     'test/ut/sdk/*.pth',
-    'test/ut/tools/annotation/_generated/',
 
     # example
     'nni_assets/**/data/',
