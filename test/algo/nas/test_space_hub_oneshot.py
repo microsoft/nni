@@ -212,7 +212,7 @@ def test_hub_oneshot(space_type, strategy_type):
     model_space = _hub_factory(space_type)
 
     dataset_type = 'cifar10'
-    if 'imagenet' in space_type or space_type in ['mobilenetv3', 'proxylessnas', 'shufflenet', 'autoformer']:
+    if 'imagenet' in space_type or space_type in ['mobilenetv3', 'mobilenetv3_small', 'proxylessnas', 'shufflenet', 'autoformer']:
         dataset_type = 'imagenet'
 
     subset_size = 4

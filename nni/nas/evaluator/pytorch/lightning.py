@@ -296,7 +296,7 @@ class SupervisedLearningModule(LightningModule):
 class _AccuracyWithLogits(torchmetrics.Accuracy):
     # Only for torchmetrics < 0.11
     def update(self, pred, target):
-        return super().update(nn_functional.softmax(pred, dim=-1), target)
+        return super().update(nn_functional.softmax(pred, dim=-1), target)  # type: ignore
 
 
 @nni.trace
@@ -311,14 +311,14 @@ class ClassificationModule(SupervisedLearningModule):
         from packaging.version import Version
         if Version(torchmetrics.__version__) < Version('0.11.0'):
             # Older version accepts num_classes = None
-            metrics = {'acc': _AccuracyWithLogits()}  # pylint: disable=no-value-for-parameter
+            metrics = {'acc': _AccuracyWithLogits()}  # type: ignore # pylint: disable=no-value-for-parameter
         else:
             if num_classes is None:
                 raise ValueError('num_classes must be specified for torchmetrics >= 0.11. '
                                  'Please either specify it or use an older version of torchmetrics.')
             metrics = {'acc': torchmetrics.Accuracy('multiclass', num_classes=num_classes)}
 
-        super().__init__(criterion, metrics,
+        super().__init__(criterion, metrics,  # type: ignore
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer,
                          export_onnx=export_onnx)
 
