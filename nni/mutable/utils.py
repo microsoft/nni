@@ -233,6 +233,7 @@ class label_scope:
         For example, ``model/cell/2``.
         """
         self.check_entered()
+        assert self.path is not None, 'This should never happen.'
         return cast(str, label(self.path))
 
     def __repr__(self):
