@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Stack } from '@fluentui/react';
-import { SlideNavBtns } from '@components/nav/slideNav/SlideNavBtns';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import NavCon from '@components/nav/Nav';
 import MessageInfo from '@components/common/MessageInfo';
@@ -28,29 +27,29 @@ export const AppContext = React.createContext({
     expandRowIDsDetailTable: new Set(['']),
     selectedRowIds: [] as string[],
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeSelectedRowIds: (_val: string[]): void => {},
+    changeSelectedRowIds: (_val: string[]): void => { },
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeColumn: (_val: string[]): void => {},
+    changeColumn: (_val: string[]): void => { },
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeMetricGraphMode: (_val: 'Maximize' | 'Minimize'): void => {},
+    changeMetricGraphMode: (_val: 'Maximize' | 'Minimize'): void => { },
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeMaxDurationUnit: (_val: string): void => {},
+    changeMaxDurationUnit: (_val: string): void => { },
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeEntries: (_val: string): void => {},
+    changeEntries: (_val: string): void => { },
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    updateOverviewPage: () => {},
+    updateOverviewPage: () => { },
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    updateDetailPage: () => {},
+    updateDetailPage: () => { },
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeExpandRowIDs: (_val: string, _type?: string): void => {},
+    changeExpandRowIDs: (_val: string, _type?: string): void => { },
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeExpandRowIDsDetailTable: (_val: string, _type?: string): void => {},
+    changeExpandRowIDsDetailTable: (_val: string, _type?: string): void => { },
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    startTimer: () => {},
+    startTimer: () => { },
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    closeTimer: (): void => {},
+    closeTimer: (): void => { },
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    refreshDetailTable: (): void => {}
+    refreshDetailTable: (): void => { }
 });
 
 interface AppState {
@@ -142,8 +141,6 @@ class App extends React.Component<{}, AppState> {
                         </div>
                         <Stack className='contentBox'>
                             <Stack className='content'>
-                                {/* search space & config & dispatcher, nnimanagerlog*/}
-                                <SlideNavBtns />
                                 {/* if api has error field, show error message */}
                                 {errorList.map(
                                     (item, key) =>

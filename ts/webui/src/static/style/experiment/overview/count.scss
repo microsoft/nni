@@ -1,5 +1,5 @@
 $seriesIconMargin: 10px;
-$margin: 32px;
+$margin: 20px;
 
 /* for duration.tsx file */
 
@@ -26,6 +26,7 @@ $margin: 32px;
 .time {
     width: 80%;
     margin: 0 auto;
+    margin-top: 16px;
 
     >div {
         margin-bottom: 17px;
@@ -71,7 +72,7 @@ $margin: 32px;
 
     /* succeed trials number style */
     .succeed-trials-number {
-        margin: 26px 0;
+        margin: 21px 0;
         text-align: center;
     }
 
@@ -189,7 +190,9 @@ $margin: 32px;
     }
 
     .confirm {
-        margin: 0 $seriesIconMargin;
+        margin: 0 4px;
+        position: relative;
+        top: 2px;
 
         i {
             color: green;
@@ -216,4 +219,94 @@ $margin: 32px;
     z-index: 999;
     left: -50%;
     width: 270%;
+}
+
+.edit-position {
+    position: relative;
+
+    .maxTrialNumber{
+        margin-right: 13px;
+    }
+}
+
+/*  edit duration style */
+div.maxExperimentDuration{
+    width: 200px;
+}
+/* trial-number & concurrency */
+.show-params{
+    width: 139px;
+    height: 32px;
+    border: 1px solid #ccc;
+    margin: 0 auto;
+    
+    >span{
+        display: inline-block;
+        padding: 0 6px;
+        line-height: 32px;
+    }
+    .title{
+        border-right: 1px solid #ccc;
+    }
+
+    .number{
+        text-align: right;
+    }
+    .unit{
+        width: 34px;
+        line-height: 28px;
+        text-align: center;
+        background-color: #F3F5F7;
+        border-radius: 5px;
+    }
+}
+
+.edit-params{
+    min-width: 152px;
+    height: 52px;
+    background: #fff;
+    border: 1px solid #F3F5F7;
+    margin: 0 auto;
+    padding: 0 10px;
+    box-sizing: border-box;
+    box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.08);
+    border-radius: 4px;
+    position: absolute;
+    top: -60px;
+    left: 33px;
+
+    .edit-input{
+        width: 48px;
+        height: 28px;
+        border: 1px solid #3582EC;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+    
+    .dropdown{
+        width: 70px;
+        height: 32px;
+        background: #F3F5F7;
+        border-radius: 4px;
+        margin-top: 10px;
+    }
+    .series {
+        position: relative;
+        top: 8px;
+        
+        >span{
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            text-align: center; 
+            background: #F9FAFB; 
+            border-radius: 6px;
+        }
+    }
+}
+
+/*edit params trialnumber & concurrency box */
+.edit-numbers{
+    margin-top: 10px;
 }

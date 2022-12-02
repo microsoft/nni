@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Stack, StackItem, CommandBarButton, IContextualMenuProps } from '@fluentui/react';
-import { Link } from 'react-router-dom';
+import { Stack, StackItem, CommandBarButton, IContextualMenuProps, IStackTokens } from '@fluentui/react';
+// import TooltipHostForIcon from '@components/common/TooltipHostForIcon';
+import WebRouters from './WebsiteRouter';
+import TooltipHostForIcon from '@components/common/del/TooltipHostForIcon';
+import LinksIcon from '@components/nav/LinksIcon';
 import { MANAGER_IP, WEBUIDOC } from '@static/const';
 import ExperimentSummaryPanel from './slideNav/ExperimentSummaryPanel';
-import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './slideNav/NNItabs';
 import { EXPERIMENT } from '@static/datamodel';
-import { gap15, stackStyle } from '@components/fluent/ChildrenGap';
+import { getPrefix } from '@static/function';
+import { SlideNavBtns } from './slideNav/SlideNavBtns';
 import {
     infoIconAbout,
     timeIcon,
@@ -19,6 +22,15 @@ import '@style/nav/nav.scss';
 import '@style/icon.scss';
 import { ErrorMessage } from '@components/nav/ErrorMessage';
 
+const pageURLtoken: IStackTokens = {
+    padding: '20px 10px',
+    childrenGap: 8
+};
+
+const navMaintoken: IStackTokens = {
+    childrenGap: 16
+};
+
 interface NavProps {
     changeInterval: (value: number) => void;
 }
@@ -26,6 +38,7 @@ interface NavProps {
 const NavCon = (props: NavProps): any => {
     const { changeInterval } = props;
     const [version, setVersion] = useState('999' as string);
+    const [currentPage, setcurrentPage] = useState(window.location.pathname === '/oview' ? 'Overview' : 'Trials detail');
     const [visibleExperimentPanel, setVisibleExperimentPanel] = useState(false);
     const [refreshText, setRefreshText] = useState('Auto refresh' as string);
     const [refreshFrequency, setRefreshFrequency] = useState(10 as number | string);
@@ -39,17 +52,17 @@ const NavCon = (props: NavProps): any => {
         window.open(WEBUIDOC);
     };
 
-    const openGithubNNI = (): void => {
+    const openNNIcode = (): void => {
         // 999.0.0-developing
         let formatVersion = `v${version}`;
         if (version === '999.0.0-developing') {
             formatVersion = 'master';
         }
-        const nniLink = `https://github.com/Microsoft/nni/tree/${formatVersion}`;
-        window.open(nniLink);
+        window.open(`https://github.com/Microsoft/nni/tree/${formatVersion}`);
     };
 
     const getInterval = (num: number): void => {
+        // 解开注释
         changeInterval(num); // notice parent component
         setRefreshFrequency(num === 0 ? '' : num);
         setRefreshText(num === 0 ? 'Disable auto' : 'Auto refresh');
@@ -110,46 +123,54 @@ const NavCon = (props: NavProps): any => {
             }
         ]
     };
-    const aboutProps: IContextualMenuProps = {
-        items: [
-            {
-                key: 'feedback',
-                text: 'Feedback',
-                iconProps: { iconName: 'OfficeChat' },
-                onClick: openGithub
-            },
-            {
-                key: 'help',
-                text: 'Document',
-                iconProps: { iconName: 'TextDocument' },
-                onClick: openDocs
-            },
-            {
-                key: 'version',
-                text: `Version ${version}`,
-                iconProps: { iconName: 'VerifiedBrand' },
-                onClick: openGithubNNI
-            }
-        ]
-    };
 
     return (
-        <Stack horizontal className='nav'>
-            <React.Fragment>
-                <StackItem grow={30} styles={{ root: { minWidth: 300, display: 'flex', verticalAlign: 'center' } }}>
-                    <span className='desktop-logo'>{NNILOGO}</span>
-                    <span className='left-right-margin'>{OVERVIEWTABS}</span>
-                    <span>{DETAILTABS}</span>
-                </StackItem>
-                <StackItem grow={70} className='navOptions'>
-                    <Stack horizontal horizontalAlign='end' tokens={gap15} styles={stackStyle}>
-                        {/* refresh button danyi*/}
-                        {/* TODO: fix bug */}
-                        {/* <CommandBarButton
-                                    iconProps={{ iconName: 'sync' }}
-                                    text="Refresh"
-                                    onClick={this.props.refreshFunction}
-                                /> */}
+        <React.Fragment>
+            {/* shu */}
+            <Stack className='nav-slider'>
+                {/* TODO: add click event for Stack>div */}
+                <Stack tokens={pageURLtoken}>
+                    <img width='36' src={(getPrefix() || '') + '/icons/logo.png'} />
+                    <WebRouters changeCurrentPage={setcurrentPage}/>
+                    {/* <TooltipHostForIcon tooltip='Overview' iconName='overview' pageURL='/oview'/>
+                    <TooltipHostForIcon tooltip='Trials detail' iconName='detail' pageURL='/detail'/> */}
+                    <TooltipHostForIcon tooltip='All experiments' iconName='all-experiments' pageURL='/experiment' />
+                </Stack>
+                <Stack tokens={pageURLtoken} className='bottom'>
+                    <LinksIcon
+                        tooltip='Feedback'
+                        iconName='feedback'
+                        directional='right'
+                        iconClickEvent={openGithub}
+                    />
+                    <LinksIcon
+                        tooltip='Document'
+                        iconName='document'
+                        directional='right'
+                        iconClickEvent={openDocs}
+                    />
+                    <LinksIcon
+                        tooltip={`Version: ${version}`}
+                        iconName='version'
+                        directional='right'
+                        iconClickEvent={openNNIcode}
+                    />
+                </Stack>
+            </Stack>
+            {/* 横 */}
+            <Stack horizontal horizontalAlign='space-between' className='nav-main'>
+                <StackItem grow={30} className='title'>{currentPage}</StackItem>
+                <StackItem grow={70} className='options'>
+                    <Stack horizontal horizontalAlign='end' tokens={navMaintoken}>
+                        <LinksIcon
+                            tooltip='Experiment summary'
+                            iconName='summary'
+                            directional='bottom'
+                            iconClickEvent={(): void => setVisibleExperimentPanel(true)}
+                        />
+                        <div className='bar'>|</div>
+                        <SlideNavBtns />
+                        <div className='bar'>|</div>
                         <div className='nav-refresh'>
                             <CommandBarButton
                                 iconProps={refreshFrequency === '' ? disableUpdates : timeIcon}
@@ -158,30 +179,19 @@ const NavCon = (props: NavProps): any => {
                             />
                             <div className='nav-refresh-num'>{refreshFrequency}</div>
                         </div>
-                        <CommandBarButton
-                            iconProps={{ iconName: 'ShowResults' }}
-                            text='Experiment summary'
-                            onClick={(): void => setVisibleExperimentPanel(true)}
-                        />
-                        <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
-                        <Link to='/experiment' className='experiment'>
-                            <div className='expNavTitle'>
-                                <span>All experiments</span>
-                                {ChevronRightMed}
-                            </div>
-                        </Link>
                     </Stack>
                 </StackItem>
-                {visibleExperimentPanel && (
-                    <ExperimentSummaryPanel
-                        closeExpPanel={(): void => setVisibleExperimentPanel(false)}
-                        experimentProfile={EXPERIMENT.profile}
-                    />
-                )}
-            </React.Fragment>
+            </Stack>
+            {visibleExperimentPanel && (
+                <ExperimentSummaryPanel
+                    closeExpPanel={(): void => setVisibleExperimentPanel(false)}
+                    experimentProfile={EXPERIMENT.profile}
+                />
+            )}
             {/* experiment error model */}
             <ErrorMessage />
-        </Stack>
+        </React.Fragment>
+
     );
 };
 

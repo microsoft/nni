@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useContext } from 'react';
 import axios from 'axios';
-import { Dropdown } from '@fluentui/react';
+import { Stack, Dropdown, IStackTokens } from '@fluentui/react';
 import { AppContext } from '@/App';
 import { MANAGER_IP, MAX_TRIAL_NUMBERS } from '@static/const';
 import { EXPERIMENT } from '@static/datamodel';
@@ -11,6 +11,9 @@ import { Edit, CheckMark, Cancel } from '@components/fluent/Icon';
 import MessageInfo from '@components/common/MessageInfo';
 import '@style/experiment/overview/count.scss';
 
+const editElementGap: IStackTokens = {
+    childrenGap: 4,
+};
 const DurationInputRef = React.createRef<HTMLInputElement>();
 
 export const EditExperimentParam = (): any => {
@@ -175,7 +178,7 @@ export const EditExperimentParam = (): any => {
     }
     return (
         <React.Fragment>
-            <div className={`${editClassName} editparam`}>
+            {/* <div className={`${editClassName} editparam`}>
                 <span className='title'>{title}</span>
                 <input
                     className={`${field} editparam-Input`}
@@ -210,7 +213,43 @@ export const EditExperimentParam = (): any => {
                 )}
 
                 {isShowSucceedInfo && <MessageInfo className='info' typeInfo={typeInfo} info={info} />}
+            </div> */}
+            {/* for new */}
+            <div className='edit-position'>
+                {/* field: maxTrialNumber trialConcurrency maxExperimentDuration */}
+                <div className={`${field} show-params`} onClick={hidePencil}>
+                    <span className='title'>{title}</span>
+                    <span className='number'>{editInputVal}</span>
+                    {title === 'Max duration' && <span className='unit'>{convertUnit(maxDurationUnit)}</span>}
+                </div>
+                {/* 弹出框 */}
+                {!isShowPencil && <Stack className='edit-params' horizontal tokens={editElementGap}>
+                    <input
+                        className='edit-input'
+                        ref={DurationInputRef}
+                        value={editInputVal}
+                        onChange={setInputVal}
+                    />
+                    {!isShowPencil && title === 'Max duration' && (
+                        <Dropdown
+                            selectedKey={unit}
+                            options={durationUnit}
+                            className='dropdown'
+                            onChange={updateUnit}
+                        />
+                    )}
+                    <span className='series'>
+                        <span className='confirm cursor' onClick={confirmEdit}>
+                            {CheckMark}
+                        </span>
+                        <span className='cancel cursor' onClick={cancelEdit}>
+                            {Cancel}
+                        </span>
+                    </span>
+                </Stack>}
+                {isShowSucceedInfo && <MessageInfo className='info' typeInfo={typeInfo} info={info} />}
             </div>
+
         </React.Fragment>
     );
 };

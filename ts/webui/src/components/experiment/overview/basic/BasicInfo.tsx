@@ -1,5 +1,5 @@
 import React, { useState, useContext, useCallback } from 'react';
-import { Stack, Callout, Link, IconButton } from '@fluentui/react';
+import { Stack, Callout, Link, IconButton, IStackTokens } from '@fluentui/react';
 import { useId } from '@uifabric/react-hooks';
 import { EXPERIMENT } from '@static/datamodel';
 import { getPrefix } from '@static/function';
@@ -9,6 +9,11 @@ import { styles } from '../../../common/calloutStyles';
 import Config from './Config';
 import '@style/common/experimentStatusColor.scss';
 import '@style/experiment/overview/basic.scss';
+
+
+const focusMetricGap: IStackTokens = {
+    childrenGap: 4
+};
 
 export const BasicInfo = (): any => {
     const labelId: string = useId('callout-label');
@@ -33,14 +38,14 @@ export const BasicInfo = (): any => {
                     <div className='id'>{EXPERIMENT.profile.id}</div>
                 </div>
             </Stack>
-            <Stack horizontal horizontalAlign='space-between' gap={4} className='focus-status-metric'>
+            <Stack horizontal horizontalAlign='space-between' tokens={focusMetricGap} className='focus-status-metric'>
                 <div
                     style={{
                         backgroundImage: `url(${(getPrefix() || '') + '/icons/experiment-status.png'})`,
                         backgroundRepeat: 'no-repeat'
                     }}
                 >
-                    <span className={`${EXPERIMENT.status} status-text focus-text`}>{EXPERIMENT.status}</span>
+                    <span className={`${EXPERIMENT.status} status-text focus-text ellipsis`}>{EXPERIMENT.status}</span>
                     {EXPERIMENT.status === 'ERROR' ? (
                         <div>
                             <div className={`${styles.buttonArea} error-info-icon`} ref={ref}>
