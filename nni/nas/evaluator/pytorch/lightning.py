@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as nn_functional
 import torch.optim as optim
 import torchmetrics
+import torchmetrics.classification
 import torch.utils.data as torch_data
 
 import nni
@@ -293,7 +294,7 @@ class SupervisedLearningModule(LightningModule):
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
 
 
-class AccuracyWithLogits(torchmetrics.Accuracy):
+class AccuracyWithLogits(torchmetrics.classification.MulticlassAccuracy):
     def update(self, pred, target):
         return super().update(nn_functional.softmax(pred, dim=-1), target)
 
