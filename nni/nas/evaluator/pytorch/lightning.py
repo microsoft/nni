@@ -311,7 +311,7 @@ class ClassificationModule(SupervisedLearningModule):
         from packaging.version import Version
         if Version(torchmetrics.__version__) < Version('0.11.0'):
             # Older version accepts num_classes = None
-            metrics = {'acc': _AccuracyWithLogits()}
+            metrics = {'acc': _AccuracyWithLogits()}  # pylint: disable=no-value-for-parameter
         else:
             if num_classes is None:
                 raise ValueError('num_classes must be specified for torchmetrics >= 0.11. '
