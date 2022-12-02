@@ -6,17 +6,12 @@
  **/
 
 import { getLogger } from 'common/log';
+import type { TrialKeeper } from 'common/trial_keeper/keeper';
 import { GpuSystemInfo, collectGpuInfo as origCollectGpuInfo } from './collect_info';
 
-const logger = getLogger('GpuScheduler');
+const logger = getLogger('TaskScheduler');
 
 let collectGpuInfo = origCollectGpuInfo;  // for ut
-
-export interface ScheduleRestrictions {
-    onlyAcceptIndices?: number[];
-    rejectActiveGpus?: boolean;
-    rejectComputeActiveGpus?: boolean;
-}
 
 interface SchedulerGpuInfo {
     index: number;
@@ -34,7 +29,7 @@ interface SchedulerTrialInfo {
     util: number;
 }
 
-export class GpuScheduler {
+export class TaskScheduler {
     private gpus: SchedulerGpuInfo[] = [];
     private trials: SchedulerTrialInfo[] = [];
 
@@ -46,10 +41,10 @@ export class GpuScheduler {
     public async init(): Promise<void> {
         const info = await collectGpuInfo(true);
         if (info === null) {
-            throw new Error('GpuScheduler: Failed to collect GPU info');
+            throw new Error('TaskScheduler: Failed to collect GPU info');
         }
         if (info.gpuNumber === 0) {
-            throw new Error('GpuScheduler: No GPU found');
+            throw new Error('TaskScheduler: No GPU found');
         }
 
         for (let i = 0; i < info.gpuNumber; i++) {
@@ -77,22 +72,23 @@ export class GpuScheduler {
         const info = await collectGpuInfo(force);
         if (info === null) {
             if (force) {
-                throw new Error('GpuScheduler: Failed to update GPU info');
+                throw new Error('TaskScheduler: Failed to update GPU info');
             }
             return;
         }
         if (info.gpuNumber !== this.gpus.length) {
-            throw new Error(`GpuScheduler: GPU number changed from ${this.gpus.length} to ${info.gpuNumber}`);
+            // TODO: according to yuge's experience this do might happen
+            throw new Error(`TaskScheduler: GPU number changed from ${this.gpus.length} to ${info.gpuNumber}`);
         }
 
         this.updateGpus(info);
     }
 
     /**
-     *  Schedule a trial and return allocated GPU indices.
+     *  Schedule a trial and return its GPU-related environment variables.
      *
-     *  If the trial cannot be scheduled for now, return `null`.
-     *  If the trial requires more then physical GPUs, throw error.
+     *  If the trial cannot be scheduled, return `null`.
+     *  (TODO: it might need more advanced failure handling)
      *
      *  This scheduler does NOT monitor the trial's life span.
      *  The caller must invokes `release()` or `releaseAll()` later.
@@ -101,17 +97,17 @@ export class GpuScheduler {
      *
      *  The `restrictions` parameter may contain following options:
      *
-     *  - onlyAcceptIndices:
+     *  - onlyUseIndices:
      *
      *      Limit usable GPUs by index.
      *      This is `gpuIndices` in experiment config.
      *
-     *  - rejectActiveGpus:
+     *  - rejectActive:
      *
      *      Do not use GPUs with running processes.
      *      This is reversed `useActiveGpu` in experiment config.
      *
-     *  - rejectComputeActiveGpus:
+     *  - rejectComputeActive:
      *
      *      Do not use GPUs with CUDA processes, but still use GPUs with graphics processes.
      *      This is useful for desktop systems with graphical interface.
@@ -120,11 +116,16 @@ export class GpuScheduler {
             experimentId: string,
             trialId: string,
             gpuNumber: number,
-            restrictions?: ScheduleRestrictions): Promise<number[] | null> {
+            restrictions?: TrialKeeper.GpuRestrictions
+        ): Promise<Record<string, string> | null> {
+
+        if (gpuNumber === 0) {
+            return { 'CUDA_VISIBLE_DEVICES': '' };
+        }
 
         if (gpuNumber >= this.gpus.length) {
             // TODO: push this message to web portal
-            logger.error(`GpuScheduler: Only have ${this.gpus.length} GPUs, requesting ${gpuNumber}`);
+            logger.error(`Only have ${this.gpus.length} GPUs, requesting ${gpuNumber}`);
             return null;
         }
 
@@ -138,7 +139,7 @@ export class GpuScheduler {
             gpu.util += gpuNumber;
             this.trials.push({ gpuIndex: gpu.index, experimentId, trialId, util: gpuNumber });
             logger.debug(`Scheduled ${experimentId}/${trialId} -> ${gpu.index}`);
-            return [ gpu.index ];
+            return { 'CUDA_VISIBLE_DEVICES': String(gpu.index) };
 
         } else {
             const n = Math.round(gpuNumber);
@@ -151,13 +152,16 @@ export class GpuScheduler {
                 this.trials.push({ gpuIndex: gpu.index, experimentId, trialId, util: 1 });
                 indices.push(gpu.index);
             }
+            indices.sort((a, b) => (a - b));
             logger.debug(`Scheduled ${experimentId}/${trialId} ->`, indices);
-            return indices.sort((a, b) => (a - b));
+            return { 'CUDA_VISIBLE_DEVICES': indices.join(',') };
         }
     }
 
     /**
-     *  Release a trial's allocated GPUs
+     *  Release a trial's allocated GPUs.
+     *
+     *  If the trial does not exist, silently do nothing.
      **/
     public async release(experimentId: string, trialId: string): Promise<void> {
         this.releaseByFilter(trial => (trial.experimentId === experimentId && trial.trialId === trialId));
@@ -191,15 +195,15 @@ export class GpuScheduler {
         }
     }
 
-    private sortGpus(restrict: ScheduleRestrictions): SchedulerGpuInfo[] {
+    private sortGpus(restrict: TrialKeeper.GpuRestrictions): SchedulerGpuInfo[] {
         let gpus = this.gpus.slice();  // copy for in-place sort
-        if (restrict.onlyAcceptIndices) {
-            gpus = gpus.filter(gpu => restrict.onlyAcceptIndices!.includes(gpu.index));
+        if (restrict.onlyUseIndices) {
+            gpus = gpus.filter(gpu => restrict.onlyUseIndices!.includes(gpu.index));
         }
-        if (restrict.rejectActiveGpus) {
+        if (restrict.rejectActive) {
             gpus = gpus.filter(gpu => !gpu.active);
         }
-        if (restrict.rejectComputeActiveGpus) {
+        if (restrict.rejectComputeActive) {
             gpus = gpus.filter(gpu => !gpu.computeActive);
         }
 
@@ -242,7 +246,7 @@ export namespace UnitTestHelpers {
         collectGpuInfo = (_?: boolean): any => Promise.resolve(info);
     }
 
-    export function getGpuUtils(scheduler: GpuScheduler): number[] {
+    export function getGpuUtils(scheduler: TaskScheduler): number[] {
         return (scheduler as any).gpus.map((gpu: SchedulerGpuInfo) => gpu.util);
     }
 }
