@@ -45,9 +45,9 @@ def ensure_frozen(mutable: Mutable | Any, sample: Sample | None = None, retries:
     Examples
     --------
     >>> from nni.mutable import Mutable, ensure_frozen
-    >>> ensure_frozen(Discrete([1, 2, 3]))
+    >>> ensure_frozen(Categorical([1, 2, 3]))
     1
-    >>> ensure_frozen(Discrete([1, 2, 3], label='a'), context={'a': 2})
+    >>> ensure_frozen(Categorical([1, 2, 3], label='a'), sample={'a': 2})
     2
     >>> ensure_frozen('anything')
     'anything'

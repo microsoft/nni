@@ -232,16 +232,20 @@ class label_scope:
 
         For example, ``model/cell/2``.
         """
-        if self.path is None:
-            raise ValueError(f'label_scope "{self.basename}" is not entered yet.')
+        self.check_entered()
         return cast(str, label(self.path))
 
     def __repr__(self):
         return f'label_scope({self.absolute_scope!r})'
 
     def next_label(self) -> str:
-        """Generate the "name" part"""
+        """Generate the "name" part."""
         return str(uid(self.absolute_scope))
+
+    def check_entered(self) -> None:
+        """Raise error if the scope is not entered."""
+        if self.path is None:
+            raise ValueError(f'label_scope "{self.basename}" is not entered yet.')
 
     @staticmethod
     def current() -> label_scope | None:
@@ -354,7 +358,7 @@ def auto_label(name: str | label | None = None, scope: label_scope | None = None
             raise TypeError('scope must be an instance of label_scope')
         if name is None:
             name = scope.next_label()
-        scope.name  # Check if scope is entered.
+        scope.check_entered()
         return cast(str, label([*cast(List[str], scope.path), name]))
 
     # Fake a label scope and return its name directly.
