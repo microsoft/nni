@@ -44,6 +44,8 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 from sklearn.datasets import load_diabetes
 
+pytestmark = pytest.mark.skip(reason='Will be rewritten.')
+
 
 class _model_cpu(nn.Module):
     def __init__(self):
