@@ -31,19 +31,20 @@ def ensure_success(exp: RetiariiExperiment):
         exp.config.canonical_copy().experiment_working_directory,
         exp.id
     )
-    assert os.path.exists(exp_dir) and os.path.exists(os.path.join(exp_dir, 'trials'))
+    assert os.path.exists(exp_dir)
 
     # check job status
     job_stats = exp.get_job_statistics()
     if not (len(job_stats) == 1 and job_stats[0]['trialJobStatus'] == 'SUCCEEDED'):
         print('Experiment jobs did not all succeed. Status is:', job_stats, file=sys.stderr)
-        print('Trying to fetch trial logs.', file=sys.stderr)
+        # TODO: log collection
+        #print('Trying to fetch trial logs.', file=sys.stderr)
 
-        for root, _, files in os.walk(os.path.join(exp_dir, 'trials')):
-            for file in files:
-                fpath = os.path.join(root, file)
-                print('=' * 10 + ' ' + fpath + ' ' + '=' * 10, file=sys.stderr)
-                print(open(fpath).read(), file=sys.stderr)
+        #for root, _, files in os.walk(os.path.join(exp_dir, 'trials')):
+        #    for file in files:
+        #        fpath = os.path.join(root, file)
+        #        print('=' * 10 + ' ' + fpath + ' ' + '=' * 10, file=sys.stderr)
+        #        print(open(fpath).read(), file=sys.stderr)
 
         raise RuntimeError('Experiment jobs did not all succeed.')
 
