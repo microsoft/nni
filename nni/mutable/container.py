@@ -37,8 +37,8 @@ class MutableList(Mutable):
     Otherwise, the mutables inside in the inner list won't be recognized as mutables.
     For example::
 
-        >>> a = [Discrete([1, 2]), Discrete([3, 4])]
-        >>> b = Discrete([5, 6])
+        >>> a = [Categorical([1, 2]), Categorical([3, 4])]
+        >>> b = Categorical([5, 6])
         >>> lst = MutableList([MutableList(a), b])
         >>> lst.random()
         [[1, 4], 6]
@@ -47,12 +47,12 @@ class MutableList(Mutable):
 
         >>> lst = MutableList([a, b])
         >>> lst.random()
-        [[Discrete([1, 2], label='global_1'), Discrete([3, 4], label='global_2')], 6]
+        [[Categorical([1, 2], label='global/1'), Categorical([3, 4], label='global/2')], 6]
 
     Examples
     --------
     >>> from nni.mutable import *
-    >>> space = MutableList([Discrete(['a', 'b']), Discrete(['c', 'd'])])
+    >>> space = MutableList([Categorical(['a', 'b']), Categorical(['c', 'd'])])
     >>> space.random()
     ['b', 'd']
     """
@@ -162,16 +162,16 @@ class MutableDict(Mutable):
 
         >>> search_space = MutableDict({
         ...     'trainer': MutableDict({
-        ...         'optimizer': Discrete(['sgd', 'adam']),
-        ...         'lr': Continuous(1e-4, 1e-2, log_distributed=True),
+        ...         'optimizer': Categorical(['sgd', 'adam']),
+        ...         'lr': Numerical(1e-4, 1e-2, log_distributed=True),
         ...         'decay_epochs': MutableList([
-        ...             Discrete([10, 20]),
-        ...             Discrete([30, 50])
+        ...             Categorical([10, 20]),
+        ...             Categorical([30, 50])
         ...         ]),
         ...     }),
         ...     'model': MutableDict({
-        ...         'type': Discrete(['resnet18', 'resnet50']),
-        ...         'pretrained': Discrete([True, False])
+        ...         'type': Categorical(['resnet18', 'resnet50']),
+        ...         'pretrained': Categorical([True, False])
         ...     }),
         ... })
         >>> search_space.random()
@@ -184,23 +184,23 @@ class MutableDict(Mutable):
     their label is still not specified and thus auto-generated::
 
         >>> search_space['trainer']['optimizer'].label
-        'global_1'
+        'global/1'
         >>> search_space.simplify()
         {
-            'global_1': Discrete(['sgd', 'adam'], label='global_1'),
-            'global_2': Continuous(0.0001, 0.01, label='global_2'),
-            'global_3': Discrete([10, 20], label='global_3'),
-            'global_4': Discrete([30, 50], label='global_4'),
-            'global_5': Discrete(['resnet18', 'resnet50'], label='global_5'),
-            'global_6': Discrete([True, False], label='global_6')
+            'global/1': Categorical(['sgd', 'adam'], label='global/1'),
+            'global/2': Numerical(0.0001, 0.01, label='global/2'),
+            'global/3': Categorical([10, 20], label='global/3'),
+            'global/4': Categorical([30, 50], label='global/4'),
+            'global/5': Categorical(['resnet18', 'resnet50'], label='global/5'),
+            'global/6': Categorical([True, False], label='global/6')
         }
         >>> search_space.freeze({
-        ...     'global_1': 'adam',
-        ...     'global_2': 0.0001,
-        ...     'global_3': 10,
-        ...     "global_4': 50,
-        ...     'global_5': 'resnet50',
-        ...     'global_6': False
+        ...     'global/1': 'adam',
+        ...     'global/2': 0.0001,
+        ...     'global/3': 10,
+        ...     "global/4': 50,
+        ...     'global/5': 'resnet50',
+        ...     'global/6': False
         ... })
         {'trainer': {'optimizer': 'adam', 'lr': 0.0001, 'decay_epochs': [10, 50]}, 'model': {'type': 'resnet50', 'pretrained': False}}
 
@@ -208,12 +208,12 @@ class MutableDict(Mutable):
 
         >>> search_space = MutableList([
         ...     MutableDict({
-        ...         'in_features': Discrete([10, 20], label='hidden_dim'),
-        ...         'out_features': Discrete([10, 20], label='hidden_dim') * 2,
+        ...         'in_features': Categorical([10, 20], label='hidden_dim'),
+        ...         'out_features': Categorical([10, 20], label='hidden_dim') * 2,
         ...     }),
         ...     MutableDict({
-        ...         'in_features': Discrete([10, 20], label='hidden_dim') * 2,
-        ...         'out_features': Discrete([10, 20], label='hidden_dim') * 4,
+        ...         'in_features': Categorical([10, 20], label='hidden_dim') * 2,
+        ...         'out_features': Categorical([10, 20], label='hidden_dim') * 4,
         ...     }),
         ... ])
         >>> search_space.random()
@@ -232,10 +232,10 @@ class MutableDict(Mutable):
     --------
     The following two usages are equivalent::
 
-        >>> MutableDict({'a': Discrete([1, 2]), 'b': Discrete([3, 4])})
-        MutableDict({'a': Discrete([1, 2], label='global_1'), 'b': Discrete([3, 4], label='global_2')})
-        >>> MutableDict(a=Discrete([1, 2]), b=Discrete([3, 4]))
-        MutableDict({'a': Discrete([1, 2], label='global_3'), 'b': Discrete([3, 4], label='global_4')})
+        >>> MutableDict({'a': Categorical([1, 2]), 'b': Categorical([3, 4])})
+        MutableDict({'a': Categorical([1, 2], label='global/1'), 'b': Categorical([3, 4], label='global/2')})
+        >>> MutableDict(a=Categorical([1, 2]), b=Categorical([3, 4]))
+        MutableDict({'a': Categorical([1, 2], label='global/3'), 'b': Categorical([3, 4], label='global/4')})
     """
 
     def __init__(self, mutables: Mapping[str, Mutable] | None = None, **mutable_kwargs: Mutable) -> None:

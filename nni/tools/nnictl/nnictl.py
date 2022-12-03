@@ -11,7 +11,7 @@ from .launcher import create_experiment, resume_experiment, view_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
 from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
     log_trial, experiment_clean, platform_clean, experiment_list, \
-    monitor_experiment, export_trials_data, trial_codegen, webui_url, \
+    monitor_experiment, export_trials_data, webui_url, \
     get_config, log_stdout, log_stderr, search_space_auto_gen, \
     save_experiment, load_experiment
 from .algo_management import algo_reg, algo_unreg, algo_show, algo_list
@@ -293,12 +293,6 @@ def get_parser():
     parser_trial_kill.add_argument('id', nargs='?', help='Experiment ID')
     parser_trial_kill.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='The ID of trial to be killed')
     parser_trial_kill.set_defaults(func=trial_kill)
-    parser_trial_codegen = parser_trial_subparsers.add_parser(
-        'codegen', description='Generate trial code for a specific trial. Useful in annotation mode.'
-    )
-    parser_trial_codegen.add_argument('id', nargs='?', help='Experiment ID')
-    parser_trial_codegen.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='The ID of trial to do code generation')
-    parser_trial_codegen.set_defaults(func=trial_codegen)
 
     # parse experiment command
     parser_experiment = subparsers.add_parser('experiment', description='Get information of, or operate on experiments.')
