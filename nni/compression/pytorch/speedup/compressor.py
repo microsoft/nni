@@ -17,7 +17,7 @@ from .compress_modules import replace_module
 from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
 from .replacer import Replacer, DefaultReplacer
-from ..utils import rand_like_with_shape
+from ..utils import rand_like_with_shape, check_ddp_model, reset_ddp_model
 from ..utils.attr import has_nested_attr, get_nested_attr
 
 
@@ -62,6 +62,7 @@ class ModelSpeedup:
         # so we need make a copy before the mask inference
         self.ori_state_dict = copy.deepcopy(model.state_dict())
         self.bound_model = model
+        self.is_ddp_model, self.ddp_params = check_ddp_model(self.bound_model)
         self.inferred_masks = dict()  # key: module_name, value: ModuleMasks
         self.batch_dim = batch_dim
         self.confidence = confidence
@@ -484,3 +485,7 @@ class ModelSpeedup:
         self.replace_compressed_modules()
         self.bound_model.train(training)
         _logger.info("speedup done")
+
+        if self.is_ddp_model:
+            self.bound_model = reset_ddp_model(self.bound_model, self.ddp_params)
+        return self.bound_model

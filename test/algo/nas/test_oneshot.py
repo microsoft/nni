@@ -229,7 +229,7 @@ def _mnist_net(type_, evaluator_kwargs):
     valid_dataset = nni.trace(MNIST)('data/mnist', download=True, train=False, transform=transform)
     valid_random_sampler = nni.trace(RandomSampler)(valid_dataset, True, int(len(valid_dataset) / 20))
     valid_loader = nni.trace(DataLoader)(valid_dataset, 64, sampler=valid_random_sampler)
-    evaluator = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **evaluator_kwargs)
+    evaluator = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, num_classes=10, **evaluator_kwargs)
 
     return base_model, evaluator
 

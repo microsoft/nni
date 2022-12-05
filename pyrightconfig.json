@@ -19,6 +19,7 @@
         "nni/tools/annotation",
         "nni/tools/gpu_tool",
         "nni/tools/jupyter_extension",
+        "nni/tools/nni_manager_scripts/collect_gpu_info.py",
         "nni/tools/nnictl",
         "nni/tools/trial_tool"
     ],

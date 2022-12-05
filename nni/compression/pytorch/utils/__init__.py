@@ -33,6 +33,11 @@ from .pruning import (
     get_output_batch_dims
 )
 from .scaling import Scaling
+from .check_ddp import (
+    check_ddp_model,
+    reset_ddp_model,
+    all_reduce_on_multiple_gpus
+)
 
 # v1
 from .counter import count_flops_params

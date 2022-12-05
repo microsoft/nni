@@ -1077,7 +1077,7 @@ class ADMMPruner(EvaluatorBasedPruner):
     __doc__ = r"""
     Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
     by decomposing the original nonconvex problem into two subproblems that can be solved iteratively.
-    In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively. 
+    In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively.
 
     During the process of solving these two subproblems, the weights of the original model will be changed.
     Then a fine-grained pruning will be applied to prune the model according to the config list given.
