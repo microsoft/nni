@@ -99,7 +99,7 @@ def test_make_divisible():
     divisors = [2, 3, 5, 7, 15]
     with pytest.raises(
         RuntimeError,
-        match=r'^`__index__` is not allowed on SymbolicExpression'
+        match=r'^(`__index__` is not allowed on SymbolicExpression|Try to use `SymbolicExpression.to_int)'
     ):
         original_make_divisible(Categorical(values, label='value'), Categorical(divisors, label='divisor'))
     result = make_divisible(Categorical(values, label='value'), Categorical(divisors, label='divisor'))
