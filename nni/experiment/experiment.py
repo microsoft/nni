@@ -407,7 +407,7 @@ class Experiment:
             return '?update_type=MAX_EXEC_DURATION'
         if key == 'searchSpace':
             return '?update_type=SEARCH_SPACE'
-        if key == 'maxTrialNum':
+        if key == 'maxTrialNumber':
             return '?update_type=MAX_TRIAL_NUM'
 
     def _update_experiment_profile(self, key: str, value: Any):
@@ -471,4 +471,4 @@ class Experiment:
         value: int
             New max_trial_number value.
         """
-        self._update_experiment_profile('maxTrialNum', value)
+        self._update_experiment_profile('maxTrialNumber', value)
