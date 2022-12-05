@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Tuple, Type, Union, Literal
 import torch
 from torch import Tensor
 
-from .settings import INPUT_PREFIX, OUTPUT_PREFIX
+from .setting import INPUT_PREFIX, OUTPUT_PREFIX, select_modules, canonicalize_settings
 from .target_space import (
     TargetSpace,
     TargetType,
@@ -15,7 +15,6 @@ from .target_space import (
     QuantizationTargetSpace,
     DistillationTargetSpace
 )
-from .utils import select_modules, canonicalize_settings
 
 _logger = logging.getLogger(__name__)
 SMALL_MASK_VALUE = -1000.0

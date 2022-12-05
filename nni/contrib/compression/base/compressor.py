@@ -66,8 +66,23 @@ class Pruner(Compressor):
     def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict]):
         return super().from_compressor(compressor, new_config_list, mode='pruning')
 
-    def update_masks(self, masks):
-        pass
+    def update_masks(self, masks: Dict[str, Dict[str, torch.Tensor]]):
+        for module_name, target_masks in masks.items():
+            assert module_name in self._module_wrappers, f'{module_name} is not register in this compressor, can not update mask for it.'
+            wrapper = self._module_wrappers[module_name]
+            for target_name, target_mask in target_masks:
+                assert target_name in wrapper.pruning_target_spaces, \
+                    f'{module_name}.{target_name} is not a pruning target, can not update mask for it.'
+                wrapper.pruning_target_spaces[target_name].mask = target_mask
+
+    def _collect_data(self) -> Dict[str, Dict[str, torch.Tensor]]:
+        raise NotImplementedError()
+
+    def _calculate_metrics(self, data: Dict[str, Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, torch.Tensor]]:
+        raise NotImplementedError()
+
+    def _allocate_masks(self, metrics: Dict[str, Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, torch.Tensor]]:
+        raise NotImplementedError()
 
 
 class Quantizer(Compressor):
