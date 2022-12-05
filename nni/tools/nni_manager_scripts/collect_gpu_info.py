@@ -30,7 +30,7 @@ def main() -> None:
     else:
         data = {'success': False}
     if errors:
-        data['errors'] = sorted(errors)
+        data['failures'] = sorted(errors)
     print(json.dumps(data), flush=True)
 
 def dict_factory(obj):

@@ -473,7 +473,7 @@ class Symbol(SymbolicExpression):
         return value
 
     def __str__(self):
-        return self.label
+        return str(self.label)
 
     def __repr__(self):
         return f'Symbol({repr(self.label)})'
