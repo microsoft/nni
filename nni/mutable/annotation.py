@@ -149,7 +149,7 @@ class ExpressionConstraint(Constraint):
     """
 
     def __init__(self, expression: MutableExpression, *, label: str | None = None) -> None:
-        self.label = label or auto_label()
+        self.label = auto_label(label)
         self.expression = expression
 
     def leaf_mutables(self, is_leaf: Callable[[Mutable], bool]) -> Iterable[LabeledMutable]:
