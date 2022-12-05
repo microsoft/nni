@@ -61,11 +61,11 @@ $barHeight: 56px;
         position: relative;
         display: flex;
 
-        button{
+        button {
             height: 36px;
             padding: 0 6px;
             box-sizing: border-box;
-            background: #F9FAFB;
+            background: #f9fafb;
         }
     }
 
@@ -114,22 +114,24 @@ $barHeight: 56px;
 }
 
 .nav-main {
-    .title{
+    .title {
         line-height: 64px;
         margin-left: 32px;
         font-size: 24px;
         font-weight: 700;
     }
-    .options{
+
+    .options {
         position: absolute;
         right: 40px;
         margin-top: 14px;
+
         /* navMaintoken: gap = 16, 24-15=9 */
-        .bar{
+        .bar {
             margin-left: 24px;
             margin-right: 8px;
             font-size: 22px;
-            color: #E5E7EB;
+            color: #e5e7eb;
         }
     }
 }

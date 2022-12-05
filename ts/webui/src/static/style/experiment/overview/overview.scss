@@ -7,7 +7,7 @@ $boxGapPadding: 10px;
     grid-template-columns: repeat(7, 1fr);
     grid-auto-rows: 102px;
     margin-bottom: 24px;
-    max-height: 1098px;
+    max-height: 1158px;
 
     > div {
         background: #fff;
@@ -17,7 +17,7 @@ $boxGapPadding: 10px;
     }
 
     .left {
-        margin-right: 10px;
+        margin-right: 18px;
     }
 
     .duration,
@@ -26,20 +26,18 @@ $boxGapPadding: 10px;
         background: #fff;
         border-radius: $boxBorderRadius;
         box-sizing: border-box;
-        margin-top: $boxGapPadding;
-
-        /* for alert message tooltip position */
-        position: relative;
-        top: -74px;
     }
 
     .duration {
         grid-row: 6 / 10;
+        position: relative;
+        top: -56px;
     }
 
     .trialCount {
         grid-row: 10 / 13;
-        
+        max-height: 283px;
+        margin-top: -38px;
     }
 }
 
@@ -50,10 +48,16 @@ $boxGapPadding: 10px;
     max-height: 436px;
 }
 
+.bestTable {
+    grid-column: 2 / 8;
+    grid-row: 7 / 13;
+    margin-top: 18px;
+    max-height: 532px;
+}
+
 .overviewBestMetric {
     grid-column: 2 / 8;
-    grid-row: 1 / 12;
-    max-height: 1103px;
+    grid-row: 1 / 7;
     overflow: hidden;
 
     .active {

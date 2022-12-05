@@ -10,14 +10,7 @@ import ExperimentSummaryPanel from './slideNav/ExperimentSummaryPanel';
 import { EXPERIMENT } from '@static/datamodel';
 import { getPrefix } from '@static/function';
 import { SlideNavBtns } from './slideNav/SlideNavBtns';
-import {
-    infoIconAbout,
-    timeIcon,
-    disableUpdates,
-    requency,
-    closeTimer,
-    ChevronRightMed
-} from '@components/fluent/Icon';
+import { timeIcon, disableUpdates, requency, closeTimer } from '@components/fluent/Icon';
 import '@style/nav/nav.scss';
 import '@style/icon.scss';
 import { ErrorMessage } from '@components/nav/ErrorMessage';
@@ -38,7 +31,9 @@ interface NavProps {
 const NavCon = (props: NavProps): any => {
     const { changeInterval } = props;
     const [version, setVersion] = useState('999' as string);
-    const [currentPage, setcurrentPage] = useState(window.location.pathname === '/oview' ? 'Overview' : 'Trials detail');
+    const [currentPage, setcurrentPage] = useState(
+        window.location.pathname === '/oview' ? 'Overview' : 'Trials detail'
+    );
     const [visibleExperimentPanel, setVisibleExperimentPanel] = useState(false);
     const [refreshText, setRefreshText] = useState('Auto refresh' as string);
     const [refreshFrequency, setRefreshFrequency] = useState(10 as number | string);
@@ -131,24 +126,14 @@ const NavCon = (props: NavProps): any => {
                 {/* TODO: add click event for Stack>div */}
                 <Stack tokens={pageURLtoken}>
                     <img width='36' src={(getPrefix() || '') + '/icons/logo.png'} />
-                    <WebRouters changeCurrentPage={setcurrentPage}/>
+                    <WebRouters changeCurrentPage={setcurrentPage} />
                     {/* <TooltipHostForIcon tooltip='Overview' iconName='overview' pageURL='/oview'/>
                     <TooltipHostForIcon tooltip='Trials detail' iconName='detail' pageURL='/detail'/> */}
                     <TooltipHostForIcon tooltip='All experiments' iconName='all-experiments' pageURL='/experiment' />
                 </Stack>
                 <Stack tokens={pageURLtoken} className='bottom'>
-                    <LinksIcon
-                        tooltip='Feedback'
-                        iconName='feedback'
-                        directional='right'
-                        iconClickEvent={openGithub}
-                    />
-                    <LinksIcon
-                        tooltip='Document'
-                        iconName='document'
-                        directional='right'
-                        iconClickEvent={openDocs}
-                    />
+                    <LinksIcon tooltip='Feedback' iconName='feedback' directional='right' iconClickEvent={openGithub} />
+                    <LinksIcon tooltip='Document' iconName='document' directional='right' iconClickEvent={openDocs} />
                     <LinksIcon
                         tooltip={`Version: ${version}`}
                         iconName='version'
@@ -159,7 +144,9 @@ const NavCon = (props: NavProps): any => {
             </Stack>
             {/* 横 */}
             <Stack horizontal horizontalAlign='space-between' className='nav-main'>
-                <StackItem grow={30} className='title'>{currentPage}</StackItem>
+                <StackItem grow={30} className='title'>
+                    {currentPage}
+                </StackItem>
                 <StackItem grow={70} className='options'>
                     <Stack horizontal horizontalAlign='end' tokens={navMaintoken}>
                         <LinksIcon
@@ -191,7 +178,6 @@ const NavCon = (props: NavProps): any => {
             {/* experiment error model */}
             <ErrorMessage />
         </React.Fragment>
-
     );
 };
 

@@ -10,7 +10,6 @@ import Config from './Config';
 import '@style/common/experimentStatusColor.scss';
 import '@style/experiment/overview/basic.scss';
 
-
 const focusMetricGap: IStackTokens = {
     childrenGap: 4
 };

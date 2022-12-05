@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { getPrefix } from '@static/function';
 const activeClassName = 'selected';
@@ -21,14 +21,17 @@ const NNILOGO = (
 );
 
 export const OVERVIEWTABSNew = () => {
-    const [overview, setOverview] = useState(`${(getPrefix() || '')}/icons/overview.png`);
-    return(
+    const [overview, setOverview] = useState(`${getPrefix() || ''}/icons/overview.png`);
+    return (
         <NavLink to='/oview' className={({ isActive }) => (isActive ? `${activeClassName} link` : 'link')}>
-            <div className='icon' onClick={() => {
-                setOverview(`${(getPrefix() || '')}/icons/overview-1.png`);
-            }}>
+            <div
+                className='icon'
+                onClick={() => {
+                    setOverview(`${getPrefix() || ''}/icons/overview-1.png`);
+                }}
+            >
                 {/* <img src={(getPrefix() || '') + '/icons/overview.png'} /> */}
-                <img src={overview} alt='overview'/>
+                <img src={overview} alt='overview' />
             </div>
         </NavLink>
     );

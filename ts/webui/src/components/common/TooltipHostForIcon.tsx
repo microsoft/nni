@@ -14,13 +14,13 @@ interface TooltipHostIndexProps {
 
 const TooltipHostForIcon = (props: TooltipHostIndexProps): any => {
     const { iconName, tooltip, pageURL } = props;
-    const [overview, setOverview] = useState(`${(getPrefix() || '')}/icons/${iconName}.png`);
+    const [overview, setOverview] = useState(`${getPrefix() || ''}/icons/${iconName}.png`);
     const [mouHover, setMouhover] = useState(false);
     useEffect(() => {
-        if(mouHover === false){
-            setOverview(`${(getPrefix() || '')}/icons/all-experiments.png`);
+        if (mouHover === false) {
+            setOverview(`${getPrefix() || ''}/icons/all-experiments.png`);
         } else {
-            setOverview(`${(getPrefix() || '')}/icons/all-experiments-1.png`);
+            setOverview(`${getPrefix() || ''}/icons/all-experiments-1.png`);
         }
     }, [mouHover]);
 
@@ -35,9 +35,9 @@ const TooltipHostForIcon = (props: TooltipHostIndexProps): any => {
                 <NavLink to={pageURL}>
                     <div
                         className='icon'
-                        onMouseEnter={()=> setMouhover(true)}
-                        onMouseLeave={()=> setMouhover(false)}
->                        
+                        onMouseEnter={() => setMouhover(true)}
+                        onMouseLeave={() => setMouhover(false)}
+                    >
                         <img src={overview} alt={iconName} />
                     </div>
                 </NavLink>

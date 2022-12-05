@@ -76,7 +76,7 @@ const Overview = (): any => {
                 </div>
                 {/* duration & trial numbers */}
                 <div className='duration left'>
-                    <h3 className='title'>Duration_Test</h3>
+                    <h3 className='title'>Duration</h3>
                     <Duration />
                 </div>
                 <div className='trialCount left'>
@@ -129,17 +129,19 @@ const Overview = (): any => {
                     <div className='overviewChart'>
                         <DefaultPoint
                             trialIds={bestTrials.map(trial => trial.info.trialJobId)}
-                            chartHeight={490}
+                            chartHeight={530}
                             hasBestCurve={false}
                             changeExpandRowIDs={changeExpandRowIDs}
                         />
-                        <SuccessTable
-                            trialIds={bestTrials.map(trial => trial.info.trialJobId)}
-                            updateOverviewPage={updateOverviewPage}
-                            expandRowIDs={expandRowIDs}
-                            changeExpandRowIDs={changeExpandRowIDs}
-                        />
                     </div>
+                </div>
+                <div className='bestTable'>
+                    <SuccessTable
+                        trialIds={bestTrials.map(trial => trial.info.trialJobId)}
+                        updateOverviewPage={updateOverviewPage}
+                        expandRowIDs={expandRowIDs}
+                        changeExpandRowIDs={changeExpandRowIDs}
+                    />
                 </div>
             </div>
         </div>

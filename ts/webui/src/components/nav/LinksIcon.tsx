@@ -1,6 +1,5 @@
-
 /**
- * 
+ *
  * for nav bar: document, github, nni-version tips
  */
 import React, { useState, useEffect } from 'react';
@@ -18,12 +17,12 @@ interface TooltipHostIndexProps {
 const LinksIcon = (props: TooltipHostIndexProps): any => {
     const { iconName, tooltip, iconClickEvent, directional } = props;
     const [mouHover, setHover] = useState(false);
-    const [imgSrc, setImgsrc] = useState(`${(getPrefix() || '')}/icons/${iconName}.png`);
+    const [imgSrc, setImgsrc] = useState(`${getPrefix() || ''}/icons/${iconName}.png`);
     useEffect(() => {
-        if(mouHover === true){
-            setImgsrc(`${(getPrefix() || '')}/icons/${iconName}-1.png`);
-        }else{
-            setImgsrc(`${(getPrefix() || '')}/icons/${iconName}.png`);
+        if (mouHover === true) {
+            setImgsrc(`${getPrefix() || ''}/icons/${iconName}-1.png`);
+        } else {
+            setImgsrc(`${getPrefix() || ''}/icons/${iconName}.png`);
         }
     }, [mouHover]);
     return (
@@ -35,14 +34,10 @@ const LinksIcon = (props: TooltipHostIndexProps): any => {
             >
                 <div
                     className='cursor'
-                    onMouseEnter={():void => setHover(true)}
-                    onMouseLeave={():void => setHover(false)}
+                    onMouseEnter={(): void => setHover(true)}
+                    onMouseLeave={(): void => setHover(false)}
                 >
-                <img
-                    className='icon'
-                    onClick={iconClickEvent}
-                    src={imgSrc} alt={iconName}
-                />
+                    <img className='icon' onClick={iconClickEvent} src={imgSrc} alt={iconName} />
                 </div>
             </TooltipHost>
         </div>
@@ -50,4 +45,3 @@ const LinksIcon = (props: TooltipHostIndexProps): any => {
 };
 
 export default LinksIcon;
-

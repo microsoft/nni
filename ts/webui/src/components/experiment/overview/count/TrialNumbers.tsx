@@ -9,7 +9,9 @@ import { AppContext } from '@/App';
 const line1Tokens: IStackTokens = {
     childrenGap: 60
 };
-
+const editNumberConcurrency: IStackTokens = {
+    childrenGap: 13
+};
 export const TrialCount = (): any => {
     const { updateOverviewPage } = useContext(AppContext);
     const count = TRIALS.countStatus();
@@ -57,7 +59,7 @@ export const TrialCount = (): any => {
                     <p className='size18 font-numbers-color'>{count.get('FAILED')}</p>
                 </div>
             </Stack>
-            <Stack horizontal className='edit-numbers'>
+            <Stack horizontal className='edit-numbers' tokens={editNumberConcurrency}>
                 <EditExpeParamContext.Provider
                     value={{
                         title: MAX_TRIAL_NUMBERS,
