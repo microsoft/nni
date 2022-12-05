@@ -106,7 +106,7 @@ class LocalTrainingService implements TrainingService {
             this.gpuScheduler = new GPUScheduler();
         }
 
-        if (this.config.gpuIndices === []) {
+        if (this.config.gpuIndices && this.config.gpuIndices.length === 0) {
             throw new Error('gpuIndices cannot be empty when specified.');
         }
 

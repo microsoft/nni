@@ -20,6 +20,8 @@ import { MockedExperimentManager } from '../mock/experimentManager';
 import { TensorboardManager } from '../../common/tensorboardManager';
 import { MockTensorboardManager } from '../mock/mockTensorboardManager';
 import { UnitTestHelpers as ExpsMgrHelpers } from 'extensions/experiments_manager';
+import globals from 'common/globals/unittest';
+import { createRestHandler } from 'rest_server/restHandler';
 
 let restServer: RestServer;
 
@@ -38,6 +40,7 @@ describe('Unit test for rest handler', () => {
         await restServer.start();
         const port = UnitTestHelpers.getPort(restServer);
         ROOT_URL = `http://localhost:${port}/api/v1/nni`;
+        globals.rest.registerExpressRouter('/api/v1/nni', createRestHandler());
     });
 
     after(() => {

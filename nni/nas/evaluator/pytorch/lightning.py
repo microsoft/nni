@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as nn_functional
 import torch.optim as optim
 import torchmetrics
+import torchmetrics.classification
 import torch.utils.data as torch_data
 
 import nni
@@ -28,8 +29,7 @@ from nni.typehint import Literal
 
 __all__ = [
     'LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression',
-    'SupervisedLearningModule', 'ClassificationModule', 'RegressionModule', 'AccuracyWithLogits',
-    # FIXME: hack to make it importable for tests
+    'SupervisedLearningModule', 'ClassificationModule', 'RegressionModule',
 ]
 
 _logger = logging.getLogger(__name__)
@@ -212,7 +212,7 @@ class SupervisedLearningModule(LightningModule):
 
     trainer: pl.Trainer
 
-    def __init__(self, criterion: Type[nn.Module], metrics: Dict[str, Type[torchmetrics.Metric]],
+    def __init__(self, criterion: Type[nn.Module], metrics: Dict[str, torchmetrics.Metric],
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: Type[optim.Optimizer] = optim.Adam,
@@ -221,7 +221,7 @@ class SupervisedLearningModule(LightningModule):
         self.save_hyperparameters('criterion', 'optimizer', 'learning_rate', 'weight_decay')
         self.criterion = criterion()
         self.optimizer = optimizer
-        self.metrics = nn.ModuleDict({name: cls() for name, cls in metrics.items()})
+        self.metrics = nn.ModuleDict(metrics)
 
         if export_onnx is None or export_onnx is True:
             self.export_onnx = Path(os.environ.get('NNI_OUTPUT_DIR', '.')) / 'model.onnx'
@@ -293,9 +293,10 @@ class SupervisedLearningModule(LightningModule):
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
 
 
-class AccuracyWithLogits(torchmetrics.Accuracy):
+class _AccuracyWithLogits(torchmetrics.Accuracy):
+    # Only for torchmetrics < 0.11
     def update(self, pred, target):
-        return super().update(nn_functional.softmax(pred, dim=-1), target)
+        return super().update(nn_functional.softmax(pred, dim=-1), target)  # type: ignore
 
 
 @nni.trace
@@ -304,8 +305,20 @@ class ClassificationModule(SupervisedLearningModule):
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: Type[optim.Optimizer] = optim.Adam,
-                 export_onnx: bool = True):
-        super().__init__(criterion, {'acc': AccuracyWithLogits},
+                 export_onnx: bool = True,
+                 num_classes: Optional[int] = None):
+
+        from packaging.version import Version
+        if Version(torchmetrics.__version__) < Version('0.11.0'):
+            # Older version accepts num_classes = None
+            metrics = {'acc': _AccuracyWithLogits()}  # type: ignore # pylint: disable=no-value-for-parameter
+        else:
+            if num_classes is None:
+                raise ValueError('num_classes must be specified for torchmetrics >= 0.11. '
+                                 'Please either specify it or use an older version of torchmetrics.')
+            metrics = {'acc': torchmetrics.Accuracy('multiclass', num_classes=num_classes)}
+
+        super().__init__(criterion, metrics,  # type: ignore
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer,
                          export_onnx=export_onnx)
 
@@ -339,6 +352,9 @@ class Classification(Lightning):
         If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
     export_onnx : bool
         If true, model will be exported to ``model.onnx`` before training starts. default true
+    num_classes : int
+        Number of classes for classification task.
+        Required for torchmetrics >= 0.11.0. default: None
     trainer_kwargs : dict
         Optional keyword arguments passed to trainer. See
         `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details.
@@ -364,12 +380,14 @@ class Classification(Lightning):
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None,
                  export_onnx: bool = True,
                  train_dataloader: Optional[DataLoader] = None,
+                 num_classes: Optional[int] = None,
                  **trainer_kwargs):
         if train_dataloader is not None:
             warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
             train_dataloaders = train_dataloader
         module = ClassificationModule(criterion=criterion, learning_rate=learning_rate,
-                                      weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
+                                      weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx,
+                                      num_classes=num_classes)
         super().__init__(module, Trainer(**trainer_kwargs),
                          train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
 
@@ -381,7 +399,7 @@ class RegressionModule(SupervisedLearningModule):
                  weight_decay: float = 0.,
                  optimizer: Type[optim.Optimizer] = optim.Adam,
                  export_onnx: bool = True):
-        super().__init__(criterion, {'mse': torchmetrics.MeanSquaredError},
+        super().__init__(criterion, {'mse': torchmetrics.MeanSquaredError()},
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer,
                          export_onnx=export_onnx)
 
@@ -448,6 +466,5 @@ class Regression(Lightning):
 
 # Alias for backwards compatibility
 _SupervisedLearningModule = SupervisedLearningModule
-_AccuracyWithLogits = AccuracyWithLogits
 _ClassificationModule = ClassificationModule
 _RegressionModule = RegressionModule

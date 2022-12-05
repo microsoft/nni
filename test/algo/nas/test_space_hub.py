@@ -82,6 +82,7 @@ def _test_searchspace_on_dataset(searchspace, dataset='cifar10', arch=None):
         max_epochs=1,
         limit_train_batches=2,
         limit_val_batches=3,
+        num_classes=10 if dataset == 'cifar10' else 1000,
     )
     evaluator.fit(model)
 
