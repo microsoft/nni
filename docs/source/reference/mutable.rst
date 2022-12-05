@@ -18,22 +18,22 @@ Base Classes
 .. autoclass:: nni.mutable.MutableExpression
    :members:
 
-Discrete
---------
+Categorical
+-----------
 
-.. autoclass:: nni.mutable.Discrete
+.. autoclass:: nni.mutable.Categorical
    :members:
 
-DiscreteMultiple
-----------------
+CategoricalMultiple
+-------------------
 
-.. autoclass:: nni.mutable.DiscreteMultiple
+.. autoclass:: nni.mutable.CategoricalMultiple
    :members:
 
-Continuous
-----------
+Numerical
+---------
 
-.. autoclass:: nni.mutable.Continuous
+.. autoclass:: nni.mutable.Numerical
    :members:
 
 Containers
@@ -46,6 +46,12 @@ Annotation
 ----------
 
 .. automodule:: nni.mutable.annotation
+   :members:
+
+Frozen
+------
+
+.. automodule:: nni.mutable.frozen
    :members:
 
 Exception

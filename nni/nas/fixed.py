@@ -30,8 +30,7 @@ def fixed_arch(fixed_arch: Union[str, Path, Dict[str, Any]], verbose=True):
 
     Returns
     -------
-    ContextStack
-        Context manager that provides a fixed architecture when creates the model.
+    Context manager that provides a fixed architecture when creates the model.
     """
 
     if isinstance(fixed_arch, (str, Path)):

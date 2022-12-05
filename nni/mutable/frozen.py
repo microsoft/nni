@@ -28,19 +28,19 @@ def ensure_frozen(mutable: Mutable | Any, sample: Sample | None = None, retries:
     """Ensure a mutable is frozen. Used when passing the mutable to a function which doesn't accept a mutable.
 
     If the argument is not a mutable, nothing happens.
-    Otherwise, :meth:`Mutable.freeze` will be called if sample is given.
+    Otherwise, :meth:`~nni.mutable.Mutable.freeze` will be called if sample is given.
     If sample is None, :func:`ensure_frozen` will also try to fill the sample
     with the content in :class:`frozen_context`.
-    Or else :meth:`Mutable.robust_default` will be called on the mutable.
+    Or else :meth:`~nni.mutable.Mutable.robust_default` will be called on the mutable.
 
     Parameters
     ----------
-    mutable
+    mutable : nni.mutable.Mutable or any
         The mutable to freeze.
     sample
         The context to freeze the mutable with.
     retries
-        Control the number of retries in case :meth:`Mutable.robust_default` is called.
+        Control the number of retries in case :meth:`~nni.mutable.Mutable.robust_default` is called.
 
     Examples
     --------
@@ -102,8 +102,7 @@ class frozen_context(ContextStack):
 
     Returns
     -------
-    ContextStack
-        Context manager that provides a frozen context.
+    Context manager that provides a frozen context.
 
     Examples
     --------

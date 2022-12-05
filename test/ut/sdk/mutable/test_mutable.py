@@ -5,32 +5,32 @@ import numpy as np
 import pytest
 
 from nni.mutable import *
-from nni.mutable.mutable import dedup_labeled_mutables
+from nni.mutable.mutable import _dedup_labeled_mutables, _mutable_equal
 
 
 def test_symbolic_execution():
-    a = Discrete([1, 2], label='a')
-    b = Discrete([3, 4], label='b')
-    c = Discrete([5, 6], label='c')
+    a = Categorical([1, 2], label='a')
+    b = Categorical([3, 4], label='b')
+    c = Categorical([5, 6], label='c')
     d = a + b + 3 * c
     assert d.freeze({'a': 2, 'b': 3, 'c': 5}) == 20
     expect = [x + y + 3 * z for x in [1, 2] for y in [3, 4] for z in [5, 6]]
     assert list(d.grid()) == expect
 
-    a = Discrete(['cat', 'dog'])
-    b = Discrete(['milk', 'coffee'])
+    a = Categorical(['cat', 'dog'])
+    b = Categorical(['milk', 'coffee'])
     assert (a + b).evaluate(['dog', 'coffee']) == 'dogcoffee'
     assert (a + 2 * b).evaluate(['cat', 'milk']) == 'catmilkmilk'
 
-    assert (3 - Discrete([1, 2])).evaluate([1]) == 2
+    assert (3 - Categorical([1, 2])).evaluate([1]) == 2
 
     with pytest.raises(
         TypeError,
         match=r'^can only concatenate str'
     ):
-        (a + Discrete([1, 3])).default()
+        (a + Categorical([1, 3])).default()
 
-    a = Discrete([1, 17], label='aa')
+    a = Categorical([1, 17], label='aa')
     a = (abs(-a * 3) % 11) ** 5
     assert 'abs' in repr(a)
     with pytest.raises(
@@ -40,17 +40,17 @@ def test_symbolic_execution():
         a.freeze({'aa': 42})
     assert a.evaluate([17]) == 7 ** 5
 
-    a = round(7 / Discrete([2, 5]))
+    a = round(7 / Categorical([2, 5]))
     assert a.evaluate([2]) == 4
 
-    a = ~(77 ^ (Discrete([1, 4]) & 5))
+    a = ~(77 ^ (Categorical([1, 4]) & 5))
     assert a.evaluate([4]) == ~(77 ^ (4 & 5))
 
-    a = Discrete([5, 3]) * Discrete([6.5, 7.5])
+    a = Categorical([5, 3]) * Categorical([6.5, 7.5])
     assert math.floor(a.evaluate([5, 7.5])) == int(5 * 7.5)
 
-    a = Discrete([1, 3])
-    b = Discrete([2, 4])
+    a = Categorical([1, 3])
+    b = Categorical([2, 4])
     with pytest.raises(
         RuntimeError,
         match=r'^Cannot use bool\(\) on SymbolicExpression'
@@ -68,14 +68,14 @@ def test_symbolic_execution():
     assert MutableExpression.max(1, 2, 3) == 3
     assert MutableExpression.max([1, 3, 2]) == 3
 
-    assert MutableExpression.condition(Discrete([2, 3]) <= 2, 'a', 'b').evaluate([3]) == 'b'
-    assert MutableExpression.condition(Discrete([2, 3]) <= 2, 'a', 'b').evaluate([2]) == 'a'
+    assert MutableExpression.condition(Categorical([2, 3]) <= 2, 'a', 'b').evaluate([3]) == 'b'
+    assert MutableExpression.condition(Categorical([2, 3]) <= 2, 'a', 'b').evaluate([2]) == 'a'
 
     with pytest.raises(RuntimeError):
-        assert int(Discrete([2.5, 3.5])).evalute([2.5]) == 2
+        assert int(Categorical([2.5, 3.5])).evalute([2.5]) == 2
 
-    assert MutableExpression.to_int(Discrete([2.5, 3.5])).evaluate([2.5]) == 2
-    assert MutableExpression.to_float(Discrete(['2.5', '3.5'])).evaluate(['3.5']) == 3.5
+    assert MutableExpression.to_int(Categorical([2.5, 3.5])).evaluate([2.5]) == 2
+    assert MutableExpression.to_float(Categorical(['2.5', '3.5'])).evaluate(['3.5']) == 3.5
 
 
 def test_make_divisible():
@@ -101,8 +101,8 @@ def test_make_divisible():
         RuntimeError,
         match=r'^`__index__` is not allowed on SymbolicExpression'
     ):
-        original_make_divisible(Discrete(values, label='value'), Discrete(divisors, label='divisor'))
-    result = make_divisible(Discrete(values, label='value'), Discrete(divisors, label='divisor'))
+        original_make_divisible(Categorical(values, label='value'), Categorical(divisors, label='divisor'))
+    result = make_divisible(Categorical(values, label='value'), Categorical(divisors, label='divisor'))
     for value in values:
         for divisor in divisors:
             lst = [value if choice.label == 'value' else divisor for choice in result.leaf_symbols()]
@@ -114,12 +114,15 @@ def test_make_divisible():
     assert max(result.grid()) == 135
 
 
-def test_discrete():
-    a = Discrete([1, 2, 3], label='a')
+def test_categorical():
+    a = Categorical([1, 2, 3], label='a')
     assert a.simplify() == {'a': a}
     assert a.freeze({'a': 2}) == 2
-    exception = a.contains({'a': 4})
+    exception = a.check_contains({'a': 4})
     assert exception is not None and 'not found' in exception.msg
+    assert a.contains({'a': 2})
+    assert a.contains({'a': 3})
+    assert not a.contains({'a': 4})
     with pytest.raises(
         SampleValidationError,
         match=r'^4 not found in'
@@ -127,10 +130,10 @@ def test_discrete():
         a.validate({'a': 4})
 
     with pytest.raises(AssertionError, match='must be unique'):
-        Discrete([2, 2, 5])
+        Categorical([2, 2, 5])
 
     assert list(a.grid()) == [1, 2, 3]
-    a = Discrete([1, 2, 3], distribution=[0.2, 0.1, 0.7])
+    a = Categorical([1, 2, 3], weights=[0.2, 0.1, 0.7])
     assert list(a.grid()) == [3, 1, 2]
 
     counter = Counter()
@@ -141,12 +144,12 @@ def test_discrete():
     assert 500 <= counter[3] <= 900
 
 
-def test_discrete_multiple():
-    a = DiscreteMultiple([2, 3, 5], n_chosen=None, label='a')
+def test_categorical_multiple():
+    a = CategoricalMultiple([2, 3, 5], n_chosen=None, label='a')
     assert a.simplify() == {'a': a}
     a.freeze({'a': [2, 3]}) == [2, 3]
 
-    def breakdown_dm(x): return isinstance(x, LabeledMutable) and not isinstance(x, DiscreteMultiple)
+    def breakdown_dm(x): return isinstance(x, LabeledMutable) and not isinstance(x, CategoricalMultiple)
 
     s = a.simplify(is_leaf=breakdown_dm)
     assert len(s) == 3
@@ -158,7 +161,7 @@ def test_discrete_multiple():
         a.freeze({'a/0': False, 'a/1': True})
     assert a.freeze({'a/0': False, 'a/1': True, 'a/2': True}) == [3, 5]
 
-    a = DiscreteMultiple([2, 3, 5], n_chosen=2, label='a')
+    a = CategoricalMultiple([2, 3, 5], n_chosen=2, label='a')
     assert a.simplify() == {'a': a}
     assert len(a.random()) == 2 and a.random() in [[2, 3], [2, 5], [3, 5]]
     a.freeze({'a': [2, 3]}) == [2, 3]
@@ -178,7 +181,7 @@ def test_discrete_multiple():
     ):
         a.freeze({'a/0': False, 'a/1': False, 'a/2': True})
 
-    a = DiscreteMultiple([1, 2, 3], distribution=[0.2, 0.1, 0.7])
+    a = CategoricalMultiple([1, 2, 3], weights=[0.2, 0.1, 0.7])
     assert list(a.grid()) == [[], [1], [2], [3], [1, 2], [1, 3], [2, 3], [1, 2, 3]]
 
     counter = Counter()
@@ -189,7 +192,7 @@ def test_discrete_multiple():
     assert 50 <= counter[2] <= 150
     assert 500 <= counter[3] <= 900
 
-    a = DiscreteMultiple([1, 2, 3], n_chosen=2, distribution=[0.3, 0.1, 0.6])
+    a = CategoricalMultiple([1, 2, 3], n_chosen=2, weights=[0.3, 0.1, 0.6])
     counter = Counter()
     for _ in range(1000):
         for x in a.random():
@@ -197,12 +200,13 @@ def test_discrete_multiple():
     assert counter[2] <= counter[1] <= counter[3]
 
 
-def test_continuous():
-    a = Continuous(0, 1, label='a')
+def test_numerical():
+    a = Numerical(0, 1, label='a')
     assert a.simplify() == {'a': a}
     assert a.freeze({'a': 0.5}) == 0.5
-    exc = a.contains({'a': 4})
+    exc = a.check_contains({'a': 4})
     assert exc is not None and 'higher than' in exc.msg
+    assert a.contains({'a': 0.8})
     assert a.default() == 0.5
     assert 0 < a.random() < 1
 
@@ -212,30 +216,30 @@ def test_continuous():
     grid = a.grid(granularity=2)
     assert list(grid) == [0.25, 0.5, 0.75]
 
-    a = Continuous(0, 1, log_distributed=True, label='a')
+    a = Numerical(0, 1, log_distributed=True, label='a')
     assert a.simplify() == {'a': a}
 
-    a = Continuous(mu=0, sigma=1, label='a')
+    a = Numerical(mu=0, sigma=1, label='a')
     assert -5 < a.random() < 5
 
-    a = Continuous(mu=0, sigma=1, log_distributed=True, label='a')
+    a = Numerical(mu=0, sigma=1, log_distributed=True, label='a')
     for _ in range(10):
         assert a.random() > 0
 
-    a = Continuous(mu=0, sigma=1, low=-1, high=1)
+    a = Numerical(mu=0, sigma=1, low=-1, high=1)
     assert min(a.grid(granularity=4)) == -1
 
-    a = Continuous(mu=2, sigma=3)
+    a = Numerical(mu=2, sigma=3)
     x = [a.random() for _ in range(1000)]
     assert 0.5 < np.mean(x) < 2.5
     assert 2 < np.std(x) < 4
     assert np.mean(list(a.grid(granularity=4))) == 2
 
-    a = Continuous(low=0, high=100, quantize=2)
+    a = Numerical(low=0, high=100, quantize=2)
     assert len(list(a.grid(granularity=10))) == 51
     assert a.random() % 2 == 0
 
-    a = Continuous(low=2, high=6, log_distributed=True, label='x')
+    a = Numerical(low=2, high=6, log_distributed=True, label='x')
     for _ in range(10):
         assert 2 < a.random() < 6
     with pytest.raises(
@@ -245,7 +249,7 @@ def test_continuous():
         a.freeze({'x': 1.5})
 
     from scipy.stats import beta
-    a = Continuous(distribution=beta(2, 5), label='x')
+    a = Numerical(distribution=beta(2, 5), label='x')
     assert 0 < a.random() < 1
     assert 0.1 < a.default() < 0.3
 
@@ -257,16 +261,16 @@ def test_continuous():
 
 
 def test_mutable_list():
-    a = MutableList([1, Discrete([1, 2, 3]), 3])
+    a = MutableList([1, Categorical([1, 2, 3]), 3])
     assert a.default() == [1, 1, 3]
-    a.append(Discrete([4, 5, 6]))
+    a.append(Categorical([4, 5, 6]))
     assert a.default() == [1, 1, 3, 4]
 
 
 def test_mutable_dict():
     a = MutableDict({
         'a': 1,
-        'b': Discrete([1, 2, 3]),
+        'b': Categorical([1, 2, 3]),
         'c': 3
     })
     assert list(a.default().values()) == [1, 1, 3]
@@ -281,22 +285,22 @@ def test_mutable_dict():
         {'a': 1, 'c': 3},
     ]
     assert a.random() == {'a': 1, 'c': 3}
-    a['b'] = Continuous(0, 1)
+    a['b'] = Numerical(0, 1)
     assert a.default() == {'a': 1, 'b': 0.5, 'c': 3}
     assert list(a.default().values()) == [1, 3, 0.5]
 
     search_space = MutableDict({
         'trainer': MutableDict({
-            'optimizer': Discrete(['sgd', 'adam']),
-            'learning_rate': Continuous(1e-4, 1e-2, log_distributed=True),
+            'optimizer': Categorical(['sgd', 'adam']),
+            'learning_rate': Numerical(1e-4, 1e-2, log_distributed=True),
             'decay_epochs': MutableList([
-                Discrete([10, 20]),
-                Discrete([30, 50])
+                Categorical([10, 20]),
+                Categorical([30, 50])
             ]),
         }),
         'model': MutableDict({
-            'type': Discrete(['resnet18', 'resnet50']),
-            'pretrained': Discrete([True, False])
+            'type': Categorical(['resnet18', 'resnet50']),
+            'pretrained': Categorical([True, False])
         }),
     })
 
@@ -317,12 +321,12 @@ def test_mutable_dict():
 
     search_space = MutableList([
         MutableDict({
-            'in_features': Discrete([10, 20], label='hidden_dim'),
-            'out_features': Discrete([10, 20], label='hidden_dim') * 2,
+            'in_features': Categorical([10, 20], label='hidden_dim'),
+            'out_features': Categorical([10, 20], label='hidden_dim') * 2,
         }),
         MutableDict({
-            'in_features': Discrete([10, 20], label='hidden_dim') * 2,
-            'out_features': Discrete([10, 20], label='hidden_dim') * 4,
+            'in_features': Categorical([10, 20], label='hidden_dim') * 2,
+            'out_features': Categorical([10, 20], label='hidden_dim') * 4,
         }),
     ])
     sample = search_space.default()
@@ -333,38 +337,38 @@ def test_composite():
     # Inspired by OpenAI gym:
     # https://github.com/openai/gym/blob/master/tests/spaces/utils.py
     COMPOSITE_SPACES = [
-        MutableList([Discrete(range(5)), Discrete(range(4))]),
+        MutableList([Categorical(range(5)), Categorical(range(4))]),
         MutableList([
-            Discrete(range(5)),
-            Continuous(0, 5)
+            Categorical(range(5)),
+            Numerical(0, 5)
         ]),
-        MutableList([Discrete(range(5)), MutableList([Continuous(low=0.0, high=1.0), Discrete(range(2))])]),
-        MutableList([Discrete(range(3)), MutableDict(
-            position=Continuous(low=0.0, high=1.0),
-            velocity=Discrete(range(2))
+        MutableList([Categorical(range(5)), MutableList([Numerical(low=0.0, high=1.0), Categorical(range(2))])]),
+        MutableList([Categorical(range(3)), MutableDict(
+            position=Numerical(low=0.0, high=1.0),
+            velocity=Categorical(range(2))
         )]),
         MutableDict(
             {
-                'position': Discrete(range(5)),
-                'velocity': Continuous(low=1, high=5, log_distributed=True),
+                'position': Categorical(range(5)),
+                'velocity': Numerical(low=1, high=5, log_distributed=True),
             }
         ),
         MutableDict(
-            position=Discrete(range(6)),
-            velocity=Continuous(low=1, high=5, log_distributed=True),
+            position=Categorical(range(6)),
+            velocity=Numerical(low=1, high=5, log_distributed=True),
         ),
         # TODO: Graph not supported yet.
-        # MutableList((Graph(node_space=Box(-1, 1, shape=(2, 1)), edge_space=None), Discrete(2))),
+        # MutableList((Graph(node_space=Box(-1, 1, shape=(2, 1)), edge_space=None), Categorical(2))),
         # MutableDict(
         #     a=MutableDict(
-        #         a=Graph(node_space=Continuous(-100, 100), edge_space=None),
-        #         b=Continuous(-100, 100),
+        #         a=Graph(node_space=Numerical(-100, 100), edge_space=None),
+        #         b=Numerical(-100, 100),
         #     ),
-        #     b=MutableList(Continuous(-100, 100), Continuous(-100, 100))
+        #     b=MutableList(Numerical(-100, 100), Numerical(-100, 100))
         # ),
-        # Graph(node_space=Continuous(low=-100, high=100), edge_space=Discrete(range(5))),
-        # Graph(node_space=Discrete(range(5)), edge_space=Continuous(low=-100, high=100)),
-        # Graph(node_space=Discrete(3), edge_space=Discrete(range(4))),
+        # Graph(node_space=Numerical(low=-100, high=100), edge_space=Categorical(range(5))),
+        # Graph(node_space=Categorical(range(5)), edge_space=Numerical(low=-100, high=100)),
+        # Graph(node_space=Categorical(3), edge_space=Categorical(range(4))),
     ]
 
     for space in COMPOSITE_SPACES:
@@ -375,13 +379,13 @@ def test_composite():
             pass
 
     space = MutableDict({
-        'a': Continuous(low=0, high=1, label='x'),
+        'a': Numerical(low=0, high=1, label='x'),
         'b': MutableDict({
-            'b_1': Continuous(low=-100, high=100),
-            'b_2': Continuous(low=-1, high=1),
-            'b_3': Continuous(low=0, high=1, label='x')
+            'b_1': Numerical(low=-100, high=100),
+            'b_2': Numerical(low=-1, high=1),
+            'b_3': Numerical(low=0, high=1, label='x')
         }),
-        'c': Discrete(range(4)),
+        'c': Categorical(range(4)),
     })
 
     for _ in range(10):
@@ -389,39 +393,40 @@ def test_composite():
         assert sample['a'] == sample['b']['b_3']
 
 
-class MyDiscrete(Discrete):
-    pass
+class MyCategorical(Categorical):
+    def __hash__(self):
+        return id(self)  # used in set
 
 
 def test_dedup():
-    a = Discrete([1, 2, 3], label='a')
-    b = Discrete([1, 2, 3], label='a')
+    a = Categorical([1, 2, 3], label='a')
+    b = Categorical([1, 2, 3], label='a')
     assert a.equals(b)
 
-    assert len(dedup_labeled_mutables([a, b])) == 1
+    assert len(_dedup_labeled_mutables([a, b])) == 1
 
-    b = Discrete([1, 2, 3, 4], label='a')
+    b = Categorical([1, 2, 3, 4], label='a')
     with pytest.raises(ValueError, match='are different'):
-        dedup_labeled_mutables([a, b])
+        _dedup_labeled_mutables([a, b])
 
-    b = MyDiscrete([1, 2, 3], label='a')
+    b = MyCategorical([1, 2, 3], label='a')
     with pytest.raises(ValueError, match='are different'):
-        dedup_labeled_mutables([a, b])
+        _dedup_labeled_mutables([a, b])
 
-    a = Continuous(0, 1, log_distributed=True, label='a')
-    b = Continuous(0, 1, log_distributed=True, label='a')
+    a = Numerical(0, 1, log_distributed=True, label='a')
+    b = Numerical(0, 1, log_distributed=True, label='a')
 
-    assert len(dedup_labeled_mutables([a, b])) == 1
-    assert not a.equals(Continuous(0, 1, log_distributed=False, label='a'))
-    assert not a.equals(Continuous(mu=0, sigma=1, label='a'))
+    assert len(_dedup_labeled_mutables([a, b])) == 1
+    assert not a.equals(Numerical(0, 1, log_distributed=False, label='a'))
+    assert not a.equals(Numerical(mu=0, sigma=1, label='a'))
 
-    a = Continuous(0, 1, label='a', default=0.5)
-    b = Continuous(0, 1, label='a', default=0.3)
+    a = Numerical(0, 1, label='a', default=0.5)
+    b = Numerical(0, 1, label='a', default=0.3)
     assert not a.equals(b)
 
 
 def test_is_leaf():
-    a = Discrete([1, 2, 3], label='a')
+    a = Categorical([1, 2, 3], label='a')
 
     with pytest.raises(ValueError, match=r'is_leaf\(\) should return'):
         a.simplify(is_leaf=lambda x: False)
@@ -431,44 +436,44 @@ def test_repr():
     mutable = Mutable()
     assert repr(mutable) == 'Mutable()'
 
-    discrete = Discrete([1, 2, 3], label='a')
-    assert repr(discrete) == 'Discrete([1, 2, 3], label=\'a\')'
+    categorical = Categorical([1, 2, 3], label='a')
+    assert repr(categorical) == 'Categorical([1, 2, 3], label=\'a\')'
 
-    discrete = Discrete(list(range(100)), label='a')
-    assert repr(discrete) == 'Discrete([0, 1, 2, ..., 97, 98, 99], label=\'a\')'
+    categorical = Categorical(list(range(100)), label='a')
+    assert repr(categorical) == 'Categorical([0, 1, 2, ..., 97, 98, 99], label=\'a\')'
 
-    discrete = DiscreteMultiple([1, 2, 3], n_chosen=None, label='a')
-    assert repr(discrete) == 'DiscreteMultiple([1, 2, 3], n_chosen=None, label=\'a\')'
+    categorical = CategoricalMultiple([1, 2, 3], n_chosen=None, label='a')
+    assert repr(categorical) == 'CategoricalMultiple([1, 2, 3], n_chosen=None, label=\'a\')'
 
-    continuous = Continuous(0, 1, label='a')
-    assert repr(continuous) == 'Continuous(0, 1, label=\'a\')'
+    numerical = Numerical(0, 1, label='a')
+    assert repr(numerical) == 'Numerical(0, 1, label=\'a\')'
 
 
 def test_default():
     D = MutableDict({
-        'a': Discrete([1, 2, 3], label='a'),
-        'b': Discrete([4, 5, 6], label='b'),
+        'a': Categorical([1, 2, 3], label='a'),
+        'b': Categorical([4, 5, 6], label='b'),
         'c': MutableList([
-            Discrete([1, 2, 3], label='a'),
-            Continuous(0, 1, label='d'),
+            Categorical([1, 2, 3], label='a'),
+            Numerical(0, 1, label='d'),
         ]),
-        'd': Continuous(0, 1, label='d')
+        'd': Numerical(0, 1, label='d')
     })
 
     assert D.default() == {'a': 1, 'b': 4, 'c': [1, 0.5], 'd': 0.5}
-    assert Discrete([1, 2, 3], default=2).default() == 2
+    assert Categorical([1, 2, 3], default=2).default() == 2
 
-    assert DiscreteMultiple([2, 4, 6], n_chosen=2).default() == [2, 4]
-    assert DiscreteMultiple([5, 3, 7], n_chosen=None).default() == [5, 3, 7]
+    assert CategoricalMultiple([2, 4, 6], n_chosen=2).default() == [2, 4]
+    assert CategoricalMultiple([5, 3, 7], n_chosen=None).default() == [5, 3, 7]
 
     with pytest.raises(ValueError, match='not a multiple of'):
-        assert Continuous(0, 1, default=0.5, quantize=0.3).default() == 0.5
+        assert Numerical(0, 1, default=0.5, quantize=0.3).default() == 0.5
 
-    assert Continuous(0, 1, default=0.9, quantize=0.3).default() == 0.9
-    assert Continuous(0, 1, quantize=0.3).default() == 0.6
+    assert Numerical(0, 1, default=0.9, quantize=0.3).default() == 0.9
+    assert Numerical(0, 1, quantize=0.3).default() == 0.6
 
-    x = Discrete([1, 2, 3], label='x')
-    y = Discrete([4, 5, 6], label='y')
+    x = Categorical([1, 2, 3], label='x')
+    y = Categorical([4, 5, 6], label='y')
     exp = x + y
     assert exp.default() == 5
 
@@ -497,8 +502,8 @@ def test_default():
     assert lst[1] + lst[2] == 7
 
     # Specified default value conflicts with random sample
-    x = Discrete([1, 2, 3], label='x', default=2)
-    y = Discrete([4, 5, 6], label='y', default=4)
+    x = Categorical([1, 2, 3], label='x', default=2)
+    y = Categorical([4, 5, 6], label='y', default=4)
     sample = {}
     ExpressionConstraint(exp == 7).robust_default(sample)
     with pytest.raises(ValueError, match=r'Default value is specified to be'):
@@ -508,11 +513,11 @@ def test_default():
 
 def test_random():
     lst = MutableList([
-        Discrete([1, 2, 3]),
-        Continuous(4, 6, label='z'),
-        Continuous(4, 6, log_distributed=True),
-        Continuous(mu=0, sigma=1),
-        Continuous(4, 6, label='z')
+        Categorical([1, 2, 3]),
+        Numerical(4, 6, label='z'),
+        Numerical(4, 6, log_distributed=True),
+        Numerical(mu=0, sigma=1),
+        Numerical(4, 6, label='z')
     ])
 
     assert lst.random(random_state=np.random.RandomState(0)) == \
@@ -520,8 +525,8 @@ def test_random():
     sample = lst.random(random_state=np.random.RandomState(0))
     assert sample[1] == sample[4]
 
-    x = Discrete([1, 2, 3], label='x', default=2)
-    y = Discrete([4, 5, 6], label='y', default=4)
+    x = Categorical([1, 2, 3], label='x', default=2)
+    y = Categorical([4, 5, 6], label='y', default=4)
     with pytest.raises(ConstraintViolation):
         for _ in range(50):
             ExpressionConstraint(x + y == 7).random()
@@ -529,17 +534,17 @@ def test_random():
 
 def test_grid():
     lst = MutableList([
-        Discrete([1, 2, 3]),
-        Continuous(4, 6, label='z'),
-        Continuous(4, 6, log_distributed=True),
-        Continuous(mu=0, sigma=1),
-        Continuous(4, 6, label='z')
+        Categorical([1, 2, 3]),
+        Numerical(4, 6, label='z'),
+        Numerical(4, 6, log_distributed=True),
+        Numerical(mu=0, sigma=1),
+        Numerical(4, 6, label='z')
     ])
 
     assert len(list(lst.grid())) == 3
 
-    x = Discrete([1, 2, 3], label='x')
-    y = Discrete([4, 5, 6], label='y')
+    x = Categorical([1, 2, 3], label='x')
+    y = Categorical([4, 5, 6], label='y')
     exp = x + y
     assert len(list(ExpressionConstraint(exp == 7).grid())) == 3
     assert len(list(ExpressionConstraint(exp == 10).grid())) == 0
@@ -553,3 +558,102 @@ def test_grid():
         {'c': None, 'a': 2, 'b': 5},
         {'c': None, 'a': 3, 'b': 4}
     ]
+
+
+def test_equals():
+    assert _mutable_equal(Categorical([1, 2, 3], label='x'), Categorical([1, 2, 3], label='x'))
+    assert not _mutable_equal(Categorical([1, 2, 3], label='x'), 1)
+    assert not _mutable_equal(1, Categorical([1, 2, 3], label='x'))
+    assert not _mutable_equal(1, 2)
+    assert not _mutable_equal(False, True)
+    assert _mutable_equal(False, False)
+    assert _mutable_equal('a', 'a')
+    assert _mutable_equal('abc', 'abc')
+    assert not _mutable_equal('abc', 'abcd')
+    assert _mutable_equal({
+        'a': Categorical([1, 2, 3], label='x'),
+        'b': Categorical([4, 5, 6], label='y'),
+    }, {
+        'a': Categorical([1, 2, 3], label='x'),
+        'b': Categorical([4, 5, 6], label='y'),
+    })
+    assert not _mutable_equal({
+        'a': Categorical([1, 2, 3], label='x'),
+        'b': Categorical([4, 5, 6], label='y'),
+    }, {
+        'a': Categorical([1, 2, 3], label='x'),
+        'b': Categorical([4, 5, 6], label='y'),
+        'c': Categorical([7, 8, 9], label='z'),
+    })
+    assert not _mutable_equal({
+        'a': Categorical([1, 2, 3], label='x'),
+        'b': Categorical([4, 5, 6], label='y'),
+    }, {
+        'a': Categorical([1, 2, 3], label='x'),
+        'b': Categorical([4, 5, 6], label='z'),
+    })
+    assert not _mutable_equal({
+        'a': Categorical([1, 2, 3], label='x'),
+        'b': Categorical([4, 5, 6], label='y'),
+        'c': Categorical([7, 8, 9], label='z'),
+    }, {
+        'a': Categorical([1, 2, 3], label='x'),
+        'b': Categorical([4, 5, 6], label='y'),
+    })
+    assert _mutable_equal({
+        'a': ['b', 'c', Numerical(0, 1, label='x')],
+    }, {
+        'a': ['b', 'c', Numerical(0, 1, label='x')],
+    })
+    assert _mutable_equal(
+        [1, 2, 3], [1, 2, 3]
+    )
+    assert not _mutable_equal(
+        [1, 2, 3], [1, 2, 3, 4]
+    )
+    assert not _mutable_equal(
+        [1, 2, Categorical([1, 2, 3])], [1, 2, 3]
+    )
+
+    assert _mutable_equal(
+        {MyCategorical([0, 1], label='x'), MyCategorical([2, 3], label='y')},
+        {MyCategorical([0, 1], label='x'), MyCategorical([2, 3], label='y')},
+    )
+    assert not _mutable_equal(
+        {MyCategorical([0, 1], label='x'), MyCategorical([2, 3], label='y'), 3},
+        {MyCategorical([0, 1], label='x'), MyCategorical([2, 3], label='y')},
+    )
+    assert not _mutable_equal(
+        {MyCategorical([0, 1], label='x'), MyCategorical([4, 5], label='y')},
+        {MyCategorical([0, 1], label='x'), MyCategorical([2, 3], label='y')},
+    )
+
+    assert _mutable_equal(
+        Categorical([1, 2], label='a') * 0.75 + Numerical(0, 1, label='b'),
+        Categorical([1, 2], label='a') * 0.75 + Numerical(0, 1, label='b'),
+    )
+    assert _mutable_equal(
+        MutableExpression.to_int(Categorical([1, 2], label='a') * 0.75) + Numerical(0, 1, label='b'),
+        MutableExpression.to_int(Categorical([1, 2], label='a') * 0.75) + Numerical(0, 1, label='b'),
+    )
+    assert not _mutable_equal(
+        Categorical([1, 2], label='a') * 0.75 + Numerical(0, 1, label='b'),
+        0.75 * Categorical([1, 2], label='a') + Numerical(0, 1, label='b'),
+    )
+
+    assert _mutable_equal(
+        MutableList([Categorical([1, 2], label='a'), Categorical([3, 4], label='b')]),
+        MutableList([Categorical([1, 2], label='a'), Categorical([3, 4], label='b')]),
+    )
+    assert not _mutable_equal(
+        MutableList([Categorical([1, 2], label='a'), Categorical([3, 4], label='b')]),
+        MutableList([Categorical([1, 2], label='a'), Categorical([3, 5], label='b')]),
+    )
+    assert _mutable_equal(
+        MutableDict({'a': Categorical([1, 2], label='a'), 'x': Categorical([3, 4], label='b')}),
+        MutableDict({'a': Categorical([1, 2], label='a'), 'x': Categorical([3, 4], label='b')}),
+    )
+    assert not _mutable_equal(
+        MutableDict({'a': Categorical([1, 2], label='a'), 'x': Categorical([3, 4], label='b')}),
+        MutableDict({'a': Categorical([1, 2], label='a'), 'x': Categorical([3, 4], label='x')}),
+    )
