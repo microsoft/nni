@@ -51,6 +51,7 @@ class TargetSpace:
         if attr is None:
             self._set_wrapper_attr(attr_name, val)
         else:
+            # here using inplace copy for ddp issue, and never set val to a torch.nn.Parameter.
             attr.copy_(val)
 
     def _register_target(self):
@@ -199,7 +200,9 @@ class DistillationTargetSpace(TargetSpace):
             return None
 
     @hidden_state.setter
-    def hidden_state(self, val):
+    def hidden_state(self, val: torch.Tensor):
+        if not isinstance(val, torch.Tensor):
+            raise TypeError('Only support saving tensor as distillation hidden_state.')
         self._buffer.append(val)
 
     @property

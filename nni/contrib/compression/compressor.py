@@ -66,6 +66,9 @@ class Pruner(Compressor):
     def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict]):
         return super().from_compressor(compressor, new_config_list, mode='pruning')
 
+    def update_masks(self, masks):
+        pass
+
 
 class Quantizer(Compressor):
     def __init__(self, model: torch.nn.Module, config_list: List[Dict]):
