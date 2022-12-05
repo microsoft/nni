@@ -28,6 +28,7 @@ from .utils import (
     _orig_index,
     _orig_bool,
     _orig_slice,
+    _orig_set,
 )
 
 _logger = logging.getLogger(__name__)
@@ -314,7 +315,8 @@ class ConcreteUnpackIterProxy(ConcreteProxy):
     def __init__(self, root: ConcreteProxy):
         if not hasattr(root.value, '__getitem__'):
             # transfer 'set' to 'tuple'
-            root = _orig_tuple(root)
+            # it' tuple not _orig_tuple!
+            root = tuple(root)
         self.root = root
         self.tracer = root.tracer
         self._node: Optional[Node] = None

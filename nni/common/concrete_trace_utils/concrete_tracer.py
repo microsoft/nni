@@ -89,7 +89,7 @@ class ConcreteTracer(TracerBase):
         _orig_is_not:               ([], False, None),
         _orig_contains:             ([], False, None),
         _orig_index:                ([], False, None),
-        
+
         # force-traced function
         torch.rand:                 ([], True, None),
         torch.randn:                ([], True, None),
@@ -98,7 +98,7 @@ class ConcreteTracer(TracerBase):
         torch.randn_like:           ([], True, None),
         torch.randint_like:         ([], True, None),
         torch.randperm:             ([], True, None),
-        
+
         # method
         Sequential.__getitem__:     ([], False, operator.getitem),
         Sequential.__len__:         ([], False, _orig_len),
@@ -121,15 +121,16 @@ class ConcreteTracer(TracerBase):
         ParameterDict.__len__:      ([], False, _orig_len),
         ParameterDict.__iter__:     ([], False, iter),
         ParameterDict.__contains__: ([], False, _orig_contains),
-        
-        # do not need to use torch.functional
+
+        # special treat to `split`
         torch.split:                ([], False, None),
         torch._C._VariableFunctions.split: ([], False, None),
         torch._C._TensorBase.split: ([], False, None),
     }
     for name in dir(torch.nn.functional):
         attr = getattr(torch.nn.functional, name)
-        if callable(attr) and not _orig_isinstance(attr, Type) and not name.startswith('__') and getattr(attr, '__module__', None) != 'torch.nn.modules.utils':
+        if callable(attr) and not _orig_isinstance(attr, Type) and not name.startswith('__')\
+            and getattr(attr, '__module__', None) not in ('typing', 'torch.nn.modules.utils'):
             if attr not in default_autowrap_leaf_function:
                 default_autowrap_leaf_function[attr] = ([], False, getattr(torch.functional, name, None))
             if hasattr(attr, '__module__') and attr.__module__ != 'torch.nn.functional':
@@ -156,6 +157,7 @@ class ConcreteTracer(TracerBase):
         # class
         _orig_bool:                 ((), False),
         _orig_zip:                  ((), False),
+        _orig_int:                  ((), False),
 
         # iterable class
         _orig_tuple:                ((), True),
@@ -1153,7 +1155,11 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         node_a: Node
         node_b: Node
         # TODO: better infomation
-        assert node_a.op == node_b.op and node_a.target == node_b.target
+        if node_a.op == 'get_attr' and node_a.name.startswith('_tensor_constant'):
+            assert node_b.op == 'get_attr' and node_b.name.startswith('_tensor_constant')
+            assert torch.equal(getattr(root, node_a.name), getattr(root, node_b.name))
+        else:
+            assert node_a.op == node_b.op and node_a.target == node_b.target
 
     with MagicMethodPatcher(tracer.root):
         name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
