@@ -18,7 +18,7 @@ from .target_space import (
 from .utils import select_modules, canonicalize_settings
 
 _logger = logging.getLogger(__name__)
-SMALL_MASK_VALUE = -1000
+SMALL_MASK_VALUE = -1000.0
 OUTPUT_FORMAT = Union[Tensor, Tuple[Tensor, Any], Dict[str, Union[Tensor, Any]]]
 
 
@@ -196,6 +196,7 @@ class ModuleWrapper(torch.nn.Module):
             if target_space.apply_method == 'mul':
                 return torch.mul(target, target_space.mask)
             elif target_space.apply_method == 'add':
+                # here we assume the target is a float dtype.
                 trans_mask = torch.where(target_space.mask == 1, torch.zeros_like(target_space.mask), SMALL_MASK_VALUE)
                 return torch.add(target, trans_mask)
             else:
@@ -289,9 +290,9 @@ class ModuleWrapper(torch.nn.Module):
         return outputs
 
 
-def register_wrapper(model: torch.nn.Module, config_list: List[Dict[str, Any]],
-                     mode: Literal['pruning', 'quantization', 'distillation'],
-                     existed_wrappers: Dict[str, ModuleWrapper] | None = None) -> Dict[str, ModuleWrapper]:
+def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
+                      mode: Literal['pruning', 'quantization', 'distillation'],
+                      existed_wrappers: Dict[str, ModuleWrapper] | None = None) -> Dict[str, ModuleWrapper]:
     assert mode in ['pruning', 'quantization', 'distillation']
     existed_wrappers = existed_wrappers if existed_wrappers else {}
     module_wrappers = {k: v for k, v in existed_wrappers.items()}
