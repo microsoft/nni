@@ -17,7 +17,7 @@ class Replacer:
         raise NotImplementedError()
 
 
-class BuiltinReplacer:
+class DefaultReplacer(Replacer):
     """
     This is replacer is used to replace the leaf-module in the model.
     Leaf-module is the ``torch.nn.Module`` that contains no ``torch.nn.Module`` as its attribute.

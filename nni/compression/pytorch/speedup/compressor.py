@@ -16,7 +16,7 @@ from nni.compression.pytorch.utils.utils import get_module_by_name
 from .compress_modules import replace_module
 from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
-from .replacer import Replacer, BuiltinReplacer
+from .replacer import Replacer, DefaultReplacer
 from ..utils import rand_like_with_shape
 from ..utils.attr import has_nested_attr, get_nested_attr
 
@@ -88,14 +88,14 @@ class ModelSpeedup:
         self.constant = {}
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}
-        self.builtin_replacer = BuiltinReplacer(replace_module)
+        self.default_replacer = DefaultReplacer(replace_module)
         self.customized_replacers: List[Replacer] = customized_replacers if customized_replacers is not None else []
         if customized_replace_func is not None:
             warn_msg = '`customized_replace_func` has been deprecated, please using `customized_replacers`, '
             warn_msg += 'it can be easily transfer to a replacer by '
-            warn_msg += 'customized_replacers=[BuiltinReplacer(customized_replace_func)]'
+            warn_msg += 'customized_replacers=[DefaultReplacer(customized_replace_func)]'
             _logger.warning(warn_msg)
-            self.customized_replacers.append(BuiltinReplacer(customized_replace_func))
+            self.customized_replacers.append(DefaultReplacer(customized_replace_func))
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
         """
@@ -416,7 +416,7 @@ class ModelSpeedup:
         with torch.no_grad():
             for replacer in self.customized_replacers:
                 replacer.replace_modules(self.bound_model, self.auto_inferences)
-            self.builtin_replacer.replace_modules(self.bound_model, self.auto_inferences)
+            self.default_replacer.replace_modules(self.bound_model, self.auto_inferences)
         for unique_name in self.auto_inferences:
             if has_nested_attr(self.bound_model, unique_name):
                 module = get_nested_attr(self.bound_model, unique_name)
