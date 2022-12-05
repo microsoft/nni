@@ -6,6 +6,7 @@ from typing import Dict, List, Literal
 
 import torch
 
+from .config import trans_legacy_config_list
 from .wrapper import ModuleWrapper, register_wrappers
 
 _logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ class Compressor:
                  mode: Literal['pruning', 'quantization', 'distillation'],
                  existed_wrapper: Dict[str, ModuleWrapper] | None = None):
         self.bound_model = model
-        self.config_list = deepcopy(config_list)
+        self.config_list = trans_legacy_config_list(deepcopy(config_list))
 
         self._is_wrapped = False
         self._module_wrappers = register_wrappers(model, config_list, mode, existed_wrapper)
@@ -81,8 +82,18 @@ class Pruner(Compressor):
     def _calculate_metrics(self, data: Dict[str, Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, torch.Tensor]]:
         raise NotImplementedError()
 
-    def _allocate_masks(self, metrics: Dict[str, Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, torch.Tensor]]:
+    def _generate_sparsity(self, metrics: Dict[str, Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, torch.Tensor]]:
         raise NotImplementedError()
+
+    def generate_masks(self) -> Dict[str, Dict[str, torch.Tensor]]:
+        data = self._collect_data()
+        metrics = self._calculate_metrics(data)
+        return self._generate_sparsity(metrics)
+
+    def compress(self):
+        masks = self.generate_masks()
+        self.update_masks(masks)
+        return self.bound_model, masks
 
 
 class Quantizer(Compressor):

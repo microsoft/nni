@@ -7,7 +7,8 @@ from typing import Any, Dict, List, Tuple, Type, Union, Literal
 import torch
 from torch import Tensor
 
-from .setting import INPUT_PREFIX, OUTPUT_PREFIX, select_modules, canonicalize_settings
+from .config import select_modules_by_config
+from .setting import INPUT_PREFIX, OUTPUT_PREFIX, canonicalize_settings
 from .target_space import (
     TargetSpace,
     TargetType,
@@ -298,7 +299,7 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
     for _, wrapper in module_wrappers.items():
         wrapper.freeze()
     for config in config_list:
-        modules, public_config = select_modules(model, config)
+        modules, public_config = select_modules_by_config(model, config)
         for module_name, module in modules.items():
             if module_name in module_wrappers:
                 wrapper = module_wrappers[module_name]
