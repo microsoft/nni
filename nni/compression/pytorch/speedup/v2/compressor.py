@@ -347,10 +347,10 @@ class ModelSpeedup(torch.fx.Interpreter):
 
             # Some operator may have the in_place operations, so we need to clone the input
             # before passing to the self.module
-            args = map_recursive(self.tensor_cloner, args)
-            kwargs = map_recursive(self.tensor_cloner, kwargs)
+            args_cloned = map_recursive(self.tensor_cloner, args)
+            kwargs_cloned = map_recursive(self.tensor_cloner, kwargs)
 
-            output = getattr(self, node.op)(node.target, args, kwargs)
+            output = getattr(self, node.op)(node.target, args_cloned, kwargs_cloned)
 
             map_recursive_zip(self.indirect_update_param_mask, output, output_masks_2)
 
@@ -469,7 +469,7 @@ class ModelSpeedup(torch.fx.Interpreter):
             node: Node
             if node.op == 'call_module':
                 sub_module: nn.Module = self.fetch_attr(node.target)
-                param_masks = self.masks_file.get(node.name, {})
+                param_masks = self.masks_file.get(node.target, {})
                 for k, v in sub_module.named_parameters():
                     if k not in param_masks:
                         param_masks[k] = torch.ones_like(v)
