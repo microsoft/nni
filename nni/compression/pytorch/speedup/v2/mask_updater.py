@@ -135,12 +135,6 @@ class DefaultMaskUpdater(MaskUpdater):
         map_recursive_zip(model_speedup.indirect_pass_grad, arg_values_2, args_rand)
         map_recursive_zip(model_speedup.indirect_pass_grad, kwarg_values_2, kwargs_rand)
 
-        if model_speedup.garbage_collect_values:
-            # TODO: do memory collect to reduce memory usage
-            # for to_delete in model_speedup.user_to_last_uses.get(node, []):
-            #     model_speedup.slots[to_delete].mask_1 = None
-            pass
-
     def indirect_update_postprocess(self, model_speedup: 'ModelSpeedup', node: Node):
         pass
 
