@@ -20,6 +20,7 @@ from torch.fx._compatibility import compatibility
 from nni.compression.pytorch.speedup.compress_modules import replace_module
 from nni.common.concrete_trace_utils.utils import run_onlyif_instance, map_recursive, map_recursive_zip
 from nni.compression.pytorch.speedup.v2.container import Slot, NodeInfo
+from nni.compression.pytorch.speedup.v2.mask_updater import MaskUpdater, DefaultMaskUpdater, DefaultModuleMaskUpdater
 
 
 @compatibility(is_backward_compatible=True)
@@ -51,43 +52,49 @@ class ModelSpeedup(torch.fx.Interpreter):
                 in_mask, out_mask, weight_mask = masks
                 # prune the ori_module to a new smaller module according to the mask
                 return new_small_module
-
+    garbage_collect_values: bool
+        if the garbage_collect_values is True, we will delete cache information after the cache has none usage.
+    logger: Optional[logging.Logger]
+        to set logger. if the value is None we will use the default logger
     """
     STD_DELTA = 1e-6
     randomize_range_float = (0.1, 8.0)
 
     def __init__(self,
                 module: GraphModule,
-                masks_file,
-                map_location=None,
                 batch_dim=0,
                 batch_size=8,
-                customized_replace_func = dict(),
-                garbage_collect_values: bool = True,
-                logger:Optional[logging.Logger] = None):
+                customized_replace_func=dict(),
+                mask_updater: list[MaskUpdater]=[DefaultModuleMaskUpdater, DefaultMaskUpdater],
+                garbage_collect_values: bool=True,
+                logger:Optional[logging.Logger]=None):
         super().__init__(module, garbage_collect_values)
 
         self.module: GraphModule
-        self.masks_file = masks_file
-        self.map_location = map_location
         self.batch_dim = batch_dim
         self.batch_size = batch_size
         self.customized_replace_func = customized_replace_func
+        self.mask_updater = mask_updater
         if logger == None:
             self.logger = logging.getLogger(__name__)
             self.logger.setLevel(logging.INFO)
         else:
             self.logger = logger
-    
+
     @compatibility(is_backward_compatible=True)
     def store_attr(self, path: str, obj):
+        """
+        an util for interprete and edit the module.
+
+        Parameters
+        ---------
+        path: str
+            the path for the attr. the hierarchy is split by `.`.
+        obj:
+            The target node to store.
+        """
         target_atoms = path.split('.')
         attr_itr = self.module
-        # for i, atom in enumerate(target_atoms)[:-1]:
-        #     if not hasattr(attr_itr, atom):
-        #         raise RuntimeError(f"Node referenced nonexistent target {'.'.join(target_atoms[:i])}")
-        #     attr_itr = getattr(attr_itr, atom)
-        # setattr(attr_itr, obj)
         for i in range(len(target_atoms))[:-1]:
             atom = target_atoms[i]
             if not hasattr(attr_itr, atom):
@@ -97,9 +104,16 @@ class ModelSpeedup(torch.fx.Interpreter):
 
     @compatibility(is_backward_compatible=True)
     def placeholder(self, target, args, kwargs) -> Any:
+        """
+        override the execution for 'placeholder' ops.
+        """
         return self.arg_dict[target]
 
     def tensor_propagate_check(self, obj: torch.Tensor):
+        """
+        detect the tensor should be seen as an intermediate tensor.
+        sometimes
+        """
         return obj.numel() > self.batch_size and obj.numel() % self.batch_size == 0
 
     @run_onlyif_instance(torch.Tensor)
@@ -130,8 +144,6 @@ class ModelSpeedup(torch.fx.Interpreter):
         return self.slots[node].value_2
 
     def tensor_randomizer(self, obj):
-        import copy
-        # if self.tensor_propagate_check(obj):
         if isinstance(obj, torch.Tensor):
             if obj.numel() != 1 and len(obj.size()) > self.batch_dim and obj.size(self.batch_dim) == self.batch_size:
                 new_obj = obj.clone().detach()
@@ -267,10 +279,10 @@ class ModelSpeedup(torch.fx.Interpreter):
             self.slots[node].value_1 = map_recursive(self.tensor_clone_detacher, output)
             self.slots[node].status['value_1'] += 1
 
-            # do memory collect / compression
             if self.garbage_collect_values:
+                # TODO: do memory collect / compression
                 # for to_delete in self.user_to_last_uses.get(node, []):
-                #     del self.inter_vars[to_delete]
+                #     self.slots[node].value_1 = None
                 pass
 
     def update_direct_sparsity(self):
@@ -473,11 +485,22 @@ class ModelSpeedup(torch.fx.Interpreter):
                         param_masks[k] = torch.ones_like(v)
                 self.node_infos[node] = NodeInfo(param_masks)
 
-    def run(self, *args) -> Any:
+    def run(self, *, args, masks_file, map_location=None) -> Any:
         """
-        There are basically two steps: first, do mask/shape inference,
-        second, replace modules.
+        This class is to speedup the model with provided weight mask.
+
+        Parameters
+        ----------
+        args : list
+            the dummy_input to execute the model
+        masks_file : str/dict
+            The path of user provided mask file, or the mask object
+        map_location : str
+            the device on which masks are placed, same to map_location in ```torch.load```
         """
+
+        self.masks_file = masks_file
+        self.map_location = map_location
 
         self.logger.info("start to speedup the model")
         training = self.module.training

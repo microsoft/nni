@@ -179,7 +179,7 @@ class AutoConvTestCase(unittest.TestCase):
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         traced_model = concrete_trace(model, {'x': dummy_input})
         # torch.manual_seed(100)
-        ModelSpeedup(traced_model, masks).run(torch.rand(3, 1, 28, 28))
+        ModelSpeedup(traced_model).run(args=[torch.rand(3, 1, 28, 28)], masks_file=masks)
 
         print('before:\n', model)
         print('after:\n', repr(traced_model))

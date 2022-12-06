@@ -19,7 +19,8 @@ class Slot:
         }
 
 class NodeInfo:
-    def __init__(self, param_masks: dict[str, torch.Tensor]) -> None:
+    def __init__(self, mask_updater, param_masks: dict[str, torch.Tensor]) -> None:
+        self.mask_updater = mask_updater
         self.param_masks_0 = param_masks
         self.param_masks_1 = {}
         self.status = {
