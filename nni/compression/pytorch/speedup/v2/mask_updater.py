@@ -1,6 +1,6 @@
 import torch
 from torch.fx.node import Node
-from nni.common.concrete_trace_utils.utils import run_onlyif_instance, map_recursive, map_recursive_zip
+from nni.common.concrete_trace_utils.utils import map_recursive, map_recursive_zip
 from nni.compression.pytorch.utils.utils import randomize_tensor
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
