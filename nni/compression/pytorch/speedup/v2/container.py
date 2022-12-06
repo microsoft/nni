@@ -1,7 +1,4 @@
-from typing import Union
-
 import torch
-from torch import nn
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -26,6 +23,7 @@ class NodeInfo:
     def __init__(self) -> None:
         self.mask_updater: 'MaskUpdater' = None
         # these are for call_module node
+        self.module: torch.nn.Module = None
         self.param_masks_0: dict[str, torch.Tensor] = None
         self.param_masks_1: dict[str, torch.Tensor] = {}
         self.status = {

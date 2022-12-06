@@ -262,30 +262,13 @@ class ModelSpeedup(torch.fx.Interpreter):
             assert not isinstance(out, torch.Tensor)
 
     def propagate_originally(self):
+
         self.logger.info("propagate original variables")
+
         for node in self.module.graph.nodes:
             node: Node
-
             self.logger.info('Propagate variables for %s: %s', node.op, node.name)
-
-            args, kwargs = node.args, node.kwargs
-            args = map_recursive(self.slot_getter_value_1, args)
-            args = map_recursive(self.tensor_detacher, args)
-            kwargs = map_recursive(self.slot_getter_value_1, kwargs)
-            kwargs = map_recursive(self.tensor_detacher, kwargs)
-
-            output = getattr(self, node.op)(node.target, args, kwargs)
-
-            self.slots[node].value_0 = output
-            self.slots[node].status['value_0'] += 1
-            self.slots[node].value_1 = map_recursive(self.tensor_clone_detacher, output)
-            self.slots[node].status['value_1'] += 1
-
-            if self.garbage_collect_values:
-                # TODO: do memory collect / compression
-                # for to_delete in self.user_to_last_uses.get(node, []):
-                #     self.slots[node].value_1 = None
-                pass
+            self.node_infos[node].mask_updater.propagate_originally(self, node)
 
     def update_direct_sparsity(self):
         # update indirect out mask
@@ -305,47 +288,10 @@ class ModelSpeedup(torch.fx.Interpreter):
             node: Node
             self.node_infos[node].mask_updater.direct_update_postprocess(self, node)
 
-        return
-        for node in self.module.graph.nodes:
-            node: Node
-
-            self.slots[node].value_2 = map_recursive(self.tensor_randomizer, self.slots[node].value_0)
-            self.slots[node].status['value_2'] += 1
-
-        for node in self.module.graph.nodes:
-            node: Node
-
-            self.logger.info('Update direct mask for %s: %s', node.op, node.name)
-            with torch.no_grad():
-                if node.op == 'call_module':
-                    node_info: NodeInfo = self.node_infos[node]
-                    sub_module: nn.Module = self.fetch_attr(node.target)
-
-                    for _k, v in sub_module.named_parameters():
-                        randomize_tensor(v, self.randomize_range_float[0], self.randomize_range_float[1])
-
-                    for k, v in sub_module.named_parameters():
-                        v *= node_info.param_masks_0[k] # in-place addition
-
-                args = map_recursive(self.slot_getter_value_2, node.args)
-                arg_masks = map_recursive(self.slot_getter_mask_1, node.args)
-                args = map_recursive_zip(self.mask_applier, args, arg_masks)
-                kwargs = map_recursive(self.slot_getter_value_2, node.kwargs)
-                kwarg_masks = map_recursive(self.slot_getter_mask_1, node.kwargs)
-                kwargs = map_recursive_zip(self.mask_applier, kwargs, kwarg_masks)
-
-                output = getattr(self, node.op)(node.target, args, kwargs)
-
-                self.slots[node].mask_1 = map_recursive(self.direct_calc_mask, output)
-                self.slots[node].status['mask_1'] += 1
-
-            # do memory collect / compression
-
     def update_indirect_sparsity(self):
         # update indirect out mask
 
         self.logger.info("update indirect sparsity")
-
 
         for node in reversed(self.module.graph.nodes):
             node: Node
@@ -359,58 +305,6 @@ class ModelSpeedup(torch.fx.Interpreter):
         for node in reversed(self.module.graph.nodes):
             node: Node
             self.node_infos[node].mask_updater.indirect_update_postprocess(self, node)
-
-        return
-        for node in reversed(self.module.graph.nodes):
-            node: Node
-
-            self.logger.info('Update indirect mask for %s: %s', node.op, node.name)
-
-            output = map_recursive(self.slot_getter_value_2, node)
-            output_masks_1 = map_recursive(self.slot_getter_mask_1, node)
-            output_masks_2 = map_recursive_zip(self.indirect_calc_mask, output_masks_1, output)
-
-            self.slots[node].mask_2 = output_masks_2
-            self.slots[node].status['mask_2'] += 1
-
-            # init apply input
-            # randomized, so it's same to use slot_getter_value_orig or slot_getter_value_orig_inplace
-            args = map_recursive(self.slot_getter_value_0, node.args)
-            args = map_recursive(self.tensor_randomizer, args)
-            arg_masks = map_recursive(self.slot_getter_mask_1, node.args)
-            args = map_recursive_zip(self.mask_applier, args, arg_masks)
-            map_recursive(self.tensor_requires_grad, args)
-
-            kwargs = map_recursive(self.slot_getter_value_0, node.kwargs)
-            kwargs = map_recursive(self.tensor_randomizer, kwargs)
-            kwarg_masks = map_recursive(self.slot_getter_mask_1, node.kwargs)
-            kwargs = map_recursive_zip(self.mask_applier, kwargs, kwarg_masks)
-            map_recursive(self.tensor_requires_grad, kwargs)
-
-            # Some operator may have the in_place operations, so we need to clone the input
-            # before passing to the self.module
-            args_cloned = map_recursive(self.tensor_cloner, args)
-            kwargs_cloned = map_recursive(self.tensor_cloner, kwargs)
-
-            output = getattr(self, node.op)(node.target, args_cloned, kwargs_cloned)
-
-            map_recursive_zip(self.indirect_update_param_mask, output, output_masks_2)
-
-            if node.op == 'call_module':
-                # update the sparsity of the paramters
-                node_info: NodeInfo = self.node_infos[node]
-                sub_module: nn.Module = self.fetch_attr(node.target)
-                for k, v in sub_module.named_parameters():
-                    grad_zero = v.grad.data == 0
-                    node_info.param_masks_1[k] = node_info.param_masks_0[k].clone()
-                    node_info.param_masks_1[k][grad_zero] = 0
-
-
-            arg_values_2 = map_recursive(self.slot_getter_value_2, node.args)
-            kwarg_values_2 = map_recursive(self.slot_getter_value_2, node.kwargs)
-
-            map_recursive_zip(self.indirect_pass_grad, arg_values_2, args)
-            map_recursive_zip(self.indirect_pass_grad, kwarg_values_2, kwargs)
 
     def replace_compressed_modules(self):
         """
@@ -512,14 +406,6 @@ class ModelSpeedup(torch.fx.Interpreter):
             for mask_updater in self.mask_updaters:
                 if mask_updater.detect(self, node):
                     break
-            # self.node_infos[node] = NodeInfo(mask_updater)
-            # if node.op == 'call_module':
-            #     sub_module: nn.Module = self.fetch_attr(node.target)
-            #     param_masks = self.masks_file.get(node.target, {})
-            #     for k, v in sub_module.named_parameters():
-            #         if k not in param_masks:
-            #             param_masks[k] = torch.ones_like(v)
-            #     self.node_infos[node] = NodeInfo(param_masks)
 
     def run(self, *, args, masks_file, map_location=None) -> Any:
         """
