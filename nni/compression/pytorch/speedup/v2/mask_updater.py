@@ -1,3 +1,4 @@
+import operator
 import torch
 from torch.fx.node import Node
 from nni.common.concrete_trace_utils.utils import map_recursive, map_recursive_zip
@@ -182,3 +183,33 @@ class LeafModuleMaskUpdater(DefaultMaskUpdater):
             grad_zero = v.grad.data == 0
             node_info.param_masks_1[k] = node_info.param_masks_0[k].clone()
             node_info.param_masks_1[k][grad_zero] = 0
+
+    # TODO:
+class UnchangeMaskUpdater(DefaultMaskUpdater):
+    def detect(self, model_speedup: 'ModelSpeedup', node: Node) -> bool:
+        """
+        the default MaskUpdater for operators that will not change mask value
+        """
+        if node.op == 'output':
+            return True
+        if node.op == 'call_function':
+            if node.target in (getattr, len, operator.is_, operator.is_not, operator.getitem, operator.contains):
+                return True
+        if node.op == 'call_method':
+            if node.target in ('dim'):
+                return True
+        return False
+
+class LogsoftmaxMaskUpdater(DefaultMaskUpdater):
+
+    def detect(self, model_speedup: 'ModelSpeedup', node: Node) -> bool:
+        """
+        the default MaskUpdater for operators that will not change mask value
+        """
+        if node.op == 'call_function' and node.target == torch.nn.functional.log_softmax:
+            return True
+        if node.op == 'call_module':
+            module: torch.nn.Module = model_speedup.fetch_attr(node.target)
+            if isinstance(module, torch.nn.LogSoftmax):
+                return True
+        return False
