@@ -1,5 +1,9 @@
 $barHeight: 56px;
 
+.header {
+    background: #0071bc;
+}
+
 .navOptions {
     .ms-Button-icon {
         color: #fff;
@@ -134,4 +138,8 @@ $barHeight: 56px;
             color: #e5e7eb;
         }
     }
+}
+
+.experiments-info .contentBox {
+    margin: 0 auto;
 }

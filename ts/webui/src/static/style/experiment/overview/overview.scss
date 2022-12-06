@@ -60,8 +60,15 @@ $boxGapPadding: 10px;
     grid-row: 1 / 7;
     overflow: hidden;
 
+    button {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+    }
+
     .active {
-        background: #d2d0ce;
+        color: #fff;
+        background: #4076c4;
+        border: 1px solid #4076c4;
     }
 
     .max {
