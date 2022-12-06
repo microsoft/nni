@@ -194,7 +194,7 @@ class ConcreteTracer(TracerBase):
                 self._autowrap_search.append(sys.modules[func.__module__])
 
         self.submodule_paths: Optional[Dict[torch.nn.Module, str]] = None
-        
+
         self.autowrap_leaf_function = autowrap_leaf_function
         self.autowrap_leaf_class = autowrap_leaf_class
         self.leaf_module = leaf_module
@@ -468,12 +468,12 @@ class ConcreteTracer(TracerBase):
                 default_arg = (default_args[name],)
 
             if name in concrete_args:
-                self.placeholder_dict[f'{name}_{str(cnt)}'] = concrete_args[name]
+                self.placeholder_dict[name] = concrete_args[name]
             else:
                 # TODO: better infomation
                 assert name in default_args
-                self.placeholder_dict[f'{name}_{str(cnt)}'] = default_args[name]
-            return self.create_proxy('placeholder', f'{name}_{str(cnt)}', default_arg, {})
+                self.placeholder_dict[name] = default_args[name]
+            return self.create_proxy('placeholder', name, default_arg, {})
         arg_names = [next(names_iter) for idx in range(skip_arg_idx, total_args)]
         diff_len = len(arg_names) - len(default_value_list)
         default_args = {arg_names[idx + diff_len]: default_value_list[idx] for idx in range(len(default_value_list))}
