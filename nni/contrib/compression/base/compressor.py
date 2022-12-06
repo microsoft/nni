@@ -1,12 +1,17 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from __future__ import annotations
 
+from collections import defaultdict
 from copy import deepcopy
 import logging
-from typing import Dict, List, Literal
+from typing import Dict, List, Literal, Tuple
 
 import torch
 
 from .config import trans_legacy_config_list
+from .target_space import PruningTargetSpace
 from .wrapper import ModuleWrapper, register_wrappers
 
 _logger = logging.getLogger(__name__)
@@ -60,12 +65,36 @@ class Compressor:
 
 
 class Pruner(Compressor):
-    def __init__(self, model: torch.nn.Module, config_list: List[Dict]):
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], **kwargs):
         super().__init__(model, config_list, mode='pruning')
+
+        self.global_groups = self._refresh_group('global')
+        if 'dummy_input' in kwargs:
+            # add parsing dependency logic
+            pass
+        self.dependency_groups = self._refresh_group('dependency')
 
     @classmethod
     def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict]):
         return super().from_compressor(compressor, new_config_list, mode='pruning')
+
+    @property
+    def target_spaces(self) -> Dict[str, Dict[str, PruningTargetSpace]]:
+        spaces = defaultdict(dict)
+        for module_name, wrapper in self._module_wrappers.items():
+            for target_name, target_space in wrapper.pruning_target_spaces.items():
+                spaces[module_name][target_name] = target_space
+        return spaces
+
+    def _refresh_group(self, key: str) -> Dict[List[Tuple[str, str, PruningTargetSpace]]]:
+        # the target in one group will consider as a whole to generate sparsity
+        group = defaultdict(list)
+        for module_name, wrapper in self._module_wrappers.items():
+            for target_name, target_space in wrapper.pruning_target_spaces.items():
+                global_group_id = target_space.setting.get(f'{key}_group_id', None)
+                if global_group_id:
+                    group[global_group_id].append((module_name, target_name, target_space))
+        return group
 
     def update_masks(self, masks: Dict[str, Dict[str, torch.Tensor]]):
         for module_name, target_masks in masks.items():

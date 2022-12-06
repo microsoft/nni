@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -78,6 +81,7 @@ class PruningTargetSpace(TargetSpace):
         if isinstance(self.target, torch.Tensor):
             self.mask = torch.ones_like(self.target).detach()
 
+    # don't support setter
     @property
     def _mask_name(self) -> str:
         return f'{self._target_name}_mask'
@@ -90,6 +94,7 @@ class PruningTargetSpace(TargetSpace):
     def mask(self, val: Tensor | None):
         self._tensor_setter_helper(self._mask_name, val)
 
+    # don't support setter
     @property
     def apply_method(self) -> str:
         _method = self.setting.get('apply_method', 'mul')
@@ -97,12 +102,63 @@ class PruningTargetSpace(TargetSpace):
         return _method
 
     @property
-    def sparsity_ratio(self) -> float | None:
-        return self.setting.get('sparsity_ratio', None)
+    def sparse_ratio(self) -> float | None:
+        return self.setting.get('sparse_ratio', None)
+
+    @sparse_ratio.setter
+    def sparse_ratio(self, val: float):
+        assert isinstance(val, float)
+        self.setting['sparse_ratio'] = val
 
     @property
-    def sparsity_threshold(self) -> float | None:
-        return self.setting.get('sparsity_threshold', None)
+    def sparse_threshold(self) -> float | None:
+        return self.setting.get('sparse_threshold', None)
+
+    @sparse_threshold.setter
+    def sparse_threshold(self, val: float):
+        assert isinstance(val, float)
+        self.setting['sparse_threshold'] = val
+
+    @property
+    def max_sparse_ratio(self) -> float | None:
+        return self.setting.get('max_sparse_ratio', None)
+
+    @max_sparse_ratio.setter
+    def max_sparse_ratio(self, val: float):
+        assert isinstance(val, float)
+        self.setting['max_sparse_ratio'] = val
+
+    @property
+    def min_sparse_ratio(self) -> float | None:
+        return self.setting.get('min_sparse_ratio', None)
+
+    @min_sparse_ratio.setter
+    def min_sparse_ratio(self, val: float):
+        assert isinstance(val, float)
+        self.setting['min_sparse_ratio'] = val
+
+    # don't support setter
+    @property
+    def sparse_granularity(self) -> List[int] | str | None:
+        return self.setting.get('sparse_granularity', None)
+
+    @property
+    def global_group_id(self) -> int | str | None:
+        return self.setting.get('global_group_id', None)
+
+    @global_group_id.setter
+    def global_group_id(self, val: int | str):
+        assert isinstance(val, (int, str))
+        self.setting['global_group_id'] = val
+
+    @property
+    def dependency_group_id(self) -> int | str | None:
+        return self.setting.get('dependency_group_id', None)
+
+    @dependency_group_id.setter
+    def dependency_group_id(self, val: int | str):
+        assert isinstance(val, (int, str))
+        self.setting['dependency_group_id'] = val
 
 
 class QuantizationTargetSpace(TargetSpace):

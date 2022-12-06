@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -86,13 +89,12 @@ class ModuleSetting:
 class PruningSetting(ModuleSetting):
     default_setting = {
         'weight': {
-            'sparsity_ratio': None,
-            'max_sparsity_ratio': None,
-            'min_sparsity_ratio': None,
-            'sparsity_threshold': None,
-            'max_sparsity_threshold': None,
-            'min_sparsity_threshold': None,
-            'group_id': None,
+            'sparse_ratio': None,
+            'max_sparse_ratio': None,
+            'min_sparse_ratio': None,
+            'sparse_threshold': None,
+            'global_group_id': None,
+            'dependency_group_id': None,
             'sparse_granularity': None,
             'apply_method': 'mul'
         },

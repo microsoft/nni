@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from collections import defaultdict
 from copy import deepcopy
 import re
@@ -32,22 +35,22 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
     # trans pruning config
     group_id_candidate = 0
     for config in config_list:
-        sparsity_ratio = None
+        sparse_ratio = None
         group_id = None
-        max_sparsity_ratio = config.pop('max_sparsity_per_layer', None)
+        max_sparse_ratio = config.pop('max_sparsity_per_layer', None)
         if 'sparsity_per_layer' in config or 'sparsity' in config:
-            sparsity_ratio = config.pop('sparsity_per_layer', config.pop('sparsity'))
+            sparse_ratio = config.pop('sparsity_per_layer', config.pop('sparsity'))
         if 'total_sparsity' in config:
-            sparsity_ratio = config.pop('total_sparsity')
+            sparse_ratio = config.pop('total_sparsity')
             group_id = group_id_candidate
             group_id_candidate += 1
-        if sparsity_ratio is not None:
+        if sparse_ratio is not None:
             config['target_names'] = ['weight', 'bias']
             config['target_settings'] = {
                 'weight': {
-                    'sparsity_ratio': sparsity_ratio,
-                    'max_sparsity_ratio': max_sparsity_ratio,
-                    'group_id': group_id,
+                    'sparse_ratio': sparse_ratio,
+                    'max_sparse_ratio': max_sparse_ratio,
+                    'global_group_id': group_id,
                 }
             }
 
