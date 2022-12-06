@@ -19,7 +19,7 @@ from nni.common.concrete_trace_utils.utils import (map_recursive,
                                                    run_onlyif_instance)
 from nni.compression.pytorch.speedup.compress_modules import replace_module
 from nni.compression.pytorch.speedup.v2.container import NodeInfo, Slot
-from nni.compression.pytorch.speedup.v2.mask_updater import MaskUpdater, DefaultMaskUpdater, DefaultModuleMaskUpdater
+from nni.compression.pytorch.speedup.v2.mask_updater import MaskUpdater, DefaultMaskUpdater, LeafModuleMaskUpdater
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import (rand_like_with_shape,
                                                  randomize_tensor,
@@ -80,7 +80,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.customized_replace_func = customized_replace_func
         self.mask_updaters:list[MaskUpdater] = [
             *customized_mask_updaters,
-            DefaultModuleMaskUpdater(),
+            LeafModuleMaskUpdater(),
             DefaultMaskUpdater()
         ]
         if logger == None:

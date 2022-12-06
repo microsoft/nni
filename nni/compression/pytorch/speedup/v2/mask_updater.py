@@ -56,9 +56,9 @@ class DefaultMaskUpdater(MaskUpdater):
         model_speedup.slots[node].status['value_1'] += 1
 
         if model_speedup.garbage_collect_values:
-            # TODO: do memory collect to reduce memory usage
-            # for to_delete in model_speedup.user_to_last_uses.get(node, []):
-            #     model_speedup.slots[to_delete].value_1 = None
+            # do memory collect to reduce memory usage
+            for to_delete in model_speedup.user_to_last_uses.get(node, []):
+                model_speedup.slots[to_delete].value_1 = None
             pass
 
     def direct_update_preprocess(self, model_speedup: 'ModelSpeedup', node: Node):
@@ -87,9 +87,7 @@ class DefaultMaskUpdater(MaskUpdater):
             model_speedup.slots[node].status['mask_1'] += 1
 
         if model_speedup.garbage_collect_values:
-            # TODO: do memory collect to reduce memory usage
-            # for to_delete in model_speedup.user_to_last_uses.get(node, []):
-            #     model_speedup.slots[to_delete].value_2 = None
+            # do memory collect to reduce memory usage
             pass
 
     def direct_update_postprocess(self, model_speedup: 'ModelSpeedup', node: Node):
@@ -135,15 +133,20 @@ class DefaultMaskUpdater(MaskUpdater):
         map_recursive_zip(model_speedup.indirect_pass_grad, arg_values_2, args_rand)
         map_recursive_zip(model_speedup.indirect_pass_grad, kwarg_values_2, kwargs_rand)
 
+        if model_speedup.garbage_collect_values:
+            # do memory collect to reduce memory usage
+            model_speedup.slots[node].mask_1 = None
+            pass
+
     def indirect_update_postprocess(self, model_speedup: 'ModelSpeedup', node: Node):
         pass
 
 
-class DefaultModuleMaskUpdater(DefaultMaskUpdater):
+class LeafModuleMaskUpdater(DefaultMaskUpdater):
 
     def detect(self, model_speedup: 'ModelSpeedup', node: Node) -> bool:
         """
-        the default MaskUpdater for module, so return true if the node is a module calling
+        the default MaskUpdater for leaf module, so return true if the node is a module calling
         """
         if node.op == 'call_module':
             model_speedup.node_infos[node].mask_updater = self
