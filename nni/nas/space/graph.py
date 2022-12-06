@@ -2,33 +2,28 @@
 # Licensed under the MIT license.
 
 """
-Model representation for engines based on graph.
+GraphModelSpace representation for engines based on graph.
 """
 
 from __future__ import annotations
 
-import json
-from enum import Enum
-from typing import (TYPE_CHECKING, Any, Dict, Iterable, List,
-                    Optional, Set, Tuple, Type, Union, cast, overload)
-
-if TYPE_CHECKING:
-    from nni.nas.mutable import Mutator
-
-from nni.nas.evaluator import Evaluator
-from nni.nas.utils import uid
-from .graph_op import Cell, Operation, _IOPseudoOperation
-
 __all__ = [
-    'Evaluator', 'Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'Mutation', 'IllegalGraphError', 'MetricData',
-    'DebugEvaluator',
+    'GraphModelSpace', 'Graph', 'Node', 'Edge', 'IllegalGraphError',
 ]
 
+import json
+from typing import (TYPE_CHECKING, Any, Dict, Callable, Iterable, List,
+                    Optional, Set, Tuple, Union, cast, overload)
 
-MetricData = Any
-"""
-Type hint for graph metrics (loss, accuracy, etc).
-"""
+import nni
+from nni.mutable import Mutable, LabeledMutable, uid
+from .graph_op import Cell, Operation, _IOPseudoOperation
+from .mutator import MutatorSequence, Mutation
+from .space import ExecutableModelSpace, ModelStatus
+
+if TYPE_CHECKING:
+    from nni.nas.evaluator import Evaluator
+
 
 EdgeEndpoint = Tuple['Node', Optional[int]]
 """
@@ -36,25 +31,20 @@ Type hint for edge's endpoint. The int indicates nodes' order.
 """
 
 
-class Model:
+class GraphModelSpace(ExecutableModelSpace):
     """
-    Represents a neural network model.
+    Represents a neural network model space with graph.
+    Previously known as ``GraphModelSpace``.
 
-    During mutation, one :class:`Model` object is created for each trainable snapshot.
+    During mutation, one :class:`GraphModelSpace` object is created for each trainable snapshot.
     For example, consider a mutator that insert a node at an edge for each iteration.
     In one iteration, the mutator invokes 4 primitives: add node, remove edge, add edge to head, add edge to tail.
-    These 4 primitives operates in one :class:`Model` object.
+    These 4 primitives operates in one :class:`GraphModelSpace` object.
     When they are all done the model will be set to "frozen" (trainable) status and be submitted to execution engine.
-    And then a new iteration starts, and a new :class:`Model` object is created by forking last model.
+    And then a new iteration starts, and a new :class:`GraphModelSpace` object is created by forking last model.
 
     Attributes
     ----------
-    python_object
-        Python object of base model. It will be none when the base model is not available.
-    python_class
-        Python class that base model is converted from.
-    python_init_params
-        Initialization parameters of python class.
     status
         See :class:`ModelStatus`.
     root_graph
@@ -62,46 +52,81 @@ class Model:
     graphs
         All graphs (subgraphs) in this model.
     evaluator
-        Model evaluator
-    history
-        Mutation history.
-        ``self`` is directly mutated from ``self.history[-1]``;
-        ``self.history[-1]`` is mutated from ``self.history[-2]``, and so on.
-        ``self.history[0]`` is the base graph.
-    metric
-        Training result of the model, or ``None`` if it's not yet trained or has failed to train.
-    intermediate_metrics
-        Intermediate training metrics. If the model is not trained, it's an empty list.
+        GraphModelSpace evaluator
+    mutators
+        List of mutators that are applied to this model.
+    parent
+        A :class:`Mutation` object that contains the mutation that creates this model.
+    metrics
+        Intermediate as well as final metrics.
     """
 
-    def __init__(self, _internal=False):
-        assert _internal, '`Model()` is private, use `model.fork()` instead'
-        self.model_id: int = uid('model')
-        self.python_object: Optional[Any] = None  # type is uncertain because it could differ between DL frameworks
-        self.python_class: Optional[Type] = None
-        self.python_init_params: Optional[Dict[str, Any]] = None
+    framework_type: str | None = None
 
-        self.status: ModelStatus = ModelStatus.Mutating
+    def __init__(self, *, _internal=False):
+        super().__init__()
+        assert _internal, '`GraphModelSpace()` is private, use `model.fork()` instead'
+        self.model_id: int = uid('model')
 
         self._root_graph_name: str = '_model'
         self.graphs: Dict[str, Graph] = {}
-        self.evaluator: Optional[Evaluator] = None
+        self.evaluator: Evaluator | None = None
 
-        self.history: List['Mutation'] = []
+        self.mutators: MutatorSequence = MutatorSequence([])
 
-        self.metric: Optional[MetricData] = None
-        self.intermediate_metrics: List[MetricData] = []
+        self.parent: Mutation | None = None
 
-    def __repr__(self):
-        return f'Model(model_id={self.model_id}, status={self.status}, graphs={list(self.graphs.keys())}, ' + \
-            f'evaluator={self.evaluator}, metric={self.metric}, intermediate_metrics={self.intermediate_metrics}, ' + \
-            f'python_class={self.python_class})'
+    def extra_repr(self):
+        return f'model_id={self.model_id}, status={self.status}, graphs={list(self.graphs.keys())}, ' + \
+            f'evaluator={self.evaluator}, mutators={self.mutators}, metrics={self.metrics}'
+
+    def leaf_mutables(self, is_leaf: Callable[[Mutable], bool]) -> Iterable[LabeledMutable]:
+        with self.mutators.bind_model(self):
+            yield from self.mutators.leaf_mutables(is_leaf)
+        if isinstance(self.evaluator, Mutable):
+            yield from self.evaluator.leaf_mutables(is_leaf)
+
+    def check_contains(self, sample: dict[str, Any]) -> tuple[bool, str]:
+        """Check if the sample is contained in the model space."""
+        return self.mutators.check_contains(sample)
+
+    def freeze(self, sample: dict[str, Any]) -> GraphModelSpace:
+        """
+        Freeze the model by applying the sample to mutators.
+
+        Can only be invoked on a mutating model.
+        The new model will be in `Frozen` state.
+
+        This API is used in mutator base class.
+        """
+        assert not self.status.frozen(), 'Can only freeze a initialized model space'
+        with self.mutators.bind_model(self):
+            model = self.mutators.freeze(sample)
+        if isinstance(self.evaluator, Mutable):
+            model.evaluator = self.evaluator.freeze(sample)
+        model.status = ModelStatus.Frozen
+        return model
 
     @property
-    def root_graph(self) -> 'Graph':
+    def root_graph(self) -> Graph:
         return self.graphs[self._root_graph_name]
 
-    def fork(self) -> 'Model':
+    @property
+    def history(self) -> list[Mutation]:
+        """Mutation history.
+
+        A record of where the model comes from.
+        ``self`` comes from the mutation recorded in ``self.history[-1]``.
+        ``self.history[0]`` is the first mutation happened on the base graph.
+        """
+        history: list[Mutation] = []
+        model = self
+        while model.parent is not None:
+            history.append(model.parent)
+            model = model.parent.from_
+        return list(reversed(history))
+
+    def fork(self) -> GraphModelSpace:
         """
         Create a new model which has same topology, names, and IDs to current one.
 
@@ -110,38 +135,47 @@ class Model:
 
         This API is used in mutator base class.
         """
-        new_model = Model(_internal=True)
+        new_model = self.__class__(_internal=True)
         new_model._root_graph_name = self._root_graph_name
-        new_model.python_class = self.python_class
-        new_model.python_init_params = self.python_init_params
         new_model.graphs = {name: graph._fork_to(new_model) for name, graph in self.graphs.items()}
-        new_model.evaluator = self.evaluator  # TODO this needs a clever copy (not deepcopy) if we need mutation
-        new_model.history = [*self.history]
-        # Note: the history is not updated. It will be updated when the model is changed, that is in mutator.
+        new_model.mutators = self.mutators
+        new_model.evaluator = self.evaluator
+        new_model.status = self.status
+        # Note: the parent is not updated here. It will be updated when the model is changed, that is in mutator.
+        # new_model.parent = self
         return new_model
 
-    @staticmethod
-    def _load(ir: Any) -> 'Model':
-        model = Model(_internal=True)
-        for graph_name, graph_data in ir.items():
-            if graph_name not in ['_evaluator', 'model_id', 'python_class', 'python_init_params']:
-                Graph._load(model, graph_name, graph_data)._register()
-        if 'model_id' in ir: # backward compatibility
-            model.model_id = ir['model_id']
-            model.python_class = ir['python_class']
-            model.python_init_params = ir['python_init_params']
+    @classmethod
+    def _load(cls, **ir: Any) -> GraphModelSpace:
+        framework_type = ir.pop('framework', nni.get_default_framework())
+        if framework_type == 'pytorch':
+            from .pytorch.graph import PytorchGraphModelSpace
+            model = PytorchGraphModelSpace(_internal=True)
+        elif framework_type == 'tensorflow' and '_internal' in ir:  # only test purposes
+            from .tensorflow.graph import TensorflowGraphModelSpace
+            ir.pop('_internal')
+            model = TensorflowGraphModelSpace(_internal=True)
+        else:
+            raise ValueError(f'Unknown framework type: {framework_type}')
+        if 'model_id' in ir:    # backward compatibility
+            model.model_id = ir.pop('model_id')
         if '_evaluator' in ir:
-            model.evaluator = Evaluator._load(ir['_evaluator'])
+            model.evaluator = ir.pop('_evaluator')       # Use evaluator's native load
+        if '_mutators' in ir:
+            model.mutators = ir.pop('_mutators')
+        for graph_name, graph_data in ir.items():
+            Graph._load(model, graph_name, graph_data)._register()
         return model
 
     def _dump(self) -> Any:
+        # Calling dump recursively. Manually handle the serialization of nested objects.
         ret = {name: graph._dump() for name, graph in self.graphs.items()}
-        # NOTE: only dump some necessary member variable, will be refactored
+        ret['framework'] = self.framework_type
         ret['model_id'] = self.model_id
-        ret['python_class'] = self.python_class
-        ret['python_init_params'] = self.python_init_params
+        if self.status in (ModelStatus.Initialized, ModelStatus.Mutating):
+            ret['_mutators'] = self.mutators
         if self.evaluator is not None:
-            ret['_evaluator'] = self.evaluator._dump()
+            ret['_evaluator'] = self.evaluator
         return ret
 
     def get_nodes(self) -> Iterable['Node']:
@@ -212,23 +246,6 @@ class Model:
         return matched_nodes
 
 
-class ModelStatus(Enum):
-    """
-    The status of model.
-
-    A model is created in `Mutating` status.
-    When the mutation is done and the model get ready to train, its status becomes `Frozen`.
-    When training started, the model's status becomes `Training`.
-    If training is successfully ended, model's `metric` attribute get set and its status becomes `Trained`.
-    If training failed, the status becomes `Failed`.
-    """
-    Mutating = "mutating"
-    Frozen = "frozen"
-    Training = "training"
-    Trained = "trained"
-    Failed = "failed"
-
-
 _InputPseudoUid = -1
 _OutputPseudoUid = -2
 
@@ -238,9 +255,9 @@ class Graph:
     Graph topology.
 
     This class simply represents the topology, with no semantic meaning.
-    All other information like metric, non-graph functions, mutation history, etc should go to :class:`Model`.
+    All other information like metric, non-graph functions, mutation history, etc should go to :class:`GraphModelSpace`.
 
-    Each graph belongs to and only belongs to one :class:`Model`.
+    Each graph belongs to and only belongs to one :class:`GraphModelSpace`.
 
     Attributes
     ----------
@@ -270,10 +287,10 @@ class Graph:
         The name of torch.nn.Module, should have one-to-one mapping with items in python model.
     """
 
-    def __init__(self, model: Model, graph_id: int, name: str = cast(str, None), _internal: bool = False):
+    def __init__(self, model: GraphModelSpace, graph_id: int, name: str = cast(str, None), _internal: bool = False):
         assert _internal, '`Graph()` is private'
 
-        self.model: Model = model
+        self.model: GraphModelSpace = model
         self.id: int = graph_id
         self.name: str = name or f'_generated_{graph_id}'
 
@@ -425,7 +442,7 @@ class Graph:
     def __eq__(self, other: object) -> bool:
         return self is other
 
-    def _fork_to(self, model: Model, name_prefix='') -> 'Graph':
+    def _fork_to(self, model: GraphModelSpace, name_prefix='') -> 'Graph':
         new_graph = Graph(model, self.id, name_prefix + self.name, _internal=True)._register()
         # TODO: use node copy instead
         new_graph.input_node.operation.io_names = self.input_node.operation.io_names
@@ -483,8 +500,9 @@ class Graph:
         self.model.graphs[new_name] = self.model.graphs[old_name]
         del self.model.graphs[old_name]
 
-    @staticmethod
-    def _load(model: Model, name: str, ir: Any) -> 'Graph':
+    @classmethod
+    def _load(cls, model: GraphModelSpace, name: str, ir: Any) -> 'Graph':
+        # This won't be used by nni.load(). Thus it doesn't follow the same pattern as other _load() methods.
         graph = Graph(model, uid(), name, _internal=True)
         graph.input_node.operation.io_names = ir.get('inputs')
         graph.output_node.operation.io_names = ir.get('outputs')
@@ -495,6 +513,7 @@ class Graph:
         return graph
 
     def _dump(self) -> Any:
+        # This dump will NOT be used by nni.dump()
         return {
             'inputs': self.input_node.operation.io_names,
             'outputs': self.output_node.operation.io_names,
@@ -624,8 +643,8 @@ class Node:
         self.graph.hidden_nodes.append(self)
         return self
 
-    @staticmethod
-    def _load(graph: Graph, name: str, ir: Any) -> 'Node':
+    @classmethod
+    def _load(cls, graph: Graph, name: str, ir: Any) -> 'Node':
         if ir['operation']['type'] == '_cell':
             op = Cell(ir['operation']['cell_name'], ir['operation'].get('parameters', {}), attributes=ir['operation'].get('attributes', {}))
         else:
@@ -709,8 +728,8 @@ class Edge:
         self.graph.edges.append(self)
         return self
 
-    @staticmethod
-    def _load(graph: Graph, ir: Any) -> 'Edge':
+    @classmethod
+    def _load(cls, graph: Graph, ir: Any) -> 'Edge':
         head = graph.get_node_by_name(ir['head'][0])
         tail = graph.get_node_by_name(ir['tail'][0])
         assert head is not None and tail is not None
@@ -721,37 +740,6 @@ class Edge:
             'head': [self.head.name, self.head_slot],
             'tail': [self.tail.name, self.tail_slot]
         }
-
-
-class Mutation:
-    """
-    An execution of mutation, which consists of four parts: a mutator, a list of decisions (choices),
-    the model that it comes from, and the model that it becomes.
-
-    In general cases, the mutation logs are not reliable and should not be replayed as the mutators can
-    be arbitrarily complex. However, for inline mutations, the labels correspond to mutator labels here,
-    this can be useful for metadata visualization and python execution mode.
-
-    Attributes
-    ----------
-    mutator
-        Mutator.
-    samples
-        Decisions/choices.
-    from_
-        Model that is comes from.
-    to
-        Model that it becomes.
-    """
-
-    def __init__(self, mutator: 'Mutator', samples: List[Any], from_: Model, to: Model):  # noqa: F821
-        self.mutator: 'Mutator' = mutator  # noqa: F821
-        self.samples: List[Any] = samples
-        self.from_: Model = from_
-        self.to: Model = to
-
-    def __repr__(self):
-        return f'Edge(mutator={self.mutator}, samples={self.samples}, from={self.from_}, to={self.to})'
 
 
 class IllegalGraphError(ValueError):
@@ -765,18 +753,3 @@ class IllegalGraphError(ValueError):
             graph = graph._dump()
         with open('generated/debug.json', 'w') as dump_file:
             json.dump(graph, dump_file, indent=4)
-
-
-class DebugEvaluator(Evaluator):
-    @staticmethod
-    def _load(ir: Any) -> 'DebugEvaluator':
-        return DebugEvaluator()
-
-    def _dump(self) -> Any:
-        return {'type': DebugEvaluator}
-
-    def _execute(self, model_cls: type) -> Any:
-        pass
-
-    def __eq__(self, other) -> bool:
-        return True
