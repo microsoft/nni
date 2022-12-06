@@ -3,58 +3,337 @@
 
 from __future__ import annotations
 
-__all__ = ['Evaluator']
+__all__ = ['Evaluator', 'MutableEvaluator', 'FrozenEvaluator']
 
-import abc
-from typing import Any, Callable, Type, Union, cast
+from contextlib import contextmanager
+from typing import Any, Callable, Iterator, Iterable, Union, TYPE_CHECKING, ContextManager
+
+import nni
+from nni.common.serializer import is_traceable, SerializableObject
+from nni.mutable import Mutable, Sample, LabeledMutable, SampleValidationError
+from nni.mutable.mutable import _mutable_equal
+
+if TYPE_CHECKING:
+    from nni.nas.space import ExecutableModelSpace
 
 
-class Evaluator(abc.ABC):
+class Evaluator:
+    """Base class of evaluator.
+
+    To users, the evaluator is to assess the quality of a model and return a score.
+    When an evaluator is defined, it usually accepts a few arguments, such as
+    basic runtime information (e.g., whether to use GPU), dataset used,
+    as well as hyper-parameters (such as learning rate).
+    These parameters can be sometimes tunable and searched by algorithms (see :class:`MutableEvaluator`).
+
+    Different evaluators could have different use scenarios and requirements on the model.
+    For example, :class:`~nni.nas.evaluator.pytorch.Classification` is tailored for classification models,
+    and assumes the model has a ``forward`` method that takes a batch of data and returns logits.
+    Evaluators might also have different assumptions, some of which are requirements of certain algorithms.
+    The evaluator with the most freedom is :class:`~nni.nas.evaluator.FunctionalEvaluator`,
+    but it's also incompatible with some algorithms.
+
+    To developers, the evaluator is to implement *all the logics involving forward/backward of neural networks*.
+    Sometimes the algorithm requires the training and searching at the same time (e.g., one-shot algos).
+    In that case, although the searching part doesn't logically belong to the evaluator,
+    it is still the evaluator's responsibility to implement it,
+    and the search algorithms will make sure to properly manipulate the evaluator to achieve the goal.
+
+    .. tip::
+
+        Inside evaluator, you can use standard :doc:`NNI trial APIs </reference/hpo>` to communicate with the exploration strategy.
+        Common usages include:
+
+        1. Use :func:`nni.get_current_parameter` to get the current :class:`~nni.nas.space.ExecutableModelSpace`.
+           Notice that :class:`~nni.nas.space.ExecutableModelSpace` is not a directly-runnable model (e.g., a PyTorch model),
+           which is different from the model received in :meth:`evaluate`.
+           :class:`~nni.nas.space.ExecutableModelSpace` objects are useful for debugging, as well as for some evaluators
+           which need to know extra details about how the model is sampled.
+        2. Use :func:`nni.report_intermediate_result` to report intermediate results.
+        3. Use :func:`nni.report_final_result` to report final results.
+
+        These APIs are only available when the evaluator is executed by NNI,
+        When using evaluator in a standalone way, either use :meth:`trial_available` to check if the APIs are available,
+        or use :meth:`mock_trial` to mock the APIs.
+        Please AVOID using :func:`nni.get_next_parameter()` because NAS framework has already handled the logic
+        of retrieving the next parameter. Incorrectly using :func:`nni.get_next_parameter()` may cause unexpected behavior.
     """
-    Evaluator of a model. An evaluator should define where the training code is, and the configuration of
-    training code. The configuration includes basic runtime information trainer needs to know (such as number of GPUs)
-    or tune-able parameters (such as learning rate), depending on the implementation of training code.
 
-    Each config should define how it is interpreted in ``_execute()``, taking only one argument which is the mutated model class.
-    For example, functional evaluator might directly import the function and call the function.
-    """
+    def evaluate(self, model: Any) -> Any:
+        """To run evaluation of a model. The model is usually a concrete model.
+        The return value of :meth:`evaluate` can be anything. Typically it's used for test purposes.
 
-    def evaluate(self, model_cls: Union[Callable[[], Any], Any]) -> Any:
-        """To run evaluation of a model. The model could be either a concrete model or a callable returning a model.
-
-        The concrete implementation of evaluate depends on the implementation of ``_execute()`` in sub-class.
+        Subclass should override this.
         """
-        return self._execute(model_cls)
+        raise NotImplementedError()
 
     def __repr__(self):
-        items = ', '.join(['%s=%r' % (k, v) for k, v in self.__dict__.items()])
-        return f'{self.__class__.__name__}({items})'
+        return f'{self.__class__.__name__}({self.extra_repr()})'
+
+    def extra_repr(self) -> str:
+        return ''
+
+    @contextmanager
+    def mock_trial(self, model: ExecutableModelSpace) -> ContextManager[None]:
+        """
+        Context manager to mock trial APIs for standalone usage.
+
+        Under the with-context of this method, :meth:`trial_available` will return ``True``,
+        and :func:`nni.get_current_parameter` will return the given model.
+
+        Parameters
+        ----------
+        model
+            The model to be evaluated. It should be a :class:`~nni.nas.space.ExecutableModelSpace` object.
+
+        Examples
+        --------
+        This method should be mostly used when testing a evaluator.
+        A typical use case is as follows:
+
+        >>> frozen_model = model_space.freeze(sample)
+        >>> with evaluator.mock_trial(frozen_model):
+        ...     evaluator.evaluate(frozen_model.executable_model())
+        """
+
+        if self.trial_available():
+            raise RuntimeError("Cannot mock trial when trial APIs are available.")
+
+        from nni.nas.space import ExecutableModelSpace
+        if not isinstance(model, ExecutableModelSpace):
+            raise TypeError("model should be an ExecutableModelSpace object.")
+
+        import nni.trial
+        original_params = nni.trial._params
+        nni.trial._params = {
+            'parameter_id': 0,
+            'parameters': model
+        }
+
+        try:
+            yield
+        finally:
+            nni.trial._params = original_params
+
+    def trial_available(self) -> bool:
+        """Whether the evaluator is executed as a trial.
+
+        If the evaluator is executed by NNI, it can use :doc:`NNI trial APIs </reference/hpo>`
+        to communicate with the exploration strategy.
+        """
+        return nni.get_current_parameter() is not None
 
     @staticmethod
-    def _load(ir: Any) -> 'Evaluator':
-        evaluator_type = ir.get('type')
-        if isinstance(evaluator_type, str):
-            # for debug purposes only
-            for subclass in Evaluator.__subclasses__():
-                if subclass.__name__ == evaluator_type:
-                    evaluator_type = subclass
-                    break
-        assert issubclass(cast(type, evaluator_type), Evaluator)
-        return cast(Type[Evaluator], evaluator_type)._load(ir)
+    def _load(**ir: Any) -> 'Evaluator':
+        """Subclass implements ``_load`` for their own serialization."""
+        raise NotImplementedError()
 
-    @abc.abstractmethod
     def _dump(self) -> Any:
-        """
-        Subclass implements ``_dump`` for their own serialization.
-        They should return a dict, with a key ``type`` which equals ``self.__class__``,
-        and optionally other keys.
-        """
-        pass
+        """Subclass implements ``_dump`` for their own serialization."""
+        raise NotImplementedError()
 
-    @abc.abstractmethod
     def _execute(self, model_cls: Union[Callable[[], Any], Any]) -> Any:
-        pass
+        """Override by subclass to implement the actual evaluation."""
+        raise NotImplementedError()
 
-    @abc.abstractmethod
-    def __eq__(self, other) -> bool:
-        pass
+
+class MutableEvaluator(Mutable, Evaluator):
+    """
+    Evaluators with tunable parameters by itself (e.g., learning rate).
+
+    The tunable parameters must be an argument of the evaluator's instantiation,
+    or an argument of the arguments' instantiation and etc.
+
+    To use this feature, there are two requirements:
+
+    1. The evaluator must inherit :class:`MutableEvaluator` rather than :class:`Evaluator`.
+    2. Make sure the init arguments have been saved in ``trace_kwargs``,
+       and the instance can be cloned with ``trace_copy``.
+       The easiest way is to wrap the evaluator with :func:`nni.trace`.
+       If the mutable parameter exists somewhere in the nested instantiation.
+       All the levels must all be wrapped with :func:`nni.trace`.
+
+    Examples
+    --------
+    >>> def get_data(shuffle): ...
+    ...
+    >>> @nni.trace                                  # 1. must wrap here
+    ... class MyOwnEvaluator(MutableEvaluator):     # 2. must inherit MutableEvaluator
+    ...     def __init__(self, lr, data): ...
+    ...
+    >>> evaluator = MyOwnEvaluator(
+    ...     lr=Categorical([0.1, 0.01]),      # the argument can be tunable
+    ...     data=nni.trace(get_data)(         # if there is mutable parameters inside, this must also have nni.trace
+    ...         shuffle=Categorical([False, True])
+    ...     )
+    ... )
+    >>> evaluator.simplify()
+    {'global/1': Categorical([0.1, 0.01], label='global/1'), 'global/2': Categorical([False, True], label='global/2')}
+    """
+
+    @staticmethod
+    def freeze_traceable_object(obj: Any, sample: dict[str, Any]) -> Any:
+        # Could return:
+        # 1. The same type of obj, if it is not traceable or nothing is changed.
+        # 2. SerializableObject. If something is mutated, and the return value is merely an empty shell of parameters.
+        if not is_traceable(obj, must_be_instance=True):
+            return obj
+
+        updates = {}
+
+        # Iterate over all the arguments that have been used to instantiate the object
+        for key, param in obj.trace_kwargs.items():
+            if isinstance(param, Mutable):
+                updates[key] = param.freeze(sample)
+            elif is_traceable(param):
+                # Recursively
+                sub_update = MutableEvaluator.freeze_traceable_object(param, sample)
+                if sub_update is not param:  # if mutated
+                    updates[key] = sub_update
+
+        if updates:
+            mutated_obj = obj.trace_copy()                  # Make a copy
+            mutated_obj.trace_kwargs.update(updates)        # Mutate
+
+            # Should instantiate the full mutated object here.
+            # But it's postponed to the next call of evaluate to save memory.
+            # mutated_obj = mutated_obj.get()
+
+            return mutated_obj
+
+        return obj
+
+    @staticmethod
+    def expand_trace_kwargs(obj: Any) -> Iterator[Mutable]:
+        if not is_traceable(obj, must_be_instance=True):
+            raise TypeError(f'{obj} is not traceable.')
+        for pos, param in enumerate(obj.trace_args):
+            if isinstance(param, Mutable):
+                raise ValueError(f'We currently do not support mutable parameters in positional arguments: {obj} (position: {pos})')
+        for param in obj.trace_kwargs.values():
+            if isinstance(param, Mutable):
+                yield param
+            # Recursively yield all the nested parameters
+            if is_traceable(param):
+                yield from MutableEvaluator.expand_trace_kwargs(param)
+
+    def freeze(self, sample: Sample) -> FrozenEvaluator:
+        """Upon freeze, :class:`MutableEvaluator` will freeze all the mutable parameters, and return a :class:`FrozenEvaluator`.
+        The evaluator will not be fully initialized to save the memory.
+        To use the evaluator, call :meth:`FrozenEvaluator.get` to get the full usable evaluator.
+
+        Returns
+        -------
+        The frozen evaluator.
+        """
+        frozen_evaluator = self.freeze_traceable_object(self, sample)
+        assert isinstance(frozen_evaluator, (MutableEvaluator, SerializableObject)), \
+            'The evaluator must still be a MutableEvaluator or SerializableObject after freezing.'
+        if type(frozen_evaluator) is SerializableObject:
+            return FrozenEvaluator(frozen_evaluator)
+        else:
+            return frozen_evaluator
+
+    def leaf_mutables(self, is_leaf: Callable[[Mutable], bool]) -> Iterable[LabeledMutable]:
+        for param in self.expand_trace_kwargs(self):
+            yield from param.leaf_mutables(is_leaf)
+
+    def check_contains(self, sample: Sample) -> SampleValidationError | None:
+        for mutable in self.expand_trace_kwargs(self):
+            exception = mutable.check_contains(sample)
+            if exception is not None:
+                exception.paths.append(mutable.label)
+                return exception
+        return None
+
+    def is_mutable(self) -> bool:
+        """Whether some arguments of the evaluator are mutable."""
+        for _ in self.expand_trace_kwargs(self):
+            return True
+        return False
+
+    @classmethod
+    def _load(cls, **ir: Any) -> MutableEvaluator:
+        return cls(**ir)
+
+    def _dump(self) -> dict:
+        return self.trace_kwargs
+
+    def __eq__(self, other: Any) -> bool:
+        if type(self) is not type(other):
+            return False
+        return _mutable_equal(self.trace_kwargs, other.trace_kwargs)
+
+
+class FrozenEvaluator(Evaluator):
+    """Wrapper of *empty-shell* mutators. Function as the freezing result of :class:`MutableEvaluator`.
+
+    When :meth:`evaluate` is invoked, it instantiates to the full evaluator and execute it.
+    """
+
+    def __init__(self, frozen_obj: SerializableObject):
+        self.frozen_obj = frozen_obj
+        self._instance: Evaluator | None = None
+
+    @staticmethod
+    def recursive_instantiate(obj: Any) -> Any:
+        if type(obj) is not SerializableObject:
+            # It has been instantiated
+            return obj
+
+        updates = {}
+        for key, param in obj.trace_kwargs.items():
+            sub_update = FrozenEvaluator.recursive_instantiate(param)
+            if sub_update is not param:
+                updates[key] = sub_update
+
+        if updates:
+            obj.trace_kwargs.update(updates)
+
+        return obj.get()
+
+    def get(self) -> Evaluator:
+        """Instantiate the full evaluator.
+
+        The instantiated evaluator will be cached and reused next time.
+        """
+        if self._instance is not None:
+            return self._instance
+        self._instance = self.recursive_instantiate(self.frozen_obj)
+        assert isinstance(self._instance, Evaluator), f'Instantiated evaluator must be an Evaluator, got {type(self._instance)}'
+        return self._instance
+
+    def evaluate(self, model: Any) -> Any:
+        """Calling :meth:`get` and execute the evaluator."""
+        return self.get().evaluate(model)
+
+    def extra_repr(self) -> str:
+        return f'frozen_obj={self.frozen_obj}, initialized={self._instance is not None}'
+
+    @classmethod
+    def _load(cls, **ir: Any) -> 'FrozenEvaluator':
+        return ir['trace_symbol'](*ir['trace_args'], **ir['trace_kwargs'])
+
+    def _dump(self) -> Any:
+        return {
+            'trace_symbol': self.trace_symbol,
+            'trace_args': self.trace_args,
+            'trace_kwargs': self.trace_kwargs,
+        }
+
+    # The following APIs are provided as shortcut of frozen_obj.
+
+    @property
+    def trace_symbol(self):
+        return self.frozen_obj.trace_symbol
+
+    @property
+    def trace_args(self):
+        return self.frozen_obj.trace_args
+
+    @property
+    def trace_kwargs(self):
+        return self.frozen_obj.trace_kwargs
+
+    def trace_copy(self):
+        return FrozenEvaluator(self.frozen_obj.trace_copy())

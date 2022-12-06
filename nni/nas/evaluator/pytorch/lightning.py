@@ -5,7 +5,7 @@ import logging
 import os
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Union, Optional, List, Callable, Type
+from typing import Any, Dict, Union, Optional, List, Type, TYPE_CHECKING, Callable
 
 import pytorch_lightning as pl
 import torch.nn as nn
@@ -23,8 +23,11 @@ try:
 except ImportError:
     cgo_import_failed = True
 
-from nni.nas.evaluator import Evaluator
+from nni.nas.evaluator import MutableEvaluator
 from nni.typehint import Literal
+
+if TYPE_CHECKING:
+    from nni.nas.execution import ExecutionEngineClient
 
 
 __all__ = [
@@ -49,18 +52,21 @@ class LightningModule(pl.LightningModule):
     This flag should be automatically set by experiments when they start to run.
     """
 
-    def set_model(self, model: Union[Callable[[], nn.Module], nn.Module]) -> None:
-        """Set the inner model (architecture) to train / evaluate.
+    trial_available: Callable[[], bool] = lambda: False
+    """Check whether trial is available. Will be overwritten by :class:`Lightning`."""
 
-        Parameters
-        ----------
-        model : callable or nn.Module
-            Can be a callable returning nn.Module or nn.Module.
-        """
-        if isinstance(model, nn.Module):
-            self.model = model
-        else:
-            self.model = model()
+    @property
+    def model(self) -> Optional[nn.Module]:
+        """The inner model (architecture) to train / evaluate."""
+        return getattr(self, '_model', None)
+
+    def set_model(self, model: nn.Module) -> None:
+        if not isinstance(model, nn.Module):
+            raise TypeError('model must be an instance of nn.Module')
+        self._model = model
+
+    def unset_model(self) -> None:
+        self._model = None
 
 
 Trainer = nni.trace(pl.Trainer)
@@ -74,7 +80,7 @@ Traced version of ``torch.utils.data.DataLoader``. See https://pytorch.org/docs/
 
 
 @nni.trace
-class Lightning(Evaluator):
+class Lightning(MutableEvaluator):
     """
     Delegate the whole training to PyTorch Lightning.
 
@@ -138,42 +144,21 @@ class Lightning(Evaluator):
         self.val_dataloaders = val_dataloaders
         self.fit_kwargs = fit_kwargs or {}
 
-    @staticmethod
-    def _load(ir):
-        return Lightning(ir['module'], ir['trainer'], ir['train_dataloaders'], ir['val_dataloaders'])
-
-    def _dump(self):
-        return {
-            'type': self.__class__,
-            'module': self.module,
-            'trainer': self.trainer,
-            'train_dataloaders': self.train_dataloaders,
-            'val_dataloaders': self.val_dataloaders
-        }
-
-    def _execute(self, model_cls):
-        return self.fit(model_cls)
+    def evaluate(self, model):
+        if self.is_mutable():
+            raise RuntimeError('Mutable evaluator must first be `freeze()` before evaluation.')
+        return self.fit(model)
 
     @property
     def train_dataloader(self):
         warnings.warn('train_dataloader is deprecated, please use `train_dataloaders`.', DeprecationWarning)
 
     def __eq__(self, other):
-        eq_func = False
-        eq_args = False
-        if other is None:
+        if not isinstance(other, Lightning):
             return False
-        if hasattr(self, "function") and hasattr(other, "function"):
-            eq_func = getattr(self, "function") == getattr(other, "function")
-        elif not (hasattr(self, "function") or hasattr(other, "function")):
-            eq_func = True
-
-        if hasattr(self, "arguments") and hasattr(other, "arguments"):
-            eq_args = getattr(self, "arguments") == getattr(other, "arguments")
-        elif not (hasattr(self, "arguments") or hasattr(other, "arguments")):
-            eq_args = True
-
-        return eq_func and eq_args
+        return self.module == other.module and self.trainer == other.trainer and \
+            self.train_dataloaders == other.train_dataloaders and self.val_dataloaders == other.val_dataloaders and \
+            self.fit_kwargs == other.fit_kwargs
 
     def fit(self, model):
         """
@@ -185,14 +170,19 @@ class Lightning(Evaluator):
         model : nn.Module
             The model to fit.
         """
-        self.module.set_model(model)
-        if self.train_dataloaders is None:
-            _logger.info('Train dataloaders are missing. Skip to validation.')
-            return self.trainer.validate(self.module, self.val_dataloaders, **self.fit_kwargs)
-        else:
-            if self.val_dataloaders is None:
-                _logger.warning('Validation dataloaders are missing.')
-            return self.trainer.fit(self.module, self.train_dataloaders, self.val_dataloaders, **self.fit_kwargs)
+        try:
+            self.module.set_model(model)
+            self.module.trial_available = self.trial_available
+            if self.train_dataloaders is None:
+                _logger.info('Train dataloaders are missing. Skip to validation.')
+                return self.trainer.validate(self.module, self.val_dataloaders, **self.fit_kwargs)
+            else:
+                if self.val_dataloaders is None:
+                    _logger.warning('Validation dataloaders are missing.')
+                return self.trainer.fit(self.module, self.train_dataloaders, self.val_dataloaders, **self.fit_kwargs)
+        finally:
+            self.module.unset_model()
+            self.module.trial_available = lambda: False
 
 
 def _check_dataloader(dataloader):
@@ -245,6 +235,7 @@ class SupervisedLearningModule(LightningModule):
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
+        print(self.model)
         y_hat = self(x)
 
         if self.running_mode == 'multi' and self.export_onnx is not None:
@@ -270,9 +261,9 @@ class SupervisedLearningModule(LightningModule):
         return self.optimizer(self.parameters(), lr=self.hparams.learning_rate, weight_decay=self.hparams.weight_decay)  # type: ignore
 
     def on_validation_epoch_end(self):
-        if not self.trainer.sanity_checking and self.running_mode == 'multi' and nni.get_current_parameter() is not None:
+        if self.trial_available() and not self.trainer.sanity_checking and self.running_mode == 'multi':
             # Don't report metric when sanity checking
-            nni.report_intermediate_result(self._get_validation_metrics())
+            self.engine_client.report_intermediate_result(self._get_validation_metrics())
 
     def on_fit_end(self):
         self._final_report()
@@ -281,8 +272,8 @@ class SupervisedLearningModule(LightningModule):
         self._final_report()
 
     def _final_report(self):
-        if self.running_mode == 'multi' and nni.get_current_parameter() is not None:
-            nni.report_final_result(self._get_validation_metrics())
+        if self.trial_available() and self.running_mode == 'multi':
+            self.engine_client.report_final_result(self._get_validation_metrics())
 
     def _get_validation_metrics(self):
         if len(self.metrics) == 1:
@@ -323,6 +314,7 @@ class ClassificationModule(SupervisedLearningModule):
                          export_onnx=export_onnx)
 
 
+@nni.trace
 class Classification(Lightning):
     """
     Evaluator that is used for classification.
@@ -404,6 +396,7 @@ class RegressionModule(SupervisedLearningModule):
                          export_onnx=export_onnx)
 
 
+@nni.trace
 class Regression(Lightning):
     """
     Evaluator that is used for regression.
