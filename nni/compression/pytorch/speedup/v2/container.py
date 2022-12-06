@@ -3,6 +3,10 @@ from typing import Union
 import torch
 from torch import nn
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .mask_updater import MaskUpdater
+
 class Slot:
     def __init__(self) -> None:
         self.value_0 = None
@@ -19,10 +23,11 @@ class Slot:
         }
 
 class NodeInfo:
-    def __init__(self, mask_updater, param_masks: dict[str, torch.Tensor]) -> None:
-        self.mask_updater = mask_updater
-        self.param_masks_0 = param_masks
-        self.param_masks_1 = {}
+    def __init__(self) -> None:
+        self.mask_updater: 'MaskUpdater' = None
+        # these are for call_module node
+        self.param_masks_0: dict[str, torch.Tensor] = None
+        self.param_masks_1: dict[str, torch.Tensor] = {}
         self.status = {
             'param_0': 0,
             'param_1': 0,

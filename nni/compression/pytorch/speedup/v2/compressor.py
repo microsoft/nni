@@ -69,7 +69,7 @@ class ModelSpeedup(torch.fx.Interpreter):
                 batch_dim=0,
                 batch_size=8,
                 customized_replace_func=dict(),
-                mask_updater: list[MaskUpdater]=[DefaultModuleMaskUpdater, DefaultMaskUpdater],
+                customized_mask_updaters: list[MaskUpdater]=[],
                 garbage_collect_values: bool=True,
                 logger:Optional[logging.Logger]=None):
         super().__init__(module, garbage_collect_values)
@@ -78,7 +78,11 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.batch_dim = batch_dim
         self.batch_size = batch_size
         self.customized_replace_func = customized_replace_func
-        self.mask_updater = mask_updater
+        self.mask_updaters:list[MaskUpdater] = [
+            *customized_mask_updaters,
+            DefaultModuleMaskUpdater(),
+            DefaultMaskUpdater()
+        ]
         if logger == None:
             self.logger = logging.getLogger(__name__)
             self.logger.setLevel(logging.INFO)
@@ -290,6 +294,20 @@ class ModelSpeedup(torch.fx.Interpreter):
 
         for node in self.module.graph.nodes:
             node: Node
+            self.node_infos[node].mask_updater.direct_update_preprocess(self, node)
+
+        for node in self.module.graph.nodes:
+            node: Node
+            self.logger.info('Update direct mask for %s: %s', node.op, node.name)
+            self.node_infos[node].mask_updater.direct_update_process(self, node)
+
+        for node in self.module.graph.nodes:
+            node: Node
+            self.node_infos[node].mask_updater.direct_update_postprocess(self, node)
+
+        return
+        for node in self.module.graph.nodes:
+            node: Node
 
             self.slots[node].value_2 = map_recursive(self.tensor_randomizer, self.slots[node].value_0)
             self.slots[node].status['value_2'] += 1
@@ -328,6 +346,21 @@ class ModelSpeedup(torch.fx.Interpreter):
 
         self.logger.info("update indirect sparsity")
 
+
+        for node in reversed(self.module.graph.nodes):
+            node: Node
+            self.node_infos[node].mask_updater.indirect_update_preprocess(self, node)
+
+        for node in reversed(self.module.graph.nodes):
+            node: Node
+            self.logger.info('Update indirect mask for %s: %s', node.op, node.name)
+            self.node_infos[node].mask_updater.indirect_update_process(self, node)
+
+        for node in reversed(self.module.graph.nodes):
+            node: Node
+            self.node_infos[node].mask_updater.indirect_update_postprocess(self, node)
+
+        return
         for node in reversed(self.module.graph.nodes):
             node: Node
 
@@ -473,16 +506,20 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.slots: Dict[Node, Slot] = {node: Slot() for node in self.module.graph.nodes}
 
         # only for module now because only module can be replaced.
-        self.node_infos: Dict[Node, NodeInfo] = {}
+        self.node_infos: Dict[Node, NodeInfo] = {node: NodeInfo() for node in self.module.graph.nodes}
         for node in self.module.graph.nodes:
             node: Node
-            if node.op == 'call_module':
-                sub_module: nn.Module = self.fetch_attr(node.target)
-                param_masks = self.masks_file.get(node.target, {})
-                for k, v in sub_module.named_parameters():
-                    if k not in param_masks:
-                        param_masks[k] = torch.ones_like(v)
-                self.node_infos[node] = NodeInfo(param_masks)
+            for mask_updater in self.mask_updaters:
+                if mask_updater.detect(self, node):
+                    break
+            # self.node_infos[node] = NodeInfo(mask_updater)
+            # if node.op == 'call_module':
+            #     sub_module: nn.Module = self.fetch_attr(node.target)
+            #     param_masks = self.masks_file.get(node.target, {})
+            #     for k, v in sub_module.named_parameters():
+            #         if k not in param_masks:
+            #             param_masks[k] = torch.ones_like(v)
+            #     self.node_infos[node] = NodeInfo(param_masks)
 
     def run(self, *, args, masks_file, map_location=None) -> Any:
         """
