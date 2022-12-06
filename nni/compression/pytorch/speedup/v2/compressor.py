@@ -2,25 +2,29 @@
 # Licensed under the MIT license.
 
 import copy
-
 import logging
-from pathlib import Path
 import queue
-from typing import Any, Callable, Optional, Type, Dict, Union
+from pathlib import Path
+from typing import Any, Callable, Dict, Optional, Type, Union
 
 import torch
 import torch.fx
-from torch.fx import GraphModule
-from torch.fx.node import Argument, Node, Target
 import torch.nn as nn
-
-from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
-from nni.compression.pytorch.utils.utils import rand_like_with_shape, randomize_tensor, torch_float_dtype, torch_integer_dtype
+from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
+from torch.fx.node import Argument, Node, Target
+
+from nni.common.concrete_trace_utils.utils import (map_recursive,
+                                                   map_recursive_zip,
+                                                   run_onlyif_instance)
 from nni.compression.pytorch.speedup.compress_modules import replace_module
-from nni.common.concrete_trace_utils.utils import run_onlyif_instance, map_recursive, map_recursive_zip
-from nni.compression.pytorch.speedup.v2.container import Slot, NodeInfo
+from nni.compression.pytorch.speedup.v2.container import NodeInfo, Slot
 from nni.compression.pytorch.speedup.v2.mask_updater import MaskUpdater, DefaultMaskUpdater, DefaultModuleMaskUpdater
+from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
+from nni.compression.pytorch.utils.utils import (rand_like_with_shape,
+                                                 randomize_tensor,
+                                                 torch_float_dtype,
+                                                 torch_integer_dtype)
 
 
 @compatibility(is_backward_compatible=True)
@@ -253,12 +257,6 @@ class ModelSpeedup(torch.fx.Interpreter):
         else:
             assert not isinstance(out, torch.Tensor)
 
-    def has_special_handler_direct(self, node: Node) -> Optional[Callable]:
-        return None
-
-    def has_special_handler_indirect(self, node: Node) -> Optional[Callable]:
-        return None
-
     def propagate_originally(self):
         self.logger.info("propagate original variables")
         for node in self.module.graph.nodes:
@@ -300,32 +298,28 @@ class ModelSpeedup(torch.fx.Interpreter):
             node: Node
 
             self.logger.info('Update direct mask for %s: %s', node.op, node.name)
-            handler = self.has_special_handler_direct(node)
-            if handler is not None:
-                handler(self, node)
-            else:
-                with torch.no_grad():
-                    if node.op == 'call_module':
-                        node_info: NodeInfo = self.node_infos[node]
-                        sub_module: nn.Module = self.fetch_attr(node.target)
+            with torch.no_grad():
+                if node.op == 'call_module':
+                    node_info: NodeInfo = self.node_infos[node]
+                    sub_module: nn.Module = self.fetch_attr(node.target)
 
-                        for _k, v in sub_module.named_parameters():
-                            randomize_tensor(v, self.randomize_range_float[0], self.randomize_range_float[1])
+                    for _k, v in sub_module.named_parameters():
+                        randomize_tensor(v, self.randomize_range_float[0], self.randomize_range_float[1])
 
-                        for k, v in sub_module.named_parameters():
-                            v *= node_info.param_masks_0[k] # in-place addition
+                    for k, v in sub_module.named_parameters():
+                        v *= node_info.param_masks_0[k] # in-place addition
 
-                    args = map_recursive(self.slot_getter_value_2, node.args)
-                    arg_masks = map_recursive(self.slot_getter_mask_1, node.args)
-                    args = map_recursive_zip(self.mask_applier, args, arg_masks)
-                    kwargs = map_recursive(self.slot_getter_value_2, node.kwargs)
-                    kwarg_masks = map_recursive(self.slot_getter_mask_1, node.kwargs)
-                    kwargs = map_recursive_zip(self.mask_applier, kwargs, kwarg_masks)
+                args = map_recursive(self.slot_getter_value_2, node.args)
+                arg_masks = map_recursive(self.slot_getter_mask_1, node.args)
+                args = map_recursive_zip(self.mask_applier, args, arg_masks)
+                kwargs = map_recursive(self.slot_getter_value_2, node.kwargs)
+                kwarg_masks = map_recursive(self.slot_getter_mask_1, node.kwargs)
+                kwargs = map_recursive_zip(self.mask_applier, kwargs, kwarg_masks)
 
-                    output = getattr(self, node.op)(node.target, args, kwargs)
+                output = getattr(self, node.op)(node.target, args, kwargs)
 
-                    self.slots[node].mask_1 = map_recursive(self.direct_calc_mask, output)
-                    self.slots[node].status['mask_1'] += 1
+                self.slots[node].mask_1 = map_recursive(self.direct_calc_mask, output)
+                self.slots[node].status['mask_1'] += 1
 
             # do memory collect / compression
 
@@ -360,8 +354,13 @@ class ModelSpeedup(torch.fx.Interpreter):
             kwargs = map_recursive_zip(self.mask_applier, kwargs, kwarg_masks)
             map_recursive(self.tensor_requires_grad, kwargs)
 
-            output = getattr(self, node.op)(node.target, args, kwargs)
-            
+            # Some operator may have the in_place operations, so we need to clone the input
+            # before passing to the self.module
+            args_cloned = map_recursive(self.tensor_cloner, args)
+            kwargs_cloned = map_recursive(self.tensor_cloner, kwargs)
+
+            output = getattr(self, node.op)(node.target, args_cloned, kwargs_cloned)
+
             map_recursive_zip(self.indirect_update_param_mask, output, output_masks_2)
 
             if node.op == 'call_module':
@@ -479,7 +478,7 @@ class ModelSpeedup(torch.fx.Interpreter):
             node: Node
             if node.op == 'call_module':
                 sub_module: nn.Module = self.fetch_attr(node.target)
-                param_masks = self.masks_file.get(node.name, {})
+                param_masks = self.masks_file.get(node.target, {})
                 for k, v in sub_module.named_parameters():
                     if k not in param_masks:
                         param_masks[k] = torch.ones_like(v)
@@ -499,8 +498,14 @@ class ModelSpeedup(torch.fx.Interpreter):
             the device on which masks are placed, same to map_location in ```torch.load```
         """
 
-        self.masks_file = masks_file
-        self.map_location = map_location
+        if map_location is None:
+            map_location = 'cuda' if torch.cuda.is_available() else 'cpu'
+        if isinstance(masks_file, (str, Path)) and Path(masks_file).exists():
+            self.masks_file = torch.load(masks_file, map_location)
+        elif isinstance(masks_file, dict):
+            self.masks_file = masks_file
+        else:
+            raise Exception('Please provide the mask or the path of the mask file')
 
         self.logger.info("start to speedup the model")
         training = self.module.training
