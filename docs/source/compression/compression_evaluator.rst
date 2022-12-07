@@ -202,7 +202,7 @@ Here is an example of how to initialize a :class:`LightningEvaluator <nni.compre
             logits = self(x)
             loss = self.criterion(logits, y)
             preds = torch.argmax(logits, dim=1)
-            acc = accuracy(preds, y)
+            acc = accuracy(preds, y, 'multiclass', num_classes=10)
 
             if stage:
                 self.log(f"default", loss, prog_bar=False)
