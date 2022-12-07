@@ -160,6 +160,10 @@ class PruningTargetSpace(TargetSpace):
         assert isinstance(val, (int, str))
         self.setting['dependency_group_id'] = val
 
+    @property
+    def align(self) -> Dict | None:
+        return self.setting.get('align', None)
+
 
 class QuantizationTargetSpace(TargetSpace):
     def __init__(self, wrapper: torch.nn.Module, target_name: str, target_type: TargetType, setting: Dict[str, Any] | None = None):

@@ -1,16 +1,23 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 from collections import defaultdict
 import heapq
-from typing import Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import torch
 
 from ..base.target_space import PruningTargetSpace
 
 
-def active_sparse_targets_filter(target_spaces: Dict[str, Dict[str, PruningTargetSpace]]) -> Dict[str, Dict[str, torch.Tensor]]:
+_TARGET_SPACES = Dict[str, Dict[str, PruningTargetSpace]]
+_MASKS = Dict[str, Dict[str, torch.Tensor]]
+_METRICS = Dict[str, Dict[str, torch.Tensor]]
+
+
+def active_sparse_targets_filter(target_spaces: _TARGET_SPACES) -> _METRICS:
     # filter all targets need to active generate sparsity
     active_targets = defaultdict(dict)
     for module_name, ts in target_spaces.items():
@@ -20,17 +27,49 @@ def active_sparse_targets_filter(target_spaces: Dict[str, Dict[str, PruningTarge
     return active_targets
 
 
-def generate_sparsity(metrics: Dict[str, Dict[str, torch.Tensor]], target_spaces: Dict[str, Dict[str, PruningTargetSpace]]):
-    pass
+def generate_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASKS:
+    def condition_dependency(target_space: PruningTargetSpace) -> bool:
+        return target_space.dependency_group_id is not None
+
+    def condition_global(target_space: PruningTargetSpace) -> bool:
+        return target_space.global_group_id is not None
+
+    def condition_ratio(target_space: PruningTargetSpace) -> bool:
+        return target_space.sparse_ratio is not None
+
+    def condition_threshold(target_space: PruningTargetSpace) -> bool:
+        return target_space.sparse_threshold is not None
+
+    def condition_align(target_space: PruningTargetSpace) -> bool:
+        return target_space.align is not None
+
+    dependency_target_spaces, remained_target_spaces = target_spaces_filter(target_spaces, condition_dependency)
+
+    global_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_global)
+    ratio_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_ratio)
+    threshold_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_threshold)
+    align_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_align)
 
 
-def _generate_ratio_sparsity(metrics: Dict[str, Dict[str, torch.Tensor]],
-                             target_spaces: Dict[str, Dict[str, PruningTargetSpace]]) -> Dict[str, Dict[str, torch.Tensor]]:
+def target_spaces_filter(target_spaces: _TARGET_SPACES, condition: Callable[[PruningTargetSpace], bool]) -> _TARGET_SPACES:
+    filtered_target_spaces = defaultdict(dict)
+    remained_target_spaces = defaultdict(dict)
+
+    for module_name, ts in target_spaces.items():
+        for target_name, target_space in ts.items():
+            if condition(target_space):
+                filtered_target_spaces[module_name][target_name] = target_space
+            else:
+                remained_target_spaces[module_name][target_name] = target_space
+    return filtered_target_spaces, remained_target_spaces
+
+
+def _generate_ratio_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASKS:
     # NOTE: smaller metric value means more un-important
     masks = defaultdict(dict)
-    for module_name, target_metrics in metrics.items():
-        for target_name, metric in target_metrics.items():
-            target_space = target_spaces[module_name][target_name]
+    for module_name, ts in target_spaces.items():
+        for target_name, target_space in ts.items():
+            metric = metrics[module_name][target_name]
             min_sparse_ratio = target_space.min_sparse_ratio if target_space.min_sparse_ratio else 0.0
             max_sparse_ratio = target_space.max_sparse_ratio if target_space.max_sparse_ratio else 1.0
             sparse_ratio = min(max_sparse_ratio, max(min_sparse_ratio, target_space.sparse_ratio))
@@ -38,13 +77,12 @@ def _generate_ratio_sparsity(metrics: Dict[str, Dict[str, torch.Tensor]],
     return masks
 
 
-def _generate_threshold_sparsity(metrics: Dict[str, Dict[str, torch.Tensor]],
-                                 target_spaces: Dict[str, Dict[str, PruningTargetSpace]]) -> Dict[str, Dict[str, torch.Tensor]]:
+def _generate_threshold_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASKS:
     # NOTE: smaller metric value means more un-important
     masks = defaultdict(dict)
-    for module_name, target_metrics in metrics.items():
-        for target_name, metric in target_metrics.items():
-            target_space = target_spaces[module_name][target_name]
+    for module_name, ts in target_spaces.items():
+        for target_name, target_space in ts.items():
+            metric = metrics[module_name][target_name]
             # metric < threshold will be 0, metric >= threshold will be 1
             mask = _threshold_mask(metric, target_space.sparse_threshold)
 
@@ -61,13 +99,16 @@ def _generate_threshold_sparsity(metrics: Dict[str, Dict[str, torch.Tensor]],
     return masks
 
 
-def _generate_align_sparsity(masks: Dict[str, Dict[str, torch.Tensor]],
-                             target_spaces: Dict[str, Dict[str, PruningTargetSpace]]) -> Dict[str, Dict[str, torch.Tensor]]:
+def _generate_align_sparsity(masks: _MASKS, target_spaces: _TARGET_SPACES) -> _MASKS:
     pass
 
 
-def _generate_global_sparsity(metrics: Dict[str, Dict[str, torch.Tensor]],
-                              groups: Dict[str, List[Tuple[str, str, PruningTargetSpace]]]) -> Dict[str, Dict[str, torch.Tensor]]:
+def _generate_global_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASKS:
+    groups = defaultdict(list)
+    for module_name, ts in target_spaces.items():
+        for target_name, target_space in ts.items():
+            groups[module_name][target_name] = target_space
+
     masks = defaultdict(dict)
     for _, group in groups.items():
         if len(group) == 0:
@@ -100,12 +141,18 @@ def _generate_global_sparsity(metrics: Dict[str, Dict[str, torch.Tensor]],
                 masks[module_name][target_name] = _ratio_mask(metrics[module_name][target_name], sparse_ratio)
             continue
 
-        sparse_threshold = _group_threshold_helper(metrics, group, sparse_number)
+        sparse_threshold = _global_threshold_generate(metrics, group, sparse_number)
         for module_name, target_name, target_space in group:
             masks[module_name][target_name] = _threshold_mask(metrics[module_name][target_name], sparse_threshold)
         continue
     return masks
 
+
+def __generate_dependency_sparsity(metrics: _METRICS, groups: Dict[str, List[Tuple[str, str, PruningTargetSpace]]]) -> _MASKS:
+    pass
+
+
+# the following are helper functions
 
 def _ratio_mask(metric: torch.Tensor, sparse_ratio: float):
     if sparse_ratio == 0.0:
@@ -124,9 +171,9 @@ def _threshold_mask(metric: torch.Tensor, sparse_threshold: float):
     return (metric >= sparse_threshold).float().to(metric.device)
 
 
-def _group_threshold_helper(metrics: Dict[str, Dict[str, torch.Tensor]],
-                            group: List[Tuple[str, str, PruningTargetSpace]],
-                            sparse_number: int) -> float:
+def _global_threshold_generate(metrics: _METRICS,
+                               group: List[Tuple[str, str, PruningTargetSpace]],
+                               sparse_number: int) -> float:
     buffer = []
     buffer_elem = 0
     for module_name, target_name, target_space in group:
@@ -140,3 +187,9 @@ def _group_threshold_helper(metrics: Dict[str, Dict[str, torch.Tensor]],
                 _, previous_grain_size = heapq.heappushpop(buffer, (-m.item(), grain_size))
                 buffer_elem += grain_size - previous_grain_size
     return -heapq.heappop(buffer)[0]
+
+
+def _nested_update(default_dict: _MASKS, update_dict: _MASKS):
+    for key, value in update_dict.items():
+        for k, v in value.items():
+            default_dict[key][k] = v
