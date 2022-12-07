@@ -54,7 +54,7 @@ def get_query_type(key):
         return '?update_type=MAX_EXEC_DURATION'
     if key == 'searchSpace':
         return '?update_type=SEARCH_SPACE'
-    if key == 'maxTrialNum':
+    if key == 'maxTrialNumber':
         return '?update_type=MAX_TRIAL_NUM'
 
 def update_experiment_profile(args, key, value):
@@ -107,7 +107,7 @@ def update_duration(args):
 
 def update_trialnum(args):
     validate_digit(args.value, 1, 999999999)
-    if update_experiment_profile(args, 'maxTrialNum', int(args.value)):
+    if update_experiment_profile(args, 'maxTrialNumber', int(args.value)):
         print_normal('Update %s success!' % 'trialnum')
     else:
         print_error('Update %s failed!' % 'trialnum')
