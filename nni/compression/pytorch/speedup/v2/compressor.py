@@ -391,10 +391,16 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.ori_state_dict = copy.deepcopy(self.module.state_dict())
 
         # input of the whole model
-        placeholder_names = [node.target for node in self.module.graph.nodes if node.op == 'placeholder']
-        assert len(args) == len(placeholder_names)
+        placeholders = [node for node in self.module.graph.nodes if node.op == 'placeholder']
+        assert len(args) <= len(placeholders)
         args = map_recursive(model_tensor_randomizer, args)
-        self.arg_dict = {k: v for k, v in zip(placeholder_names, args)}
+        self.arg_dict = {}
+        for i, placeholder in enumerate(placeholders):
+            if i < len(args):
+                self.arg_dict[placeholder.target] = args[i]
+            else:
+                assert len(placeholder.args) == 1, f'parameter \'{placeholder.target}\' has no default value!'
+                self.arg_dict[placeholder.target] = placeholder.args[0]
 
         # to store intermediate infomations
         self.slots: Dict[Node, Slot] = {node: Slot() for node in self.module.graph.nodes}
