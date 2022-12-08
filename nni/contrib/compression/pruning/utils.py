@@ -7,6 +7,7 @@ from collections import defaultdict
 import heapq
 from typing import Callable, Dict, List, Tuple
 
+import numpy
 import torch
 
 from ..base.target_space import PruningTargetSpace
@@ -43,12 +44,24 @@ def generate_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASK
     def condition_align(target_space: PruningTargetSpace) -> bool:
         return target_space.align is not None
 
+    masks = defaultdict(dict)
+
+    threshold_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_threshold)
+    _nested_update_masks(masks, _generate_threshold_sparsity(metrics, threshold_target_spaces))
+
     dependency_target_spaces, remained_target_spaces = target_spaces_filter(target_spaces, condition_dependency)
+    _nested_update_masks(masks, _generate_dependency_sparsity(metrics, dependency_target_spaces))
 
     global_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_global)
+    _nested_update_masks(masks, _generate_global_sparsity(metrics, global_target_spaces))
+
     ratio_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_ratio)
-    threshold_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_threshold)
+    _nested_update_masks(masks, _generate_ratio_sparsity(metrics, ratio_target_spaces))
+
     align_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_align)
+    _nested_update_masks(masks, _generate_align_sparsity(masks, align_target_spaces))
+
+    return masks
 
 
 def target_spaces_filter(target_spaces: _TARGET_SPACES, condition: Callable[[PruningTargetSpace], bool]) -> _TARGET_SPACES:
@@ -100,21 +113,33 @@ def _generate_threshold_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACE
 
 
 def _generate_align_sparsity(masks: _MASKS, target_spaces: _TARGET_SPACES) -> _MASKS:
-    pass
+    align_masks = defaultdict(dict)
+    for module_name, ts in target_spaces.items():
+        for target_name, target_space in ts.items():
+            src_mask = masks[module_name][target_space.align['target_name']]
+            align_dims: List[int] = target_space.align['dims']
+            reduce_dims = [d for d in range(len(src_mask.shape)) if d not in align_dims or d - len(src_mask.shape) not in align_dims]
+            align_masks[module_name][target_name] = src_mask.sum(reduce_dims).bool().float()
+    return align_masks
 
 
 def _generate_global_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASKS:
-    groups = defaultdict(list)
+    groups: Dict[str, List[Tuple[str, str, PruningTargetSpace]]] = defaultdict(list)
     for module_name, ts in target_spaces.items():
         for target_name, target_space in ts.items():
-            groups[module_name][target_name] = target_space
+            groups[target_space.global_group_id].append((module_name, target_name, target_space))
 
     masks = defaultdict(dict)
     for _, group in groups.items():
-        if len(group) == 0:
-            continue
+        group_sparse_ratio = None
+        for _, _, target_space in group:
+            if target_space.sparse_ratio is not None:
+                if group_sparsity_ratio is None:
+                    group_sparsity_ratio = target_space.sparse_ratio
+                else:
+                    assert group_sparsity_ratio == target_space.sparse_ratio
+        assert group_sparse_ratio is not None
 
-        group_sparse_ratio = group[0][2].sparse_ratio
         # at least how many elements to mask
         sparse_number_low = 0
         # at most how many elements to mask
@@ -148,13 +173,41 @@ def _generate_global_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) 
     return masks
 
 
-def __generate_dependency_sparsity(metrics: _METRICS, groups: Dict[str, List[Tuple[str, str, PruningTargetSpace]]]) -> _MASKS:
-    pass
+def _generate_dependency_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASKS:
+    groups: Dict[str, List[Tuple[str, str, PruningTargetSpace]]] = defaultdict(list)
+    for module_name, ts in target_spaces.items():
+        for target_name, target_space in ts.items():
+            groups[target_space.dependency_group_id].append((module_name, target_name, target_space))
+
+    masks = defaultdict(dict)
+    for _, group in groups.items():
+        block_numbers = []
+        group_sparsity_ratio = None
+        filtered_metrics = defaultdict(dict)
+
+        for module_name, target_name, target_space in group:
+            assert isinstance(target_space.internal_metric_block, (int, None))
+            block_numbers.append(target_space.internal_metric_block if target_space.internal_metric_block else 1)
+            if target_space.sparse_ratio is not None:
+                if group_sparsity_ratio is None:
+                    group_sparsity_ratio = target_space.sparse_ratio
+                else:
+                    assert group_sparsity_ratio == target_space.sparse_ratio
+            filtered_metrics[module_name][target_name] = metrics[module_name][target_name]
+        block_number = numpy.lcm(block_numbers)
+        assert group_sparsity_ratio is not None
+        group_metric = _metric_fuse(filtered_metrics)
+        group_mask = _ratio_mask(group_metric, group_sparsity_ratio, view_size=[block_number, -1])
+
+        for module_name, target_name, _ in group:
+            masks[module_name][target_name] = group_mask.clone()
+    
+    return masks
 
 
 # the following are helper functions
 
-def _ratio_mask(metric: torch.Tensor, sparse_ratio: float):
+def _ratio_mask(metric: torch.Tensor, sparse_ratio: float, view_size: int | List[int] = -1):
     if sparse_ratio == 0.0:
         return torch.ones_like(metric)
 
@@ -162,9 +215,14 @@ def _ratio_mask(metric: torch.Tensor, sparse_ratio: float):
         return torch.zeros_like(metric)
 
     assert 0.0 < sparse_ratio < 1.0
-    sparse_number = int(sparse_ratio * metric.numel())
-    _, indices = metric.topk(sparse_number, largest=False)
-    return torch.ones_like(metric).scatter(-1, indices, 1.0)
+    if isinstance(view_size, int) or len(view_size[:-1]) == 0:
+        block_number = 1
+    else:
+        block_number = numpy.prod(view_size[:-1])
+    sparse_number_per_block = int(metric.numel() // block_number * sparse_ratio)
+    viewed_metric = metric.view(view_size)
+    _, indices = viewed_metric.topk(sparse_number_per_block, largest=False)
+    return torch.ones_like(viewed_metric).scatter(-1, indices, 1.0).reshape_as(metric)
 
 
 def _threshold_mask(metric: torch.Tensor, sparse_threshold: float):
@@ -189,7 +247,24 @@ def _global_threshold_generate(metrics: _METRICS,
     return -heapq.heappop(buffer)[0]
 
 
-def _nested_update(default_dict: _MASKS, update_dict: _MASKS):
+def _nested_update_masks(default_dict: _MASKS, update_dict: _MASKS):
     for key, value in update_dict.items():
         for k, v in value.items():
-            default_dict[key][k] = v
+            if k in default_dict[key] and isinstance(default_dict[key][k], torch.Tensor):
+                default_dict[key][k] = (default_dict[key][k] + v).bool().float()
+            else:
+                default_dict[key][k] = v
+
+
+def _metric_fuse(metrics: _METRICS) -> torch.Tensor:
+    # mean all metric value
+    fused_metric = None
+    count = 0
+    for _, module_metrics in metrics.items():
+        for _, target_metric in module_metrics.items():
+            if fused_metric:
+                fused_metric += target_metric
+            else:
+                fused_metric = target_metric.clone()
+            count += 1
+    return fused_metric / count

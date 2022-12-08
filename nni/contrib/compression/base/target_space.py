@@ -160,6 +160,12 @@ class PruningTargetSpace(TargetSpace):
         assert isinstance(val, (int, str))
         self.setting['dependency_group_id'] = val
 
+    # don't support setter
+    @property
+    def internal_metric_block(self) -> int | List[int] | str | None:
+        return self.setting.get('internal_metric_block', None)
+
+    # don't support setter
     @property
     def align(self) -> Dict | None:
         return self.setting.get('align', None)

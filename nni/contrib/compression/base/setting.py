@@ -96,12 +96,15 @@ class PruningSetting(ModuleSetting):
             'global_group_id': None,
             'dependency_group_id': None,
             'sparse_granularity': None,
-            'apply_method': 'mul'
+            'internal_metric_block': None,
+            'apply_method': 'mul',
         },
         'bias': {
             'align': {
+                # should support granularity in the future
+                # module_name can also be supported
                 'target_name': 'weight',
-                'dim': 0
+                'dims': [0],
             },
             'apply_method': 'mul'
         }
