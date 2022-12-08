@@ -128,10 +128,13 @@ class ModuleWrapper(torch.nn.Module):
 
         if mode == 'pruning':
             target_spaces = self.pruning_target_spaces
+            target_space_cls = PruningTargetSpace
         if mode == 'quantization':
             target_spaces = self.quantization_target_spaces
+            target_space_cls = QuantizationTargetSpace
         if mode == 'distillation':
             target_spaces = self.distillation_target_spaces
+            target_space_cls = DistillationTargetSpace
 
         settings = canonicalize_settings(self.module, sub_config, mode)
         inter_sec = set(target_spaces.keys()).intersection(settings.keys())
@@ -140,7 +143,7 @@ class ModuleWrapper(torch.nn.Module):
             warn_msg = f'{name} have already configured, the new config will be ignored.'
             _logger.warning(warn_msg)
             settings.pop(name)
-        target_spaces.update(self._create_target_spaces(settings, PruningTargetSpace))
+        target_spaces.update(self._create_target_spaces(settings, target_space_cls))
 
     def update_masks(self, masks: Dict[str, torch.Tensor]):
         """
@@ -170,7 +173,8 @@ class ModuleWrapper(torch.nn.Module):
         # -1 because the first arg of forward is `self`, not in args
         pos_args_num = len(self._input_args_spec.args) - 1
         pos_args = args[:pos_args_num]
-        pos_args += (kwargs.pop(k) for k in self._input_args_spec.args[len(pos_args) + 1:])
+        if len(pos_args) < pos_args_num:
+            pos_args += (kwargs.pop(k) for k in self._input_args_spec.args[len(pos_args) + 1:])
         var_args = args[pos_args_num:]
         kwonly_args = {k: kwargs.pop(k) for k in self._input_args_spec.kwonlyargs}
         return pos_args, var_args, kwonly_args, kwargs
@@ -242,7 +246,7 @@ class ModuleWrapper(torch.nn.Module):
         for idx, arg_value in enumerate(pos_args):
             target_name = f'{INPUT_PREFIX}_{idx + 1}'
             new_args.append(self.patch_helper(target_name, arg_value))
-        new_args.append(self.patch_helper(f'{INPUT_PREFIX}_{self._input_args_spec.varargs}', varargs))
+        new_args.extend(self.patch_helper(f'{INPUT_PREFIX}_{self._input_args_spec.varargs}', varargs))
 
         new_kwargs = {}
         for key, value in kwonly_args.items():

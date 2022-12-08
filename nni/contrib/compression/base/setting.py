@@ -54,7 +54,8 @@ class ModuleSetting:
         assert target_settings is not None, \
             f'{module_cls_name} is not registered, please register setting with {cls.__name__}.register().'
 
-        cls._update_setting(target_settings, update_setting)
+        if update_setting:
+            cls._update_setting(target_settings, update_setting)
 
         target_names = list(target_names if target_names else target_settings.keys())
 

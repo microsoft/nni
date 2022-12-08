@@ -10,7 +10,7 @@ from typing import Callable, Dict, List, Tuple
 import numpy
 import torch
 
-from ..base.target_space import PruningTargetSpace
+from ..base.target_space import PruningTargetSpace, TargetType
 
 
 _TARGET_SPACES = Dict[str, Dict[str, PruningTargetSpace]]
@@ -46,7 +46,7 @@ def generate_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASK
 
     masks = defaultdict(dict)
 
-    threshold_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_threshold)
+    threshold_target_spaces, remained_target_spaces = target_spaces_filter(target_spaces, condition_threshold)
     _nested_update_masks(masks, _generate_threshold_sparsity(metrics, threshold_target_spaces))
 
     dependency_target_spaces, remained_target_spaces = target_spaces_filter(target_spaces, condition_dependency)
@@ -64,16 +64,18 @@ def generate_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASK
     return masks
 
 
-def target_spaces_filter(target_spaces: _TARGET_SPACES, condition: Callable[[PruningTargetSpace], bool]) -> _TARGET_SPACES:
+def target_spaces_filter(target_spaces: _TARGET_SPACES,
+                         condition: Callable[[PruningTargetSpace], bool]) -> Tuple[_TARGET_SPACES, _TARGET_SPACES]:
     filtered_target_spaces = defaultdict(dict)
     remained_target_spaces = defaultdict(dict)
 
     for module_name, ts in target_spaces.items():
         for target_name, target_space in ts.items():
-            if condition(target_space):
-                filtered_target_spaces[module_name][target_name] = target_space
-            else:
+            if (target_space.type is TargetType.PARAMETER and target_space.target is None) or not condition(target_space):
                 remained_target_spaces[module_name][target_name] = target_space
+            else:
+                filtered_target_spaces[module_name][target_name] = target_space
+
     return filtered_target_spaces, remained_target_spaces
 
 
@@ -118,7 +120,7 @@ def _generate_align_sparsity(masks: _MASKS, target_spaces: _TARGET_SPACES) -> _M
         for target_name, target_space in ts.items():
             src_mask = masks[module_name][target_space.align['target_name']]
             align_dims: List[int] = target_space.align['dims']
-            reduce_dims = [d for d in range(len(src_mask.shape)) if d not in align_dims or d - len(src_mask.shape) not in align_dims]
+            reduce_dims = [d for d in range(len(src_mask.shape)) if d not in align_dims and d - len(src_mask.shape) not in align_dims]
             align_masks[module_name][target_name] = src_mask.sum(reduce_dims).bool().float()
     return align_masks
 
@@ -201,7 +203,7 @@ def _generate_dependency_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPAC
 
         for module_name, target_name, _ in group:
             masks[module_name][target_name] = group_mask.clone()
-    
+
     return masks
 
 
@@ -222,7 +224,7 @@ def _ratio_mask(metric: torch.Tensor, sparse_ratio: float, view_size: int | List
     sparse_number_per_block = int(metric.numel() // block_number * sparse_ratio)
     viewed_metric = metric.view(view_size)
     _, indices = viewed_metric.topk(sparse_number_per_block, largest=False)
-    return torch.ones_like(viewed_metric).scatter(-1, indices, 1.0).reshape_as(metric)
+    return torch.ones_like(viewed_metric).scatter(-1, indices, 0.0).reshape_as(metric)
 
 
 def _threshold_mask(metric: torch.Tensor, sparse_threshold: float):
