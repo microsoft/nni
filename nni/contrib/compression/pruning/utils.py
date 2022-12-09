@@ -47,19 +47,24 @@ def generate_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASK
     masks = defaultdict(dict)
 
     threshold_target_spaces, remained_target_spaces = target_spaces_filter(target_spaces, condition_threshold)
-    _nested_update_masks(masks, _generate_threshold_sparsity(metrics, threshold_target_spaces))
+    update_masks = _generate_threshold_sparsity(metrics, threshold_target_spaces)
+    _nested_multiply_update_masks(masks, _expand_masks(update_masks, threshold_target_spaces))
 
     dependency_target_spaces, remained_target_spaces = target_spaces_filter(target_spaces, condition_dependency)
-    _nested_update_masks(masks, _generate_dependency_sparsity(metrics, dependency_target_spaces))
+    update_masks = _generate_dependency_sparsity(metrics, dependency_target_spaces)
+    _nested_multiply_update_masks(masks, _expand_masks(update_masks, dependency_target_spaces))
 
     global_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_global)
-    _nested_update_masks(masks, _generate_global_sparsity(metrics, global_target_spaces))
+    update_masks = _generate_global_sparsity(metrics, global_target_spaces)
+    _nested_multiply_update_masks(masks, _expand_masks(update_masks, global_target_spaces))
 
     ratio_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_ratio)
-    _nested_update_masks(masks, _generate_ratio_sparsity(metrics, ratio_target_spaces))
+    update_masks = _generate_ratio_sparsity(metrics, ratio_target_spaces)
+    _nested_multiply_update_masks(masks, _expand_masks(update_masks, ratio_target_spaces))
 
     align_target_spaces, remained_target_spaces = target_spaces_filter(remained_target_spaces, condition_align)
-    _nested_update_masks(masks, _generate_align_sparsity(masks, align_target_spaces))
+    update_masks = _generate_align_sparsity(masks, align_target_spaces)
+    _nested_multiply_update_masks(masks, _expand_masks(update_masks, align_target_spaces))
 
     return masks
 
@@ -249,11 +254,13 @@ def _global_threshold_generate(metrics: _METRICS,
     return -heapq.heappop(buffer)[0]
 
 
-def _nested_update_masks(default_dict: _MASKS, update_dict: _MASKS):
+def _nested_multiply_update_masks(default_dict: _MASKS, update_dict: _MASKS):
+    # if a target already has a mask, the old one will multiply the new one as the target mask,
+    # that means the mask in default dict will more and more sparse.
     for key, value in update_dict.items():
         for k, v in value.items():
             if k in default_dict[key] and isinstance(default_dict[key][k], torch.Tensor):
-                default_dict[key][k] = (default_dict[key][k] + v).bool().float()
+                default_dict[key][k] = (default_dict[key][k] * v).bool().float()
             else:
                 default_dict[key][k] = v
 
@@ -270,3 +277,15 @@ def _metric_fuse(metrics: _METRICS) -> torch.Tensor:
                 fused_metric = target_metric.clone()
             count += 1
     return fused_metric / count
+
+
+def _expand_masks(masks: _MASKS, target_spaces: _TARGET_SPACES) -> _MASKS:
+    new_masks = defaultdict(dict)
+    for module_name, module_masks in masks.items():
+        for target_name, target_mask in module_masks.items():
+            target_space = target_spaces[module_name][target_name]
+            if target_space._scaler:
+                new_masks[module_name][target_name] = target_space._scaler.expand(target_mask, target_space.target.shape)
+            else:
+                new_masks[module_name][target_name] = target_mask
+    return new_masks

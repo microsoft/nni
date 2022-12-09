@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 from collections import defaultdict
 from copy import deepcopy
 import re
@@ -11,7 +13,15 @@ import torch
 from .setting import INPUT_PREFIX, OUTPUT_PREFIX
 
 
-def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def trans_legacy_config_list(config_list: List[Dict[str, Any]], sparse_granularity: str | List[int] | None = None) -> List[Dict[str, Any]]:
+    if not config_list:
+        return config_list
+
+    if 'exclude' not in config_list[0] and 'sparsity' not in config_list[0] and 'sparsity_per_layer' \
+        not in config_list[0] and 'total_sparsity' not in config_list[0] and 'quant_types' not in config_list[0]:
+        # all the old keys not in the first config, then we assume this config list is not a legacy config list.
+        return config_list
+
     config_list = deepcopy(config_list)
 
     # trans common part
@@ -51,6 +61,7 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
                     'sparse_ratio': sparse_ratio,
                     'max_sparse_ratio': max_sparse_ratio,
                     'global_group_id': group_id,
+                    'sparse_granularity': sparse_granularity,
                 }
             }
 

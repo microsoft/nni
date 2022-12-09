@@ -27,8 +27,7 @@ class ModuleSetting:
         cls.registry[module_cls__name] = deepcopy(setting)
 
     @classmethod
-    def get(cls, module_cls_or_name: str | torch.nn.Module | Type[torch.nn.Module], target_names: List[str] | None = None,
-            update_setting: Dict[str, Any] | None = None) -> _SETTING:
+    def get(cls, module_cls_or_name: str | torch.nn.Module | Type[torch.nn.Module], config: Dict[str, Any]) -> _SETTING:
         """
         Return the updated setting for the given module type.
 
@@ -50,12 +49,17 @@ class ModuleSetting:
         else:
             raise RuntimeError('`module_cls_or_name` is not an instance or subclass of `torch.nn.Module` or a name.')
 
+        target_names = config.pop('target_names', None)
+        update_settings = config.pop('target_settings', None)
         target_settings = deepcopy(cls.registry.get(module_cls_name, None))
         assert target_settings is not None, \
             f'{module_cls_name} is not registered, please register setting with {cls.__name__}.register().'
 
-        if update_setting:
-            cls._update_setting(target_settings, update_setting)
+        if target_names is None and update_settings is None and config:
+            cls._update_shortcut_setting(target_settings, config)
+
+        if update_settings:
+            cls._update_setting(target_settings, update_settings)
 
         target_names = list(target_names if target_names else target_settings.keys())
 
@@ -85,6 +89,13 @@ class ModuleSetting:
                 setting1[target_name].update(deepcopy(target_setting))
             else:
                 setting1[target_name] = deepcopy(target_setting)
+
+    @classmethod
+    def _update_shortcut_setting(cls, setting1: _SETTING, setting2: Dict[str, Any]):
+        for _, target_setting in setting1.items():
+            update_keys = [key for key in target_setting.keys() if key in setting2]
+            for key in update_keys:
+                target_setting[key] = deepcopy(setting2[key])
 
 
 class PruningSetting(ModuleSetting):
@@ -152,8 +163,8 @@ def canonicalize_settings(module: torch.nn.Module,
                           mode: Literal['pruning', 'quantization', 'distillation'] | None = None) -> Dict[str, Dict[str, Any]]:
     assert mode is not None
     if mode == 'pruning':
-        return PruningSetting.get(module, config.get('target_names', None), config.get('target_settings', None))
+        return PruningSetting.get(module, config)
     if mode == 'quantization':
-        return QuantizationSetting.get(module, config.get('target_names', None), config.get('target_settings', None))
+        return QuantizationSetting.get(module, config)
     if mode == 'distillation':
-        return DistillatoinSetting.get(module, config.get('target_names', None), config.get('target_settings', None))
+        return DistillatoinSetting.get(module, config)

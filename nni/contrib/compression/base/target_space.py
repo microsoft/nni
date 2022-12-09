@@ -10,6 +10,8 @@ from typing import Any, Dict, List
 import torch
 from torch import Tensor
 
+from nni.compression.pytorch.utils.scaling import Scaling
+
 
 class TargetType(Enum):
     INPUT = 'input'
@@ -75,6 +77,7 @@ class PruningTargetSpace(TargetSpace):
     def __init__(self, wrapper: torch.nn.Module, target_name: str, target_type: TargetType, setting: Dict[str, Any] | None = None):
         super().__init__(wrapper, target_name, target_type, setting)
         self._register_mask()
+        self._scaler: Scaling | None = None
 
     def _register_mask(self):
         self._wrapper.register_buffer(self._mask_name, None)

@@ -63,11 +63,12 @@ class Scaling:
         padding `-1` at back of kernel_size until `len(expand_size) == len(kernel_size)`.
     """
 
-    def __init__(self, kernel_size: List[int], kernel_padding_mode: Literal['front', 'back'] = 'front') -> None:
+    def __init__(self, kernel_size: List[int], kernel_padding_mode: Literal['front', 'back'] = 'front', kernel_padding_val: int | None = None) -> None:
         self.kernel_size = kernel_size
         err_msg = f"kernel_padding_mode should be one of ['front', 'back'], but get kernel_padding_mode={kernel_padding_mode}."
         assert kernel_padding_mode in ['front', 'back'], err_msg
         self.kernel_padding_mode = kernel_padding_mode
+        self.kernel_padding_val = kernel_padding_val if kernel_padding_val else (1 if kernel_padding_mode=='front' else -1)
 
     def _padding(self, _list: List[int], length: int, padding_value: int = -1,
                  padding_mode: Literal['front', 'back'] = 'back') -> List[int]:
@@ -168,9 +169,9 @@ class Scaling:
         # If kernel_padding_mode is 'back', padding -1 at the back of `self.kernel_size`.
         # e.g., padding kernel_size [1] to [1, -1, -1] when target size length is 3.
         if self.kernel_padding_mode == 'front':
-            kernel_size = self._padding(self.kernel_size, len(target.shape), 1, 'front')
+            kernel_size = self._padding(self.kernel_size, len(target.shape), self.kernel_padding_val, 'front')
         elif self.kernel_padding_mode == 'back':
-            kernel_size = self._padding(self.kernel_size, len(target.shape), -1, 'back')
+            kernel_size = self._padding(self.kernel_size, len(target.shape), self.kernel_padding_val, 'back')
         else:
             raise ValueError(f'Unsupported kernel padding mode: {self.kernel_padding_mode}.')
         return self._shrink(target, kernel_size, reduce_func)
@@ -178,9 +179,9 @@ class Scaling:
     def expand(self, target: Tensor, expand_size: List[int]):
         # Similar with `self.shrink`, canonicalize kernel_size to expand_size length at first.
         if self.kernel_padding_mode == 'front':
-            kernel_size = self._padding(self.kernel_size, len(expand_size), 1, 'front')
+            kernel_size = self._padding(self.kernel_size, len(expand_size), self.kernel_padding_val, 'front')
         elif self.kernel_padding_mode == 'back':
-            kernel_size = self._padding(self.kernel_size, len(expand_size), -1, 'back')
+            kernel_size = self._padding(self.kernel_size, len(expand_size), self.kernel_padding_val, 'back')
         else:
             raise ValueError(f'Unsupported kernel padding mode: {self.kernel_padding_mode}.')
         return self._expand(target, kernel_size, expand_size)
