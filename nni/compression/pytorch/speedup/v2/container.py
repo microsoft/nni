@@ -9,12 +9,14 @@ class Slot:
         self.value_0 = None
         self.value_1 = None
         self.value_2 = None
+        self.value_3 = None
         self.mask_1 = None
         self.mask_2 = None
         self.status = {
             'value_0': 0,
             'value_1': 0,
             'value_2': 0,
+            'value_3': 0,
             'mask_1': 0,
             'mask_2': 0,
         }

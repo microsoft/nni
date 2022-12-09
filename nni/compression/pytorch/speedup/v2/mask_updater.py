@@ -95,12 +95,13 @@ class DefaultMaskUpdater(MaskUpdater):
         pass
 
     def indirect_update_preprocess(self, model_speedup: 'ModelSpeedup', node: Node):
-        pass
+        model_speedup.slots[node].value_3 = map_recursive(model_speedup.tensor_deleter, model_speedup.slots[node].value_3)
+        model_speedup.slots[node].status['value_3'] += 1
 
     def indirect_update_process(self, model_speedup: 'ModelSpeedup', node: Node):
-        output_2 = map_recursive(model_speedup.slot_getter_value_2, node)
+        output_3 = map_recursive(model_speedup.slot_getter_value_3, node)
         output_masks_1 = map_recursive(model_speedup.slot_getter_mask_1, node)
-        output_masks_2 = map_recursive_zip(model_speedup.indirect_calc_mask, output_masks_1, output_2)
+        output_masks_2 = map_recursive_zip(model_speedup.indirect_calc_mask2, output_masks_1, output_3)
 
         model_speedup.slots[node].mask_2 = output_masks_2
         model_speedup.slots[node].status['mask_2'] += 1
@@ -128,11 +129,11 @@ class DefaultMaskUpdater(MaskUpdater):
 
         map_recursive_zip(model_speedup.indirect_update_param_mask, output, output_masks_2)
 
-        arg_values_2 = map_recursive(model_speedup.slot_getter_value_2, node.args)
-        kwarg_values_2 = map_recursive(model_speedup.slot_getter_value_2, node.kwargs)
+        arg_values_3 = map_recursive(model_speedup.slot_getter_value_3, node.args)
+        kwarg_values_3 = map_recursive(model_speedup.slot_getter_value_3, node.kwargs)
 
-        map_recursive_zip(model_speedup.indirect_pass_grad, arg_values_2, args_rand)
-        map_recursive_zip(model_speedup.indirect_pass_grad, kwarg_values_2, kwargs_rand)
+        map_recursive_zip(model_speedup.indirect_pass_grad2, arg_values_3, args_rand)
+        map_recursive_zip(model_speedup.indirect_pass_grad2, kwarg_values_3, kwargs_rand)
 
         if model_speedup.garbage_collect_values:
             # do memory collect to reduce memory usage
@@ -186,6 +187,7 @@ class LeafModuleMaskUpdater(DefaultMaskUpdater):
 
     # TODO:
 class UnchangeMaskUpdater(DefaultMaskUpdater):
+
     def detect(self, model_speedup: 'ModelSpeedup', node: Node) -> bool:
         """
         the default MaskUpdater for operators that will not change mask value
@@ -193,7 +195,7 @@ class UnchangeMaskUpdater(DefaultMaskUpdater):
         if node.op == 'output':
             return True
         if node.op == 'call_function':
-            if node.target in (getattr, len, operator.is_, operator.is_not, operator.getitem, operator.contains):
+            if node.target in (getattr, len, operator.is_, operator.is_not, operator.contains):
                 return True
         if node.op == 'call_method':
             if node.target in ('dim'):

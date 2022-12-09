@@ -124,6 +124,10 @@ class ModelSpeedup(torch.fx.Interpreter):
         """
         return obj.numel() > self.batch_size and obj.numel() % self.batch_size == 0
 
+    @run_onlyif_instance(torch.Tensor, False)
+    def tensor_deleter(self, _obj: torch.Tensor):
+        return None
+
     @run_onlyif_instance(torch.Tensor)
     def tensor_cloner(self, obj: torch.Tensor):
         return obj.clone()
@@ -135,21 +139,6 @@ class ModelSpeedup(torch.fx.Interpreter):
     @run_onlyif_instance(torch.Tensor)
     def tensor_clone_detacher(self, obj: torch.Tensor):
         return obj.clone().detach()
-
-    @run_onlyif_instance(Node)
-    def slot_getter_value_0(self, node: Node):
-        assert self.slots[node].status['value_0'] == 1, 'slot error: bad value_0(%d)' % self.slots[node].status['value_0']
-        return self.slots[node].value_0
-
-    @run_onlyif_instance(Node)
-    def slot_getter_value_1(self, node: Node):
-        assert self.slots[node].status['value_1'] == 1, 'slot error: bad value_1(%d)' % self.slots[node].status['value_1']
-        return self.slots[node].value_1
-
-    @run_onlyif_instance(Node)
-    def slot_getter_value_2(self, node: Node):
-        assert self.slots[node].status['value_2'] == 1, 'slot error: bad value_2(%d)' % self.slots[node].status['value_2']
-        return self.slots[node].value_2
 
     def tensor_randomizer(self, obj):
         if isinstance(obj, torch.Tensor):
@@ -167,6 +156,40 @@ class ModelSpeedup(torch.fx.Interpreter):
                 return copy.deepcopy(obj)
             except copy.Error:
                 return obj
+
+    def mask_applier(self, value, mask):
+        if isinstance(value, torch.Tensor) and self.tensor_propagate_check(value):
+            assert isinstance(mask, torch.Tensor) and value.shape == mask.shape
+            return value * mask
+        else:
+            assert mask is None
+            return value
+
+    def tensor_requires_grad(self, obj):
+        if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj) and obj.dtype in torch_float_dtype:
+            # only float type can require the gradient
+            # enable the auto gradient
+            obj.requires_grad_(True)
+
+    @run_onlyif_instance(Node)
+    def slot_getter_value_0(self, node: Node):
+        assert self.slots[node].status['value_0'] == 1, 'slot error: bad value_0(%d)' % self.slots[node].status['value_0']
+        return self.slots[node].value_0
+
+    @run_onlyif_instance(Node)
+    def slot_getter_value_1(self, node: Node):
+        assert self.slots[node].status['value_1'] == 1, 'slot error: bad value_1(%d)' % self.slots[node].status['value_1']
+        return self.slots[node].value_1
+
+    @run_onlyif_instance(Node)
+    def slot_getter_value_2(self, node: Node):
+        assert self.slots[node].status['value_2'] == 1, 'slot error: bad value_2(%d)' % self.slots[node].status['value_2']
+        return self.slots[node].value_2
+
+    @run_onlyif_instance(Node)
+    def slot_getter_value_3(self, node: Node):
+        assert self.slots[node].status['value_3'] == 1, 'slot error: bad value_3(%d)' % self.slots[node].status['value_3']
+        return self.slots[node].value_3
 
     @run_onlyif_instance(Node, False)
     def slot_getter_mask_1(self, node: Node):
@@ -189,20 +212,6 @@ class ModelSpeedup(torch.fx.Interpreter):
         else:
             assert self.slots[node].status['mask_2'] >= 1, 'slot error: bad mask_2(%d)' % self.slots[node].status['mask_2']
             return self.slots[node].mask_2
-
-    def mask_applier(self, value, mask):
-        if isinstance(value, torch.Tensor) and self.tensor_propagate_check(value):
-            assert isinstance(mask, torch.Tensor) and value.shape == mask.shape
-            return value * mask
-        else:
-            assert mask is None
-            return value
-
-    def tensor_requires_grad(self, obj):
-        if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj) and obj.dtype in torch_float_dtype:
-            # only float type can require the gradient
-            # enable the auto gradient
-            obj.requires_grad_(True)
 
     # utils for direct update tand indirect update
     def direct_calc_mask(self, obj):
@@ -236,6 +245,18 @@ class ModelSpeedup(torch.fx.Interpreter):
                 return new_mask
         return mask
 
+    def indirect_calc_mask2(self, mask, obj):
+        if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj):
+            assert isinstance(mask, torch.Tensor) and obj.shape == mask.shape
+            gradient_sum = torch.sum(torch.abs(obj), dim=0)
+            _grad_zero = gradient_sum == 0
+            new_mask = mask.clone()
+            for batchid in range(obj.size(0)):
+                # set the same mask value for the whole batche
+                new_mask[batchid][_grad_zero] = 0
+            return new_mask
+        return mask
+
     def indirect_update_param_mask(self, output, mask):
         # Note: output maybe tensor or list/tuple of tensors
         if isinstance(output, torch.Tensor) and self.tensor_propagate_check(output):
@@ -255,6 +276,21 @@ class ModelSpeedup(torch.fx.Interpreter):
                 elif slot_val.grad is None:
                     slot_val.grad = out.grad
                 elif slot_val.grad is not None and out.grad is None:
+                    # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
+                    # the size operation of tin will have no gradient
+                    pass
+        else:
+            assert not isinstance(out, torch.Tensor)
+
+    # # pass the gradient to the predecessor nodes
+    def indirect_pass_grad2(self, slot_val, out):
+        if isinstance(out, torch.Tensor):
+            if self.tensor_propagate_check(out):
+                if slot_val is not None and out.grad is not None:
+                    slot_val += out.grad
+                elif slot_val is None:
+                    slot_val = out.grad
+                elif slot_val is not None and out.grad is None:
                     # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
                     # the size operation of tin will have no gradient
                     pass

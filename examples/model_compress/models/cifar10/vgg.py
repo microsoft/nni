@@ -43,7 +43,8 @@ class VGG(nn.Module):
 
     def forward(self, x):
         x = self.feature(x)
-        x = nn.AvgPool2d(2)(x)
+        # x = nn.AvgPool2d(2)(x)
+        x = nn.functional.avg_pool2d(x, 2)
         x = x.view(x.size(0), -1)
         y = self.classifier(x)
         return y
