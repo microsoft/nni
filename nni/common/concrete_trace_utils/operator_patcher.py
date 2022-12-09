@@ -8,7 +8,7 @@ import logging
 from functools import lru_cache
 from textwrap import dedent
 from types import MethodType, FunctionType
-from typing import List
+from typing import List, Optional
 
 import torch
 
@@ -146,12 +146,11 @@ class OperatorPatcher:
     transformer_op = TransformerOp()
 
     def __init__(self, use_operator_patch: bool, operator_patch_backlist: List[str]):
-        super().__init__()
         self.use_operator_patch = use_operator_patch
         self.operator_patch_backlist = operator_patch_backlist
 
     @lru_cache
-    def patch(self, func):
+    def patch_inner(self, func):
         if not hasattr(func, '__module__') or func.__module__ is None or func.__module__.startswith('torch'):
             return func
         if self.use_operator_patch == (func in self.operator_patch_backlist):
@@ -198,3 +197,16 @@ class OperatorPatcher:
             exec(compile(new_tree, func.__code__.co_filename, 'exec'),
                  func.__globals__, var_dict)
             return var_dict['new_func']
+
+class OperatorPatcherContext:
+    patcher: Optional[OperatorPatcher] = None
+
+    @staticmethod
+    def create(use_operator_patch: bool, operator_patch_backlist: List[str]):
+        assert OperatorPatcherContext.patcher is None
+        OperatorPatcherContext.patcher = OperatorPatcher(use_operator_patch, operator_patch_backlist)
+
+    @staticmethod
+    def patch(func):
+        assert OperatorPatcherContext.patcher is not None
+        return OperatorPatcherContext.patcher.patch_inner(func)
