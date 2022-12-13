@@ -15,17 +15,18 @@ try:
 except ImportError:
     from typing_extensions import Literal
 
+import nni
 import torch
-
-import nni.nas.nn.pytorch as nn
-from nni.nas import model_wrapper
+from torch import nn
+from nni.mutable import MutableExpression, Sample
+from nni.nas.nn.pytorch import ModelSpace, Repeat, Cell, MutableConv2d, MutableBatchNorm2d, MutableLinear, model_context
 
 from nni.nas.oneshot.pytorch.supermodule.sampling import PathSamplingRepeat
 from nni.nas.oneshot.pytorch.supermodule.differentiable import DifferentiableMixedRepeat
 
-from .utils.fixed import FixedFactory
 from .utils.pretrained import load_pretrained_weight
 
+MaybeIntChoice = Union[int, MutableExpression]
 
 # the following are NAS operations from
 # https://github.com/facebookresearch/unnas/blob/main/pycls/models/nas/operations.py
@@ -52,14 +53,14 @@ OPS = {
     'conv_1x1': lambda C, stride, affine:
         nn.Sequential(
             nn.ReLU(inplace=False),
-            nn.Conv2d(C, C, 1, stride=stride, padding=0, bias=False),
-            nn.BatchNorm2d(C, affine=affine)
+            MutableConv2d(C, C, 1, stride=stride, padding=0, bias=False),
+            MutableBatchNorm2d(C, affine=affine)
         ),
     'conv_3x3': lambda C, stride, affine:
         nn.Sequential(
             nn.ReLU(inplace=False),
-            nn.Conv2d(C, C, 3, stride=stride, padding=1, bias=False),
-            nn.BatchNorm2d(C, affine=affine)
+            MutableConv2d(C, C, 3, stride=stride, padding=1, bias=False),
+            MutableBatchNorm2d(C, affine=affine)
         ),
     'sep_conv_3x3': lambda C, stride, affine:
         SepConv(C, C, 3, stride, 1, affine=affine),
@@ -76,16 +77,16 @@ OPS = {
     'conv_3x1_1x3': lambda C, stride, affine:
         nn.Sequential(
             nn.ReLU(inplace=False),
-            nn.Conv2d(C, C, (1, 3), stride=(1, stride), padding=(0, 1), bias=False),
-            nn.Conv2d(C, C, (3, 1), stride=(stride, 1), padding=(1, 0), bias=False),
-            nn.BatchNorm2d(C, affine=affine)
+            MutableConv2d(C, C, (1, 3), stride=(1, stride), padding=(0, 1), bias=False),
+            MutableConv2d(C, C, (3, 1), stride=(stride, 1), padding=(1, 0), bias=False),
+            MutableBatchNorm2d(C, affine=affine)
         ),
     'conv_7x1_1x7': lambda C, stride, affine:
         nn.Sequential(
             nn.ReLU(inplace=False),
-            nn.Conv2d(C, C, (1, 7), stride=(1, stride), padding=(0, 3), bias=False),
-            nn.Conv2d(C, C, (7, 1), stride=(stride, 1), padding=(3, 0), bias=False),
-            nn.BatchNorm2d(C, affine=affine)
+            MutableConv2d(C, C, (1, 7), stride=(1, stride), padding=(0, 3), bias=False),
+            MutableConv2d(C, C, (7, 1), stride=(stride, 1), padding=(3, 0), bias=False),
+            MutableBatchNorm2d(C, affine=affine)
         ),
 }
 
@@ -95,11 +96,11 @@ class ReLUConvBN(nn.Sequential):
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
         super().__init__(
             nn.ReLU(inplace=False),
-            nn.Conv2d(
+            MutableConv2d(
                 C_in, C_out, kernel_size, stride=stride,
                 padding=padding, bias=False
             ),
-            nn.BatchNorm2d(C_out, affine=affine)
+            MutableBatchNorm2d(C_out, affine=affine)
         )
 
 
@@ -108,12 +109,12 @@ class DilConv(nn.Sequential):
     def __init__(self, C_in, C_out, kernel_size, stride, padding, dilation, affine=True):
         super().__init__(
             nn.ReLU(inplace=False),
-            nn.Conv2d(
+            MutableConv2d(
                 C_in, C_in, kernel_size=kernel_size, stride=stride,
                 padding=padding, dilation=dilation, groups=C_in, bias=False
             ),
-            nn.Conv2d(C_in, C_out, kernel_size=1, padding=0, bias=False),
-            nn.BatchNorm2d(C_out, affine=affine),
+            MutableConv2d(C_in, C_out, kernel_size=1, padding=0, bias=False),
+            MutableBatchNorm2d(C_out, affine=affine),
         )
 
 
@@ -122,19 +123,19 @@ class SepConv(nn.Sequential):
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
         super().__init__(
             nn.ReLU(inplace=False),
-            nn.Conv2d(
+            MutableConv2d(
                 C_in, C_in, kernel_size=kernel_size, stride=stride,
                 padding=padding, groups=C_in, bias=False
             ),
-            nn.Conv2d(C_in, C_in, kernel_size=1, padding=0, bias=False),
-            nn.BatchNorm2d(C_in, affine=affine),
+            MutableConv2d(C_in, C_in, kernel_size=1, padding=0, bias=False),
+            MutableBatchNorm2d(C_in, affine=affine),
             nn.ReLU(inplace=False),
-            nn.Conv2d(
+            MutableConv2d(
                 C_in, C_in, kernel_size=kernel_size, stride=1,
                 padding=padding, groups=C_in, bias=False
             ),
-            nn.Conv2d(C_in, C_out, kernel_size=1, padding=0, bias=False),
-            nn.BatchNorm2d(C_out, affine=affine),
+            MutableConv2d(C_in, C_out, kernel_size=1, padding=0, bias=False),
+            MutableBatchNorm2d(C_out, affine=affine),
         )
 
 
@@ -143,19 +144,19 @@ class DilSepConv(nn.Sequential):
     def __init__(self, C_in, C_out, kernel_size, stride, padding, dilation, affine=True):
         super().__init__(
             nn.ReLU(inplace=False),
-            nn.Conv2d(
+            MutableConv2d(
                 C_in, C_in, kernel_size=kernel_size, stride=stride,
                 padding=padding, dilation=dilation, groups=C_in, bias=False
             ),
-            nn.Conv2d(C_in, C_in, kernel_size=1, padding=0, bias=False),
-            nn.BatchNorm2d(C_in, affine=affine),
+            MutableConv2d(C_in, C_in, kernel_size=1, padding=0, bias=False),
+            MutableBatchNorm2d(C_in, affine=affine),
             nn.ReLU(inplace=False),
-            nn.Conv2d(
+            MutableConv2d(
                 C_in, C_in, kernel_size=kernel_size, stride=1,
                 padding=padding, dilation=dilation, groups=C_in, bias=False
             ),
-            nn.Conv2d(C_in, C_out, kernel_size=1, padding=0, bias=False),
-            nn.BatchNorm2d(C_out, affine=affine),
+            MutableConv2d(C_in, C_out, kernel_size=1, padding=0, bias=False),
+            MutableBatchNorm2d(C_out, affine=affine),
         )
 
 
@@ -178,11 +179,11 @@ class FactorizedReduce(nn.Module):
         if isinstance(C_out, int):
             assert C_out % 2 == 0
         else:   # is a value choice
-            assert all(c % 2 == 0 for c in C_out.all_options())
+            assert all(c % 2 == 0 for c in C_out.grid())
         self.relu = nn.ReLU(inplace=False)
-        self.conv_1 = nn.Conv2d(C_in, C_out // 2, 1, stride=2, padding=0, bias=False)
-        self.conv_2 = nn.Conv2d(C_in, C_out // 2, 1, stride=2, padding=0, bias=False)
-        self.bn = nn.BatchNorm2d(C_out, affine=affine)
+        self.conv_1 = MutableConv2d(C_in, C_out // 2, 1, stride=2, padding=0, bias=False)
+        self.conv_2 = MutableConv2d(C_in, C_out // 2, 1, stride=2, padding=0, bias=False)
+        self.bn = MutableBatchNorm2d(C_out, affine=affine)
         self.pad = nn.ConstantPad2d((0, 1, 0, 1), 0)
 
     def forward(self, x):
@@ -219,14 +220,14 @@ class AuxiliaryHead(nn.Module):
         self.features = nn.Sequential(
             nn.ReLU(inplace=True),
             nn.AvgPool2d(5, stride=stride, padding=0, count_include_pad=False),
-            nn.Conv2d(C, 128, 1, bias=False),
-            nn.BatchNorm2d(128),
+            MutableConv2d(C, 128, 1, bias=False),
+            MutableBatchNorm2d(128),
             nn.ReLU(inplace=True),
-            nn.Conv2d(128, 768, 2, bias=False),
-            nn.BatchNorm2d(768),
+            MutableConv2d(128, 768, 2, bias=False),
+            MutableBatchNorm2d(768),
             nn.ReLU(inplace=True)
         )
-        self.classifier = nn.Linear(768, num_labels)
+        self.classifier = MutableLinear(768, num_labels)
 
     def forward(self, x):
         x = self.features(x)
@@ -242,7 +243,7 @@ class CellPreprocessor(nn.Module):
     See :class:`CellBuilder` on how to calculate those channel numbers.
     """
 
-    def __init__(self, C_pprev: nn.MaybeChoice[int], C_prev: nn.MaybeChoice[int], C: nn.MaybeChoice[int], last_cell_reduce: bool) -> None:
+    def __init__(self, C_pprev: MaybeIntChoice, C_prev: MaybeIntChoice, C: MaybeIntChoice, last_cell_reduce: bool) -> None:
         super().__init__()
 
         if last_cell_reduce:
@@ -276,9 +277,9 @@ class CellBuilder:
     """
 
     def __init__(self, op_candidates: List[str],
-                 C_prev_in: nn.MaybeChoice[int],
-                 C_in: nn.MaybeChoice[int],
-                 C: nn.MaybeChoice[int],
+                 C_prev_in: MaybeIntChoice,
+                 C_in: MaybeIntChoice,
+                 C: MaybeIntChoice,
                  num_nodes: int,
                  merge_op: Literal['all', 'loose_end'],
                  first_cell_reduce: bool, last_cell_reduce: bool,
@@ -330,9 +331,9 @@ class CellBuilder:
         for op in self.op_candidates:
             ops_factory[op] = partial(self.op_factory, op=op, channels=cast(int, self.C), is_reduction_cell=is_reduction_cell)
 
-        cell = nn.Cell(ops_factory, self.num_nodes, self.num_ops_per_node, self.num_predecessors, self.merge_op,
-                       preprocessor=preprocessor, postprocessor=CellPostprocessor(),
-                       label='reduce' if is_reduction_cell else 'normal')
+        cell = Cell(ops_factory, self.num_nodes, self.num_ops_per_node, self.num_predecessors, self.merge_op,
+                    preprocessor=preprocessor, postprocessor=CellPostprocessor(),
+                    label='reduce' if is_reduction_cell else 'normal')
 
         # update state
         self.C_prev_in = self.C_in
@@ -343,7 +344,7 @@ class CellBuilder:
         return cell
 
 
-class NDSStage(nn.Repeat):
+class NDSStage(Repeat):
     """This class defines NDSStage, a special type of Repeat, for isinstance check, and shape alignment.
 
     In NDS, we can't simply use Repeat to stack the blocks,
@@ -386,7 +387,7 @@ class NDSStagePathSampling(PathSamplingRepeat):
     """The path-sampling implementation (for one-shot) of each NDS stage if depth is mutating."""
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
-        if isinstance(module, NDSStage) and isinstance(module.depth_choice, nn.choice.ValueChoiceX):
+        if isinstance(module, NDSStage) and isinstance(module.depth_choice, MutableExpression):
             return cls(
                 module.first_cell_transformation_factory(),
                 cast(List[nn.Module], module.blocks),
@@ -411,7 +412,7 @@ class NDSStageDifferentiable(DifferentiableMixedRepeat):
     """The differentiable implementation (for one-shot) of each NDS stage if depth is mutating."""
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
-        if isinstance(module, NDSStage) and isinstance(module.depth_choice, nn.choice.ValueChoiceX):
+        if isinstance(module, NDSStage) and isinstance(module.depth_choice, MutableExpression):
             # Only interesting when depth is mutable
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
             return cls(
@@ -444,12 +445,12 @@ _INIT_PARAMETER_DOCS = """
 
     To use NDS spaces with one-shot strategies,
     especially when depth is mutating (i.e., ``num_cells`` is set to a tuple / list),
-    please use :class:`~nni.retiarii.hub.pytorch.nasnet.NDSStagePathSampling` (with ENAS and RandomOneShot)
-    and :class:`~nni.retiarii.hub.pytorch.nasnet.NDSStageDifferentiable` (with DARTS and Proxyless) into ``mutation_hooks``.
-    This is because the output shape of each stacked block in :class:`~nni.retiarii.hub.pytorch.nasnet.NDSStage` can be different.
+    please use :class:`~nni.nas.hub.pytorch.nasnet.NDSStagePathSampling` (with ENAS and RandomOneShot)
+    and :class:`~nni.nas.hub.pytorch.nasnet.NDSStageDifferentiable` (with DARTS and Proxyless) into ``mutation_hooks``.
+    This is because the output shape of each stacked block in :class:`~nni.nas.hub.pytorch.nasnet.NDSStage` can be different.
     For example::
 
-        from nni.retiarii.hub.pytorch.nasnet import NDSStageDifferentiable
+        from nni.nas.hub.pytorch.nasnet import NDSStageDifferentiable
         darts_strategy = strategy.DARTS(mutation_hooks=[NDSStageDifferentiable.mutate])
 
     Parameters
@@ -470,7 +471,7 @@ _INIT_PARAMETER_DOCS = """
 """
 
 
-class NDS(nn.Module):
+class NDS(ModelSpace):
     __doc__ = """
     The unified version of NASNet search space.
 
@@ -487,9 +488,9 @@ class NDS(nn.Module):
     op_candidates
         List of operator candidates. Must be from ``OPS``.
     merge_op
-        See :class:`~nni.retiarii.nn.pytorch.Cell`.
+        See :class:`~nni.nas.nn.pytorch.Cell`.
     num_nodes_per_cell
-        See :class:`~nni.retiarii.nn.pytorch.Cell`.
+        See :class:`~nni.nas.nn.pytorch.Cell`.
     """
 
     def __init__(self,
@@ -503,6 +504,11 @@ class NDS(nn.Module):
                  drop_path_prob: float = 0.):
         super().__init__()
 
+        self.op_candidates = op_candidates
+        self.merge_op = merge_op
+        self.num_nodes_per_cell = num_nodes_per_cell
+        self.width = width
+        self.num_cells = num_cells
         self.dataset = dataset
         self.num_labels = 10 if dataset == 'cifar' else 1000
         self.auxiliary_loss = auxiliary_loss
@@ -510,35 +516,35 @@ class NDS(nn.Module):
 
         # preprocess the specified width and depth
         if isinstance(width, Iterable):
-            C = nn.ValueChoice(list(width), label='width')
+            C = nni.choice('width', list(width))
         else:
             C = width
 
-        self.num_cells: nn.MaybeChoice[int] = cast(int, num_cells)
+        self.num_cells: MaybeIntChoice = cast(int, num_cells)
         if isinstance(num_cells, Iterable):
-            self.num_cells = nn.ValueChoice(list(num_cells), label='depth')
+            self.num_cells = nni.choice('depth', list(num_cells))
         num_cells_per_stage = [(i + 1) * self.num_cells // 3 - i * self.num_cells // 3 for i in range(3)]
 
         # auxiliary head is different for network targetted at different datasets
         if dataset == 'imagenet':
             self.stem0 = nn.Sequential(
-                nn.Conv2d(3, cast(int, C // 2), kernel_size=3, stride=2, padding=1, bias=False),
-                nn.BatchNorm2d(cast(int, C // 2)),
+                MutableConv2d(3, cast(int, C // 2), kernel_size=3, stride=2, padding=1, bias=False),
+                MutableBatchNorm2d(cast(int, C // 2)),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(cast(int, C // 2), cast(int, C), 3, stride=2, padding=1, bias=False),
-                nn.BatchNorm2d(C),
+                MutableConv2d(cast(int, C // 2), cast(int, C), 3, stride=2, padding=1, bias=False),
+                MutableBatchNorm2d(C),
             )
             self.stem1 = nn.Sequential(
                 nn.ReLU(inplace=True),
-                nn.Conv2d(cast(int, C), cast(int, C), 3, stride=2, padding=1, bias=False),
-                nn.BatchNorm2d(C),
+                MutableConv2d(cast(int, C), cast(int, C), 3, stride=2, padding=1, bias=False),
+                MutableBatchNorm2d(C),
             )
             C_pprev = C_prev = C_curr = C
             last_cell_reduce = True
         elif dataset == 'cifar':
             self.stem = nn.Sequential(
-                nn.Conv2d(3, cast(int, 3 * C), 3, padding=1, bias=False),
-                nn.BatchNorm2d(cast(int, 3 * C))
+                MutableConv2d(3, cast(int, 3 * C), 3, padding=1, bias=False),
+                MutableBatchNorm2d(cast(int, 3 * C))
             )
             C_pprev = C_prev = 3 * C
             C_curr = C
@@ -572,7 +578,7 @@ class NDS(nn.Module):
             # C_pprev is output channel number of last second cell among all the cells already built.
             if len(stage) > 1:
                 # Contains more than one cell
-                C_pprev = len(cast(nn.Cell, stage[-2]).output_node_indices) * C_curr
+                C_pprev = len(cast(Cell, stage[-2]).output_node_indices) * C_curr
             else:
                 # Look up in the out channels of last stage.
                 C_pprev = C_prev
@@ -580,7 +586,7 @@ class NDS(nn.Module):
             # This was originally,
             # C_prev = num_nodes_per_cell * C_curr.
             # but due to loose end, it becomes,
-            C_prev = len(cast(nn.Cell, stage[-1]).output_node_indices) * C_curr
+            C_prev = len(cast(Cell, stage[-1]).output_node_indices) * C_curr
 
             # Useful in aligning the pprev and prev cell.
             last_cell_reduce = cell_builder.last_cell_reduce
@@ -593,7 +599,7 @@ class NDS(nn.Module):
             self.auxiliary_head = AuxiliaryHead(C_to_auxiliary, self.num_labels, dataset=self.dataset)  # type: ignore
 
         self.global_pooling = nn.AdaptiveAvgPool2d((1, 1))
-        self.classifier = nn.Linear(cast(int, C_prev), self.num_labels)
+        self.classifier = MutableLinear(cast(int, C_prev), self.num_labels)
 
     def forward(self, inputs):
         if self.dataset == 'imagenet':
@@ -620,6 +626,33 @@ class NDS(nn.Module):
         else:
             return logits
 
+    def freeze(self, sample: Sample) -> None:
+        """Freeze the model according to the sample.
+
+        As different stages have dependencies among each other, we will recreate the whole model for simplicity.
+        For weight inheritance purposes, this :meth:`freeze` might require re-writing.
+
+        Parameters
+        ----------
+        sample
+            The architecture dict.
+
+        See Also
+        --------
+        nni.nas.nn.pytorch.MutableModule.freeze
+        """
+        with model_context(sample):
+            return NDS(
+                self.op_candidates,
+                self.merge_op,
+                self.num_nodes_per_cell,
+                self.width,
+                self.num_cells,
+                self.dataset,
+                self.auxiliary_loss,
+                self.drop_path_prob
+            )
+
     def set_drop_path_prob(self, drop_prob):
         """
         Set the drop probability of Drop-path in the network.
@@ -629,17 +662,12 @@ class NDS(nn.Module):
             if isinstance(module, DropPath_):
                 module.drop_prob = drop_prob
 
-    @classmethod
-    def fixed_arch(cls, arch: dict) -> FixedFactory:
-        return FixedFactory(cls, arch)
 
-
-@model_wrapper
 class NASNet(NDS):
     __doc__ = """
     Search space proposed in `Learning Transferable Architectures for Scalable Image Recognition <https://arxiv.org/abs/1707.07012>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    It is built upon :class:`~nni.nas.nn.pytorch.Cell`, and implemented based on :class:`~nni.nas.hub.pytorch.nasnet.NDS`.
     Its operator candidates are :attr:`~NASNet.NASNET_OPS`.
     It has 5 nodes per cell, and the output is concatenation of nodes not used as input to other nodes.
     """ + _INIT_PARAMETER_DOCS
@@ -677,11 +705,10 @@ class NASNet(NDS):
                          drop_path_prob=drop_path_prob)
 
 
-@model_wrapper
 class ENAS(NDS):
     __doc__ = """Search space proposed in `Efficient neural architecture search via parameter sharing <https://arxiv.org/abs/1802.03268>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    It is built upon :class:`~nni.nas.nn.pytorch.Cell`, and implemented based on :class:`~nni.nas.hub.pytorch.nasnet.NDS`.
     Its operator candidates are :attr:`~ENAS.ENAS_OPS`.
     It has 5 nodes per cell, and the output is concatenation of nodes not used as input to other nodes.
     """ + _INIT_PARAMETER_DOCS
@@ -711,12 +738,11 @@ class ENAS(NDS):
                          drop_path_prob=drop_path_prob)
 
 
-@model_wrapper
 class AmoebaNet(NDS):
     __doc__ = """Search space proposed in
     `Regularized evolution for image classifier architecture search <https://arxiv.org/abs/1802.01548>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    It is built upon :class:`~nni.nas.nn.pytorch.Cell`, and implemented based on :class:`~nni.nas.hub.pytorch.nasnet.NDS`.
     Its operator candidates are :attr:`~AmoebaNet.AMOEBA_OPS`.
     It has 5 nodes per cell, and the output is concatenation of nodes not used as input to other nodes.
     """ + _INIT_PARAMETER_DOCS
@@ -750,12 +776,11 @@ class AmoebaNet(NDS):
                          drop_path_prob=drop_path_prob)
 
 
-@model_wrapper
 class PNAS(NDS):
     __doc__ = """Search space proposed in
     `Progressive neural architecture search <https://arxiv.org/abs/1712.00559>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    It is built upon :class:`~nni.nas.nn.pytorch.Cell`, and implemented based on :class:`~nni.nas.hub.pytorch.nasnet.NDS`.
     Its operator candidates are :attr:`~PNAS.PNAS_OPS`.
     It has 5 nodes per cell, and the output is concatenation of all nodes in the cell.
     """ + _INIT_PARAMETER_DOCS
@@ -788,11 +813,10 @@ class PNAS(NDS):
                          drop_path_prob=drop_path_prob)
 
 
-@model_wrapper
 class DARTS(NDS):
     __doc__ = """Search space proposed in `Darts: Differentiable architecture search <https://arxiv.org/abs/1806.09055>`__.
 
-    It is built upon :class:`~nni.retiarii.nn.pytorch.Cell`, and implemented based on :class:`~nni.retiarii.hub.pytorch.nasnet.NDS`.
+    It is built upon :class:`~nni.nas.nn.pytorch.Cell`, and implemented based on :class:`~nni.nas.hub.pytorch.nasnet.NDS`.
     Its operator candidates are :attr:`~DARTS.DARTS_OPS`.
     It has 4 nodes per cell, and the output is concatenation of all nodes in the cell.
 
@@ -881,7 +905,7 @@ class DARTS(NDS):
         else:
             raise ValueError(f'Unsupported architecture with name: {name}')
 
-        model_factory = cls.fixed_arch(arch)
+        model_factory = cls.frozen_factory(arch)
         model = model_factory(**init_kwargs)
 
         if pretrained:

@@ -4,17 +4,15 @@
 from typing import Optional, Tuple, cast, Any, Dict, Union
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 
-import nni.nas.nn.pytorch as nn
-from nni.nas import model_wrapper, basic_unit
-from nni.nas.fixed import no_fixed_arch
-from nni.nas.nn.pytorch.choice import ValueChoiceX
+import nni
+from nni.nas.nn.pytorch import ParametrizedModule, ModelSpace, Repeat, MutableConv2d, MutableLinear, MutableLayerNorm
+from nni.mutable import Categorical, MutableExpression, frozen_context
 from nni.nas.oneshot.pytorch.supermodule.operation import MixedOperation
-from nni.nas.oneshot.pytorch.supermodule._valuechoice_utils import traverse_all_options
 from nni.nas.oneshot.pytorch.supermodule._operation_utils import Slicable as _S, MaybeWeighted as _W
 
-from .utils.fixed import FixedFactory
 from .utils.pretrained import load_pretrained_weight
 
 try:
@@ -45,7 +43,7 @@ class RelativePosition2D(nn.Module):
         # compute the row and column distance
         length_q_sqrt = int(length_q ** 0.5)
         distance_mat_v = (range_vec_k[None, :] // length_q_sqrt - range_vec_q[:, None] // length_q_sqrt)
-        distance_mat_h = (range_vec_k[None, :]  % length_q_sqrt - range_vec_q[:, None]  % length_q_sqrt)
+        distance_mat_h = (range_vec_k[None, :] % length_q_sqrt - range_vec_q[:, None] % length_q_sqrt)
         # clip the distance to the range of [-legnth, legnth]
         distance_mat_clipped_v = torch.clamp(distance_mat_v, - self.legnth, self.legnth)
         distance_mat_clipped_h = torch.clamp(distance_mat_h, - self.legnth, self.legnth)
@@ -64,6 +62,7 @@ class RelativePosition2D(nn.Module):
 
         return embeddings
 
+
 class RelativePositionAttention(nn.Module):
     """
     This class is designed to support the relative position in attention.
@@ -73,6 +72,7 @@ class RelativePositionAttention(nn.Module):
     It is commonly calculated via a look-up table with learnable parameters interacting with queries
     and keys in self-attention modules.
     """
+
     def __init__(
             self, embed_dim, num_heads,
             attn_drop=0., proj_drop=0.,
@@ -86,12 +86,12 @@ class RelativePositionAttention(nn.Module):
         self.scale = qk_scale or head_dim ** -0.5
 
         # Please refer to MixedMultiheadAttention for details.
-        self.q = nn.Linear(embed_dim, head_dim * num_heads, bias = qkv_bias)
-        self.k = nn.Linear(embed_dim, head_dim * num_heads, bias = qkv_bias)
-        self.v = nn.Linear(embed_dim, head_dim * num_heads, bias = qkv_bias)
+        self.q = MutableLinear(embed_dim, head_dim * num_heads, bias=qkv_bias)
+        self.k = MutableLinear(embed_dim, head_dim * num_heads, bias=qkv_bias)
+        self.v = MutableLinear(embed_dim, head_dim * num_heads, bias=qkv_bias)
 
         self.attn_drop = nn.Dropout(attn_drop)
-        self.proj = nn.Linear(head_dim * num_heads, embed_dim)
+        self.proj = MutableLinear(head_dim * num_heads, embed_dim)
         self.proj_drop = nn.Dropout(proj_drop)
         self.rpe = rpe
         if rpe:
@@ -140,8 +140,9 @@ class TransformerEncoderLayer(nn.Module):
     This class is designed to support the RelativePositionAttention().
     The pytorch build-in nn.TransformerEncoderLayer() does not support customed attention.
     """
+
     def __init__(
-        self, embed_dim, num_heads, mlp_ratio: Union[int, float, nn.ValueChoice]=4.,
+        self, embed_dim, num_heads, mlp_ratio: Union[int, float, Categorical[int]] = 4.,
         qkv_bias=False, qk_scale=None, rpe=False,
         drop_rate=0., attn_drop=0., proj_drop=0., drop_path=0.,
         pre_norm=True, rpe_length=14, head_dim=64
@@ -163,17 +164,17 @@ class TransformerEncoderLayer(nn.Module):
             head_dim=head_dim
         )
 
-        self.attn_layer_norm = nn.LayerNorm(embed_dim)
-        self.ffn_layer_norm = nn.LayerNorm(embed_dim)
+        self.attn_layer_norm = MutableLayerNorm(embed_dim)
+        self.ffn_layer_norm = MutableLayerNorm(embed_dim)
 
         self.activation_fn = nn.GELU()
 
-        self.fc1 = nn.Linear(
+        self.fc1 = MutableLinear(
             cast(int, embed_dim),
-            cast(int, nn.ValueChoice.to_int(embed_dim * mlp_ratio))
+            cast(int, MutableExpression.to_int(embed_dim * mlp_ratio))
         )
-        self.fc2 = nn.Linear(
-            cast(int, nn.ValueChoice.to_int(embed_dim * mlp_ratio)),
+        self.fc2 = MutableLinear(
+            cast(int, MutableExpression.to_int(embed_dim * mlp_ratio)),
             cast(int, embed_dim)
         )
 
@@ -213,10 +214,10 @@ class TransformerEncoderLayer(nn.Module):
         return x
 
 
-@basic_unit
-class ClsToken(nn.Module):
+class ClsToken(ParametrizedModule):
     """ Concat class token with dim=embed_dim before patch embedding.
     """
+
     def __init__(self, embed_dim: int):
         super().__init__()
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
@@ -238,8 +239,8 @@ class MixedClsToken(MixedOperation, ClsToken):
     bound_type = ClsToken
     argument_list = ['embed_dim']
 
-    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
-        return max(traverse_all_options(value_choice))
+    def super_init_argument(self, name: str, value_choice: MutableExpression):
+        return max(value_choice.grid())
 
     def slice_param(self, embed_dim, **kwargs) -> Any:
         embed_dim_ = _W(embed_dim)
@@ -248,16 +249,17 @@ class MixedClsToken(MixedOperation, ClsToken):
         return {'cls_token': cls_token}
 
     def forward_with_args(self, embed_dim,
-                        inputs: torch.Tensor) -> torch.Tensor:
+                          inputs: torch.Tensor) -> torch.Tensor:
         cls_token = self.slice_param(embed_dim)['cls_token']
         assert isinstance(cls_token, torch.Tensor)
 
         return torch.cat((cls_token.expand(inputs.shape[0], -1, -1), inputs), dim=1)
 
-@basic_unit
-class AbsPosEmbed(nn.Module):
+
+class AbsPosEmbed(ParametrizedModule):
     """ Add absolute position embedding on patch embedding.
     """
+
     def __init__(self, length: int, embed_dim: int):
         super().__init__()
         self.pos_embed = nn.Parameter(torch.zeros(1, length, embed_dim))
@@ -279,7 +281,7 @@ class MixedAbsPosEmbed(MixedOperation, AbsPosEmbed):
     bound_type = AbsPosEmbed
     argument_list = ['embed_dim']
 
-    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
+    def super_init_argument(self, name: str, value_choice: MutableExpression):
         return max(traverse_all_options(value_choice))
 
     def slice_param(self, embed_dim, **kwargs) -> Any:
@@ -288,16 +290,15 @@ class MixedAbsPosEmbed(MixedOperation, AbsPosEmbed):
 
         return {'pos_embed': pos_embed}
 
-    def forward_with_args(self,  embed_dim,
-                        inputs: torch.Tensor) -> torch.Tensor:
+    def forward_with_args(self, embed_dim,
+                          inputs: torch.Tensor) -> torch.Tensor:
         pos_embed = self.slice_param(embed_dim)['pos_embed']
         assert isinstance(pos_embed, torch.Tensor)
 
         return inputs + pos_embed
 
 
-@model_wrapper
-class AutoformerSpace(nn.Module):
+class AutoformerSpace(ModelSpace):
     """
     The search space that is proposed in `Autoformer <https://arxiv.org/abs/2107.00651>`__.
     There are four searchable variables: depth, embedding dimension, heads number and MLP ratio.
@@ -366,34 +367,34 @@ class AutoformerSpace(nn.Module):
             raise ImportError('timm must be installed to use AutoFormer.')
 
         # define search space parameters
-        embed_dim = nn.ValueChoice(list(search_embed_dim), label="embed_dim")
-        depth = nn.ValueChoice(list(search_depth), label="depth")
-        mlp_ratios = [nn.ValueChoice(list(search_mlp_ratio), label=f"mlp_ratio_{i}") for i in range(max(search_depth))]
-        num_heads = [nn.ValueChoice(list(search_num_heads), label=f"num_head_{i}") for i in range(max(search_depth))]
+        embed_dim = nni.choice("embed_dim", list(search_embed_dim))
+        depth = nni.choice("depth", list(search_depth))
+        mlp_ratios = [nni.choice(f"mlp_ratio_{i}", list(search_mlp_ratio)) for i in range(max(search_depth))]
+        num_heads = [nni.choice(f"num_head_{i}", list(search_num_heads)) for i in range(max(search_depth))]
 
-        self.patch_embed = nn.Conv2d(
+        self.patch_embed = MutableConv2d(
             in_chans, cast(int, embed_dim),
-            kernel_size = patch_size,
-            stride = patch_size
+            kernel_size=patch_size,
+            stride=patch_size
         )
         self.patches_num = int((img_size // patch_size) ** 2)
         self.global_pool = global_pool
 
         self.cls_token = ClsToken(cast(int, embed_dim))
-        self.pos_embed = AbsPosEmbed(self.patches_num+1, cast(int, embed_dim)) if abs_pos else nn.Identity()
+        self.pos_embed = AbsPosEmbed(self.patches_num + 1, cast(int, embed_dim)) if abs_pos else nn.Identity()
 
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, max(search_depth))]  # stochastic depth decay rule
 
-        self.blocks = nn.Repeat(
+        self.blocks = Repeat(
             lambda index: TransformerEncoderLayer(
-                embed_dim = embed_dim, num_heads = num_heads[index], mlp_ratio=mlp_ratios[index],
-                qkv_bias = qkv_bias, drop_rate = drop_rate, attn_drop = attn_drop_rate, drop_path=dpr[index],
-                rpe_length=img_size // patch_size, qk_scale=qk_scale, rpe=rpe, pre_norm=pre_norm, head_dim = 64
+                embed_dim=embed_dim, num_heads=num_heads[index], mlp_ratio=mlp_ratios[index],
+                qkv_bias=qkv_bias, drop_rate=drop_rate, attn_drop=attn_drop_rate, drop_path=dpr[index],
+                rpe_length=img_size // patch_size, qk_scale=qk_scale, rpe=rpe, pre_norm=pre_norm, head_dim=64
             ), depth
         )
 
-        self.norm = nn.LayerNorm(cast(int, embed_dim)) if pre_norm else nn.Identity()
-        self.head = nn.Linear(cast(int, embed_dim), num_classes) if num_classes > 0 else nn.Identity()
+        self.norm = MutableLayerNorm(cast(int, embed_dim)) if pre_norm else nn.Identity()
+        self.head = MutableLinear(cast(int, embed_dim), num_classes) if num_classes > 0 else nn.Identity()
 
     @classmethod
     def get_extra_mutation_hooks(cls):
@@ -457,7 +458,7 @@ class AutoformerSpace(nn.Module):
         # RandomOneShot is the only supported strategy for now.
         from nni.nas.strategy import RandomOneShot
         init_kwargs = cls.preset(name)
-        with no_fixed_arch():
+        with frozen_context.bypass():
             model_space = cls(**init_kwargs)
         strategy = RandomOneShot(mutation_hooks=cls.get_extra_mutation_hooks())
         strategy.attach_model(model_space)
@@ -529,7 +530,7 @@ class AutoformerSpace(nn.Module):
         else:
             raise ValueError(f'Unsupported architecture with name: {name}')
 
-        model_factory = FixedFactory(cls, arch)
+        model_factory = cls.frozen_factory(arch)
         model = model_factory(**init_kwargs)
 
         if pretrained:

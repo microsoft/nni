@@ -1,7 +1,5 @@
 """Currently, this is only a sanity-check (runnable) of spaces provided in hub."""
 
-import random
-
 from torchvision import transforms
 from torchvision.datasets import FakeData
 
@@ -11,13 +9,10 @@ import pytorch_lightning
 
 import nni
 import nni.runtime.platform.test
-import nni.retiarii.evaluator.pytorch.lightning as pl
-import nni.retiarii.hub.pytorch as searchspace
-from nni.retiarii import fixed_arch
-from nni.retiarii.execution.utils import unpack_if_only_one
-from nni.retiarii.mutator import InvalidMutation, Sampler
-from nni.retiarii.nn.pytorch.mutator import extract_mutation_from_pt_module
-
+import nni.nas.evaluator.pytorch.lightning as pl
+import nni.nas.hub.pytorch as searchspace
+from nni.mutable import ConstraintViolation
+from nni.nas.nn.pytorch import ModelSpace
 
 pytestmark = pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
 
@@ -29,40 +24,20 @@ def _reset():
     nni.runtime.platform.test._last_metric = None
 
 
-class RandomSampler(Sampler):
-    def __init__(self):
-        self.counter = 0
-
-    def choice(self, candidates, *args, **kwargs):
-        self.counter += 1
-        return random.choice(candidates)
-
-
-def try_mutation_until_success(base_model, mutators, retry):
-    if not retry:
-        raise ValueError('Retry exhausted.')
-    try:
-        model = base_model
-        for mutator in mutators:
-            model = mutator.bind_sampler(RandomSampler()).apply(model)
-        return model
-    except InvalidMutation:
-        return try_mutation_until_success(base_model, mutators, retry - 1)
-
-
-def _test_searchspace_on_dataset(searchspace, dataset='cifar10', arch=None):
+def _test_searchspace_on_dataset(searchspace: ModelSpace, dataset='cifar10', arch=None, retry=1):
     _reset()
 
-    # dataset supports cifar10 and imagenet
-    model, mutators = extract_mutation_from_pt_module(searchspace)
-
-    if arch is None:
-        model = try_mutation_until_success(model, mutators, 10)
-        arch = {mut.mutator.label: unpack_if_only_one(mut.samples) for mut in model.history}
-
-    print('Selected model:', arch)
-    with fixed_arch(arch):
-        model = model.python_class(**model.python_init_params)
+    if arch is not None:
+        model = searchspace.freeze(arch)
+    else:
+        for _ in range(retry):
+            try:
+                model = searchspace.random()
+                break
+            except ConstraintViolation as e:
+                pass
+        else:
+            raise e
 
     if dataset == 'cifar10':
         train_data = FakeData(size=200, image_size=(3, 32, 32), num_classes=10, transform=transforms.ToTensor())
@@ -92,7 +67,7 @@ def _test_searchspace_on_dataset(searchspace, dataset='cifar10', arch=None):
 
 def test_nasbench101():
     ss = searchspace.NasBench101()
-    _test_searchspace_on_dataset(ss)
+    _test_searchspace_on_dataset(ss, retry=20)
 
 
 def test_nasbench201():
@@ -124,16 +99,16 @@ def test_nasnet_corner_case():
         "normal/op_5_1": "sep_conv_5x5",
         "normal/op_6_0": "max_pool_7x7",
         "normal/op_6_1": "sep_conv_5x5",
-        "normal/input_2_0": 0,
-        "normal/input_2_1": 0,
-        "normal/input_3_0": 0,
-        "normal/input_3_1": 1,
-        "normal/input_4_0": 1,
-        "normal/input_4_1": 2,
-        "normal/input_5_0": 0,
-        "normal/input_5_1": 1,
-        "normal/input_6_0": 0,
-        "normal/input_6_1": 2,
+        "normal/input_2_0": [0],
+        "normal/input_2_1": [0],
+        "normal/input_3_0": [0],
+        "normal/input_3_1": [1],
+        "normal/input_4_0": [1],
+        "normal/input_4_1": [2],
+        "normal/input_5_0": [0],
+        "normal/input_5_1": [1],
+        "normal/input_6_0": [0],
+        "normal/input_6_1": [2],
         "reduce/op_2_0": "dil_conv_3x3",
         "reduce/op_2_1": "max_pool_7x7",
         "reduce/op_3_0": "dil_conv_3x3",
@@ -144,19 +119,19 @@ def test_nasnet_corner_case():
         "reduce/op_5_1": "conv_1x1",
         "reduce/op_6_0": "sep_conv_7x7",
         "reduce/op_6_1": "sep_conv_3x3",
-        "reduce/input_2_0": 1,
-        "reduce/input_2_1": 1,
-        "reduce/input_3_0": 0,
-        "reduce/input_3_1": 1,
-        "reduce/input_4_0": 2,
-        "reduce/input_4_1": 1,
-        "reduce/input_5_0": 0,
-        "reduce/input_5_1": 4,
-        "reduce/input_6_0": 3,
-        "reduce/input_6_1": 3,
+        "reduce/input_2_0": [1],
+        "reduce/input_2_1": [1],
+        "reduce/input_3_0": [0],
+        "reduce/input_3_1": [1],
+        "reduce/input_4_0": [2],
+        "reduce/input_4_1": [1],
+        "reduce/input_5_0": [0],
+        "reduce/input_5_1": [4],
+        "reduce/input_6_0": [3],
+        "reduce/input_6_1": [3],
     }
 
-    _test_searchspace_on_dataset(searchspace.NASNet(), arch=arch)
+    _test_searchspace_on_dataset(searchspace.NASNet(), arch={'model/' + k: v for k, v in arch.items()})
 
 
 def test_nasnet_fixwd():
@@ -197,12 +172,3 @@ def test_shufflenet():
 def test_autoformer():
     ss = searchspace.AutoformerSpace()
     _test_searchspace_on_dataset(ss, dataset='imagenet')
-
-    import torch
-    for name in ['tiny', 'small', 'base']:
-        # check subnet & supernet weights load
-        model = searchspace.AutoformerSpace.load_searched_model(f'autoformer-{name}', pretrained = True, download = True)
-        model(torch.rand(1, 3, 224, 224))
-        strategy = searchspace.AutoformerSpace.load_strategy_checkpoint(f'random-one-shot-{name}')
-        strategy.model.resample()
-        strategy.model(torch.rand(1, 3, 224, 224))
