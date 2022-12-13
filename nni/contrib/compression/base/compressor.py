@@ -3,15 +3,16 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 from copy import deepcopy
 import logging
 from typing import Dict, List, Literal
 
 import torch
 
+from nni.compression.pytorch.utils.scaling import Scaling
+
 from .config import trans_legacy_config_list
-from .target_space import PruningTargetSpace
+from .target_space import TargetType
 from .wrapper import ModuleWrapper, register_wrappers
 
 _logger = logging.getLogger(__name__)
@@ -23,9 +24,10 @@ class Compressor:
                  existed_wrapper: Dict[str, ModuleWrapper] | None = None):
         self.bound_model = model
         self.config_list = trans_legacy_config_list(deepcopy(config_list))
+        self._validate_config()
 
         self._is_wrapped = False
-        self._module_wrappers = register_wrappers(self.bound_model, self.config_list, mode, existed_wrapper)
+        self._module_wrappers, self._target_spaces = register_wrappers(self.bound_model, self.config_list, mode, existed_wrapper)
 
         self.wrap_model()
 
@@ -61,24 +63,32 @@ class Compressor:
         self._is_wrapped = False
 
     def compress(self):
-        return self.bound_model
+        raise NotImplementedError()
 
 
 class Pruner(Compressor):
     def __init__(self, model: torch.nn.Module, config_list: List[Dict]):
         super().__init__(model, config_list, mode='pruning')
+        self._register_scalers()
 
     @classmethod
     def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict]):
         return super().from_compressor(compressor, new_config_list, mode='pruning')
 
-    @property
-    def target_spaces(self) -> Dict[str, Dict[str, PruningTargetSpace]]:
-        spaces = defaultdict(dict)
-        for module_name, wrapper in self._module_wrappers.items():
-            for target_name, target_space in wrapper.pruning_target_spaces.items():
-                spaces[module_name][target_name] = target_space
-        return spaces
+    def _register_scalers(self):
+        for _, ts in self._target_spaces.items():
+            for _, target_space in ts.items():
+                if target_space.sparse_granularity is None:
+                    continue
+                if target_space.sparse_granularity == 'out_channel':
+                    assert target_space._target_type is TargetType.PARAMETER
+                    target_space._scaler = Scaling([1], kernel_padding_mode='back', kernel_padding_val=-1)
+                elif target_space.sparse_granularity == 'in_channel':
+                    assert target_space._target_type is TargetType.PARAMETER
+                    target_space._scaler = Scaling([1], kernel_padding_mode='front', kernel_padding_val=-1)
+                else:
+                    assert all(isinstance(_, int) for _ in target_space.sparse_granularity)
+                    target_space._scaler = Scaling(target_space.sparse_granularity, kernel_padding_mode='front', kernel_padding_val=1)
 
     def update_masks(self, masks: Dict[str, Dict[str, torch.Tensor]]):
         for module_name, target_masks in masks.items():

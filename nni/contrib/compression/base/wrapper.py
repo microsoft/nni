@@ -143,7 +143,11 @@ class ModuleWrapper(torch.nn.Module):
             warn_msg = f'{name} have already configured, the new config will be ignored.'
             _logger.warning(warn_msg)
             settings.pop(name)
-        target_spaces.update(self._create_target_spaces(settings, target_space_cls))
+        new_target_spaces = self._create_target_spaces(settings, target_space_cls)
+        target_spaces.update(new_target_spaces)
+
+        # return the new registered target spaces
+        return new_target_spaces
 
     def update_masks(self, masks: Dict[str, torch.Tensor]):
         """
@@ -299,8 +303,10 @@ class ModuleWrapper(torch.nn.Module):
 
 def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
                       mode: Literal['pruning', 'quantization', 'distillation'],
-                      existed_wrappers: Dict[str, ModuleWrapper] | None = None) -> Dict[str, ModuleWrapper]:
+                      existed_wrappers: Dict[str, ModuleWrapper] | None = None,
+                      ) -> Tuple[Dict[str, ModuleWrapper], Dict[str, Dict[str, TargetSpace]]]:
     assert mode in ['pruning', 'quantization', 'distillation']
+    configured_target_spaces = {}
     existed_wrappers = existed_wrappers if existed_wrappers else {}
     module_wrappers = {k: v for k, v in existed_wrappers.items()}
     for _, wrapper in module_wrappers.items():
@@ -311,8 +317,16 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
             if module_name in module_wrappers:
                 wrapper = module_wrappers[module_name]
                 wrapper.unfreeze()
-                wrapper.extend_target_spaces(public_config, mode)
+                target_spaces = wrapper.extend_target_spaces(public_config, mode)
             else:
                 wrapper = ModuleWrapper(module, module_name, {mode: public_config})
                 module_wrappers[module_name] = wrapper
-    return module_wrappers
+                if mode == 'pruning':
+                    target_spaces = {k: v for k, v in wrapper.pruning_target_spaces.items()}
+                elif mode == 'quantization':
+                    target_spaces = {k: v for k, v in wrapper.quantization_target_spaces.items()}
+                else:
+                    target_spaces = {k: v for k, v in wrapper.distillation_target_spaces.items()}
+            configured_target_spaces[module_name] = target_spaces
+
+    return module_wrappers, configured_target_spaces

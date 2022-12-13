@@ -13,7 +13,9 @@ import torch
 from .setting import INPUT_PREFIX, OUTPUT_PREFIX
 
 
-def trans_legacy_config_list(config_list: List[Dict[str, Any]], sparse_granularity: str | List[int] | None = None) -> List[Dict[str, Any]]:
+def trans_legacy_config_list(config_list: List[Dict[str, Any]],
+                             default_sparse_granularity: str | List[int] | None = None) -> List[Dict[str, Any]]:
+    # transfer the old config keys to new config keys
     if not config_list:
         return config_list
 
@@ -61,7 +63,7 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]], sparse_granulari
                     'sparse_ratio': sparse_ratio,
                     'max_sparse_ratio': max_sparse_ratio,
                     'global_group_id': group_id,
-                    'sparse_granularity': sparse_granularity,
+                    'sparse_granularity': default_sparse_granularity,
                 }
             }
 
@@ -111,8 +113,11 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
             if re.match(op_name_re, op_name):
                 op_names.add(op_name)
 
-    for op_type in op_types:
-        op_names.intersection_update(type2names.get(op_type, set()))
+    if op_types:
+        selected_by_op_types = set()
+        for op_type in op_types:
+            selected_by_op_types.update(type2names.get(op_type, set()))
+        op_names.intersection_update(selected_by_op_types)
 
     op_names.difference_update(exclude_op_names)
 

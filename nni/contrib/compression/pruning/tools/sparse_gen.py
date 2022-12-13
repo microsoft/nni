@@ -4,28 +4,15 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from functools import reduce
 import heapq
 from typing import Callable, Dict, List, Tuple
 
 import numpy
 import torch
 
-from ..base.target_space import PruningTargetSpace, TargetType
-
-
-_TARGET_SPACES = Dict[str, Dict[str, PruningTargetSpace]]
-_MASKS = Dict[str, Dict[str, torch.Tensor]]
-_METRICS = Dict[str, Dict[str, torch.Tensor]]
-
-
-def active_sparse_targets_filter(target_spaces: _TARGET_SPACES) -> _METRICS:
-    # filter all targets need to active generate sparsity
-    active_targets = defaultdict(dict)
-    for module_name, ts in target_spaces.items():
-        for target_name, target_space in ts.items():
-            if target_space.sparse_ratio or target_space.sparse_threshold:
-                active_targets[module_name][target_name] = target_space.target
-    return active_targets
+from .common import _MASKS, _METRICS, _TARGET_SPACES
+from ...base.target_space import PruningTargetSpace, TargetType
 
 
 def generate_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASKS:
@@ -188,12 +175,12 @@ def _generate_dependency_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPAC
 
     masks = defaultdict(dict)
     for _, group in groups.items():
-        block_numbers = []
+        block_numbers = [1]
         group_sparsity_ratio = None
         filtered_metrics = defaultdict(dict)
 
         for module_name, target_name, target_space in group:
-            assert isinstance(target_space.internal_metric_block, (int, None))
+            assert target_space.internal_metric_block is None or isinstance(target_space.internal_metric_block, int)
             block_numbers.append(target_space.internal_metric_block if target_space.internal_metric_block else 1)
             if target_space.sparse_ratio is not None:
                 if group_sparsity_ratio is None:
@@ -201,7 +188,7 @@ def _generate_dependency_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPAC
                 else:
                     assert group_sparsity_ratio == target_space.sparse_ratio
             filtered_metrics[module_name][target_name] = metrics[module_name][target_name]
-        block_number = numpy.lcm(block_numbers)
+        block_number = reduce(numpy.lcm, block_numbers)
         assert group_sparsity_ratio is not None
         group_metric = _metric_fuse(filtered_metrics)
         group_mask = _ratio_mask(group_metric, group_sparsity_ratio, view_size=[block_number, -1])
@@ -271,7 +258,7 @@ def _metric_fuse(metrics: _METRICS) -> torch.Tensor:
     count = 0
     for _, module_metrics in metrics.items():
         for _, target_metric in module_metrics.items():
-            if fused_metric:
+            if fused_metric is not None:
                 fused_metric += target_metric
             else:
                 fused_metric = target_metric.clone()
@@ -280,6 +267,7 @@ def _metric_fuse(metrics: _METRICS) -> torch.Tensor:
 
 
 def _expand_masks(masks: _MASKS, target_spaces: _TARGET_SPACES) -> _MASKS:
+    # expand the mask shape from metric shape to target shape
     new_masks = defaultdict(dict)
     for module_name, module_masks in masks.items():
         for target_name, target_mask in module_masks.items():

@@ -3,8 +3,9 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from copy import deepcopy
-from typing import Any, Dict, List, Literal, Type
+from typing import Any, Dict, Literal, Type
 
 import torch
 
@@ -112,9 +113,9 @@ class PruningSetting(ModuleSetting):
             'apply_method': 'mul',
         },
         'bias': {
+            # should support granularity in the future
+            # module_name should also be supported
             'align': {
-                # should support granularity in the future
-                # module_name can also be supported
                 'target_name': 'weight',
                 'dims': [0],
             },
@@ -123,8 +124,8 @@ class PruningSetting(ModuleSetting):
     }
 
     registry = {
+        'Linear': default_setting,
         'Conv2d': default_setting,
-        'Linear': default_setting
     }
 
 
@@ -149,13 +150,23 @@ class QuantizationSetting(ModuleSetting):
     }
 
     registry = {
+        'Linear': default_setting,
         'Conv2d': default_setting,
-        'Linear': default_setting
     }
 
 
 class DistillatoinSetting(ModuleSetting):
-    pass
+    default_setting = {
+        '_output_': {
+            'lambda': None,
+        }
+    }
+
+    @classmethod
+    def default(cls):
+        return cls.default_setting
+
+    registry = defaultdict(default)
 
 
 def canonicalize_settings(module: torch.nn.Module,
