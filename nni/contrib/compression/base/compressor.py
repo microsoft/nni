@@ -14,6 +14,7 @@ from nni.compression.pytorch.utils.scaling import Scaling
 from .config import trans_legacy_config_list
 from .target_space import TargetType
 from .wrapper import ModuleWrapper, register_wrappers
+from ..utils.evaluator import Evaluator
 
 _logger = logging.getLogger(__name__)
 
@@ -21,10 +22,15 @@ _logger = logging.getLogger(__name__)
 class Compressor:
     def __init__(self, model: torch.nn.Module, config_list: List[Dict],
                  mode: Literal['pruning', 'quantization', 'distillation'],
-                 existed_wrapper: Dict[str, ModuleWrapper] | None = None):
+                 existed_wrapper: Dict[str, ModuleWrapper] | None = None,
+                 evaluator: Evaluator | None = None):
         self.bound_model = model
         self.config_list = trans_legacy_config_list(deepcopy(config_list))
         self._validate_config()
+        self.evaluator = evaluator
+        if self.evaluator is not None:
+            assert isinstance(evaluator, Evaluator)
+            evaluator._init_optimizer_helpers(self.bound_model)
 
         self._is_wrapped = False
         self._module_wrappers, self._target_spaces = register_wrappers(self.bound_model, self.config_list, mode, existed_wrapper)
@@ -41,7 +47,8 @@ class Compressor:
             compressor.unwrap_model()
         model = compressor.bound_model
         existed_wrapper = compressor._module_wrappers
-        return cls(model, new_config_list, mode, existed_wrapper)
+        evaluator = compressor.evaluator
+        return cls(model, new_config_list, mode, existed_wrapper, evaluator)
 
     def _validate_config(self):
         pass
@@ -67,8 +74,8 @@ class Compressor:
 
 
 class Pruner(Compressor):
-    def __init__(self, model: torch.nn.Module, config_list: List[Dict]):
-        super().__init__(model, config_list, mode='pruning')
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None):
+        super().__init__(model, config_list, mode='pruning', evaluator=evaluator)
         self._register_scalers()
 
     @classmethod
@@ -120,8 +127,8 @@ class Pruner(Compressor):
 
 
 class Quantizer(Compressor):
-    def __init__(self, model: torch.nn.Module, config_list: List[Dict]):
-        super().__init__(model, config_list, mode='quantization')
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None):
+        super().__init__(model, config_list, mode='quantization', evaluator=evaluator)
 
     @classmethod
     def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict]):
@@ -129,8 +136,8 @@ class Quantizer(Compressor):
 
 
 class Distiller(Compressor):
-    def __init__(self, model: torch.nn.Module, config_list: List[Dict]):
-        super().__init__(model, config_list, mode='distillation')
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None):
+        super().__init__(model, config_list, mode='distillation', evaluator=evaluator)
 
     @classmethod
     def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict]):

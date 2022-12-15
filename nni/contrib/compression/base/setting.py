@@ -119,7 +119,7 @@ class PruningSetting(ModuleSetting):
                 'target_name': 'weight',
                 'dims': [0],
             },
-            'apply_method': 'mul'
+            'apply_method': 'mul',
         }
     }
 
@@ -133,19 +133,19 @@ class QuantizationSetting(ModuleSetting):
     default_setting = {
         '_input_': {
             'quant_dtype': None,
-            'apply_method': 'clamp_round'
+            'apply_method': 'clamp_round',
         },
         'weight': {
             'quant_dtype': None,
-            'apply_method': 'clamp_round'
+            'apply_method': 'clamp_round',
         },
         'bias': {
             'quant_dtype': None,
-            'apply_method': 'clamp_round'
+            'apply_method': 'clamp_round',
         },
         '_output_': {
             'quant_dtype': None,
-            'apply_method': 'clamp_round'
+            'apply_method': 'clamp_round',
         }
     }
 
@@ -156,17 +156,13 @@ class QuantizationSetting(ModuleSetting):
 
 
 class DistillatoinSetting(ModuleSetting):
-    default_setting = {
+    registry = defaultdict(lambda: {
         '_output_': {
             'lambda': None,
+            'link': None,
+            'apply_method': None,
         }
-    }
-
-    @classmethod
-    def default(cls):
-        return cls.default_setting
-
-    registry = defaultdict(default)
+    })
 
 
 def canonicalize_settings(module: torch.nn.Module,

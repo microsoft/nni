@@ -275,6 +275,19 @@ class DistillationTargetSpace(TargetSpace):
         self._buffer.append(val)
 
     @property
+    def lambda_(self) -> float | None:
+        return self.setting.get('lambda', 1.)
+
+    @lambda_.setter
+    def lambda_(self, val: float):
+        assert isinstance(val, float)
+        self.setting['lambda'] = val
+
+    @property
+    def link(self):
+        return self.setting.get('link', None)
+
+    @property
     def apply_method(self) -> str:
         _method = self.setting.get('apply_method', 'mse')
         assert _method in ['mse', 'kl']
