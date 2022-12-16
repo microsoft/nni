@@ -100,7 +100,8 @@ class PruningTargetSpace(TargetSpace):
     # don't support setter
     @property
     def apply_method(self) -> str:
-        _method = self.setting.get('apply_method', 'mul')
+        _method = self.setting.get('apply_method', None)
+        _method = _method if _method else 'mul'
         assert _method in ['mul', 'add']
         return _method
 
@@ -190,7 +191,8 @@ class QuantizationTargetSpace(TargetSpace):
             self.zero_point = torch.zeros_like(self.target)
 
     def _compute_qmin_qmax(self):
-        quant_dtype = self.setting.get('quant_dtype', 'int8')
+        quant_dtype = self.setting.get('quant_dtype', None)
+        quant_dtype = quant_dtype if quant_dtype else 'int8'
         if quant_dtype.startswith('int'):
             quant_bit = int(quant_dtype.split('int', 1)[1])
             qmin, qmax = -2 ** (quant_bit - 1) + 1, 2 ** (quant_bit - 1) - 1
@@ -243,7 +245,8 @@ class QuantizationTargetSpace(TargetSpace):
 
     @property
     def apply_method(self) -> str:
-        _method = self.setting.get('apply_method', 'clamp_round')
+        _method = self.setting.get('apply_method', None)
+        _method = _method if _method else 'clamp_round'
         assert _method in ['clamp_round']
         return _method
 
@@ -276,7 +279,7 @@ class DistillationTargetSpace(TargetSpace):
 
     @property
     def lambda_(self) -> float | None:
-        return self.setting.get('lambda', 1.)
+        return self.setting.get('lambda', None)
 
     @lambda_.setter
     def lambda_(self, val: float):
@@ -289,6 +292,7 @@ class DistillationTargetSpace(TargetSpace):
 
     @property
     def apply_method(self) -> str:
-        _method = self.setting.get('apply_method', 'mse')
+        _method = self.setting.get('apply_method', None)
+        _method = _method if _method else 'mse'
         assert _method in ['mse', 'kl']
         return _method

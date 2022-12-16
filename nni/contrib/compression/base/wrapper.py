@@ -228,8 +228,8 @@ class ModuleWrapper(torch.nn.Module):
             return target
 
     def _distil_observe_helper(self, target: Tensor, target_space: DistillationTargetSpace) -> Tensor:
-        # NOTE: here will have a risk if target is not Tensor, we don't know if it can be deepcopy and if it will be changed.
-        target_space.hidden_state = target.clone().detach() if isinstance(target, Tensor) else target
+        # NOTE: here will have a risk, we don't know if target will be inplace changed in the following.
+        target_space.hidden_state = target
         return target
 
     def patch_helper(self, target_name: str, target: Tensor | Any) -> Tensor | Any:
@@ -248,15 +248,16 @@ class ModuleWrapper(torch.nn.Module):
 
         new_args = []
         for idx, arg_value in enumerate(pos_args):
-            target_name = f'{INPUT_PREFIX}_{idx + 1}'
+            target_name = f'{INPUT_PREFIX}{idx + 1}'
             new_args.append(self.patch_helper(target_name, arg_value))
-        new_args.extend(self.patch_helper(f'{INPUT_PREFIX}_{self._input_args_spec.varargs}', varargs))
+        new_args.extend(self.patch_helper(f'{INPUT_PREFIX}{self._input_args_spec.varargs}', varargs))
 
         new_kwargs = {}
         for key, value in kwonly_args.items():
-            target_name = f'{INPUT_PREFIX}_{key}'
+            target_name = f'{INPUT_PREFIX}{key}'
             new_kwargs[key] = self.patch_helper(target_name, value)
-        new_kwargs.update(self.patch_helper(f'{INPUT_PREFIX}_{self._input_args_spec.varkw}', varkw))
+        new_kwargs.update(self.patch_helper(f'{INPUT_PREFIX}{self._input_args_spec.varkw}', varkw))
+
         return new_args, new_kwargs
 
     def patch_params(self, targets_dict: Dict[str, Tensor]) -> Dict[str, Tensor]:
@@ -268,17 +269,17 @@ class ModuleWrapper(torch.nn.Module):
 
     def patch_outputs(self, outputs: OUTPUT_FORMAT) -> OUTPUT_FORMAT:
         if isinstance(outputs, Tensor):
-            target_name = f'{OUTPUT_PREFIX}_0'
+            target_name = f'{OUTPUT_PREFIX}0'
             new_outputs = self.patch_helper(target_name, outputs)
         elif isinstance(outputs, (list, tuple)):
             new_outputs = []
             for idx, target in enumerate(outputs):
-                target_name = f'{OUTPUT_PREFIX}_{idx}'
+                target_name = f'{OUTPUT_PREFIX}{idx}'
                 new_outputs.append(self.patch_helper(target_name, target))
         elif isinstance(outputs, dict):
             new_outputs = {}
             for output_name, target in outputs.items():
-                target_name = f'{OUTPUT_PREFIX}_{output_name}'
+                target_name = f'{OUTPUT_PREFIX}{output_name}'
                 new_outputs[output_name] = self.patch_helper(target_name, target)
         else:
             raise TypeError(f'Only support return Tensor/list/dict, but got {type(outputs)}')

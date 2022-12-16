@@ -34,7 +34,6 @@ class Compressor:
 
         self._is_wrapped = False
         self._module_wrappers, self._target_spaces = register_wrappers(self.bound_model, self.config_list, mode, existed_wrapper)
-
         self.wrap_model()
 
     @classmethod

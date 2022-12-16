@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 from copy import deepcopy
 from typing import Any, Dict, Literal, Type
 
@@ -41,14 +40,7 @@ class ModuleSetting:
         update_setting
             Used to update the given module type setting from the registry.
         """
-        if isinstance(module_cls_or_name, torch.nn.Module):
-            module_cls_name = module_cls_or_name.__class__.__name__
-        elif issubclass(module_cls_or_name, torch.nn.Module):
-            module_cls_name = module_cls_or_name.__name__
-        elif isinstance(module_cls_or_name, str):
-            module_cls_name = module_cls_or_name
-        else:
-            raise RuntimeError('`module_cls_or_name` is not an instance or subclass of `torch.nn.Module` or a name.')
+        module_cls_name = cls._get_module_cls_name(module_cls_or_name)
 
         target_names = config.pop('target_names', None)
         update_settings = config.pop('target_settings', None)
@@ -82,6 +74,18 @@ class ModuleSetting:
                 selected_settings[target_name] = deepcopy(target_settings[target_name])
 
         return selected_settings
+
+    @classmethod
+    def _get_module_cls_name(cls, module_cls_or_name: str | torch.nn.Module | Type[torch.nn.Module]) -> str:
+        if isinstance(module_cls_or_name, torch.nn.Module):
+            module_cls_name = module_cls_or_name.__class__.__name__
+        elif issubclass(module_cls_or_name, torch.nn.Module):
+            module_cls_name = module_cls_or_name.__name__
+        elif isinstance(module_cls_or_name, str):
+            module_cls_name = module_cls_or_name
+        else:
+            raise RuntimeError('`module_cls_or_name` is not an instance or subclass of `torch.nn.Module` or a name.')
+        return module_cls_name
 
     @classmethod
     def _update_setting(cls, setting1: _SETTING, setting2: _SETTING):
@@ -156,13 +160,26 @@ class QuantizationSetting(ModuleSetting):
 
 
 class DistillatoinSetting(ModuleSetting):
-    registry = defaultdict(lambda: {
+    default_setting = {
         '_output_': {
             'lambda': None,
             'link': None,
             'apply_method': None,
         }
-    })
+    }
+
+    registry = {
+        'Linear': default_setting,
+        'Conv2d': default_setting,
+    }
+
+    @classmethod
+    def get(cls, module_cls_or_name: str | torch.nn.Module | Type[torch.nn.Module], config: Dict[str, Any]) -> _SETTING:
+        # auto register default setting for unknown module type
+        module_cls_name = cls._get_module_cls_name(module_cls_or_name)
+        if module_cls_name not in cls.registry:
+            cls.register(module_cls_name, cls.default_setting)
+        return super().get(module_cls_or_name, config)
 
 
 def canonicalize_settings(module: torch.nn.Module,
