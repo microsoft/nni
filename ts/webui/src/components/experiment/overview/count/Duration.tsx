@@ -34,12 +34,6 @@ export const Duration = (): any => {
 
     return (
         <React.Fragment>
-            {/* <ProgressBar
-                tooltip={`${convertDuration(tooltip)} remaining`}
-                percent={percent}
-                latestVal={execDurationStr}
-                presetVal={`${maxExecDurationStr} ${maxDurationUnit}`}
-            /> */}
             {/* duration progress circle */}
             <div className='circle-progress'>
                 <Circle

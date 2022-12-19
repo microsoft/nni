@@ -1,19 +1,19 @@
-// import React, { useContext } from 'react';
-import React from 'react';
+import React, { useContext } from 'react';
 import { Stack, IStackTokens, ProgressIndicator } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
-// import { CONTROLTYPE, MAX_TRIAL_NUMBERS } from '@static/const';
-// import { EditExperimentParam } from './EditExperimentParam';
-// import ProgressBar from './ProgressBar';
-// import { EditExpeParamContext } from './context';
-// import { AppContext } from '@/App';
-// import { leftProgress, rightEditParam } from './commonStyle';
+import { CONTROLTYPE, MAX_TRIAL_NUMBERS } from '@static/const';
+import { EditExperimentParam } from './EditExperimentParam';
+import { EditExpeParamContext } from './context';
+import { AppContext } from '@/App';
 
 const line1Tokens: IStackTokens = {
     childrenGap: 60
 };
-
+const editNumberConcurrency: IStackTokens = {
+    childrenGap: 13
+};
 export const TrialCount = (): any => {
+    const { updateOverviewPage } = useContext(AppContext);
     const count = TRIALS.countStatus();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const stoppedCount = count.get('USER_CANCELED')! + count.get('SYS_CANCELED')! + count.get('EARLY_STOPPED')!;
@@ -59,40 +59,39 @@ export const TrialCount = (): any => {
                     <p className='size18 font-numbers-color'>{count.get('FAILED')}</p>
                 </div>
             </Stack>
-
-            {/* <div style={rightEditParam}>
+            <Stack horizontal className='edit-numbers' tokens={editNumberConcurrency}>
+                <EditExpeParamContext.Provider
+                    value={{
+                        title: MAX_TRIAL_NUMBERS,
+                        field: 'maxTrialNumber',
+                        editType: CONTROLTYPE[1],
+                        maxExecDuration: '',
+                        maxTrialNum: EXPERIMENT.maxTrialNumber,
+                        trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
+                        updateOverviewPage
+                    }}
+                >
+                    <div className='maxTrialNum'>
+                        <EditExperimentParam />
+                    </div>
+                </EditExpeParamContext.Provider>
+                <div className='concurrency'>
                     <EditExpeParamContext.Provider
                         value={{
-                            title: MAX_TRIAL_NUMBERS,
-                            field: 'maxTrialNumber',
-                            editType: CONTROLTYPE[1],
+                            title: 'Concurrency',
+                            field: 'trialConcurrency',
+                            editType: CONTROLTYPE[2],
+                            // maxExecDuration: EXPERIMENT.profile.params.maxExecDuration,
                             maxExecDuration: '',
                             maxTrialNum: EXPERIMENT.maxTrialNumber,
                             trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
                             updateOverviewPage
                         }}
                     >
-                        <div className='maxTrialNum'>
-                            <EditExperimentParam />
-                        </div>
+                        <EditExperimentParam />
                     </EditExpeParamContext.Provider>
-                    <div className='concurrency'>
-                        <EditExpeParamContext.Provider
-                            value={{
-                                title: 'Concurrency',
-                                field: 'trialConcurrency',
-                                editType: CONTROLTYPE[2],
-                                // maxExecDuration: EXPERIMENT.profile.params.maxExecDuration,
-                                maxExecDuration: '',
-                                maxTrialNum: EXPERIMENT.maxTrialNumber,
-                                trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
-                                updateOverviewPage
-                            }}
-                        >
-                            <EditExperimentParam />
-                        </EditExpeParamContext.Provider>
-                    </div>
-                </div> */}
+                </div>
+            </Stack>
         </React.Fragment>
     );
 };

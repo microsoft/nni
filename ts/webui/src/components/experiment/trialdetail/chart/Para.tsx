@@ -34,10 +34,10 @@ const innerChartMargins = {
 
 // TODO: class 全局变量，需要调试
 let pcs: any;
+const paraRef = React.createRef<HTMLDivElement>();
 
 const Para = (props: ParaProps) => {
     const { metricGraphMode, changeMetricGraphMode } = useContext(AppContext);
-    const paraRef = React.createRef<HTMLDivElement>();
     const { trials, searchSpace } = props;
     const [selectedPercent, setSelectedPercent] = useState('1');
     const [primaryMetricKey, setPrimaryMetricKey] = useState('default');

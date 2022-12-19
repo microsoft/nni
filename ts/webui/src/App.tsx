@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Stack } from '@fluentui/react';
-import { SlideNavBtns } from '@components/nav/slideNav/SlideNavBtns';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import NavCon from '@components/nav/Nav';
 import MessageInfo from '@components/common/MessageInfo';
@@ -142,8 +141,6 @@ class App extends React.Component<{}, AppState> {
                         </div>
                         <Stack className='contentBox'>
                             <Stack className='content'>
-                                {/* search space & config & dispatcher, nnimanagerlog*/}
-                                <SlideNavBtns />
                                 {/* if api has error field, show error message */}
                                 {errorList.map(
                                     (item, key) =>
