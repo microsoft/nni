@@ -24,7 +24,7 @@ import torch
 import torch.nn.functional as F
 from torch.optim import SGD
 
-from scripts.compression_mnist_model import TorchModel, trainer, evaluator, device, test_trt
+from nni_assets.compression.mnist_model import TorchModel, trainer, evaluator, device, test_trt
 
 # define the model
 model = TorchModel().to(device)
@@ -62,7 +62,7 @@ config_list = [{
 
 # %%
 # finetuning the model by using QAT
-from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+from nni.compression.pytorch.quantization import QAT_Quantizer
 dummy_input = torch.rand(32, 1, 28, 28).to(device)
 quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input)
 quantizer.compress()

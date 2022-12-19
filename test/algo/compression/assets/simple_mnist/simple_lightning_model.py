@@ -38,7 +38,7 @@ class SimpleLightningModel(pl.LightningModule):
         logits = self(x)
         loss = F.nll_loss(logits, y)
         preds = torch.argmax(logits, dim=1)
-        acc = accuracy(preds, y)
+        acc = accuracy(preds, y, 'multiclass', num_classes=10)
 
         if stage:
             self.log(f"default", loss, prog_bar=False)
@@ -71,7 +71,7 @@ class SimpleLightningModel(pl.LightningModule):
 class MNISTDataModule(pl.LightningDataModule):
     def __init__(self, data_dir: str = "./"):
         super().__init__()
-        self.data_dir = 'data/mnist'
+        self.data_dir = data_dir
         self.transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
 
     def prepare_data(self):

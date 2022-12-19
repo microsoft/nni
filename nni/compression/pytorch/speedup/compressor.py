@@ -2,12 +2,13 @@
 # Licensed under the MIT license.
 
 import copy
+
 import logging
 from pathlib import Path
 import queue
+from typing import List
 
 import torch
-import torch.nn as nn
 
 from nni.common.graph_utils import build_module_graph
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
@@ -15,7 +16,9 @@ from nni.compression.pytorch.utils.utils import get_module_by_name
 from .compress_modules import replace_module
 from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
-from ..utils import rand_like_with_shape
+from .replacer import Replacer, DefaultReplacer
+from ..utils import rand_like_with_shape, check_ddp_model, reset_ddp_model
+from ..utils.attr import has_nested_attr, get_nested_attr
 
 
 _logger = logging.getLogger(__name__)
@@ -42,30 +45,27 @@ class ModelSpeedup:
         the index of batch dimension in the dummy_input
     confidence: the confidence coefficient of the sparsity inference. This value is
         actually used as the batchsize of the dummy_input.
-    customized_replace_func: None/Dict
-        If `customized_replace_func` is not None, then we will use the given function to replace the
-        corresponding modules. The `key` of the dict is the opertor types and the `value`
-        is the replace function of corresponding opertor. The replace function should take
-        two input parameters, one is the original module, the second input parameter is tuple
-        of the input mask, output mask and weight mask. This replace function should prune the module
-        accordingly. Here is an example of the replace function(more examples can refer to compress_modules.py)::
-
-            def example_replace(ori_module, masks):
-                in_mask, out_mask, weight_mask = masks
-                # prune the ori_module to a new smaller module according to the mask
-                return new_small_module
-
+    customized_replacers
+        ``customized_replacers`` is a list of ``Replacer``.
+        Call a ``Module`` that does not contain a ``Module`` as a leaf-module,
+        a ``Module`` that contains a ``Module`` as a hyper-module, then replacer is used to replace the hyper-module.
+        The difference between the replacer and replace function is that replacer can perform more efficient replacements
+        to hyper-module, and replace function is used to replace leaf-module.
+        In ``ModelSpeedup.compress``, replacers are first to be called to replace the hyper-modules before
+        replacing all leaf-modules by replace functions.
     """
 
     def __init__(self, model, dummy_input, masks_file, map_location=None,
-                 batch_dim=0, confidence=8, customized_replace_func=None):
+                 batch_dim=0, confidence=8, customized_replacers=None, customized_replace_func=None):
         assert confidence > 1
         # The auto inference will change the values of the parameters in the model
         # so we need make a copy before the mask inference
         self.ori_state_dict = copy.deepcopy(model.state_dict())
         self.bound_model = model
+        self.is_ddp_model, self.ddp_params = check_ddp_model(self.bound_model)
         self.inferred_masks = dict()  # key: module_name, value: ModuleMasks
         self.batch_dim = batch_dim
+        self.confidence = confidence
         self.dummy_input, self.device = self._random_model_input(
             dummy_input, confidence, batch_dim)
         self.torch_graph = build_module_graph(model, self.dummy_input)
@@ -89,7 +89,14 @@ class ModelSpeedup:
         self.constant = {}
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}
-        self.customized_replace_func = customized_replace_func if customized_replace_func is not None else {}
+        self.default_replacer = DefaultReplacer(replace_module)
+        self.customized_replacers: List[Replacer] = customized_replacers if customized_replacers is not None else []
+        if customized_replace_func is not None:
+            warn_msg = '`customized_replace_func` has been deprecated, please using `customized_replacers`, '
+            warn_msg += 'it can be easily transfer to a replacer by '
+            warn_msg += 'customized_replacers=[DefaultReplacer(customized_replace_func)]'
+            _logger.warning(warn_msg)
+            self.customized_replacers.append(DefaultReplacer(customized_replace_func))
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
         """
@@ -195,7 +202,11 @@ class ModelSpeedup:
                 continue
             # The detach operation here is for the in-place operation. We cannot
             # directly can the backward on the output tensor of an in-place operator.
-            dummy_input.append(self.internal_result[_input].detach())
+            if isinstance(self.internal_result[_input], torch.Tensor):
+                dummy_input.append(self.internal_result[_input].detach())
+            else:
+                dummy_input.append(self.internal_result[_input])
+
             debugnames.append(_input)
 
         return dummy_input, debugnames
@@ -229,15 +240,15 @@ class ModelSpeedup:
                 return
             # function doesn't have weights
             _auto_infer = AutoMaskInference(
-                func, dummy_input, in_masks, in_constants=in_constants, batch_dim=self.batch_dim)
+                func, dummy_input, self, in_masks, in_constants=in_constants)
         else:
             weight_mask = None
             if module_name in self.masks:
                 weight_mask = self.masks[module_name]
             _, module = get_module_by_name(self.bound_model, module_name)
             _auto_infer = AutoMaskInference(
-                module, dummy_input, in_masks, weight_mask, in_constants=in_constants,
-                state_dict=copy.deepcopy(module.state_dict()), batch_dim=self.batch_dim)
+                module, dummy_input, self, in_masks, weight_mask, in_constants=in_constants,
+                state_dict=copy.deepcopy(module.state_dict()))
         self.auto_inferences[unique_name] = _auto_infer
         _auto_infer.name = node.unique_name
 
@@ -280,6 +291,7 @@ class ModelSpeedup:
             The target node to update the indirect sparsity
         """
         unique_name = node.unique_name
+
         if unique_name in self.auto_inferences and self.auto_inferences[unique_name] is not None:
             # if the auto inference object already in self.auto_inference, then
             # directly update the previous one
@@ -291,13 +303,18 @@ class ModelSpeedup:
             # pass the gradient to the predecessor nodes
             for in_id, tin in enumerate(auto_infer.dummy_input):
                 debug_name = auto_infer.input_debugname[in_id]
+
                 last_output = self.internal_result[debug_name]
                 # if isinstance(last_output, torch.Tensor):
                 # TODO what if last output is tuple/list of tensor
                 if last_output.grad is not None and tin.grad is not None:
                     last_output.grad.data += tin.grad.data
-                else:
+                elif last_output.grad is None:
                     last_output.grad = tin.grad
+                elif last_output.grad is not None and tin.grad is None:
+                    # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
+                    # the size operation of tin will have no gradient
+                    continue
         else:
             _logger.warning(
                 'Note: %s does not have corresponding mask inference object', node.name)
@@ -360,7 +377,7 @@ class ModelSpeedup:
         for node in self.torch_graph.nodes_py.nodes_op:
             successors = self.torch_graph.find_successors(node.unique_name)
             out_degree[node.unique_name] = len(successors)
-            predecessors = self.torch_graph.find_predecessors(node.unique_name)
+            predecessors = set(self.torch_graph.find_predecessors(node.unique_name))
             in_degree[node.unique_name] = len(predecessors)
             if in_degree[node.unique_name] == 0:
                 visit_queue.put(node)
@@ -381,8 +398,8 @@ class ModelSpeedup:
         while not visit_queue.empty():
             curnode = visit_queue.get()
             self.update_indirect_sparsity(curnode)
-            predecessors = self.torch_graph.find_predecessors(
-                curnode.unique_name)
+            predecessors = set(self.torch_graph.find_predecessors(
+                curnode.unique_name))
             for predecessor in predecessors:
                 out_degree[predecessor] -= 1
                 if out_degree[predecessor] == 0:
@@ -398,97 +415,22 @@ class ModelSpeedup:
         is that ```func``` should be not required to be replaced.
         """
         with torch.no_grad():
-            for unique_name in self.auto_inferences:
-                self.replace_submodule(unique_name)
-
-    def replace_submodule(self, unique_name, reindex_dim=None, reindex=None):
-        """
-        Replace the submodule according to the inferred sparsity.
-
-        Parameters
-        ----------
-        unique_name: str
-            The unique_name of the submodule to replace.
-        reindex_dim: int
-            The dimension of the re-index operation.
-        reindex: Reindex
-            The index tensor. Normally this variable is None. If we want to reindex the
-            output of this submodule, we can pass the index by this parameter.
-        """
-        class ReindexModule(nn.Module):
-            """
-            ReindexModule is used to resolve the mask conflict when replace the submodule.
-            Basically, we can use two ways to resolve the mask conflict: (1) unmask some
-            values(will introduce more computation overhead) (2) reindex and padd the output
-            tensor of the target op(introduce more memory access overhad). Currently this
-            method is shutdown, in the future, we will merge these two methods into a graph
-            pass which is used to resolve the mask conflict.
-            """
-
-            def __init__(self, ori_module, reindex_dim, reindex):
-                super(ReindexModule, self).__init__()
-                self.ori_module = ori_module
-                self.reindex_dim = reindex_dim
-                self.reindex = reindex
-                tmp_index = [slice(None, None) for i in range(reindex_dim+1)]
-                # the index for the tensor
-                tmp_index[reindex_dim] = reindex
-                self.t_index = tuple(tmp_index)
-
-            def forward(self, x):
-                tmpout = self.ori_module(x)
-                shape = list(tmpout.size())
-                shape[self.reindex_dim] = self.reindex.size(0)
-                out = torch.zeros(tuple(shape), device=tmpout.device,
-                                  requires_grad=tmpout.requires_grad)
-                out[self.t_index] = tmpout
-                return out
-
-        assert unique_name in self.auto_inferences
-        g_node = self.torch_graph.name_to_node[unique_name]
-        _logger.debug("replace %s, in %s type, with op_type %s",
-                      unique_name, g_node.type, g_node.op_type)
-        auto_infer = self.auto_inferences[unique_name]
-        if g_node.type == 'module':
-            if g_node.unique_name in self.torch_graph.reused_module:
-                if reindex_dim is not None:
-                    _logger.warning(
-                        'Cannot replace a reused module with padding operator!!')
-                    return None
-            super_module, leaf_module = get_module_by_name(
-                self.bound_model, g_node.name)
-            m_type = g_node.op_type
-            if (not m_type in replace_module) and (m_type not in self.customized_replace_func):
-                err_msg = f"Has not supported replacing module with type: {m_type}, "
-                err_msg += f"you could report an issue at https://github.com/microsoft/nni. "
-                err_msg += f"If you know how to replace {m_type}, "
-                err_msg += f"you could implement module replacement by passing in"
-                err_msg += f"`customized_replace_func` to `{self.__class__.__name__}`. "
-                err_msg += f"You are welcome to contribute back to nni as native support if you have implemented the replacement function, "
-                err_msg += f"so that more users can benefit from your contributions."
-                raise RuntimeError(err_msg)
-            _logger.info("replace module (name: %s, op_type: %s)",
-                         g_node.name, m_type)
-            replace_function = self.customized_replace_func.get(m_type, replace_module.get(m_type, None))
-            compressed_module = replace_function(
-                leaf_module, auto_infer.get_masks())
-            new_submodule = compressed_module
-            if reindex_dim is None:
-                setattr(super_module, g_node.name.split(
-                    '.')[-1], compressed_module)
-            elif reindex_dim is not None and reindex is not None:
-                # reindex the output of this submodule and replace the orginal module
-                new_submodule = ReindexModule(
-                    compressed_module, reindex_dim, reindex)
-                setattr(super_module, g_node.name.split(
-                    '.')[-1], new_submodule)
-            return new_submodule
-        elif g_node.type == 'func':
-            _logger.info("Warning: cannot replace (name: %s, op_type: %s) which is func type",
-                         unique_name, g_node.op_type)
-            return None
-        else:
-            raise RuntimeError("Unsupported node type: {}".format(g_node.type))
+            for replacer in self.customized_replacers:
+                replacer.replace_modules(self.bound_model, self.auto_inferences)
+            self.default_replacer.replace_modules(self.bound_model, self.auto_inferences)
+        for unique_name in self.auto_inferences:
+            if has_nested_attr(self.bound_model, unique_name):
+                module = get_nested_attr(self.bound_model, unique_name)
+                if isinstance(module, torch.nn.Module):
+                    err_msg = f"Has not supported replacing module with type: {type(module)}, "
+                    err_msg += f"you could report an issue at https://github.com/microsoft/nni. "
+                    err_msg += f"If you know how to replace {type(module)}, "
+                    err_msg += f"you could implement module replacement by passing in"
+                    err_msg += f"`customized_replace_func` to `{self.__class__.__name__}`. "
+                    err_msg += f"You are welcome to contribute back to nni as native support "
+                    err_msg += f"if you have implemented the replacement function, "
+                    err_msg += f"so that more users can benefit from your contributions."
+                    _logger.error(err_msg)
 
     def initialize_speedup(self):
         """
@@ -543,3 +485,7 @@ class ModelSpeedup:
         self.replace_compressed_modules()
         self.bound_model.train(training)
         _logger.info("speedup done")
+
+        if self.is_ddp_model:
+            self.bound_model = reset_ddp_model(self.bound_model, self.ddp_params)
+        return self.bound_model

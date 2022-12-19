@@ -7,8 +7,8 @@ import types
 import logging
 import torch
 from nni.common.graph_utils import build_module_graph
-from nni.compression.pytorch.quantization.literal import QuantType, BN_FOLD_OP, BN_FOLD_TAG
-from nni.compression.pytorch.quantization.observers import RecordingObserver
+from .utils.quantization.literal import QuantType, BN_FOLD_OP, BN_FOLD_TAG
+from .utils.quantization.observers import RecordingObserver
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
@@ -763,6 +763,8 @@ class Quantizer(Compressor):
             _setattr(self.bound_model, wrapper.module_name, wrapper.module)
         super()._unwrap_model()
 
+    # TODO: For most complex models, the information provided by input_shape is not enough to randomly initialize the complete input.
+    # And nni should not be responsible for exporting the onnx model, this feature should be deprecated in quantization refactor.
     def export_model_save(self, model, model_path, calibration_config=None, calibration_path=None, onnx_path=None,
                           input_shape=None, device=None):
         """

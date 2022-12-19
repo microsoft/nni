@@ -215,7 +215,8 @@ class TpeTuner(Tuner):
                 loss = -loss
             for key, value in param.items():
                 self._history[key].append(Record(value, loss))
-        _logger.info(f'Replayed {len(data)} trials')
+                self.dedup.add_history(param)
+        _logger.info(f'Replayed {len(data)} FINISHED trials')
 
 def suggest(args, rng, space, history):
     params = {}
@@ -411,7 +412,7 @@ def adaptive_parzen_normal(args, history_mus, prior_mu, prior_sigma):
     n = min(100, len(mus) + 1)
     sigmas = np.clip(sigmas, prior_sigma / n, prior_sigma)
 
-    weights = np.append(linear_forgetting_weights(args, len(mus)), args.prior_weight)
+    weights = np.append(linear_forgetting_weights(args, len(mus) - 1), args.prior_weight)
     weights = weights[order]
 
     return weights / np.sum(weights), mus, sigmas

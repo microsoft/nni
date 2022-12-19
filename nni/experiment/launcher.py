@@ -18,6 +18,7 @@ from typing import Any, TYPE_CHECKING, cast
 from typing_extensions import Literal
 
 from .config import ExperimentConfig
+from .config.utils import load_experiment_config
 from . import rest
 from ..tools.nnictl.config_utils import Experiments, Config
 from ..tools.nnictl.nnictl_utils import update_experiment
@@ -140,11 +141,17 @@ def start_experiment(
         rest.post(port, '/experiment', config.json(), url_prefix)
 
     except Exception as e:
-        _logger.error('Create experiment failed')
+        _logger.error('Create experiment failed: %s', e)
         if proc is not None:
             with contextlib.suppress(Exception):
                 proc.kill()
-        raise e
+
+        log = Path(nni_manager_args.experiments_directory, nni_manager_args.experiment_id, 'log', 'nnictl_stderr.log')
+        if log.exists():
+            _logger.warning('NNI manager stderr:')
+            _logger.warning(log.read_text())
+
+        raise
 
     return proc
 
@@ -203,7 +210,7 @@ def _save_experiment_information(experiment_id: str, port: int, start_time: int,
 
 def get_stopped_experiment_config(exp_id, exp_dir=None):
     config_json = get_stopped_experiment_config_json(exp_id, exp_dir)  # type: ignore
-    config = ExperimentConfig(**config_json)  # type: ignore
+    config = load_experiment_config(config_json)  # type: ignore
     if exp_dir and not os.path.samefile(exp_dir, config.experiment_working_directory):
         msg = 'Experiment working directory provided in command line (%s) is different from experiment config (%s)'
         _logger.warning(msg, exp_dir, config.experiment_working_directory)

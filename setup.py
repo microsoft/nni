@@ -121,6 +121,7 @@ def _setup():
         python_requires = '>=3.7',
         install_requires = _read_requirements_txt('dependencies/required.txt'),
         extras_require = {
+            'Anneal': _read_requirements_txt('dependencies/required_extra.txt', 'Anneal'),
             'SMAC': _read_requirements_txt('dependencies/required_extra.txt', 'SMAC'),
             'BOHB': _read_requirements_txt('dependencies/required_extra.txt', 'BOHB'),
             'PPOTuner': _read_requirements_txt('dependencies/required_extra.txt', 'PPOTuner'),
@@ -289,7 +290,6 @@ _temp_files = [
     'test/model_path/',
     'test/temp.json',
     'test/ut/sdk/*.pth',
-    'test/ut/tools/annotation/_generated/',
 
     # example
     'nni_assets/**/data/',

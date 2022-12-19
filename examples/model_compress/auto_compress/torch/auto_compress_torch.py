@@ -3,7 +3,7 @@
 
 from pathlib import Path
 
-from nni.algorithms.compression.pytorch.auto_compress import AutoCompressionExperiment, AutoCompressionSearchSpaceGenerator
+from nni.compression.pytorch.auto_compress import AutoCompressionExperiment, AutoCompressionSearchSpaceGenerator
 
 from auto_compress_module import AutoCompressionModule
 

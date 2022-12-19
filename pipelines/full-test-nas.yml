@@ -4,13 +4,7 @@ schedules:
 - cron: 0 18 * * *
   branches:
     include: [ master ]
-
-resources:
-  repositories:
-    - repository: azpfilter
-      type: github
-      name: microsoft/azure-pipeline-filter
-      endpoint: github-filter-connection
+  always: true
 
 variables:
   filter.modified.globs: 'examples/nas/**,nni/algorithms/nas/**,nni/nas/**,nni/retiarii/**,pipelines/full-test-nas.yml,test/ut/nas/**,test/algo/nas/**'
@@ -32,12 +26,10 @@ stages:
   jobs:
   - job: linux
     pool: nni-it-1es-11
-    timeoutInMinutes: 60
+    timeoutInMinutes: 90
 
     steps:
-    - template: templates/fix-apt-1es.yml
-      parameters:
-        check_gpu: true
+    - template: templates/check-gpu-status.yml
 
     - template: templates/install-dependencies.yml
       parameters:
@@ -55,24 +47,25 @@ stages:
 
   - job: windows
     pool: nni-it-1es-windows
-    timeoutInMinutes: 60
+    timeoutInMinutes: 90
 
     steps:
-    # FIXME: Windows should use GPU,
-    # but it's not used now since driver is not installed in the image.
+    - template: templates/check-gpu-status.yml
+      parameters:
+        platform: windows
 
     - template: templates/install-dependencies.yml
       parameters:
-        platform: windows
+        platform: windows-gpu
         python_env: noop
 
     - template: templates/install-nni.yml
       parameters:
         user: false
 
-    # NOTE: Data needs to be downloaded if Windows has GPU.
-    # Also, the download template needs to be updated with powershell syntax.
-    # - template: templates/download-test-data.yml
+    - template: templates/download-test-data.yml
+      parameters:
+        platform: windows
 
     - powershell: |
         python test/vso_tools/ssl_patch.py

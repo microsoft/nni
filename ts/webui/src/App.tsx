@@ -82,6 +82,8 @@ class App extends React.Component<{}, AppState> {
     }
 
     async componentDidMount(): Promise<void> {
+        localStorage.removeItem('columns');
+        localStorage.removeItem('paraColumns');
         await Promise.all([EXPERIMENT.init(), TRIALS.init()]);
         this.setState(state => ({
             experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,

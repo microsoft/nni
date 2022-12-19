@@ -23,8 +23,14 @@ import os from 'os';
 import path from 'path';
 
 import type { NniManagerArgs } from './arguments';
-import { NniPaths, createPaths } from './paths';
 import type { LogStream } from './log_stream';
+import { NniPaths, createPaths } from './paths';
+import { RestManager } from './rest';
+
+// Enforce ts-node to compile `shutdown.ts`.
+// Without this line it might complain "log_1.getRobustLogger is not a function".
+// "Magic. Do not touch."
+import './shutdown';
 
 // copied from https://www.typescriptlang.org/docs/handbook/2/mapped-types.html
 type Mutable<Type> = {
@@ -35,6 +41,7 @@ export interface MutableGlobals {
     args: Mutable<NniManagerArgs>;
     paths: Mutable<NniPaths>;
     logStream: LogStream;
+    rest: RestManager;
 
     reset(): void;
 }
@@ -58,12 +65,13 @@ export function resetGlobals(): void {
         writeLineSync: (_line: string): void => { /* dummy */ },
         close: async (): Promise<void> => { /* dummy */ }
     };
+    const rest = new RestManager();
     const shutdown = {
         register: (..._: any): void => { /* dummy */ },
     };
 
     const globalAsAny = global as any;
-    const utGlobals = { args, paths, logStream, shutdown, reset: resetGlobals };
+    const utGlobals = { args, paths, logStream, rest, shutdown, reset: resetGlobals };
     if (globalAsAny.nni === undefined) {
         globalAsAny.nni = utGlobals;
     } else {
@@ -72,6 +80,9 @@ export function resetGlobals(): void {
 }
 
 function isUnitTest(): boolean {
+    if ((global as any).nniUnitTest) {
+        return true;
+    }
     const event = process.env['npm_lifecycle_event'] ?? '';
     return event.startsWith('test') || event === 'mocha' || event === 'nyc';
 }

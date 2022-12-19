@@ -14,7 +14,7 @@ import nni.runtime.platform.test
 import nni.retiarii.evaluator.pytorch.lightning as pl
 import nni.retiarii.hub.pytorch as searchspace
 from nni.retiarii import fixed_arch
-from nni.retiarii.execution.utils import _unpack_if_only_one
+from nni.retiarii.execution.utils import unpack_if_only_one
 from nni.retiarii.mutator import InvalidMutation, Sampler
 from nni.retiarii.nn.pytorch.mutator import extract_mutation_from_pt_module
 
@@ -25,7 +25,7 @@ pytestmark = pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='I
 def _reset():
     # this is to not affect other tests in sdk
     nni.trial._intermediate_seq = 0
-    nni.trial._params = {'foo': 'bar', 'parameter_id': 0}
+    nni.trial._params = {'foo': 'bar', 'parameter_id': 0, 'parameters': {}}
     nni.runtime.platform.test._last_metric = None
 
 
@@ -58,7 +58,7 @@ def _test_searchspace_on_dataset(searchspace, dataset='cifar10', arch=None):
 
     if arch is None:
         model = try_mutation_until_success(model, mutators, 10)
-        arch = {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model.history}
+        arch = {mut.mutator.label: unpack_if_only_one(mut.samples) for mut in model.history}
 
     print('Selected model:', arch)
     with fixed_arch(arch):
@@ -82,6 +82,7 @@ def _test_searchspace_on_dataset(searchspace, dataset='cifar10', arch=None):
         max_epochs=1,
         limit_train_batches=2,
         limit_val_batches=3,
+        num_classes=10 if dataset == 'cifar10' else 1000,
     )
     evaluator.fit(model)
 
@@ -196,3 +197,12 @@ def test_shufflenet():
 def test_autoformer():
     ss = searchspace.AutoformerSpace()
     _test_searchspace_on_dataset(ss, dataset='imagenet')
+
+    import torch
+    for name in ['tiny', 'small', 'base']:
+        # check subnet & supernet weights load
+        model = searchspace.AutoformerSpace.load_searched_model(f'autoformer-{name}', pretrained = True, download = True)
+        model(torch.rand(1, 3, 224, 224))
+        strategy = searchspace.AutoformerSpace.load_strategy_checkpoint(f'random-one-shot-{name}')
+        strategy.model.resample()
+        strategy.model(torch.rand(1, 3, 224, 224))

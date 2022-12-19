@@ -4,13 +4,7 @@ schedules:
 - cron: 0 18 * * *
   branches:
     include: [ master ]
-
-resources:
-  repositories:
-    - repository: azpfilter
-      type: github
-      name: microsoft/azure-pipeline-filter
-      endpoint: github-filter-connection
+  always: true
 
 variables:
   filter.modified.globs: 'examples/model_compress/**,nni/algorithms/compression/**,nni/compression/**,pipelines/full-test-compression.yml,test/algo/compression/**'
@@ -35,9 +29,7 @@ stages:
     timeoutInMinutes: 60
 
     steps:
-    - template: templates/fix-apt-1es.yml
-      parameters:
-        check_gpu: true
+    - template: templates/check-gpu-status.yml
 
     - template: templates/install-dependencies.yml
       parameters:
@@ -52,8 +44,3 @@ stages:
         cd test/algo
         python -m pytest compression
       displayName: Compression unit test
-
-    - script: |
-        cd test
-        source scripts/model_compression.sh
-      displayName: Model compression test

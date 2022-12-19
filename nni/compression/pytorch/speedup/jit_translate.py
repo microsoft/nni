@@ -1,43 +1,48 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
+from types import ModuleType
+from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:  # Only imports the below statements during type checking
+    from nni.compression.pytorch.speedup import ModelSpeedup
+    from nni.common.graph_utils import NodePyGroup
+
 import re
+import string
 import logging
-from functools import partial
+from functools import partial, lru_cache
+import copy
 import torch
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+jitid_2_dtype = {4: torch.long, 6:torch.float32}
 
 # to exclude partial
 
 __all__ = [
-    'adaptive_avgpool_python', 'add_python', 'avgpool2d_python', 'cat_python', 'contiguous_python',
-    'div_python', 'dropout_python', 'exp_python', 'flatten_python', 'floor_div_python', 'gelu_python',
-    'getattr_python', 'jit_to_python_function', 'matmul_python', 'mean_python',
-    'mul_python', 'num2tensor_python', 'parse_constant', 'permute_python', 'relu_inplace_python',
-    'relu_python', 'reshape_python', 'select_python', 'sigmoid_python', 'size_python', 'slice_python',
-    'softmax_python', 'squeeze_python', 'to_python', 'toint_python', 'torch', 'trans_from_jit_to_python',
-    'translate_list', 'transpose2_python', 'transpose_python', 'tupleunpack_python', 'typeas_python',
-    'unsqueeze_python', 'upsample_bilinear2d_python', 'view_python'
+    'getattr_python', 'jit_to_python_function', 'num2tensor_python', 'parse_constant', 'slice_python',
+    'translate_list', 'tupleunpack_python', 'arg_trans_dtype', 'arg_trans_memory_format', 'arg_trans_layout'
 ]
 
-
-def translate_list(list_node, speedup=None):
+def translate_list(list_node: torch._C.Value, speedup: ModelSpeedup=None) -> List:
     """
     Get the list of values from the list construct node.
 
     Parameters
     ----------
-    list_node: Torch.C.Value
+    list_node
         The cpp node of the target list.
-    speedup: ModuleSpeed
+    speedup
         The Module speedup module.
 
     Returns
     -------
-    values: list
+    values
         The list of values in the target cpp list node.
     """
     # the node that create the list
@@ -50,27 +55,26 @@ def translate_list(list_node, speedup=None):
         if speedup is not None and debugName in speedup.internal_result:
             # this value is the result of the other nodes, such as
             # ate::size
-            values.append(speedup.internal_result[debugName].item())
+            values.append(speedup.internal_result[debugName])
         else:
             # if the corresponding value is a constant
             values.append(_i.toIValue())
     return values
 
-
-def parse_constant(cvalue, speedup):
+def parse_constant(cvalue: torch._C.Value, speedup: ModelSpeedup) -> Any:
     """
     Parse the constant values from this Node
 
     Parameters
     ----------
-    cvalue: Torch.C.Value
+    cvalue
         The cpp node of the target constant value.
-    speedup: ModelSpeedup
+    speedup
         The Model speedup module.
 
     Returns
     -------
-    value: int/float/tensor
+    value
         The constant values parsed from the node.
     """
     logger.debug('Try to parse the constant value: %s', cvalue.debugName())
@@ -83,248 +87,20 @@ def parse_constant(cvalue, speedup):
 
     inputs = op_node.inputs()
     input_values = [parse_constant(_i, speedup) for _i in inputs]
-    func = trans_from_jit_to_python[op_node.kind()](op_node, speedup)
+    if op_node.kind() not in trans_func_dict:
+        raise RuntimeError('Unsupported function op node type: {}'.format(op_node.kind()))
+
+    func = trans_func_dict[op_node.kind()](op_node, speedup)
     return func(*input_values)
 
-
-def dropout_python(node, speedup):
-    return torch.dropout
-
-
-def flatten_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    start_dim = inputs[1].toIValue()
-    end_dim = inputs[2].toIValue()
-    new_flatten = partial(torch.flatten, start_dim=start_dim, end_dim=end_dim)
-    return new_flatten
-
-
-def relu_inplace_python(node, speedup):
-    return torch.relu_
-
-
-def relu_python(node, speedup):
-    return torch.relu
-
-
-def sigmoid_python(node, speedup):
-    return torch.sigmoid
-
-
-def mean_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim_list = translate_list(inputs[1], speedup)
-    keep_dim = inputs[2].toIValue()
-    new_mean = partial(torch.mean, dim=tuple(dim_list), keepdim=keep_dim)
-    return new_mean
-
-
-def add_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    constant = None
-    for i in range(2):
-        input_i = inputs[i]
-        debug_name = input_i.debugName()
-        if debug_name not in speedup.internal_result:
-            # this input is a constant value
-            # TODO: what if this input is a constant tensor
-
-            if input_i.toIValue() is not None:
-                constant = parse_constant(input_i, speedup)
-                break
-    if constant is None:
-        return torch.add
-    else:
-        new_add = partial(torch.add, constant)
-        return new_add
-
-
-def sub_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    constant = [None, None]
-    for i in range(2):
-        input_i = inputs[i]
-        debug_name = input_i.debugName()
-        if debug_name not in speedup.internal_result:
-            # this input is a constant value
-            # TODO: what if this input is a constant tensor
-
-            if input_i.toIValue() is not None:
-                constant[i] = parse_constant(input_i, speedup)
-                break
-    if constant[0] is None and constant[1] is None:
-        new_sub = torch.sub
-    elif constant[0] is not None:
-        new_sub = partial(torch.sub, input=constant)
-    else:
-        new_sub = partial(torch.sub, other=constant)
-    return new_sub
-
-
-def floor_div_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    divisor = inputs[1]
-    constant = None
-    if divisor.debugName() not in speedup.internal_result:
-        # divisor is a constant value/tensor
-        constant = parse_constant(divisor, speedup)
-    if constant is None:
-        return torch.floor_divide
-    else:
-        new_op = partial(torch.floor_divide, other=constant)
-        return new_op
-
-
-def mul_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    constant = None
-    for i in range(2):
-        input_i = inputs[i]
-        debug_name = input_i.debugName()
-        if debug_name not in speedup.internal_result:
-            constant = parse_constant(input_i, speedup)
-            # both two inputs cannot be constants at the same time
-            break
-    if constant is None:
-        return torch.mul
-    else:
-        new_mul = partial(torch.mul, constant)
-        return new_mul
-
-
-def transpose_python(node, speedup):
-    return torch.t
-
-
-def transpose2_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim_1 = inputs[1].toIValue()
-    dim_2 = inputs[2].toIValue()
-    new_transpose = partial(torch.transpose, dim0=dim_1, dim1=dim_2)
-    return new_transpose
-
-
-def matmul_python(node, speedup):
-    return torch.matmul
-
-
-def div_python(node, speedup):
-    # The second input parameter of torch.div can be a
-    # tensor or a constant, if it is a constant, we need
-    # to return
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    if inputs[1].debugName() in speedup.internal_result:
-        # the second input parameters is the output of the other
-        # nodes
-        return torch.div
-    else:
-        other = inputs[1].toIValue()
-        new_div = partial(torch.div, other=other)
-
-        return new_div
-
-
-def softmax_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim = inputs[1].toIValue()
-    new_softmax = partial(torch.softmax, dim=dim)
-    return new_softmax
-
-
-def contiguous_python(node, speedup):
-    class contiguousModule(torch.nn.Module):
-        def forward(self, x):
-            return x.contiguous()
-    return contiguousModule()
-
-
-def gelu_python(node, speedup):
-    return torch.nn.GELU()
-
-
-def silu_python(node, speedup):
-    return torch.nn.SiLU()
-
-
-def avgpool2d_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    kernel_size = translate_list(inputs[1], speedup)
-    stride = translate_list(inputs[2], speedup)
-    padding = translate_list(inputs[3], speedup)
-    new_avgpool = partial(torch.nn.functional.avg_pool2d,
-                          kernel_size=kernel_size, stride=stride, padding=padding)
-    return new_avgpool
-
-
-def adaptive_avgpool_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    output_size = translate_list(inputs[1], speedup)
-    new_avgpool = torch.nn.AdaptiveAvgPool2d(output_size)
-    return new_avgpool
-
-
-def tupleunpack_python(node, speedup):
-    # Note: tuple unpack should only exists at the
-    # the end of the model, and is no need to replace/propagate mask
-    return None
-
-
-def num2tensor_python(node, speedup):
-    return torch.nn.Identity()
-
-
-def exp_python(node, speedup):
-    return torch.exp
-
-
-def squeeze_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim = None
-    if len(inputs) > 1:
-        dim = parse_constant(inputs[1], speedup)
-    new_squeeze = partial(torch.squeeze, dim=dim)
-    return new_squeeze
-
-def unsqueeze_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim = parse_constant(inputs[1], speedup)
-    new_unsqueeze = partial(torch.unsqueeze, dim=dim)
-    return new_unsqueeze
-
-def constant_pad_nd_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    pad = translate_list(inputs[1], speedup)
-    value = parse_constant(inputs[2], speedup)
-    new_constant_pad_nd = partial(torch.nn.functional.pad, pad=pad, value=value)
-    return new_constant_pad_nd
-
-##########################################################
-# Split Line
-# Following module/functions cannot be translated into a
-# single function, so we use torch.nn.Module to wrap the
-# the core function, and return the torch.nn.Module instead
-##########################################################
-
-
-def slice_python(node, speedup):
+def slice_python(node: NodePyGroup, speedup: ModelSpeedup):
     class SliceMoudle(torch.nn.Module):
         def __init__(self, sliceobj):
             super(SliceMoudle, self).__init__()
-            self.sliceobj = sliceobj
+            # we need to deepcopy the value here, because, in the
+            # follwing steps, we may randomize the input tensor
+            # which will change the values of the sliceobj
+            self.sliceobj = copy.deepcopy(sliceobj)
 
         def forward(self, x, *args):
             # args is for the slice dimension and indexes, however,
@@ -344,106 +120,56 @@ def slice_python(node, speedup):
     slice_end = parse_constant(inputs[3], speedup)
     slice_step = parse_constant(inputs[4], speedup)
     slice_obj = slice(slice_start, slice_end, slice_step)
+
     slice_list = []
     for _ in range(slice_dim):
         slice_list.append(slice(None, None))
     logger.info('Slice dim:%s, Slice obj:%s', str(slice_dim), str(slice_obj))
     slice_list.append(slice_obj)
-    return SliceMoudle(tuple(slice_list))
 
+    if inputs[0].debugName() not in speedup.internal_result:
+        # The inputs of slice operator may be the constant
+        target_tensor = parse_constant(inputs[0], speedup)
+        slice_list = tuple(slice_list)
 
-def select_python(node, speedup):
-    class SelectModule(torch.nn.Module):
-        def __init__(self, dim, index):
-            super(SelectModule, self).__init__()
-            self.dim = dim
-            self.index = index
+        def constant_slice(*args):
+            return target_tensor[slice_list]
+        return constant_slice
+    else:
+        return SliceMoudle(tuple(slice_list))
 
-        def forward(self, x):
-            return x.select(self.dim, self.index)
+def cat_python(node: NodePyGroup, speedup: ModelSpeedup):
+    class CatModule(torch.nn.Module):
+        def __init__(self, cat_dim):
+            super(CatModule, self).__init__()
+            self.cat_dim = cat_dim
+
+        def forward(self, *args):
+            return torch.cat(args, dim=self.cat_dim)
+
     c_node = node.key_node
     inputs = list(c_node.inputs())
     dim = inputs[1].toIValue()
-    index = inputs[2].toIValue()
-    return SelectModule(dim, index)
+    return CatModule(dim)
 
+def tupleunpack_python(_node: NodePyGroup, _speedup: ModelSpeedup) -> Optional[Callable]:
+    # Note: tuple unpack should only exists at the
+    # the end of the model, and is no need to replace/propagate mask
+    return None
 
-def size_python(node, speedup):
-    # return None
-    class SizeMoudle(torch.nn.Module):
-        def __init__(self, sizedim):
-            super(SizeMoudle, self).__init__()
-            self.sizedim = sizedim
+def num2tensor_python(_node: NodePyGroup, _speedup: ModelSpeedup):
+    return torch.nn.Identity()
 
-        def forward(self, x):
-            return torch.as_tensor([x.size(self.sizedim)], dtype=torch.long)
-            # return torch.tensor(x.size(self.sizedim))
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    size_dim = inputs[1].toIValue()
-    return SizeMoudle(size_dim)
-
-
-def toint_python(node, speedup):
-    class ToIntModule(torch.nn.Module):
-        def forward(self, x):
-            return x.to(torch.int)
-    return ToIntModule()
-
-
-def view_python(node, speedup):
-    class ViewModule(torch.nn.Module):
-        def __init__(self, shape):
-            super(ViewModule, self).__init__()
-            self.shape = shape
-            logger.info('View Module output size: %s', str(self.shape))
-
-        def forward(self, *args):
-            return args[0].view(self.shape)
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    shape = translate_list(inputs[1], speedup)
-    return ViewModule(shape)
-
-
-def reshape_python(node, speedup):
-    class ReshapeModule(torch.nn.Module):
-        def __init__(self, shape):
-            super(ReshapeModule, self).__init__()
-            self.shape = shape
-            logger.info('Reshape Module output size: %s', str(self.shape))
-
-        def forward(self, *args):
-            return args[0].reshape(self.shape)
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    shape = translate_list(inputs[1], speedup)
-    return ReshapeModule(shape)
-
-
-def permute_python(node, speedup):
-    class PermuteModule(torch.nn.Module):
-        def __init__(self, dimlist):
-            super(PermuteModule, self).__init__()
-            self.dimlist = dimlist
-
-        def forward(self, x):
-            return x.permute(self.dimlist)
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim_list = translate_list(inputs[1], speedup)
-    return PermuteModule(dim_list)
-
-
-def getattr_python(node, speedup):
+def getattr_python(node: NodePyGroup, _speedup: ModelSpeedup):
     """
     Note: Ops started with Prim:: is not taken as the key node,
     so we directly pass the Cpp node into this funciton.
+
     Parameters
     ----------
-    node: torch._C.Node
+    node
         The cpp node of prim::Getattr
-    speedup: ModelSpeedup
+    speedup
         The corresponding speedup object.
     """
     class GetModule(torch.nn.Module):
@@ -462,193 +188,694 @@ def getattr_python(node, speedup):
     assert len(key_words) == 1
     return GetModule(key_words[0])
 
-
-def upsample_bilinear2d_python(node, speedup):
-    class UpsampleModule(torch.nn.Module):
-        def __init__(self, size_list, scale_list):
-            super(UpsampleModule, self).__init__()
-            self.size_list = size_list
-            self.scale_list = scale_list
-
-        def forward(self, *args):
-            """
-            The first input of args is the target tensor to upsample
-            , the following parameters is useless, because we already
-            get the size_list and the scale_list by parsing the cpp_nodes.
-            """
-            return torch.nn.functional.upsample_bilinear(args[0],
-                                                         size=self.size_list, scale_factor=self.scale_list)
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    size_list_node = inputs[1].node()
-    scale_list_node = inputs[3].node()
-    size_list = None
-    scale_list = None
-
-    if size_list_node.kind() == 'prim::ListConstruct':
-        size_list = translate_list(inputs[1], speedup)
-    if scale_list_node.kind() == 'prim::ListConstruct':
-        scale_list = translate_list(inputs[3], speedup)
-    return UpsampleModule(size_list, scale_list)
-
-
-def upsample_nearest2d_python(node, speedup):
-    class UpsampleModule(torch.nn.Module):
-        def __init__(self, size_list, scale_list):
-            super(UpsampleModule, self).__init__()
-            self.size_list = size_list
-            self.scale_list = scale_list
-
-        def forward(self, *args):
-            """
-            The first input of args is the target tensor to upsample
-            , the following parameters is useless, because we already
-            get the size_list and the scale_list by parsing the cpp_nodes.
-            """
-            return torch.nn.functional.upsample_nearest(args[0],
-                                                        size=self.size_list, scale_factor=self.scale_list)
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    size_list_node = inputs[1].node()
-    scale_list_node = inputs[2].node()
-    size_list = None
-    scale_list = None
-
-    if size_list_node.kind() == 'prim::ListConstruct':
-        size_list = translate_list(inputs[1], speedup)
-    if scale_list_node.kind() == 'prim::ListConstruct':
-        scale_list = translate_list(inputs[2], speedup)
-    return UpsampleModule(size_list, scale_list)
-
-
-def typeas_python(node, speedup):
+class FuncAdapter:
     """
-    currently only support type_as float.
-    TODO: support more types in the type_as, need to figure out
-    how to get the scalar type from torch._C.TensorType.
+    A function adapter which can reorder arguments.
+    It can be initialate with constant argument, and positions of each non-constant
+    argument. When called, it can put arguments into correct position, then call the
+    function.
+
+    Attributes
+    ----------
+    func
+        The function or method to be called.
+    positional
+        Positional arguments values. The placeholder is None if it's non-constant.
+    keyword
+        Keyword arguments values. The placeholder is None if it's non-constant.
+    undetermined
+        A list of the right positions of arguments.
+        Position is an int in positional or a str in keyword.
+    special_treat
+        A Dict of the positions and methods.
+        The values of these positions should be treat by those methods.
+
     """
-    class TypeasModule(torch.nn.Module):
-        def __init__(self, dtype=torch.float):
-            self.example = torch.zeros(1, dtype=dtype)
 
-        def forward(self, x):
-            return x.type_as(self.example)
-    return TypeasModule()
+    def __init__(self, func: Callable, positional: List[Any], keyword: Dict[str, Any],
+                undetermined: List[Union[int, str]], special_treat: Dict[Union[int, str], Callable]):
+        if not callable(func):
+            raise TypeError('the "func" argument must be callable')
 
+        self.func = func
+        self.positional = positional
+        self.keyword = keyword
+        self.undetermined = undetermined
+        self.special_treat = special_treat
 
-def to_python(node, speedup):
-    # for the time being, only device parameters are supported
-    class ToModule(torch.nn.Module):
-        def __init__(self, device):
-            super(ToModule, self).__init__()
+    def __call__(self, *args):
+        assert len(args) >= len(self.undetermined)
+        if len(args) > len(self.undetermined):
+            logger.warning('throw some args away when calling the function "%s"', self.func.__name__)
 
-        def forward(self, x):
-            return x.to(device)
+        for i, p in enumerate(self.undetermined):
+            v = args[i]
+            if isinstance(p, int):
+                self.positional[p] = v
+            else:
+                self.keyword[p] = v
 
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    device = inputs[3].toIValue()
-    return ToModule(device)
+        for p, fs in self.special_treat.items():
+            if isinstance(p, int):
+                for f in fs:
+                    self.positional[p] = f(self.positional[p])
+            else:
+                for f in fs:
+                    self.keyword[p] = f(self.keyword[p])
+        result = self.func(*self.positional, **self.keyword)
+        if isinstance(result, int): # turn result of 'size' into tensor
+            result = torch.as_tensor([result], dtype=torch.long)
+        return result
 
+# There are some types that will be convert into enums after jit.
+# So we should recover them back:
+#   device, dtype, layout, memory_format, qscheme, qengine, dispatchkey
 
-def cat_python(node, speedup):
-    class CatModule(torch.nn.Module):
-        def __init__(self, cat_dim):
-            super(CatModule, self).__init__()
-            self.cat_dim = cat_dim
-
-        def forward(self, *args):
-            return torch.cat(args, dim=self.cat_dim)
-
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim = inputs[1].toIValue()
-    return CatModule(dim)
-
-
-def expandas_python(node, speedup):
-    class ExpandasModule(torch.nn.Module):
-        def forward(self, x, y):
-            return x.expand_as(y).clone()
-    return ExpandasModule()
-
-
-trans_from_jit_to_python = {
-    'aten::add': add_python,
-    'aten::add_': add_python,
-    'aten::sub': sub_python,
-    'aten::sub_': sub_python,
-    'aten::mul': mul_python,
-    'aten::mul_': mul_python,
-    'aten::relu': relu_python,
-    'aten::relu_': relu_inplace_python,
-    'aten::sigmoid': sigmoid_python,
-    'aten::sigmoid_': sigmoid_python,
-    # tanh behaives like relu
-    'aten::tanh': relu_python,
-    'aten::tanh_': relu_python,
-    'aten::flatten': flatten_python,
-    'aten::mean': mean_python,
-    'aten::dropout': dropout_python,
-    'aten::slice': slice_python,
-    'aten::select': select_python,
-    'aten::size': size_python,
-    'aten::t': transpose_python,
-    'aten::transpose': transpose2_python,
-    'aten::Int': toint_python,
-    'aten::view': view_python,
-    'aten::reshape': reshape_python,
-    'aten::permute': permute_python,
-    'aten::matmul': matmul_python,
-    'aten::div': div_python,
-    'aten::floor_divide': floor_div_python,
-    'aten::softmax': softmax_python,
-    'aten::contiguous': contiguous_python,
-    'aten::gelu': gelu_python,
-    'aten::cat': cat_python,
-    'aten::avg_pool2d': avgpool2d_python,
-    'aten::max_pool2d': avgpool2d_python,
-    'aten::adaptive_avg_pool2d': adaptive_avgpool_python,
-    'aten::to': to_python,
-    'aten::type_as': typeas_python,
-    'aten::upsample_bilinear2d': upsample_bilinear2d_python,
-    'aten::upsample_nearest2d': upsample_nearest2d_python,
-    'aten::exp': exp_python,
-    'aten::squeeze': squeeze_python,
-    'aten::unsqueeze': unsqueeze_python,
-    'aten::constant_pad_nd': constant_pad_nd_python,
-    'aten::silu': silu_python,
-    'aten::expand_as': expandas_python,
-    'prim::TupleUnpack': tupleunpack_python,
-    'prim::ListUnpack': tupleunpack_python,
-    'prim::NumToTensor': num2tensor_python,
-    'prim::GetAttr': getattr_python
+enum_to_dtype_names = {
+    0: 'uint8',
+    1: 'int8',
+    2: 'int16',
+    3: 'int32',
+    4: 'int64',
+    5: 'float16',
+    6: 'float32',
+    7: 'float64',
+    8: 'complex32',
+    9: 'complex64',
+    10: 'complex128',
+    11: 'bool',
+    12: 'qint8',
+    13: 'quint8',
+    14: 'qint32',
+    15: 'bfloat16',
+    16: 'quint4x2',
+    17: 'quint2x4',
 }
 
+enum_to_dtype_dict = {}
 
-def jit_to_python_function(node, speedup):
+for enum_value, name in enum_to_dtype_names.items():
+    if hasattr(torch, name):
+        enum_to_dtype_dict[enum_value] = getattr(torch, name)
+
+def arg_trans_dtype(ivalue: Union[None, int, torch.dtype]) -> Optional[torch.dtype]:
     """
-    Return a callable object to inference the mask according to the
-    node.op_type.
+    Special process for dtype.
+    Torch will transform dtype to an enum in cpp, so the value of dtype we get in jit is an int.
+    This function is used to recover the int to torch.dtype in python.
+
+    Parameters
+    ----------
+    ivalue
+        The value of dtype or method to be recovered.
+
+    """
+    if ivalue is None or isinstance(ivalue, torch.dtype):
+        return ivalue
+    elif isinstance(ivalue, int):
+        if ivalue in enum_to_dtype_dict:
+            return enum_to_dtype_dict[ivalue]
+    raise TypeError('No torch.dtype corresponding to the value "%s"' % ivalue)
+
+enum_to_memory_format_dict = {
+    0: torch.contiguous_format,
+    1: torch.preserve_format,
+    2: torch.channels_last,
+    3: torch.channels_last_3d,
+}
+
+def arg_trans_memory_format(ivalue: Union[None, int, torch.memory_format]) -> Optional[torch.memory_format]:
+    """
+    Special process for memory_format.
+    Torch will transform memory_format to an enum in cpp, so the value of memory_format we get in jit is an int.
+    This function is used to recover the int to torch.memory_format in python.
+
+    Parameters
+    ----------
+    ivalue
+        The value of memory_format or method to be recovered.
+
+    """
+    if ivalue is None or isinstance(ivalue, torch.memory_format):
+        return ivalue
+    elif isinstance(ivalue, int):
+        if ivalue in enum_to_memory_format_dict:
+            return enum_to_memory_format_dict[ivalue]
+    raise TypeError('No torch.memory_format corresponding to the value "%s"' % ivalue)
+
+enum_to_layout_names = {
+    0: 'strided',
+    1: 'sparse_coo',
+    2: 'sparse_csr',
+    3: '_mkldnn',
+    4: 'sparse_csc',
+    5: 'sparse_bsr',
+    6: 'sparse_bsc',
+}
+
+enum_to_layout_dict = {}
+
+for enum_value, name in enum_to_layout_names.items():
+    if hasattr(torch, name):
+        enum_to_layout_dict[enum_value] = getattr(torch, name)
+
+def arg_trans_layout(ivalue: Union[None, int, torch.layout]) -> torch.layout:
+    """
+    Special process for layout.
+    Torch will transform layout to an enum in cpp, so the value of layout we get in jit is an int.
+    This function is used to recover the int to torch.layout in python.
+
+    Parameters
+    ----------
+    ivalue
+        The value of layout or method to be recovered.
+
+    """
+    if ivalue is None:
+        # tips: layout cannot be None with argument 'pin_memory' exist in in pytorch.
+        # tips: the default value of torch.layout is not like torch.dtype or torch.memory_format
+        return torch.strided
+    elif isinstance(ivalue, torch.layout):
+        return ivalue
+    elif isinstance(ivalue, int):
+        if ivalue in enum_to_layout_dict:
+            return enum_to_layout_dict[ivalue]
+    raise TypeError('No torch.layout corresponding to the value "%s"' % ivalue)
+
+special_treat_dict = {
+    'dtype': arg_trans_dtype,
+    'memory_format': arg_trans_memory_format,
+    'layout': arg_trans_layout,
+}
+
+@lru_cache
+def parse_aten_schema(schema: str):
+    """
+    Parse the schema, to positional_num and keyword_list, and detect if the argument should be specially treated.
+    only available on pytorch >= v1.9.0
+    """
+
+    positional_num = 0
+    keyword_list = list()
+    special_treat = dict() # for dtype and memory_format trans now
+
+    for arg in torch._C.parse_schema(schema).arguments:
+        if not arg.kwarg_only:
+            key = positional_num
+            positional_num += 1
+        else:
+            key = arg.name
+            keyword_list.append(key)
+
+        if arg.name in special_treat_dict:
+            if key not in special_treat:
+                special_treat[key] = [special_treat_dict[arg.name]]
+            else:
+                special_treat[key].append(special_treat_dict[arg.name])
+
+    return positional_num, keyword_list, special_treat
+
+@lru_cache
+def parse_aten_schema_version_1_8_x(schema: str):
+    """
+    Parse the schema, to positional_num and keyword_list, and detect if the argument should be specially treated.
+    Cannot use 'torch._C.parse_schema' because 'torch._C.Argument' has no 'kwarg_only' on pytorch v1.8.x
+    Using a lexer-parser like method to parse it.
+    Re-write from torch/csrc/jit/frontend/function_schema_parser.cpp
+    """
+    single_solid_tokens = [
+        '(', ')', '[', ']',
+        '+', '-', '!', '>',
+        '|', '=', ':', '.', ',',
+        '?', '*',
+    ]
+    # no '>=', '<=', '&', '/'
+    # '|' only occurs in 'Tensor(a|b)'
+    spec_tokens = [
+        'numdigits', 'string', 'quoted', 'unknown',
+    ]
+    str_chars_first = (*string.ascii_letters, '_')
+    str_chars = (*string.ascii_letters, *string.digits, '_')
+    num_chars_first = (*string.digits,)
+    num_chars_16 = (*string.digits, *string.ascii_lowercase[:6], *string.ascii_uppercase[:6])
+
+    tokens = list()
+    # 1: in ('\'', '"'); 2: in num; 3: in str;
+    status = 0
+    status_esc_char = False
+
+    for char in schema:
+        if status == 1:
+            if status_esc_char:
+                status_esc_char = False
+                tokens[-1][1] += char
+            elif char == '\\':
+                status_esc_char = True
+            else:
+                tokens[-1][1] += char
+                if char == tokens[-1][1][0]:
+                    status = 0
+            continue
+        elif status == 2:
+            if char in num_chars_16:
+                tokens[-1][1] += char
+                continue
+            else:
+                status = 0
+        elif status == 3:
+            if char in str_chars:
+                tokens[-1][1] += char
+                continue
+            else:
+                status = 0
+        if status == 0:
+            if char in single_solid_tokens:
+                tokens.append(char)
+            elif char in ('\'', '\"'):
+                tokens.append(['quoted', char])
+                status = 1
+            elif char in num_chars_first:
+                tokens.append(['numdigits', char])
+                status = 2
+            elif char in str_chars_first:
+                tokens.append(['string', char])
+                status = 3
+            elif char not in ('\n', ' ', '\t'):
+                tokens.append(['unknown', char])
+    assert status == 0
+
+    index = 0
+    def next_pass(index_diff = 1) -> str:
+        nonlocal index
+        index += index_diff
+        if index_diff == 1:
+            return tokens[index - 1]
+
+    def next_if(tk: str, index_diff=0) -> bool:
+        nonlocal index
+        if tk in spec_tokens:
+            return isinstance(tokens[index + index_diff], list) and tokens[index + index_diff][0] == tk
+        else:
+            return tokens[index + index_diff] == tk
+
+    def next_if_pass_value(tk: str, default_value = None) -> Optional[str]:
+        nonlocal index
+        if tk in spec_tokens:
+            if isinstance(tokens[index], list) and tokens[index][0] == tk:
+                index += 1
+                return tokens[index - 1][1]
+        else:
+            if tokens[index] == tk:
+                index += 1
+                return tk
+        return default_value
+
+    def next_expect_pass_value(tk: str) -> str:
+        nonlocal index
+        if tk in spec_tokens:
+            if not isinstance(tokens[index], list) or tokens[index][0] != tk:
+                raise Exception('aten schema parse error')
+            ret = tokens[index][1]
+        else:
+            if tokens[index] != tk:
+                raise Exception('aten schema parse error')
+            ret = tk
+        index += 1
+        return ret
+
+    def parse_number():
+        if next_if('+') or next_if('-'):
+            value = next_pass() + next_expect_pass_value('numdigits')
+        elif (get := next_if_pass_value('numdigits')) is not None:
+            value = get
+        else:
+            return None
+        if next_if_pass_value('.') is not None:
+            value += '.'
+            if (get := next_if_pass_value('numdigits')):
+                value += get
+        if value[-1] == 'e' and next_if_pass_value('-') is not None:
+            # only occur in versions < 1.9.0
+            # 1e-10
+            value += '-' + next_expect_pass_value('numdigits')
+        return value
+
+    def parse_name():
+        name = next_expect_pass_value('string')
+        if next_if_pass_value(':') is not None:
+            next_expect_pass_value(':')
+            name += '::' + next_expect_pass_value('string')
+        overload_name = ''
+        if next_if_pass_value('.') is not None:
+            overload_name = next_expect_pass_value('string')
+        return name, overload_name
+
+    def parse_list(sep, end, callback):
+        ret = []
+        if end is None or not next_if(end):
+            ret.append(callback())
+            while (get := next_if_pass_value(sep)) is not None:
+                ret.append(get)
+                ret.append(callback())
+        if end is not None:
+            ret.append(next_expect_pass_value(end))
+        return ret
+
+    def parse_alias_annotation():
+        if next_if_pass_value('(') is not None:
+            def parse_inner():
+                if next_if_pass_value('*') is not None:
+                    return '*'
+                else:
+                    return next_expect_pass_value('string')
+
+            value = '('.join(parse_list('|', None, parse_inner))
+            value += next_if_pass_value('!', '')
+            if next_if('-') and next_if('>', 1):
+                next_pass(2)
+                value += '->'
+                value += ''.join(parse_list('|', None, parse_inner))
+            return value + next_expect_pass_value(')')
+        else:
+            return next_if_pass_value('!', '')
+
+    def parse_type():
+        if next_if_pass_value('(') is not None:
+            value = ''.join(parse_list(',', ')', parse_type))
+        else:
+            value = next_expect_pass_value('string')
+            if value == '__torch__':
+                # only occur in versions < 1.9.0
+                while (get := next_if_pass_value('.')) is not None:
+                    value += get + next_expect_pass_value('string')
+            if next_if_pass_value('('):
+                the_types = ''.join(parse_list(',', ')', parse_type))
+                value += '(%s)' % the_types
+            value += parse_alias_annotation()
+        while True:
+            if next_if('[') and next_if(']', 1):
+                next_pass(2)
+                value += '[]'
+                value += parse_alias_annotation()
+            elif next_if_pass_value('?') is not None:
+                value += '?'
+            elif next_if_pass_value('-') is not None:
+                # only occur in versions < 1.9.0
+                # t(x -> *)
+                value += '-' + next_expect_pass_value('>') + next_expect_pass_value('*')
+                break
+            else:
+                break
+        return value
+
+    def parse_default_value():
+        if next_if_pass_value('[') is not None:
+            return parse_list(',', ']', parse_default_value)
+        elif (get := parse_number()) is not None:
+            return get
+        elif (get := next_if_pass_value('quoted')) is not None:
+            return get
+        else:
+            return next_expect_pass_value('string')
+
+    def parse_argument():
+        the_type = parse_type()
+        if next_if_pass_value('[') is not None:
+            the_type += '[' + parse_number() + next_expect_pass_value(']')
+            the_type += parse_alias_annotation()
+            the_type += next_if_pass_value('?', '')
+        name = next_expect_pass_value('string')
+        default_value = ''
+        if next_if_pass_value('=') is not None:
+            default_value = parse_default_value()
+        return the_type, name, default_value
+
+    def parse_declaration():
+        name, overload_name = parse_name()
+        arguments = list()
+        kwarg_only = False
+        is_vararg = False
+        next_expect_pass_value('(')
+        def parse_inner():
+            nonlocal kwarg_only
+            nonlocal is_vararg
+            if is_vararg:
+                raise Exception('"..." must be the last element')
+            elif next_if_pass_value('*') is not None:
+                kwarg_only = True
+            elif next_if_pass_value('.') is not None:
+                next_expect_pass_value('.')
+                next_expect_pass_value('.')
+                is_vararg = True
+            else:
+                arguments.append((parse_argument()[1], kwarg_only))
+        parse_list(',', ')', parse_inner)
+        return name, overload_name, arguments, is_vararg
+
+    positional_num = 0
+    keyword_list = list()
+    special_treat = dict() # for dtype and memory_format trans now
+
+    for name, kwarg_only in parse_declaration()[2]:
+        if not kwarg_only:
+            key = positional_num
+            positional_num += 1
+        else:
+            key = name
+            keyword_list.append(key)
+
+        if name in special_treat_dict:
+            if key not in special_treat:
+                special_treat[key] = [special_treat_dict[name]]
+            else:
+                special_treat[key].append(special_treat_dict[name])
+
+    return positional_num, keyword_list, special_treat
+
+def parse_input_value(speedup: ModelSpeedup, input_nodes: List[torch._C.Node], positional_num: int, keyword_list: List[str]):
+    """
+    translate inputs, to constant positional arguments, constant keyword arguments, and undetermined positions
+    """
+    positional: List[str] = list()
+    keyword: Dict[str, str] = dict()
+    undetermined: List[Union[int, str]] = list()
+
+    for ainput in input_nodes:
+        if ainput.node().kind() == 'prim::ListConstruct':
+            arg = translate_list(ainput, speedup)
+        elif ainput.node().kind() == 'prim::Constant':
+            arg = ainput.toIValue()
+        else:
+            assert 'aten::' in ainput.node().kind() or 'prim::' in ainput.node().kind()
+            if len(positional) < positional_num:
+                undetermined.append(len(positional))
+            else:
+                undetermined.append(keyword_list[len(keyword)])
+            arg = None
+
+        if len(positional) < positional_num:
+            positional.append(arg)
+        else:
+            keyword[keyword_list[len(keyword)]] = arg
+    return positional, keyword, undetermined
+
+def special_treat_to_constant_value(positional: List, keyword: Dict[str], undetermined: List[Union[int, str]],
+                                    special_treat: Dict[Union[int, str], Callable]) -> Dict[Union[int, str], Callable]:
+    """
+    if any argument with special_treat is not in undetermined, do the treat
+    """
+    undetermined_special_treat = dict()
+    for p, fs in special_treat.items():
+        if p in undetermined:
+            undetermined_special_treat[p] = fs
+        elif isinstance(p, int):
+            for f in fs: positional[p] = f(positional[p])
+        else:
+            for f in fs: keyword[p] = f(keyword[p])
+    return undetermined_special_treat
+
+table_fix_schema = {
+    'to.device': (
+        5, ['memory_format'], {
+            2:                  [arg_trans_dtype],
+            'memory_format':    [arg_trans_memory_format],
+        },
+    ),
+    'to.dtype': (
+        4, ['memory_format'], {
+            1:                  [arg_trans_dtype],
+            'memory_format':    [arg_trans_memory_format],
+        },
+    ),
+    'to.other': (
+        4, ['memory_format'], {
+            'memory_format':    [arg_trans_memory_format],
+        },
+    ),
+    # functinon 'to', 'randint', and 'sparse_coo_tensor' has different schema between python and c++.
+    # https://pytorch.org/docs/stable/jit_unsupported.html#ops-with-divergent-schemas-between-torch-python
+
+    # """aten::sparse_coo_tensor.size(int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=False) -> (Te
+    # nsor)""",
+    # """aten::sparse_coo_tensor.indices(Tensor indices, Tensor values, *, int? dtype=None, int? layout=None, Device? device=None, bool? pi
+    # n_memory=None) -> (Tensor)""",
+    # """aten::sparse_coo_tensor.indices_size(Tensor indices, Tensor values, int[] size, *, int? dtype=None, int? layout=None, Device? devi
+    # ce=None, bool? pin_memory=None) -> (Tensor"""'
+}
+
+layout_names_to_trans = {
+    'strided':      'to_dense',
+    'sparse_coo':   'to_sparse_coo',
+    'sparse_csr':   'to_sparse_csr',
+    'sparse_csc':   'to_sparse_csc',
+    'sparse_bsr':   'to_sparse_bsr',
+    'sparse_bsc':   'to_sparse_bsc',
+    '_mkldnn':      'to_mkldnn',
+}
+
+layout_names_to_trans_dict = {}
+
+for layout_name, trans_name in layout_names_to_trans.items():
+    if hasattr(torch, layout_name) and hasattr(torch.Tensor, trans_name):
+        layout_names_to_trans_dict[getattr(torch, layout_name)] = getattr(torch.Tensor, trans_name)
+
+def hook_to_dtype_layout(positional, keyword, undetermined, undetermined_special_treat):
+    """
+    there is no function corresponding to 'aten::to.dtype_layout'. so we gen it in another way.
+
+    positional_num = 1 (self)
+    keyword_list = ['dtype', 'layout', 'device', 'pin_memory', 'non_blocking', 'copy', 'memory_format']
+    special_treat = {
+        'dtype': arg_trans_dtype,
+        'layout': arg_trans_layout,
+        'memory_format': arg_trans_memory_format,
+    },
+    """
+    assert 'layout' not in undetermined
+    assert 'pin_memory' not in undetermined
+    assert 'non_blocking' not in undetermined
+
+    to_layout = arg_trans_layout(keyword['layout'])
+    del keyword['layout']
+    del keyword['pin_memory']
+    del keyword['non_blocking']
+    real_to = FuncAdapter(torch.Tensor.to, positional, keyword, undetermined, undetermined_special_treat)
+
+    def ret_func(*args):
+        the_self = args[0]
+        the_self = layout_names_to_trans_dict[to_layout](the_self)
+        return real_to(the_self, *args[1:])
+
+    return ret_func
+
+def hook_randint(positional, keyword, undetermined, undetermined_special_treat):
+    assert 'pin_memory' not in undetermined
+    del keyword['pin_memory']
+    return FuncAdapter(torch.randint, positional, keyword, undetermined, undetermined_special_treat)
+
+table_gen_hook = {
+    'to.dtype_layout': hook_to_dtype_layout, #TODO: this uncommon 'aten::to' is not tested
+    'randint': hook_randint,
+    'randint.generator': hook_randint,
+    'randint.low': hook_randint,
+    'randint.low_generator': hook_randint,
+}
+
+def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpeedup) -> FuncAdapter:
+    """
+    parse a Return a callable object to inference the mask according to the node.op_type.
 
     Parameters
     ---------
-    node: NodeGroup
+    func
+        The torch function one-to-one correspondence with the node.
+    node
         The target node to inference the mask
-    speedup: ModelSpeedup
+    speedup
         The speedup object of the target model.
 
     Returns
     ------
-    func: callable object(nn.Module/function)
+    func
+        Return the translated function that used to inference the mask
+        , if current op_type is not supported, then we return None.
+    """
+    c_node = node.key_node
+
+    schema = c_node.schema()
+    op_with_overload = schema[6:schema.find('(')] # the magic number 6 means cut off `aten::` or `prim::`
+    if op_with_overload in table_fix_schema:
+        positional_num, keyword_list, special_treat = table_fix_schema[op_with_overload]
+    elif torch.__version__ < '1.9.0':
+        positional_num, keyword_list, special_treat = parse_aten_schema_version_1_8_x(schema)
+    else:
+        positional_num, keyword_list, special_treat = parse_aten_schema(schema)
+
+    input_nodes = list(c_node.inputs())
+    positional, keyword, undetermined = parse_input_value(speedup, input_nodes, positional_num, keyword_list)
+
+    undetermined_special_treat = special_treat_to_constant_value(positional, keyword, undetermined, special_treat)
+
+    if op_with_overload in table_gen_hook:
+        return table_gen_hook[op_with_overload](positional, keyword, undetermined, undetermined_special_treat)
+    else:
+        return FuncAdapter(func, positional, keyword, undetermined, undetermined_special_treat)
+
+trans_func_dict = {
+    'aten::slice': slice_python,
+    'aten::cat': cat_python,
+    'aten::Int': partial(generate_aten_to_python, torch._C._TensorBase.int),
+
+    'prim::TupleUnpack': tupleunpack_python,
+    'prim::ListUnpack': tupleunpack_python,
+    'prim::NumToTensor': num2tensor_python,
+    'prim::GetAttr': getattr_python,
+}
+
+def init_add_functions(func_from: Union[ModuleType, Type[Any]]):
+    """
+    Add function/method attributes from a module/class, to the trans_func_dict
+
+    Parameters
+    ---------
+    func_from
+        The module/class include needed functions
+
+    """
+    global trans_func_dict
+    new_trans_func_dict = dict()
+    for name in dir(func_from):
+        attr = getattr(func_from, name)
+        if callable(attr) and not name.startswith('__'):
+            new_trans_func_dict['aten::' + name] = partial(generate_aten_to_python, attr)
+    trans_func_dict = {**new_trans_func_dict, **trans_func_dict}
+
+init_add_functions(torch._C._VariableFunctions)
+init_add_functions(torch._C._nn)
+init_add_functions(torch._C._TensorBase)
+
+def jit_to_python_function(node: NodePyGroup, speedup: ModelSpeedup) -> FuncAdapter:
+    """
+    Return a callable object to inference the mask according to the node.op_type.
+
+    Parameters
+    ---------
+    node
+        The target node to inference the mask
+    speedup
+        The speedup object of the target model.
+
+    Returns
+    ------
+    func
         Return the translated function that used to inference the mask
         , if current op_type is not supported, then we return None.
     """
     logger.debug(
         'Translate C function %s into its python version', node.op_type)
-    if node.op_type not in trans_from_jit_to_python:
+    if node.op_type not in trans_func_dict:
         logger.error(
             '%s is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~', node.op_type)
         # return None to skip the mask inference for this node
         return None
-    return trans_from_jit_to_python[node.op_type](node, speedup)
+    return trans_func_dict[node.op_type](node, speedup)

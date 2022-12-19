@@ -1,6 +1,6 @@
 import multiprocessing
 import os
-import sys
+import subprocess
 import time
 
 import pytest
@@ -76,3 +76,51 @@ def test_exp_exit_without_stop(pytestconfig):
             return
     process.kill()
     raise RuntimeError(f'Experiment fails to stop in {timeout} seconds.')
+
+
+def test_multitrial_experiment_resume_view(pytestconfig):
+    # start a normal nas experiment
+    base_model, evaluator = _mnist_net('simple', {'max_epochs': 1})
+    search_strategy = strategy.Random()
+    exp = RetiariiExperiment(base_model, evaluator, strategy=search_strategy)
+    exp_id = exp.id
+    exp_config = RetiariiExeConfig('local')
+    exp_config.trial_concurrency = 1
+    exp_config.max_trial_number = 1
+    exp_config._trial_command_params = nas_experiment_trial_params(pytestconfig.rootpath)
+    exp.run(exp_config)
+    ensure_success(exp)
+    assert isinstance(exp.export_top_models()[0], dict)
+    exp.stop()
+
+    # resume the above nas experiment. only tested the resume logic in the python side,
+    # as no more trial is executed after resume, the above experiment is already finished
+    print('python api resume...')
+    exp = RetiariiExperiment.resume(exp_id)
+    ensure_success(exp)
+    # sleep here because there would be several seconds for the experiment status to change
+    # to ERROR from INITIALIZED/RUNNING if the resume gets error.
+    time.sleep(6)
+    assert exp.get_status() == 'DONE', f'The experiment status should not be {exp.get_status()}'
+    # TODO: currently `export_top_models` does not work as strategy's states are not resumed
+    # assert isinstance(exp.export_top_models()[0], dict)
+    exp.stop()
+    # view the above experiment in non blocking mode then stop it
+    print('python api view...')
+    exp = RetiariiExperiment.view(exp_id, non_blocking=True)
+    assert exp.get_status() == 'VIEWED', f'The experiment status should not be {exp.get_status()}'
+    exp.stop()
+
+    # the following is nnictl resume and view
+    print('nnictl resume...')
+    new_env = os.environ.copy()
+    new_env['PYTHONPATH'] = str(pytestconfig.rootpath)
+    # NOTE: experiment status (e.g., ERROR) is not checked, because it runs in blocking mode and
+    # the rest server exits right after the command is done
+    proc = subprocess.run(f'nnictl resume {exp_id}', shell=True, env=new_env)
+    assert proc.returncode == 0, 'resume nas experiment failed with code %d' % proc.returncode
+    print('nnictl view...')
+    proc = subprocess.run(f'nnictl view {exp_id}', shell=True)
+    assert proc.returncode == 0, 'view nas experiment failed with code %d' % proc.returncode
+    proc = subprocess.run(f'nnictl stop {exp_id}', shell=True)
+    assert proc.returncode == 0, 'stop viewed nas experiment failed with code %d' % proc.returncode

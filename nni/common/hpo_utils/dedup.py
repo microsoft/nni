@@ -79,6 +79,12 @@ class Deduplicator:
             self._history.add(params_str)
             return True
 
+    def add_history(self, formatted_parameters: FormattedParameters) -> None:
+        params = deformat_parameters(formatted_parameters, self._space)
+        params_str = typing.cast(str, nni.dump(params, sort_keys=True))
+        if params_str not in self._history:
+            self._history.add(params_str)
+
 def _spec_never_dup(spec: ParameterSpec) -> bool:
     if spec.is_nested():
         return False  # "not chosen" duplicates with "not chosen"

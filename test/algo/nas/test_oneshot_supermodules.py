@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 import torch
 import torch.nn as nn
-from nni.retiarii.nn.pytorch import ValueChoice, Conv2d, BatchNorm2d, LayerNorm, Linear, MultiheadAttention
+from nni.retiarii.nn.pytorch import ValueChoice, LayerChoice, Conv2d, BatchNorm2d, LayerNorm, Linear, MultiheadAttention
 from nni.retiarii.oneshot.pytorch.base_lightning import traverse_and_mutate_submodules
 from nni.retiarii.oneshot.pytorch.supermodule.differentiable import (
     MixedOpDifferentiablePolicy, DifferentiableMixedLayer, DifferentiableMixedInput, GumbelSoftmax,
@@ -144,15 +144,37 @@ def test_differentiable_valuechoice():
     assert set(conv.export({}).keys()) == {'123', '456'}
 
 
-def _mixed_operation_sampling_sanity_check(operation, memo, *input):
+def test_differentiable_layerchoice_dedup():
+    layerchoice1 = LayerChoice([Conv2d(3, 3, 3), Conv2d(3, 3, 3)], label='a')
+    layerchoice2 = LayerChoice([Conv2d(3, 3, 3), Conv2d(3, 3, 3)], label='a')
+
+    memo = {}
+    DifferentiableMixedLayer.mutate(layerchoice1, 'x', memo, {})
+    DifferentiableMixedLayer.mutate(layerchoice2, 'x', memo, {})
+    assert len(memo) == 1 and 'a' in memo
+
+
+def _mutate_op_path_sampling_policy(operation):
     for native_op in NATIVE_MIXED_OPERATIONS:
         if native_op.bound_type == type(operation):
             mutate_op = native_op.mutate(operation, 'dummy', {}, {'mixed_op_sampling': MixedOpPathSamplingPolicy})
             break
+    return mutate_op
 
+
+def _mixed_operation_sampling_sanity_check(operation, memo, *input):
+    mutate_op = _mutate_op_path_sampling_policy(operation)
     mutate_op.resample(memo=memo)
     return mutate_op(*input)
 
+
+from nni.nas.oneshot.pytorch.supermodule.base import sub_state_dict
+def _mixed_operation_state_dict_sanity_check(operation, model, memo, *input):
+    mutate_op = _mutate_op_path_sampling_policy(operation)
+    mutate_op.resample(memo=memo)
+    model.load_state_dict(sub_state_dict(mutate_op))
+    return mutate_op(*input), model(*input)
+    
 
 def _mixed_operation_differentiable_sanity_check(operation, *input):
     for native_op in NATIVE_MIXED_OPERATIONS:
@@ -160,7 +182,9 @@ def _mixed_operation_differentiable_sanity_check(operation, *input):
             mutate_op = native_op.mutate(operation, 'dummy', {}, {'mixed_op_sampling': MixedOpDifferentiablePolicy})
             break
 
-    return mutate_op(*input)
+    mutate_op(*input)
+    mutate_op.export({})
+    mutate_op.export_probs({})
 
 
 def test_mixed_linear():
@@ -175,6 +199,11 @@ def test_mixed_linear():
     with pytest.raises(TypeError):
         linear = Linear(ValueChoice([3, 6, 9], label='shared'), ValueChoice([2, 4, 8]), bias=ValueChoice([False, True]))
         _mixed_operation_sampling_sanity_check(linear, {'shared': 3}, torch.randn(2, 3))
+
+    linear = Linear(ValueChoice([3, 6, 9], label='in_features'), ValueChoice([2, 4, 8], label='out_features'), bias=True)
+    kwargs = {'in_features': 6, 'out_features': 4}
+    out1, out2 = _mixed_operation_state_dict_sanity_check(linear, Linear(**kwargs), kwargs, torch.randn(2, 6))
+    assert torch.allclose(out1, out2)
 
 
 def test_mixed_conv2d():
@@ -223,6 +252,17 @@ def test_mixed_conv2d():
     conv.resample({'k': 1})
     assert conv(torch.ones((1, 1, 3, 3))).sum().item() == 9
 
+    # only `in_channels`, `out_channels`, `kernel_size`, and `groups` influence state_dict
+    conv = Conv2d(
+        ValueChoice([2, 4, 8], label='in_channels'), ValueChoice([6, 12, 24], label='out_channels'), 
+        kernel_size=ValueChoice([3, 5, 7], label='kernel_size'), groups=ValueChoice([1, 2], label='groups')   
+    )
+    kwargs = {
+        'in_channels': 8, 'out_channels': 12, 
+        'kernel_size': 5, 'groups': 2
+    }
+    out1, out2 = _mixed_operation_state_dict_sanity_check(conv, Conv2d(**kwargs), kwargs, torch.randn(2, 8, 16, 16))
+    assert torch.allclose(out1, out2)
 
 def test_mixed_batchnorm2d():
     bn = BatchNorm2d(ValueChoice([32, 64], label='dim'))
@@ -232,6 +272,10 @@ def test_mixed_batchnorm2d():
 
     _mixed_operation_differentiable_sanity_check(bn, torch.randn(2, 64, 3, 3))
 
+    bn = BatchNorm2d(ValueChoice([32, 48, 64], label='num_features'))
+    kwargs = {'num_features': 48}
+    out1, out2 = _mixed_operation_state_dict_sanity_check(bn, BatchNorm2d(**kwargs), kwargs, torch.randn(2, 48, 3, 3))
+    assert torch.allclose(out1, out2)
 
 def test_mixed_layernorm():
     ln = LayerNorm(ValueChoice([32, 64], label='normalized_shape'), elementwise_affine=True)
@@ -249,6 +293,10 @@ def test_mixed_layernorm():
 
     _mixed_operation_differentiable_sanity_check(ln, torch.randn(2, 64, 16))
 
+    ln = LayerNorm(ValueChoice([32, 48, 64], label='normalized_shape'))
+    kwargs = {'normalized_shape': 48}
+    out1, out2 = _mixed_operation_state_dict_sanity_check(ln, LayerNorm(**kwargs), kwargs, torch.randn(2, 8, 48))
+    assert torch.allclose(out1, out2)
 
 def test_mixed_mhattn():
     mhattn = MultiheadAttention(ValueChoice([4, 8], label='emb'), 4)
@@ -281,6 +329,11 @@ def test_mixed_mhattn():
 
     _mixed_operation_differentiable_sanity_check(mhattn, torch.randn(5, 3, 8), torch.randn(5, 3, 8), torch.randn(5, 3, 8))
 
+    mhattn = MultiheadAttention(embed_dim=ValueChoice([4, 8, 16], label='embed_dim'), num_heads=ValueChoice([1, 2, 4], label='num_heads'),
+        kdim=ValueChoice([4, 8, 16], label='kdim'), vdim=ValueChoice([4, 8, 16], label='vdim'))
+    kwargs = {'embed_dim': 16, 'num_heads': 2, 'kdim': 4, 'vdim': 8}
+    (out1, _), (out2, _) = _mixed_operation_state_dict_sanity_check(mhattn, MultiheadAttention(**kwargs), kwargs, torch.randn(7, 2, 16), torch.randn(7, 2, 4), torch.randn(7, 2, 8))
+    assert torch.allclose(out1, out2)
 
 @pytest.mark.skipif(torch.__version__.startswith('1.7'), reason='batch_first is not supported for legacy PyTorch')
 def test_mixed_mhattn_batch_first():
@@ -319,6 +372,9 @@ def test_differentiable_layer_input():
     op = DifferentiableMixedLayer([('a', Linear(2, 3, bias=False)), ('b', Linear(2, 3, bias=True))], nn.Parameter(torch.randn(2)), nn.Softmax(-1), 'eee')
     assert op(torch.randn(4, 2)).size(-1) == 3
     assert op.export({})['eee'] in ['a', 'b']
+    probs = op.export_probs({})
+    assert len(probs) == 2
+    assert abs(probs['eee/a'] + probs['eee/b'] - 1) < 1e-4
     assert len(list(op.parameters())) == 3
 
     with pytest.raises(ValueError):
@@ -328,6 +384,8 @@ def test_differentiable_layer_input():
     input = DifferentiableMixedInput(5, 2, nn.Parameter(torch.zeros(5)), GumbelSoftmax(-1), 'ddd')
     assert input([torch.randn(4, 2) for _ in range(5)]).size(-1) == 2
     assert len(input.export({})['ddd']) == 2
+    assert len(input.export_probs({})) == 5
+    assert 'ddd/3' in input.export_probs({})
 
 
 def test_proxyless_layer_input():
@@ -341,7 +399,8 @@ def test_proxyless_layer_input():
     input = ProxylessMixedInput(5, 2, nn.Parameter(torch.zeros(5)), GumbelSoftmax(-1), 'ddd')
     assert input.resample({})['ddd'] in list(range(5))
     assert input([torch.randn(4, 2) for _ in range(5)]).size() == torch.Size([4, 2])
-    assert input.export({})['ddd'] in list(range(5))
+    exported = input.export({})['ddd']
+    assert len(exported) == 2 and all(e in list(range(5)) for e in exported)
 
 
 def test_pathsampling_repeat():
@@ -373,6 +432,7 @@ def test_differentiable_repeat():
     assert op(torch.randn(2, 8)).size() == torch.Size([2, 16])
     sample = op.export({})
     assert 'ccc' in sample and sample['ccc'] in [0, 1]
+    assert sorted(op.export_probs({}).keys()) == ['ccc/0', 'ccc/1']
 
     class TupleModule(nn.Module):
         def __init__(self, num):
@@ -452,11 +512,16 @@ def test_differentiable_cell():
             result.update(module.export(memo=result))
         assert len(result) == model.cell.num_nodes * model.cell.num_ops_per_node * 2
 
+        result_prob = {}
+        for module in nas_modules:
+            result_prob.update(module.export_probs(memo=result_prob))
+
         ctrl_params = []
         for m in nas_modules:
             ctrl_params += list(m.parameters(arch=True))
         if cell_cls in [CellLooseEnd, CellOpFactory]:
             assert len(ctrl_params) == model.cell.num_nodes * (model.cell.num_nodes + 3) // 2
+            assert len(result_prob) == len(ctrl_params) * 2  # len(op_names) == 2
             assert isinstance(model.cell, DifferentiableMixedCell)
         else:
             assert not isinstance(model.cell, DifferentiableMixedCell)

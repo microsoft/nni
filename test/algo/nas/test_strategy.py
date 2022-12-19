@@ -56,7 +56,10 @@ class MockExecutionEngine(AbstractExecutionEngine):
 
 
 def _reset_execution_engine(engine=None):
-    nni.retiarii.execution.api._execution_engine = engine
+    # Use the new NAS reset
+    # nni.retiarii.execution.api._execution_engine = engine
+    import nni.nas.execution.api
+    nni.nas.execution.api._execution_engine = engine
 
 
 class Net(nn.Module):
@@ -127,6 +130,13 @@ def test_random_search():
 
 def test_evolution():
     evolution = strategy.RegularizedEvolution(population_size=5, sample_size=3, cycles=10, mutation_prob=0.5, on_failure='ignore')
+    engine = MockExecutionEngine(failure_prob=0.2)
+    _reset_execution_engine(engine)
+    evolution.run(*_get_model_and_mutators())
+    wait_models(*engine.models)
+    _reset_execution_engine()
+
+    evolution = strategy.RegularizedEvolution(population_size=5, sample_size=3, cycles=10, mutation_prob=0.5, dedup=True, on_failure='ignore')
     engine = MockExecutionEngine(failure_prob=0.2)
     _reset_execution_engine(engine)
     evolution.run(*_get_model_and_mutators())

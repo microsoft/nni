@@ -3,7 +3,7 @@ Search Space
 
 .. _mutation-primitives:
 
-Mutation Pritimives
+Mutation Primitives
 -------------------
 
 LayerChoice
@@ -69,6 +69,90 @@ AutoActivation
 ^^^^^^^^^^^^^^
 
 ..  autoclass:: nni.retiarii.nn.pytorch.AutoActivation
+    :members:
+
+Model Space Hub
+---------------
+
+NasBench101
+^^^^^^^^^^^
+
+..  autoclass:: nni.retiarii.hub.pytorch.NasBench101
+    :members:
+
+NasBench201
+^^^^^^^^^^^
+
+..  autoclass:: nni.retiarii.hub.pytorch.NasBench201
+    :members:
+
+NASNet
+^^^^^^
+
+..  autoclass:: nni.retiarii.hub.pytorch.NASNet
+    :members:
+
+..  autoclass:: nni.retiarii.hub.pytorch.nasnet.NDS
+    :members:
+
+..  autoclass:: nni.retiarii.hub.pytorch.nasnet.NDSStage
+    :members:
+
+..  autoclass:: nni.retiarii.hub.pytorch.nasnet.NDSStagePathSampling
+    :members:
+
+..  autoclass:: nni.retiarii.hub.pytorch.nasnet.NDSStageDifferentiable
+    :members:
+
+ENAS
+^^^^
+
+..  autoclass:: nni.retiarii.hub.pytorch.ENAS
+    :members:
+
+AmoebaNet
+^^^^^^^^^
+
+..  autoclass:: nni.retiarii.hub.pytorch.AmoebaNet
+    :members:
+
+PNAS
+^^^^
+
+..  autoclass:: nni.retiarii.hub.pytorch.PNAS
+    :members:
+
+DARTS
+^^^^^
+
+..  autoclass:: nni.retiarii.hub.pytorch.DARTS
+    :members:
+
+ProxylessNAS
+^^^^^^^^^^^^
+
+..  autoclass:: nni.retiarii.hub.pytorch.ProxylessNAS
+    :members:
+
+..  autoclass:: nni.retiarii.hub.pytorch.proxylessnas.InvertedResidual
+    :members:
+
+MobileNetV3Space
+^^^^^^^^^^^^^^^^
+
+..  autoclass:: nni.retiarii.hub.pytorch.MobileNetV3Space
+    :members:
+
+ShuffleNetSpace
+^^^^^^^^^^^^^^^
+
+..  autoclass:: nni.retiarii.hub.pytorch.ShuffleNetSpace
+    :members:
+
+AutoformerSpace
+^^^^^^^^^^^^^^^
+
+..  autoclass:: nni.retiarii.hub.pytorch.AutoformerSpace
     :members:
 
 Mutators (advanced)

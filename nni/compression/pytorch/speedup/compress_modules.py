@@ -31,6 +31,7 @@ replace_module = {
     'SELU': lambda module, masks: no_replace(module, masks),
     'CELU': lambda module, masks: no_replace(module, masks),
     'GELU': lambda module, masks: no_replace(module, masks),
+    'GELUActivation': lambda module, masks: no_replace(module, masks),
     'Sigmoid': lambda module, masks: no_replace(module, masks),
     'SiLU': lambda module, masks: no_replace(module, masks),
     'Mish': lambda module, masks: no_replace(module, masks),
@@ -45,8 +46,10 @@ replace_module = {
     'Upsample': lambda module, masks: no_replace(module, masks),
     'LayerNorm': lambda module, masks: replace_layernorm(module, masks),
     'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks),
+    'Embedding': lambda module, masks: replace_embedding(module, masks),
     'PixelShuffle': lambda module, masks: replace_pixelshuffle(module, masks),
-    'Flatten': lambda module, masks: no_replace(module, masks)
+    'Flatten': lambda module, masks: no_replace(module, masks),
+    'GroupNorm': lambda module, masks: replace_groupnorm(module, masks),
 }
 
 
@@ -73,6 +76,7 @@ def convert_to_coarse_mask(t_mask, dim):
     n_dims = len(shape)
     dim_list = list(range(n_dims))
     # try to reduce the mask from the dim-th dimension
+    dim = dim if dim >= 0 else n_dims + dim
     dim_list.remove(dim)
 
     t_merged = torch.sum(t_mask, dim_list)
@@ -83,6 +87,30 @@ def convert_to_coarse_mask(t_mask, dim):
     indexes = torch.nonzero(all_pruned, as_tuple=True)[0]
     remained_indexes = torch.nonzero(need_remain, as_tuple=True)[0]
     return indexes, remained_indexes
+
+
+def convert_dense_shape(mask):
+    """
+    Get the dense shape of the tensor after removing the sparsity
+    values.
+
+    Parameters
+    ----------
+    mask: torch.Tensor
+        The mask tensor.
+
+    Returns
+    -------
+    dense_shape: tuple
+        The dense shape after removing the sparsity values.
+    """
+    assert isinstance(mask, torch.Tensor)
+    n_dim = len(mask.size())
+    dense_shape = []
+    for dim in range(n_dim):
+        _, remained = convert_to_coarse_mask(mask, dim)
+        dense_shape.append(remained.size(0))
+    return tuple(dense_shape)
 
 
 def no_replace(module, masks):
@@ -166,8 +194,8 @@ def replace_linear(linear, masks):
 
     weight_mask = weight_mask['weight']
     # N C K
-    pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
-    pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
+    pruned_in, remained_in = convert_to_coarse_mask(in_mask, -1)
+    pruned_out, remained_out = convert_to_coarse_mask(output_mask, -1)
     n_remained_in = weight_mask.size(1) - pruned_in.size(0)
     n_remained_out = weight_mask.size(0) - pruned_out.size(0)
     remained_in, remained_out = remained_in.to(
@@ -283,6 +311,90 @@ def replace_batchnorm2d(norm, masks):
     return new_norm
 
 
+def replace_groupnorm(norm: nn.GroupNorm, masks):
+    """
+    Parameters
+    ----------
+    norm : torch.nn.GroupNorm
+        The group norm module to be replace
+    masks : Tuple of the input masks, output masks and weight masks
+        Tuple of the masks, for example
+        ([input_m1, input_m2], [output_m], {'weight':weight_m})
+
+    Returns
+    -------
+    torch.nn.GroupNorm
+        The new group norm module
+    """
+    in_masks, output_mask, _ = masks
+    assert isinstance(norm, nn.GroupNorm)
+    in_mask = in_masks[0]
+
+    # N, C, H, W
+    _, remained_in = convert_to_coarse_mask(in_mask, 1)
+    _, remained_out = convert_to_coarse_mask(output_mask, 1)
+
+    assert len(remained_in.size()) == 1
+    if remained_in.size(0) != remained_out.size(0):
+        raise ShapeMisMatchError()
+
+    ori_channel_step = norm.num_channels // norm.num_groups
+    for groupid in range(norm.num_groups):
+        in_start = groupid * ori_channel_step
+        in_end = in_start + ori_channel_step
+
+        new_channel_step = torch.logical_and(
+            in_start <= remained_in,
+            remained_in < in_end,
+        ).sum().item()
+
+        # this group fully pruned
+        if new_channel_step == 0:
+            continue
+
+        break
+
+
+    new_groups = 0
+
+    # Validate
+    for groupid in range(norm.num_groups):
+        in_start = groupid * ori_channel_step
+        in_end = in_start + ori_channel_step
+        num_item = torch.logical_and(
+            in_start <= remained_in,
+            remained_in < in_end,
+        ).sum().item()
+        if num_item == 0:
+            continue
+
+        # check if the number of remained channel of each group are the same
+        if num_item != new_channel_step:
+            raise UnBalancedGroupError()
+
+        new_groups += 1
+
+    new_num_channels = remained_in.size()[0]
+    new_module = nn.GroupNorm(
+        new_groups,
+        new_num_channels,
+        eps=norm.eps,
+        affine=norm.affine,
+    )
+    if new_module.affine:
+        new_module.weight.data = torch.index_select(
+            norm.weight.data,
+            0,
+            remained_in,
+        )
+        new_module.bias.data = torch.index_select(
+            norm.bias.data,
+            0,
+            remained_in,
+        )
+    return new_module
+
+
 def replace_instancenorm2d(norm, masks):
     """
     Parameters
@@ -382,18 +494,20 @@ def replace_conv2d(conv, masks):
         in_end = in_start + ori_inchannel_step
         out_start = groupid * ori_outchannel_step
         out_end = out_start + ori_outchannel_step
-        current_input_index = list(
-            filter(lambda x: in_start <= x and x < in_end, remained_in.tolist()))
-        current_output_index = list(
-            filter(lambda x: out_start <= x and x < out_end, remained_out.tolist()))
+
+        new_inchannel_step: int = torch.logical_and(
+            in_start <= remained_in,
+            remained_in < in_end
+        ).sum().item()
+        new_outchannel_step: int = torch.logical_and(
+            out_start <= remained_out,
+            remained_out < out_end
+        ).sum().item()
         # remap the global index to the group index
-        if len(current_input_index) == 0:
+        if new_inchannel_step == 0:
             # if the whole group are pruned
             continue
         else:
-
-            new_inchannel_step = len(current_input_index)
-            new_outchannel_step = len(current_output_index)
             break
     tmp_weight = torch.ones(
         n_remained_out, new_inchannel_step, k_size1, k_size2)
@@ -409,12 +523,15 @@ def replace_conv2d(conv, masks):
         in_end = in_start + ori_inchannel_step
         out_start = groupid * ori_outchannel_step
         out_end = out_start + ori_outchannel_step
-        current_input_index = list(
-            filter(lambda x: in_start <= x and x < in_end, remained_in.tolist()))
-        current_output_index = list(
-            filter(lambda x: out_start <= x and x < out_end, remained_out.tolist()))
+
+        current_input_mask = torch.logical_and(in_start <= remained_in, remained_in < in_end)
+        current_input_index = remained_in[current_input_mask]
+
+        current_output_mask = torch.logical_and(out_start <= remained_out, remained_out < out_end)
+        current_output_index = remained_out[current_output_mask]
+
         # remap the global index to the group index
-        current_input_index = [x-in_start for x in current_input_index]
+        current_input_index = current_input_index - in_start
         if len(current_input_index) == 0:
             # if the whole group are pruned
             assert len(current_output_index) == 0
@@ -582,16 +699,38 @@ def replace_layernorm(layernorm, masks):
     if len(in_masks) != 1:
         raise InputsNumberError()
     in_mask = in_masks[0]
-    dim_n = len(in_mask.size())
-    new_shape = []
-    for i in range(1, dim_n):
-        sum_dims = list(range(0, dim_n))
-        sum_dims.remove(i)
-        reduced = torch.sum(in_mask, sum_dims)
-        n_remained = torch.sum(reduced > 0)
-        new_shape.append(n_remained)
 
-    return nn.LayerNorm(tuple(new_shape), layernorm.eps, layernorm.elementwise_affine)
+    old_normalized_shape = layernorm.normalized_shape
+    new_normalized_shape = []
+    remained_list = []
+    for i in range(-len(old_normalized_shape), 0):
+        pruned, remained = convert_to_coarse_mask(in_mask, i)
+        new_normalized_shape.append(old_normalized_shape[i] - pruned.size()[0])
+        remained_list.append(remained)
+
+    new_layernorm = nn.LayerNorm(tuple(new_normalized_shape), layernorm.eps, layernorm.elementwise_affine)
+
+    if new_layernorm.elementwise_affine:
+        new_layernorm.to(layernorm.weight.device)
+        # NOTE: should we keep the weight & bias?
+        with torch.no_grad():
+            tmp_weight_data = layernorm.weight.data
+            tmp_bias_data = layernorm.bias.data
+            for i, remained in enumerate(remained_list):
+                tmp_weight_data = torch.index_select(tmp_weight_data, i, remained)
+                tmp_bias_data = torch.index_select(tmp_bias_data, i, remained)
+            new_layernorm.weight.data = tmp_weight_data
+            new_layernorm.bias.data = tmp_bias_data
+    return new_layernorm
+
+def replace_embedding(embedding, masks):
+    """
+    Replace the embedding layer according the infered masks.
+    We replace the embedding layer according the weight masks,
+    """
+    # currently we donnot support replace the embedding layer
+    # because we donnot have the corressponding pruner
+    return embedding
 
 
 def replace_pixelshuffle(pixelshuffle, masks):

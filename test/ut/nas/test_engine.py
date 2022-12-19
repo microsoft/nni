@@ -4,6 +4,7 @@ import unittest
 from pathlib import Path
 
 import nni.retiarii
+import nni.retiarii.integration_api
 from nni.retiarii import Model, submit_models
 from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.execution import set_execution_engine
@@ -26,6 +27,7 @@ class EngineTest(unittest.TestCase):
         nni.retiarii.integration_api._advisor = None
         nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
+        advisor._advisor_initialized = True
         advisor._channel = LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()
@@ -43,6 +45,7 @@ class EngineTest(unittest.TestCase):
         nni.retiarii.integration_api._advisor = None
         nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
+        advisor._advisor_initialized = True
         advisor._channel = LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()

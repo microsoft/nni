@@ -1,29 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
 import axios from 'axios';
 import { DefaultButton, IContextualMenuProps } from '@fluentui/react';
 import { MANAGER_IP } from '@static/const';
 import { disableTensorboard, getTensorboardMenu } from '@static/function';
-import { Tensorboard } from '@static/interface';
 import TensorboardDialog from './TensorboardDialog';
+import { KillJobIsError, TensorboardTaskInfo } from '@static/interface';
 
-function TensorboardUI(props): any {
+interface TensorboardUIProps {
+    selectedRowIds: string[];
+    changeSelectTrialIds: () => void;
+}
+
+function TensorboardUI(props: TensorboardUIProps): any {
     let refreshTensorboard = 0;
     const { selectedRowIds, changeSelectTrialIds } = props;
-    const [queryTensorboardList, setQueryTensorboardList] = useState([]);
+    const [queryTensorboardList, setQueryTensorboardList] = useState([] as TensorboardTaskInfo[]);
     const [isReaptedStartTensorboard, setReaptedTensorboard] = useState(false);
     const [tensorboardPanelVisible, setTensorboardPanelVisible] = useState(false);
     const [isShowTensorboardDetail, setIsShowTensorboardDetail] = useState(false);
-    const [selectedTensorboard, setSelectedTensorboard] = useState({});
-    const [errorMessage, setErrorMessage] = useState({});
-    const [timerList, setTimerList] = useState([0]);
+    const [selectedTensorboard, setSelectedTensorboard] = useState({} as TensorboardTaskInfo);
+    const [errorMessage, setErrorMessage] = useState({} as KillJobIsError);
+    const [timerList, setTimerList] = useState([0] as number[]);
 
     function startTrialTensorboard(): void {
         const { selectedRowIds } = props;
         if (selectedRowIds.length > 0) {
             setIsShowTensorboardDetail(false);
             const result = queryTensorboardList.filter(
-                (item: Tensorboard) => item.trialJobIdList.join(',') === selectedRowIds.join(',')
+                (item: TensorboardTaskInfo) => item.trialJobIdList.join(',') === selectedRowIds.join(',')
             );
             if (result.length > 0) {
                 setReaptedTensorboard(true);
@@ -34,17 +38,18 @@ function TensorboardUI(props): any {
                 startTensorboard
                     .then(res => {
                         if (res.status === 200) {
+                            console.info(res.data);
                             setSelectedTensorboard(res.data);
                             closeTimer();
                             queryAllTensorboard();
-                            setErrorMessage({ error: false, message: '' });
+                            setErrorMessage({ isError: false, message: '' });
                             setTensorboardPanelVisible(true);
                         }
                     })
                     .catch(err => {
                         if (err.response) {
                             setErrorMessage({
-                                error: true,
+                                isError: true,
                                 message: err.response.data.error || 'Failed to start tensorBoard!'
                             });
                         }
@@ -88,7 +93,7 @@ function TensorboardUI(props): any {
         });
     }
 
-    function seeTensorboardWebportal(item: Tensorboard): void {
+    function seeTensorboardWebportal(item: TensorboardTaskInfo): void {
         setSelectedTensorboard(item);
         setIsShowTensorboardDetail(true);
         setTensorboardPanelVisible(true);
@@ -139,10 +144,5 @@ function TensorboardUI(props): any {
         </React.Fragment>
     );
 }
-
-TensorboardUI.propTypes = {
-    selectedRowIds: PropTypes.array,
-    changeSelectTrialIds: PropTypes.func
-};
 
 export default TensorboardUI;

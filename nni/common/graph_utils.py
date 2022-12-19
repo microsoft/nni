@@ -6,6 +6,7 @@ import logging
 import queue
 import re
 from collections import defaultdict
+from typing import List, Dict
 import torch
 from torch.utils.tensorboard._pytorch_graph import NodePy, NodePyIO, NodePyOP, GraphPy
 CLASSTYPE_KIND = 'ClassType'
@@ -75,7 +76,19 @@ class TorchGraph:
         if torch.__version__ >= '1.6.0':
             # only pytorch with version greater than 1.6.0 has the strict option
             kw_args['strict'] = False
-        self.trace = torch.jit.trace(model, dummy_input, **kw_args)
+        try:
+            import pytorch_lightning as pl
+        except ImportError:
+            is_lightning_module = False
+        else:
+            if isinstance(model, pl.LightningModule):
+                is_lightning_module = True
+            else:
+                is_lightning_module = False
+        if is_lightning_module:
+            self.trace = model.to_torchscript(method="trace", example_inputs=dummy_input, **kw_args)
+        else:
+            self.trace = torch.jit.trace(model, dummy_input, **kw_args)
         torch._C._jit_pass_inline(self.trace.graph)
         model.train(training)
 
@@ -250,6 +263,7 @@ class TorchModuleGraph(TorchGraph):
 
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         super().__init__(model, dummy_input, traced_model)
+        self.name_to_node: Dict[str, NodePyOP]
         self.global_count = 0
         self.reused_module = set()
         self.name_to_node, self.input_to_node, self.output_to_node = self._build_graph()
@@ -790,7 +804,7 @@ class TorchModuleGraph(TorchGraph):
                 node_group.auxiliary = self._extract_cat_info(
                     node_group, cpp_node)
 
-    def find_predecessors(self, unique_name):
+    def find_predecessors(self, unique_name) -> List[str]:
         """
         Find predecessor node of the given node
 
@@ -813,7 +827,7 @@ class TorchModuleGraph(TorchGraph):
                 predecessors.append(node_py.unique_name)
         return predecessors
 
-    def find_successors(self, unique_name):
+    def find_successors(self, unique_name) -> List[str]:
         """
         Find successor nodes of the given node
 

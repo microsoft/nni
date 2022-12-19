@@ -14,7 +14,9 @@ import {
     ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
-import { ExperimentConfig, LocalConfig, toSeconds, toCudaVisibleDevices } from '../common/experimentConfig';
+import {
+    ExperimentConfig, LocalConfig, TrainingServiceConfig, toSeconds, toCudaVisibleDevices
+} from '../common/experimentConfig';
 import { getExperimentsManager } from 'extensions/experiments_manager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
@@ -23,7 +25,7 @@ import {
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
     INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
-    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
+    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA, ADD_CUSTOMIZED_TRIAL_JOB
 } from './commands';
 import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 
@@ -43,6 +45,7 @@ class NNIManager implements Manager {
     private waitingTrials: TrialJobApplicationForm[];
     private trialJobs: Map<string, TrialJobDetail>;
     private trialDataForTuner: string;
+    private trialDataForResume: string;
     private readonly: boolean;
     private config!: ExperimentConfig;
 
@@ -55,6 +58,7 @@ class NNIManager implements Manager {
         this.waitingTrials = [];
         this.trialJobs = new Map<string, TrialJobDetail>();
         this.trialDataForTuner = '';
+        this.trialDataForResume = '';
         this.readonly = false;
 
         this.log = getLogger('NNIManager');
@@ -118,6 +122,45 @@ class NNIManager implements Manager {
         return this.dataStore.exportTrialHpConfigs();
     }
 
+    public addRecoveredTrialJob(allTrialJobs: Array<TrialJobInfo>): void {
+        const jobs: Array<TrialJobInfo> = allTrialJobs.filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING');
+        const trialData: any[] = [];
+        let maxSequeceId = 0;
+        for (const job of jobs) {
+            if (job.sequenceId === undefined || job.hyperParameters === undefined) {
+                this.log.warning('The trial to be recovered missing sequenceId and/or hyperParameters', job);
+                continue;
+            }
+            const params: string = job.hyperParameters[0];
+            const sequenceId: number = job.sequenceId;
+            maxSequeceId = Math.max(maxSequeceId, sequenceId);
+            
+            const hyperParams = JSON.parse(params);
+            const packedParameter = {
+                parameter_id: hyperParams['parameter_id'],
+                parameter_source: 'resumed',
+                parameters: hyperParams['parameters'],
+                parameter_index: hyperParams['parameter_index'],
+            }
+            const form: TrialJobApplicationForm = {
+                id: job.trialJobId,
+                sequenceId: sequenceId,
+                hyperParameters: {
+                    value: JSON.stringify(packedParameter),
+                    index: 0
+                },
+            };
+
+            this.waitingTrials.push(form);
+            trialData.push(packedParameter);
+            this.dataStore.storeTrialJobEvent('ADD_RESUMED', job.trialJobId, '');
+        }
+        this.trialDataForResume = JSON.stringify(trialData);
+
+        // next sequenceId
+        this.experimentProfile.nextSequenceId = maxSequeceId + 1;
+    }
+
     public addCustomizedTrialJob(hyperParams: string): Promise<number> {
         if (this.readonly) {
             return Promise.reject(new Error('Error: can not add customized trial job in readonly mode!'));
@@ -128,8 +171,8 @@ class NNIManager implements Manager {
 
         // TODO: NNI manager should not peek tuner's internal protocol, let's refactor this later
         const packedParameter = {
-            parameter_id: null, // eslint-disable-line @typescript-eslint/camelcase
-            parameter_source: 'customized', // eslint-disable-line @typescript-eslint/camelcase
+            parameter_id: null,
+            parameter_source: 'customized',
             parameters: JSON.parse(hyperParams)
         }
 
@@ -220,11 +263,7 @@ class NNIManager implements Manager {
 
         // Resume currSubmittedTrialNum
         this.currSubmittedTrialNum = allTrialJobs.length;
-
-        // Check the final status for WAITING and RUNNING jobs
-        await Promise.all(allTrialJobs
-            .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
-            .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.trialJobId)));
+        this.addRecoveredTrialJob(allTrialJobs);
 
         // Collect generated trials and imported trials
         const finishedTrialData: string = await this.exportData();
@@ -339,7 +378,7 @@ class NNIManager implements Manager {
             }
             await this.trainingService.cleanUp();
         } catch (err) {
-            this.log.error(`${err.stack}`);
+            this.log.error(`${(err as any).stack}`);
         }
         if (this.experimentProfile.endTime === undefined) {
             this.setEndtime();
@@ -451,6 +490,9 @@ class NNIManager implements Manager {
         } else if (platform === 'adl') {
             const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
             return new module_.AdlTrainingService();
+        } else if (platform.endsWith('_v3')) {
+            const module_ = await import('../training_service/v3/compat');
+            return new module_.V3asV1(config.trainingService as TrainingServiceConfig);
         } else {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
@@ -593,9 +635,9 @@ class NNIManager implements Manager {
                     finishedTrialJobNum++;
                     hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
-                        trial_job_id: trialJobDetail.id, // eslint-disable-line @typescript-eslint/camelcase
+                        trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
-                        hyper_params: hyperParams // eslint-disable-line @typescript-eslint/camelcase
+                        hyper_params: hyperParams
                     }));
                     break;
                 case 'FAILED':
@@ -606,9 +648,9 @@ class NNIManager implements Manager {
                     finishedTrialJobNum++;
                     hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
-                        trial_job_id: trialJobDetail.id, // eslint-disable-line @typescript-eslint/camelcase
+                        trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
-                        hyper_params: hyperParams // eslint-disable-line @typescript-eslint/camelcase
+                        hyper_params: hyperParams
                     }));
                     break;
                 case 'WAITING':
@@ -806,6 +848,12 @@ class NNIManager implements Manager {
                         throw new Error('Dispatcher error: tuner has not been setup');
                     }
                     this.dispatcher.sendCommand(IMPORT_DATA, this.trialDataForTuner);
+                }
+                if (this.trialDataForResume.length > 0 ) {
+                    if (this.dispatcher === undefined) {
+                        throw new Error('Dispatcher error: tuner has not been setup');
+                    }
+                    this.dispatcher.sendCommand(ADD_CUSTOMIZED_TRIAL_JOB, this.trialDataForResume);
                 }
                 this.requestTrialJobs(this.experimentProfile.params.trialConcurrency);
                 break;

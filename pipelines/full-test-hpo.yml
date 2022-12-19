@@ -4,13 +4,7 @@ schedules:
 - cron: 0 18 * * *
   branches:
     include: [ master ]
-
-resources:
-  repositories:
-    - repository: azpfilter
-      type: github
-      name: microsoft/azure-pipeline-filter
-      endpoint: github-filter-connection
+  always: true
 
 variables:
   filter.modified.globs: 'examples/tuners/**,nni/algorithms/hpo/**,pipelines/full-test-hpo.yml,'
@@ -35,9 +29,7 @@ stages:
     timeoutInMinutes: 60
 
     steps:
-    - template: templates/fix-apt-1es.yml
-      parameters:
-        check_gpu: true
+    - template: templates/check-gpu-status.yml
 
     - template: templates/install-dependencies.yml
       parameters:
@@ -53,7 +45,7 @@ stages:
         (cd test && python -m pytest ut)
         export PATH=$PATH:$PWD/toolchain/yarn/bin
         export CI=true
-        (cd ts/nni_manager && yarn test)
+        (cd ts/nni_manager && npm run test)
       displayName: SDK unit test
 
     # TODO: this should be replaced with a dedicated HPO algo test suite

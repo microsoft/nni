@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Stack, PrimaryButton, Toggle, IStackTokens } from '@fluentui/react';
-import { TooltipForIntermediate, TableObj, Intermedia, EventMap } from '@static/interface';
+import { TooltipForIntermediate, EventMap, AllTrialsIntermediateChart } from '@static/interface';
 import { reformatRetiariiParameter } from '@static/function';
 import ReactEcharts from 'echarts-for-react';
 import 'echarts/lib/component/tooltip';
@@ -11,20 +11,19 @@ const stackTokens: IStackTokens = {
 };
 
 interface IntermediateState {
-    detailSource: Array<TableObj>;
+    detailSource: AllTrialsIntermediateChart[];
     interSource: object;
-    filterSource: Array<TableObj>;
+    filterSource: AllTrialsIntermediateChart[];
     eachIntermediateNum: number; // trial's intermediate number count
     isLoadconfirmBtn: boolean;
     isFilter?: boolean | undefined;
     length: number;
-    clickCounts: number; // user filter intermediate click confirm btn's counts
     startMediaY: number;
     endMediaY: number;
 }
 
 interface IntermediateProps {
-    source: Array<TableObj>;
+    source: AllTrialsIntermediateChart[];
 }
 
 class Intermediate extends React.Component<IntermediateProps, IntermediateState> {
@@ -43,43 +42,24 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
             isLoadconfirmBtn: false,
             isFilter: false,
             length: 100000,
-            clickCounts: 0,
             startMediaY: 0,
             endMediaY: 100
         };
     }
 
-    drawIntermediate = (source: Array<TableObj>): void => {
+    drawIntermediate = (source: AllTrialsIntermediateChart[]): void => {
         if (source.length > 0) {
             this.setState({
                 length: source.length,
                 detailSource: source
             });
             const { startMediaY, endMediaY } = this.state;
-            const trialIntermediate: Array<Intermedia> = [];
-            Object.keys(source).map(item => {
-                const temp = source[item];
-                trialIntermediate.push({
-                    name: temp.id,
-                    trialNum: temp.sequenceId,
-                    data: temp.description.intermediate,
-                    type: 'line',
-                    hyperPara: temp.description.parameters
-                });
-            });
-            // find max intermediate number
-            trialIntermediate.sort((a, b) => {
+            const xAxis: number[] = [];
+            // find having most intermediate number
+            source.sort((a, b) => {
                 return b.data.length - a.data.length;
             });
-            const legend: string[] = [];
-            // max length
-            const length = trialIntermediate[0].data.length;
-            const xAxis: number[] = [];
-            Object.keys(trialIntermediate).map(item => {
-                const temp = trialIntermediate[item];
-                legend.push(temp.name);
-            });
-            for (let i = 1; i <= length; i++) {
+            for (let i = 1; i <= source[0].data.length; i++) {
                 xAxis.push(i);
             }
             const option = {
@@ -89,20 +69,21 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                     confine: true,
                     formatter: function (data: TooltipForIntermediate): React.ReactNode {
                         const trialId = data.seriesName;
-                        let parameters = {};
-                        let trialNum = 0;
-                        const temp = trialIntermediate.find(key => key.name === trialId);
-                        if (temp !== undefined) {
-                            parameters = temp.hyperPara;
-                            trialNum = temp.trialNum;
+                        // parameter and trialNo need to have the init value otherwise maybe cause page broke down
+                        let parameter = {};
+                        let trialNo = 0;
+                        const renderTrial = source.find(key => key.name === trialId);
+                        if (renderTrial !== undefined) {
+                            parameter = renderTrial.parameter;
+                            trialNo = renderTrial.sequenceId;
                         }
                         return `
                             <div class="tooldetailAccuracy">
-                                <div>Trial No.: ${trialNum}</div> 
+                                <div>Trial No.: ${trialNo}</div> 
                                 <div>Trial ID: ${trialId}</div>
                                 <div>Intermediate: ${data.data}</div>
                                 <div>Parameters: <pre>${JSON.stringify(
-                                    reformatRetiariiParameter(parameters),
+                                    reformatRetiariiParameter(parameter),
                                     null,
                                     4
                                 )}</pre>
@@ -137,7 +118,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         end: endMediaY
                     }
                 ],
-                series: trialIntermediate
+                series: source
             };
             this.setState({
                 interSource: option
@@ -164,7 +145,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
 
     // confirm btn function [filter data]
     filterLines = (): void => {
-        const filterSource: Array<TableObj> = [];
+        const filterSource: AllTrialsIntermediateChart[] = [];
         this.setState({ isLoadconfirmBtn: true }, () => {
             const { source } = this.props;
             // get input value
@@ -175,32 +156,29 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
             if (pointVal === '' || minVal === '') {
                 alert('Please input filter message');
             } else {
-                // user not input max value
                 const position = JSON.parse(pointVal);
                 const min = JSON.parse(minVal);
                 if (maxVal === '') {
-                    Object.keys(source).map(item => {
-                        const temp = source[item];
-                        const val = temp.description.intermediate[position - 1];
+                    // user not input max value
+                    for (const item of source) {
+                        const val = item.data[position - 1];
                         if (val >= min) {
-                            filterSource.push(temp);
+                            filterSource.push(item);
                         }
-                    });
+                    }
                 } else {
                     const max = JSON.parse(maxVal);
-                    Object.keys(source).map(item => {
-                        const temp = source[item];
-                        const val = temp.description.intermediate[position - 1];
+                    for (const item of source) {
+                        const val = item.data[position - 1];
                         if (val >= min && val <= max) {
-                            filterSource.push(temp);
+                            filterSource.push(item);
                         }
-                    });
+                    }
                 }
                 this.setState({ filterSource: filterSource });
                 this.drawIntermediate(filterSource);
             }
-            const counts = this.state.clickCounts + 1;
-            this.setState({ isLoadconfirmBtn: false, clickCounts: counts });
+            this.setState({ isLoadconfirmBtn: false });
         });
     };
 
