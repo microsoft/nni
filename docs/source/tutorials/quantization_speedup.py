@@ -47,13 +47,11 @@ Note
 
 Prerequisite
 ------------
-CUDA version >= 11.0
+When using TensorRT to speed up the quantized model, it is highly recommended to use the PyTorch docker image provided by NVIDIA.
+Users can refer to `this web page <https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch>`__ for detailed usage of the docker image.
+The docker image "nvcr.io/nvidia/pytorch:22.09-py3" has been tested for the quantization speedup.
 
-TensorRT version >= 7.2
-
-Note
-
-* If you haven't installed TensorRT before or use the old version, please refer to `TensorRT Installation Guide <https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html>`__\  
+In the docker image, users should install nni>=3.0, pytorch_lightning, pycuda.
 
 Usage
 -----

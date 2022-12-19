@@ -323,7 +323,7 @@ def test_trt_no_calibration(test_data_loader, num_eval_batches):
     }]
     device = torch.device('cuda')
     def my_eval(model):
-        evaluate(model, nn.CrossEntropyLoss(), test_data_loader,
+        evaluate(model, test_data_loader,
                  neval_batches=2, device=device)
 
     myModel = load_model(saved_model_dir + float_model_file)
@@ -368,5 +368,5 @@ def test_trt_calibration(test_data_loader, num_eval_batches):
 if __name__ == '__main__':
     num_eval_batches = 100
     data_loader, test_data_loader = prepare_data_loaders(data_path, train_batch_size=32, eval_batch_size=64)
-    # test_trt_calibration(test_data_loader, num_eval_batches)
+    #test_trt_calibration(test_data_loader, num_eval_batches)
     test_trt_no_calibration(test_data_loader, num_eval_batches)
