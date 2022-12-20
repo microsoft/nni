@@ -97,7 +97,7 @@ class Pruner(Compressor):
             for _, target_space in ts.items():
                 if target_space.sparse_granularity is None:
                     continue
-                if target_space.sparse_granularity is 'default':
+                if target_space.sparse_granularity == 'default':
                     target_space.sparse_granularity = self._set_default_sparse_granularity(target_space)
                 if target_space.sparse_granularity == 'out_channel':
                     assert target_space._target_type is TargetType.PARAMETER
