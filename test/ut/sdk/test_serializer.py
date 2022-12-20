@@ -61,8 +61,8 @@ class CustomizeLoadDump:
         }
 
     @staticmethod
-    def _load(**attrs):
-        return CustomizeLoadDump(attrs['a'], attrs['any'])
+    def _load(*, a, any):
+        return CustomizeLoadDump(a, any)
 
 
 class UnserializableSimpleClass:

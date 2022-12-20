@@ -869,7 +869,7 @@ def _json_tricks_serializable_object_encode(obj: Any, primitives: bool = False, 
     # Encodes a serializable object instance to json.
 
     # do nothing to instance that is not a serializable object and do not use trace
-    if not (use_trace and hasattr(obj, '__class__') and is_traceable(type(obj))):
+    if not (use_trace and is_traceable(obj, must_be_instance=True)):
         return obj
 
     if isinstance(obj.trace_symbol, property):
@@ -911,7 +911,9 @@ def _json_tricks_customize_decode(obj: Dict[str, Any]) -> Any:
         cls = import_cls_or_func_from_hybrid_name(obj['__instance_type__'])
         if not hasattr(cls, '_load'):
             raise ValueError(f'Customized object {cls} must have a static method _load() to load from a dict.')
-        return cls._load(**obj)
+        kwargs = obj.copy()
+        kwargs.pop('__instance_type__')
+        return cls._load(**kwargs)
     return obj
 
 
