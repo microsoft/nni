@@ -112,7 +112,7 @@ class PruningSetting(ModuleSetting):
             'sparse_threshold': None,
             'global_group_id': None,
             'dependency_group_id': None,
-            'sparse_granularity': None,
+            'sparse_granularity': 'default',
             'internal_metric_block': None,
             'apply_method': 'mul',
         },

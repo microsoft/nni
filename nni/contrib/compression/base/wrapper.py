@@ -96,12 +96,12 @@ class ModuleWrapper(torch.nn.Module):
         for target_name, target_space in self.pruning_target_spaces.items():
             if target_space.type == TargetType.PARAMETER and isinstance(target_space.target, torch.nn.Parameter):
                 delattr(self.module, target_name)
-                self.module.register_buffer(target_name, target_space.target.data.clone())
+                self.module.register_buffer(target_name, target_space.target.detach().clone())
 
         for target_name, target_space in self.quantization_target_spaces.items():
             if target_space.type == TargetType.PARAMETER and isinstance(target_space.target, torch.nn.Parameter):
                 delattr(self.module, target_name)
-                self.module.register_buffer(target_name, target_space.target.data.clone())
+                self.module.register_buffer(target_name, target_space.target.detach().clone())
 
     def unwrap(self):
         if not hasattr(self.module, '_nni_wrapper'):
@@ -111,12 +111,12 @@ class ModuleWrapper(torch.nn.Module):
         for target_name, target_space in self.pruning_target_spaces.items():
             if target_space.type == TargetType.PARAMETER and isinstance(target_space.target, torch.nn.Parameter):
                 delattr(self.module, target_name)
-                self.module.register_parameter(target_name, torch.nn.Parameter(target_space.target.data.clone()))
+                self.module.register_parameter(target_name, torch.nn.Parameter(target_space.target.detach().clone()))
 
         for target_name, target_space in self.quantization_target_spaces.items():
             if target_space.type == TargetType.PARAMETER and isinstance(target_space.target, torch.nn.Parameter):
                 delattr(self.module, target_name)
-                self.module.register_parameter(target_name, torch.nn.Parameter(target_space.target.data.clone()))
+                self.module.register_parameter(target_name, torch.nn.Parameter(target_space.target.detach().clone()))
 
         self.module.forward = self.module_forward
         delattr(self.module, '_nni_wrapper')
@@ -294,8 +294,13 @@ class ModuleWrapper(torch.nn.Module):
         params_dict.update({k: v.target for k, v in self.distillation_target_spaces.items() if v.type is TargetType.PARAMETER})
         params_dict = self.patch_params(params_dict)
         for target_name, patched_param in params_dict.items():
-            module_param: Tensor = getattr(self.module, target_name)
-            module_param.copy_(patched_param)
+            # NOTE: here using copy_ will cause `backward through the graph a second time` error, don't know why.
+            # We want to use copy_ for buffers because in-place modification can be recorded in DP, or it will be lost.
+            # Here we use setattr to workaround because we don't need to record the buffer value for these module fake targets.
+
+            # module_param: Tensor = getattr(self.module, target_name)
+            # module_param.copy_(patched_param)
+            setattr(self.module, target_name, patched_param)
 
         outputs = self.module_forward(*args, **kwargs)
         outputs = self.patch_outputs(outputs)
@@ -310,8 +315,6 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
     configured_target_spaces = {}
     existed_wrappers = existed_wrappers if existed_wrappers else {}
     module_wrappers = {k: v for k, v in existed_wrappers.items()}
-    for _, wrapper in module_wrappers.items():
-        wrapper.freeze()
     for config in config_list:
         modules, public_config = select_modules_by_config(model, config)
         for module_name, module in modules.items():

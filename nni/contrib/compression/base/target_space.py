@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from collections import abc
 from copy import deepcopy
 from enum import Enum
 from typing import Any, Dict, List
@@ -64,9 +65,9 @@ class TargetSpace:
             assert hasattr(self._wrapper.module, self._target_name)
             target = getattr(self._wrapper.module, self._target_name)
             if isinstance(target, torch.nn.parameter.Parameter):
-                self._wrapper.register_parameter(self._target_name, torch.nn.Parameter(target.data.clone()))
+                self._wrapper.register_parameter(self._target_name, torch.nn.Parameter(target.detach().clone()))
             elif isinstance(target, torch.Tensor):
-                self._wrapper.register_buffer(self._target_name, target.data.clone())
+                self._wrapper.register_buffer(self._target_name, target.detach().clone())
             elif isinstance(target, None):
                 self._wrapper.register_buffer(self._target_name, None)
             else:
@@ -141,10 +142,14 @@ class PruningTargetSpace(TargetSpace):
         assert isinstance(val, float)
         self.setting['min_sparse_ratio'] = val
 
-    # don't support setter
     @property
     def sparse_granularity(self) -> List[int] | str | None:
         return self.setting.get('sparse_granularity', None)
+
+    @sparse_granularity.setter
+    def sparse_granularity(self, val: List[int] | str | None):
+        assert isinstance(val, str) or val is None or (isinstance(val, abc.Sequence) and all(isinstance(v, int) for v in val))
+        self.setting['sparse_granularity'] = val
 
     @property
     def global_group_id(self) -> int | str | None:
