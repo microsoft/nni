@@ -5,8 +5,10 @@ import torchvision
 import torchvision.transforms as transforms
 import torch.quantization
 
-from nni.algorithms.compression.pytorch.quantization import PtqQuantizer
-from nni.algorithms.compression.v2.pytorch.utils import TorchEvaluator
+# from nni.algorithms.compression.pytorch.quantization import PtqQuantizer
+# from nni.algorithms.compression.v2.pytorch.utils import TorchEvaluator
+from nni.compression.pytorch.quantization import PtqQuantizer
+from nni.compression.pytorch.utils import TorchEvaluator
 from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
 from nni.compression.pytorch.quantization_speedup.calibrator import Calibrator
 
@@ -368,5 +370,5 @@ def test_trt_calibration(test_data_loader, num_eval_batches):
 if __name__ == '__main__':
     num_eval_batches = 100
     data_loader, test_data_loader = prepare_data_loaders(data_path, train_batch_size=32, eval_batch_size=64)
-    #test_trt_calibration(test_data_loader, num_eval_batches)
-    test_trt_no_calibration(test_data_loader, num_eval_batches)
+    test_trt_calibration(test_data_loader, num_eval_batches)
+    #test_trt_no_calibration(test_data_loader, num_eval_batches)

@@ -7,16 +7,16 @@ from typing import Any, Callable, Dict, Tuple
 import torch
 import torch.nn as nn
 from schema import Schema, And, Or, Optional
-from nni.compression.pytorch.quantization.settings import LayerQuantSetting
-from nni.compression.pytorch.utils.config_validation import QuantizerSchema
-from nni.compression.pytorch.compressor import Quantizer, QuantForward, _setattr
-from nni.compression.pytorch.quantization.literal import (
+from nni.compression.pytorch.utils.quantization.settings import LayerQuantSetting
+from nni.compression.pytorch.utils.config_validation_v1 import QuantizerSchema
+from nni.compression.pytorch.compressor import Quantizer, QuantForward
+from nni.compression.pytorch.utils.quantization.literal import (
     QuantScheme,
     QuantDtype
 )
 
-from ...v2.pytorch.utils import Evaluator, ForwardHook
-from ...v2.pytorch.pruning.tools import EvaluatorBasedHookDataCollector
+from nni.compression.pytorch.utils import Evaluator, ForwardHook, set_nested_attr
+from nni.compression.pytorch.pruning.tools import EvaluatorBasedHookDataCollector
 
 logger = logging.getLogger(__name__)
 
@@ -314,7 +314,7 @@ class PtqQuantizer(Quantizer):
 
         """
         for wrapper in self.identity_wrappers:
-            _setattr(self.bound_model, wrapper.module_name, nn.Identity())
+            set_nested_attr(self.bound_model, wrapper.module_name, nn.Identity())
         super()._unwrap_model()
 
     def export_model(self, model_path=None, calibration_path=None, onnx_path=None, input_shape=None, device=None):
