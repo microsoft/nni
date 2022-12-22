@@ -12,6 +12,14 @@ from typing import List, Optional
 
 import torch
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .concrete_tracer import ConcreteTracer
+
+from .utils import (
+    _orig_isinstance,
+    _orig_len,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -37,6 +45,17 @@ class TransformerOp(ast.NodeTransformer):
             # if the status is 'in brunch test',
             self.is_incond_status -= 1
         return super().visit(node)
+
+    def visit_Call(self, node: ast.Call):
+        if not _orig_isinstance(node.func, ast.Name) or node.func.id != 'patch_run':
+            self.is_transformed = True
+            return self.generic_visit(ast.Call(
+                func=ast.Name(id='patch_run', ctx=ast.Load()),
+                args=[node.func, *node.args],
+                keywords=node.keywords,
+            ))
+        else:
+            return self.generic_visit(node)
 
     def visit_While(self, node: ast.While):
         self.is_incond_status = 2
@@ -71,7 +90,7 @@ class TransformerOp(ast.NodeTransformer):
             # in branch cond test expr, need no replacement
             self.is_incond_status = 2
             return self.generic_visit(node)
-        elif isinstance(node.op, ast.Not):
+        elif _orig_isinstance(node.op, ast.Not):
             self.is_transformed = True
             return self.generic_visit(ast.Call(
                 func=ast.Name(id='not_', ctx=ast.Load()),
@@ -87,7 +106,7 @@ class TransformerOp(ast.NodeTransformer):
             self.is_incond_status = 2
             return self.generic_visit(node)
         else:
-            if not isinstance(node.values[1], (ast.Call, ast.BoolOp)):
+            if not _orig_isinstance(node.values[1], (ast.Call, ast.BoolOp)):
                 _logger.warning('warning: "and/or" will generate branch expr. The 2nd arg can\'t be traced if the 1st arg returns a True.'
                                 ' Don\'t mix up "and/or" and "&/|"!')
             return self.generic_visit(node)
@@ -102,7 +121,7 @@ class TransformerOp(ast.NodeTransformer):
                 should_replace = True
                 break
         if should_replace:
-            if len(node.ops) != 1:
+            if _orig_len(node.ops) != 1:
                 raise RuntimeError(
                     'not supported in "{} cmp_op {} cmp_op {}" when cmp_op contains "is/is not/in/not in"')
             self.is_transformed = True
@@ -112,7 +131,7 @@ class TransformerOp(ast.NodeTransformer):
                 ast.In: 'contains',
                 ast.NotIn: 'contains',
             }[type(node.ops[0])]
-            if isinstance(node.ops[0], (ast.In, ast.NotIn)):
+            if _orig_isinstance(node.ops[0], (ast.In, ast.NotIn)):
                 args = [node.comparators[0], node.left]
             else:
                 args = [node.left, node.comparators[0]]
@@ -121,7 +140,7 @@ class TransformerOp(ast.NodeTransformer):
                 args=args,
                 keywords=[],
             )
-            if isinstance(node.ops[0], ast.NotIn):
+            if _orig_isinstance(node.ops[0], ast.NotIn):
                 ret_node = ast.Call(
                     func=ast.Name(id='not_', ctx=ast.Load()),
                     args=[ret_node],
@@ -155,14 +174,18 @@ class OperatorPatcher:
             return func
         if self.use_operator_patch == (func in self.operator_patch_backlist):
             return func
-        if isinstance(func, torch.nn.Module):
+        if _orig_isinstance(func, torch.nn.Module):
             func = func.forward
-        if isinstance(func, MethodType):
-            func = func.__func__
-        if not isinstance(func, FunctionType) or not hasattr(func, '__code__'):
+        if _orig_isinstance(func, MethodType):
+            func_inner = func.__func__
+            the_self = func.__self__
+        else:
+            func_inner = func
+            the_self = None
+        if not _orig_isinstance(func_inner, FunctionType) or not hasattr(func_inner, '__code__'):
             return func
 
-        lines, lnum = inspect.findsource(func)
+        lines, lnum = inspect.findsource(func_inner)
         # align with original source code
         lines_cut_start = ['\n' * lnum, *lines[lnum:]]
         lines_cut_start_end = inspect.getblock(lines_cut_start)
@@ -173,7 +196,7 @@ class OperatorPatcher:
 
         is_transformed, new_tree = self.transformer_op.visit_start(tree)
         if not is_transformed:
-            return func
+            return func_inner
         else:
             new_tree.body[0].body = [
                 # equals to:
@@ -194,19 +217,38 @@ class OperatorPatcher:
             ast.fix_missing_locations(new_tree)
             var_dict = {}
             # use func.__code__.co_filename to make the new function easily debuggable.
-            exec(compile(new_tree, func.__code__.co_filename, 'exec'),
-                 func.__globals__, var_dict)
-            return var_dict['new_func']
+            exec(
+                compile(new_tree, func.__code__.co_filename, 'exec'),
+                {
+                    'patch_run': OperatorPatcherContext.patch_run,
+                    **func.__globals__,
+                },
+                var_dict)
+            if the_self is not None:
+                return var_dict['new_func'].__get__(the_self)
+            else:
+                return var_dict['new_func']
 
 class OperatorPatcherContext:
+    tracer: Optional['ConcreteTracer'] = None
     patcher: Optional[OperatorPatcher] = None
 
     @staticmethod
-    def create(use_operator_patch: bool, operator_patch_backlist: List[str]):
+    def create(tracer: 'ConcreteTracer', use_operator_patch: bool, operator_patch_backlist: List[str]):
+        assert OperatorPatcherContext.tracer is None
         assert OperatorPatcherContext.patcher is None
+        OperatorPatcherContext.tracer = tracer
         OperatorPatcherContext.patcher = OperatorPatcher(use_operator_patch, operator_patch_backlist)
 
     @staticmethod
-    def patch(func):
+    def exit(tracer: 'ConcreteTracer'):
+        assert OperatorPatcherContext.tracer == tracer
+        OperatorPatcherContext.tracer = None
+        OperatorPatcherContext.patcher = None
+
+    @staticmethod
+    def patch_run(func, *args, **kwargs):
         assert OperatorPatcherContext.patcher is not None
-        return OperatorPatcherContext.patcher.patch_inner(func)
+        with OperatorPatcherContext.tracer.do_temp_disable(True, True, True):
+            new_func = OperatorPatcherContext.patcher.patch_inner(func)
+        return new_func(*args, **kwargs)

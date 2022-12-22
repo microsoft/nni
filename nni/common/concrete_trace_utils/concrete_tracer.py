@@ -27,7 +27,7 @@ from torch.fx.node import Target, Node
 from torch.fx.proxy import TracerBase
 
 from . import concrete_proxy as ep
-from .operator_patcher import OperatorPatcher
+from .operator_patcher import OperatorPatcher, OperatorPatcherContext
 from .utils import (
     _orig_module_call,
     _orig_module_getattribute,
@@ -523,7 +523,7 @@ class ConcreteTracer(TracerBase):
                 such as '__main__.FooModel' or '__main__.bar_func'. the namespace is
                 always needed.
         """
-        self.op_patcher = OperatorPatcher(use_operator_patch, operator_patch_backlist)
+        OperatorPatcherContext.create(self, use_operator_patch, operator_patch_backlist)
         if isinstance(root, torch.nn.Module):
             self.root = root
 
