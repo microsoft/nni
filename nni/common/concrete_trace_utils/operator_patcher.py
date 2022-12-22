@@ -172,6 +172,8 @@ class OperatorPatcher:
     def patch_inner(self, func):
         if not hasattr(func, '__module__') or func.__module__ is None or func.__module__.startswith('torch'):
             return func
+        if hasattr(func, '_Patcher__fx_already_patched'):
+            return func
         if self.use_operator_patch == (func in self.operator_patch_backlist):
             return func
         if _orig_isinstance(func, torch.nn.Module):
@@ -218,10 +220,10 @@ class OperatorPatcher:
             var_dict = {}
             # use func.__code__.co_filename to make the new function easily debuggable.
             exec(
-                compile(new_tree, func.__code__.co_filename, 'exec'),
+                compile(new_tree, func_inner.__code__.co_filename, 'exec'),
                 {
                     'patch_run': OperatorPatcherContext.patch_run,
-                    **func.__globals__,
+                    **func_inner.__globals__,
                 },
                 var_dict)
             if the_self is not None:

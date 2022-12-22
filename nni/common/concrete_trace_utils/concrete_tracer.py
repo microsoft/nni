@@ -830,7 +830,7 @@ class ConcreteTracer(TracerBase):
                              type_expr=fn.__annotations__.get('return', None))
 
         self.submodule_paths = None
-
+        OperatorPatcherContext.exit(self)
         return self.graph
 
 # List of pairs of (global dict, function name) functions
