@@ -252,24 +252,21 @@ class ConcreteTracer(TracerBase):
             fn = target
             if _orig_getattr(fn, '__module__', None) != 'nni.common.concrete_trace_utils.concrete_tracer' and hasattr(fn, '__globals__'):
                 _autowrap_check(self.patcher, fn.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs)
-            fn = self.op_patcher.patch(fn)
             with self.do_temp_disable(call=True):
-                return fn(*args, **kwargs)
+                return OperatorPatcherContext.patch_run(fn, *args, **kwargs)
         elif kind == 'call_method':
             self_obj, *args_tail = args
             fn = _orig_getattr(self_obj, target)
             if _orig_getattr(fn, '__module__', None) != 'nni.common.concrete_trace_utils.concrete_tracer' and hasattr(fn, '__globals__'):
                 _autowrap_check(self.patcher, fn.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs)
-            fn = self.op_patcher.patch(fn)
             with self.do_temp_disable(call=True):
-                return fn(*args_tail, **kwargs)
+                return OperatorPatcherContext.patch_run(fn, *args_tail, **kwargs)
         elif kind == 'call_module':
             fn = self.fetch_attr(target)
             if _orig_getattr(fn, '__module__', None) != 'nni.common.concrete_trace_utils.concrete_tracer' and hasattr(fn, '__globals__'):
                 _autowrap_check(self.patcher, fn.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs)
-            fn = self.op_patcher.patch(fn)
             with self.do_temp_disable(call=True):
-                return fn(*args, **kwargs)
+                return OperatorPatcherContext.patch_run(fn, *args, **kwargs)
         elif kind == 'get_attr':
             return self.fetch_attr(target)
         elif kind == 'output':
@@ -562,7 +559,6 @@ class ConcreteTracer(TracerBase):
 
         fn_globals = fn.__globals__  # run before it gets patched
         fn, args, more_args, kwargs = self.create_args_for_root(fn, isinstance(root, torch.nn.Module), concrete_args)
-        fn = self.op_patcher.patch(fn)
 
         self.the_path_of_parameter = {id(v): k for k, v in self.root.named_parameters()}
         self.the_path_of_buffer = {id(v): k for k, v in self.root.named_buffers()}
