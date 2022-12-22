@@ -8,6 +8,7 @@ import torch.nn.functional as F
 
 from nni.common.concrete_trace_utils import concrete_trace, ConcreteTracer
 from nni.compression.pytorch.pruning import L1NormPruner
+from nni.compression.pytorch.speedup.compress_modules import no_replace
 from nni.compression.pytorch.speedup.v2 import ModelSpeedup
 from nni.algorithms.compression.v2.pytorch.utils import (
     compute_sparsity_compact2origin,
@@ -70,6 +71,7 @@ class TorchModel1(torch.nn.Module):
         self.pool3 = torch.nn.MaxPool2d((2, 2))
         self.pool4 = torch.nn.MaxPool2d((2, 2))
         self.pool5 = torch.nn.MaxPool2d((2, 2))
+        self.logsoftmax = torch.nn.LogSoftmax()
         self.cond = torch.jit.script(CondModel())
         # self.asub = ASubModel()
 
@@ -148,8 +150,8 @@ class TorchModel1(torch.nn.Module):
         x = x.view(-1, x.size(1))
 
 
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
+        x = self.logsoftmax(self.fc1(x))
+        x = F.log_softmax(self.fc2(x))
         x = F.softmax(self.fc3(x), dim=1)
 
         y1 = x[:,0:int(x.size(1)/2)]
@@ -179,7 +181,7 @@ class AutoConvTestCase(unittest.TestCase):
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         traced_model = concrete_trace(model, {'x': dummy_input})
         # torch.manual_seed(100)
-        ModelSpeedup(traced_model).run(args=[torch.rand(3, 1, 28, 28)], masks_file=masks)
+        ModelSpeedup(traced_model, customized_replace_func = {'LogSoftmax': no_replace}).run(args=[torch.rand(3, 1, 28, 28)], masks_file=masks)
 
         print('before:\n', model)
         print('after:\n', repr(traced_model))

@@ -32,3 +32,4 @@ class NodeInfo:
             'param_0': 0,
             'param_1': 0,
         }
+        self.infos = {}

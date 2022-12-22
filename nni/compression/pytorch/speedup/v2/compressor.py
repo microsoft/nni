@@ -19,7 +19,11 @@ from nni.common.concrete_trace_utils.utils import (map_recursive,
                                                    run_onlyif_instance)
 from nni.compression.pytorch.speedup.compress_modules import replace_module
 from nni.compression.pytorch.speedup.v2.container import NodeInfo, Slot
-from nni.compression.pytorch.speedup.v2.mask_updater import MaskUpdater, DefaultMaskUpdater, LeafModuleMaskUpdater
+from nni.compression.pytorch.speedup.v2.mask_updater import (MaskUpdater,
+                                                             DefaultMaskUpdater,
+                                                             LeafModuleMaskUpdater,
+                                                             NoMaskUpdater,
+                                                             NoChangeMaskUpdater)
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import (rand_like_with_shape,
                                                  randomize_tensor,
@@ -80,6 +84,8 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.customized_replace_func = customized_replace_func
         self.mask_updaters:list[MaskUpdater] = [
             *customized_mask_updaters,
+            NoChangeMaskUpdater(),
+            NoMaskUpdater(),
             LeafModuleMaskUpdater(),
             DefaultMaskUpdater()
         ]
@@ -121,6 +127,9 @@ class ModelSpeedup(torch.fx.Interpreter):
         """
         detect the tensor should be seen as an intermediate tensor.
         sometimes
+        # TODO: an api to specify dim 
+        # now the dim is 0 and cannot be edited
+        # and the check function should also be edited
         """
         return obj.numel() > self.batch_size and obj.numel() % self.batch_size == 0
 
@@ -136,13 +145,19 @@ class ModelSpeedup(torch.fx.Interpreter):
     def tensor_detacher(self, obj: torch.Tensor):
         return obj.detach()
 
-    @run_onlyif_instance(torch.Tensor)
-    def tensor_clone_detacher(self, obj: torch.Tensor):
-        return obj.clone().detach()
+    def tensor_clone_detacher(self, obj):
+        if isinstance(obj, torch.Tensor):
+            new_obj = obj.clone().detach()
+            return new_obj
+        else:
+            try:
+                return copy.deepcopy(obj)
+            except copy.Error:
+                return obj
 
     def tensor_randomizer(self, obj):
         if isinstance(obj, torch.Tensor):
-            if obj.numel() != 1 and len(obj.size()) > self.batch_dim and obj.size(self.batch_dim) == self.batch_size:
+            if obj.numel() != 1 and obj.dim() > self.batch_dim and obj.size(self.batch_dim) == self.batch_size:
                 new_obj = obj.clone().detach()
                 if not new_obj.is_contiguous():
                     new_obj = new_obj.contiguous()
@@ -215,6 +230,8 @@ class ModelSpeedup(torch.fx.Interpreter):
 
     # utils for direct update tand indirect update
     def direct_calc_mask(self, obj):
+        # TODO: an api to specify dim 
+        # now the dim is 0 and cannot be edited
         if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj):
             obj: torch.Tensor
 
@@ -257,7 +274,7 @@ class ModelSpeedup(torch.fx.Interpreter):
             return new_mask
         return mask
 
-    def indirect_update_param_mask(self, output, mask):
+    def indirect_update_backward(self, output, mask):
         # Note: output maybe tensor or list/tuple of tensors
         if isinstance(output, torch.Tensor) and self.tensor_propagate_check(output):
             assert isinstance(mask, torch.Tensor)
@@ -268,22 +285,6 @@ class ModelSpeedup(torch.fx.Interpreter):
 
     # # pass the gradient to the predecessor nodes
     def indirect_pass_grad(self, slot_val, out):
-        if isinstance(slot_val, torch.Tensor):
-            assert isinstance(out, torch.Tensor)
-            if self.tensor_propagate_check(slot_val):
-                if slot_val.grad is not None and out.grad is not None:
-                    slot_val.grad.data += out.grad.data
-                elif slot_val.grad is None:
-                    slot_val.grad = out.grad
-                elif slot_val.grad is not None and out.grad is None:
-                    # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
-                    # the size operation of tin will have no gradient
-                    pass
-        else:
-            assert not isinstance(out, torch.Tensor)
-
-    # # pass the gradient to the predecessor nodes
-    def indirect_pass_grad2(self, slot_val, out):
         if isinstance(out, torch.Tensor):
             if self.tensor_propagate_check(out):
                 if slot_val is not None and out.grad is not None:
@@ -304,7 +305,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         for node in self.module.graph.nodes:
             node: Node
             self.logger.info('Propagate variables for %s: %s', node.op, node.name)
-            self.node_infos[node].mask_updater.propagate_originally(self, node)
+            MaskUpdater.propagate_originally(self, node)
 
     def update_direct_sparsity(self):
         # update indirect out mask
@@ -440,13 +441,16 @@ class ModelSpeedup(torch.fx.Interpreter):
 
         # to store intermediate infomations
         self.slots: Dict[Node, Slot] = {node: Slot() for node in self.module.graph.nodes}
+        # for mask_updater to store extended infos
+        self.node_infos: Dict[Node, NodeInfo] = {node: NodeInfo() for node in self.module.graph.nodes}
 
-        # only for module now because only module can be replaced.
+    def initialize_update_sparsity(self):
         self.node_infos: Dict[Node, NodeInfo] = {node: NodeInfo() for node in self.module.graph.nodes}
         for node in self.module.graph.nodes:
             node: Node
             for mask_updater in self.mask_updaters:
                 if mask_updater.detect(self, node):
+                    self.node_infos[node].mask_updater = mask_updater
                     break
 
     def run(self, *, args, masks_file, map_location=None) -> Any:
@@ -483,6 +487,8 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.initialize_propagate(args)
 
         self.propagate_originally()
+
+        self.initialize_update_sparsity()
 
         self.update_direct_sparsity()
 
