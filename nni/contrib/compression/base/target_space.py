@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections import abc
 from copy import deepcopy
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal, Tuple
 
 import torch
 from torch import Tensor
@@ -29,6 +29,7 @@ class TargetSpace:
         self._setting = setting if setting is not None else {}
 
         self._register_target()
+        self._shape = None
 
     @property
     def setting(self) -> Dict[str, Any]:
@@ -40,6 +41,19 @@ class TargetSpace:
             return self._get_wrapper_attr(self._target_name)
         else:
             return None
+
+    @property
+    def shape(self) -> List[int] | None:
+        if self.type is TargetType.PARAMETER:
+            return self.target.shape
+        else:
+            return self._shape
+
+    @shape.setter
+    def shape(self, val: List[int] | None):
+        assert self.type is not TargetType.PARAMETER, 'Can not set shape to a parameter target space.'
+        assert val is None or all(isinstance(_, int) for _ in val)
+        self._shape = val
 
     @property
     def type(self) -> TargetType:
@@ -113,7 +127,7 @@ class PruningTargetSpace(TargetSpace):
     @sparse_ratio.setter
     def sparse_ratio(self, val: float):
         assert isinstance(val, float)
-        self.setting['sparse_ratio'] = val
+        self._setting['sparse_ratio'] = val
 
     @property
     def sparse_threshold(self) -> float | None:
@@ -122,7 +136,7 @@ class PruningTargetSpace(TargetSpace):
     @sparse_threshold.setter
     def sparse_threshold(self, val: float):
         assert isinstance(val, float)
-        self.setting['sparse_threshold'] = val
+        self._setting['sparse_threshold'] = val
 
     @property
     def max_sparse_ratio(self) -> float | None:
@@ -131,7 +145,7 @@ class PruningTargetSpace(TargetSpace):
     @max_sparse_ratio.setter
     def max_sparse_ratio(self, val: float):
         assert isinstance(val, float)
-        self.setting['max_sparse_ratio'] = val
+        self._setting['max_sparse_ratio'] = val
 
     @property
     def min_sparse_ratio(self) -> float | None:
@@ -140,16 +154,22 @@ class PruningTargetSpace(TargetSpace):
     @min_sparse_ratio.setter
     def min_sparse_ratio(self, val: float):
         assert isinstance(val, float)
-        self.setting['min_sparse_ratio'] = val
+        self._setting['min_sparse_ratio'] = val
 
     @property
-    def sparse_granularity(self) -> List[int] | str | None:
-        return self.setting.get('sparse_granularity', None)
+    def granularity(self) -> List[int] | Tuple[List[int], str, int] | str | None:
+        return self.setting.get('granularity', None)
 
-    @sparse_granularity.setter
-    def sparse_granularity(self, val: List[int] | str | None):
-        assert isinstance(val, str) or val is None or (isinstance(val, abc.Sequence) and all(isinstance(v, int) for v in val))
-        self.setting['sparse_granularity'] = val
+    @granularity.setter
+    def granularity(self, val: List[int] | Tuple[List[int], str, int] | str | None):
+        if isinstance(val, abc.Sequence):
+            assert all(isinstance(v, int) for v in val) or \
+                   (all(isinstance(v, int) for v in val[0]) and \
+                    isinstance(val[1], str) if len(val) > 1 else True and \
+                    isinstance(val[2], int) if len(val) > 2 else True)
+        else:
+            assert isinstance(val, str) or val is None
+        self._setting['granularity'] = val
 
     @property
     def global_group_id(self) -> int | str | None:
@@ -158,7 +178,7 @@ class PruningTargetSpace(TargetSpace):
     @global_group_id.setter
     def global_group_id(self, val: int | str):
         assert isinstance(val, (int, str))
-        self.setting['global_group_id'] = val
+        self._setting['global_group_id'] = val
 
     @property
     def dependency_group_id(self) -> int | str | None:
@@ -167,7 +187,7 @@ class PruningTargetSpace(TargetSpace):
     @dependency_group_id.setter
     def dependency_group_id(self, val: int | str):
         assert isinstance(val, (int, str))
-        self.setting['dependency_group_id'] = val
+        self._setting['dependency_group_id'] = val
 
     # don't support setter
     @property
@@ -184,20 +204,19 @@ class QuantizationTargetSpace(TargetSpace):
     def __init__(self, wrapper: torch.nn.Module, target_name: str, target_type: TargetType, setting: Dict[str, Any] | None = None):
         super().__init__(wrapper, target_name, target_type, setting)
         self._register_scale()
+        self._scaler: Scaling | None = None
 
     def _register_scale(self):
         self._wrapper.register_buffer(self._scale_name, None)
         self._wrapper.register_buffer(self._zero_point_name, None)
+        self._wrapper.register_buffer(self._tracked_max_name, None)
+        self._wrapper.register_buffer(self._tracked_min_name, None)
         qmin, qmax = self._compute_qmin_qmax()
         setattr(self._wrapper, self._qmin_name, qmin)
         setattr(self._wrapper, self._qmax_name, qmax)
-        if isinstance(self.target, torch.Tensor):
-            self.scale = torch.ones_like(self.target)
-            self.zero_point = torch.zeros_like(self.target)
 
     def _compute_qmin_qmax(self):
-        quant_dtype = self.setting.get('quant_dtype', None)
-        quant_dtype = quant_dtype if quant_dtype else 'int8'
+        quant_dtype = self.quant_dtype if self.quant_dtype else 'int8'
         if quant_dtype.startswith('int'):
             quant_bit = int(quant_dtype.split('int', 1)[1])
             qmin, qmax = -2 ** (quant_bit - 1) + 1, 2 ** (quant_bit - 1) - 1
@@ -225,6 +244,14 @@ class QuantizationTargetSpace(TargetSpace):
         return f'{self._target_name}_qmin'
 
     @property
+    def _tracked_min_name(self) -> str:
+        return f'{self._target_name}_tracked_min'
+
+    @property
+    def _tracked_max_name(self) -> str:
+        return f'{self._target_name}_tracked_max'
+
+    @property
     def scale(self) -> Tensor | None:
         return self._get_wrapper_attr(self._scale_name)
 
@@ -249,11 +276,53 @@ class QuantizationTargetSpace(TargetSpace):
         return self._get_wrapper_attr(self._qmin_name)
 
     @property
+    def tracked_min(self) -> Tensor | None:
+        return self._get_wrapper_attr(self._tracked_min_name)
+
+    @tracked_min.setter
+    def tracked_min(self, val: Tensor | None) -> Tensor | None:
+        self._tensor_setter_helper(self._tracked_min_name, val)
+
+    @property
+    def tracked_max(self) -> Tensor | None:
+        return self._get_wrapper_attr(self._tracked_max_name)
+
+    @tracked_max.setter
+    def tracked_max(self, val: Tensor | None) -> Tensor | None:
+        self._tensor_setter_helper(self._tracked_max_name, val)
+
+    @property
+    def granularity(self) -> List[int] | Tuple[List[int], str, int] | str | None:
+        return self.setting.get('granularity', None)
+
+    @granularity.setter
+    def granularity(self, val: List[int] | Tuple[List[int], str, int] | str | None):
+        if isinstance(val, abc.Sequence):
+            assert all(isinstance(v, int) for v in val) or \
+                   (all(isinstance(v, int) for v in val[0]) and \
+                    isinstance(val[1], str) if len(val) > 1 else True and \
+                    isinstance(val[2], int) if len(val) > 2 else True)
+        else:
+            assert isinstance(val, str) or val is None
+        self._setting['granularity'] = val
+
+    @property
+    def quant_dtype(self) -> str:
+        return self.setting.get('quant_dtype', None)
+
+    @property
+    def quant_scheme(self) -> Literal['affine', 'symmetric'] | None:
+        return self.setting.get('quant_scheme', None)
+
+    @property
     def apply_method(self) -> str:
         _method = self.setting.get('apply_method', None)
         _method = _method if _method else 'clamp_round'
-        assert _method in ['clamp_round']
         return _method
+
+    @apply_method.setter
+    def apply_method(self, val: str):
+        self._setting['apply_method'] = val
 
 
 class DistillationTargetSpace(TargetSpace):
@@ -289,7 +358,7 @@ class DistillationTargetSpace(TargetSpace):
     @lambda_.setter
     def lambda_(self, val: float):
         assert isinstance(val, float)
-        self.setting['lambda'] = val
+        self._setting['lambda'] = val
 
     @property
     def link(self):

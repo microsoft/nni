@@ -9,7 +9,7 @@ from typing import Callable, Dict, List, overload
 
 import torch
 
-from .tools.common import _MASKS, _METRICS, _TARGET_SPACES
+from .tools.common import _MASKS, _METRICS
 from .tools.calculate_metrics import norm_metrics
 from .tools.collect_data import active_sparse_targets_filter
 from .tools.sparse_gen import generate_sparsity
@@ -27,9 +27,9 @@ class _NormPruner(Pruner):
         ...
 
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None,
-                 existed_wrapper: Dict[str, ModuleWrapper] | None = None, *args, **kwargs):
+                 existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         super().__init__(model=model, config_list=config_list, evaluator=evaluator,
-                         existed_wrapper=existed_wrapper, *args, **kwargs)
+                         existed_wrappers=existed_wrappers)
 
     def _collect_data(self) -> Dict[str, Dict[str, torch.Tensor]]:
         return active_sparse_targets_filter(self._target_spaces)
@@ -82,22 +82,19 @@ class TaylorFOWeightPruner(Pruner):
         ...
 
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, training_steps: int,
-                 existed_wrapper: Dict[str, ModuleWrapper] | None = None, *args, **kwargs):
+                 existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         super().__init__(model=model, config_list=config_list, evaluator=evaluator,
-                         existed_wrapper=existed_wrapper, *args, **kwargs)
+                         existed_wrappers=existed_wrappers)
         self.training_steps = training_steps
 
         # trigger masks generation when self.current_step == self.training_steps
         self.current_step = 0
         # save all target hooks with format {module_name: {target_name: hook}}
         self.hooks: Dict[str, Dict[str, TensorHook]] = defaultdict(dict)
-        # handle the generated masks
-        self._masks = None
-        self._target_spaces: _TARGET_SPACES
 
     @classmethod
-    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], training_steps: int, *args, **kwargs):
-        return super().from_compressor(compressor, new_config_list, training_steps=training_steps, *args, **kwargs)
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], training_steps: int):
+        return super().from_compressor(compressor, new_config_list, training_steps=training_steps)
 
     def _collect_data(self) -> Dict[str, Dict[str, torch.Tensor]]:
         data = defaultdict(dict)
@@ -142,8 +139,8 @@ class TaylorFOWeightPruner(Pruner):
         def optimizer_task():
             self.current_step += 1
             if self.current_step == self.training_steps:
-                self._masks = self.generate_masks()
-                self.update_masks(self._masks)
+                masks = self.generate_masks()
+                self.update_masks(masks)
                 self._times -= 1
                 print(self.__class__.__name__, f'generate masks, remaining times {self._times}')
             if self.current_step == self._interval_steps and self._times > 0:
@@ -164,4 +161,4 @@ class TaylorFOWeightPruner(Pruner):
         self.register_trigger(self.evaluator)
         self.evaluator.train(self.training_steps)
         self.evaluator.unbind_model()
-        return self.bound_model, self._masks
+        return self.bound_model, self.get_masks()

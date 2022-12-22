@@ -102,7 +102,8 @@ class Scaling:
             raise ValueError(f'Unsupported padding mode: {padding_mode}.')
         return new_list
 
-    def _shrink(self, target: Tensor, kernel_size: List[int], reduce_func: Callable[[Tensor], Tensor] | None = None) -> Tensor:
+    def _shrink(self, target: Tensor, kernel_size: List[int], reduce_func: Callable[[Tensor], Tensor] | None = None,
+                keepdim: bool = False) -> Tensor:
         """
         Main logic about how to shrink target. Subclass could override this function to customize.
         Sum all values covered by the kernel as a simple implementation.
@@ -127,9 +128,10 @@ class Scaling:
         # `sum` does not take into account the metric scale problem, it is better to use `mean` here.
         result = reduce_func(converted_target) if reduce_func else converted_target.mean(-1)
 
-        # step 3: reduce the dims where kernel_size is -1.
-        # e.g., target size is [10, 40], kernel_size is [-1, 4], result size is [1, 10], then reduce result to size [10].
-        result = reduce(lambda t, dim: t.squeeze(dim), [result] + reduced_dims)  # type: ignore
+        if not keepdim:
+            # step 3: reduce the dims where kernel_size is -1.
+            # e.g., target size is [10, 40], kernel_size is [-1, 4], result size is [1, 10], then reduce result to size [10].
+            result = reduce(lambda t, dim: t.squeeze(dim), [result] + reduced_dims)  # type: ignore
 
         return result
 
@@ -162,7 +164,7 @@ class Scaling:
 
         return result
 
-    def shrink(self, target: Tensor, reduce_func: Callable[[Tensor], Tensor] | None = None) -> Tensor:
+    def shrink(self, target: Tensor, reduce_func: Callable[[Tensor], Tensor] | None = None, keepdim: bool = False) -> Tensor:
         # Canonicalize kernel_size to target size length at first.
         # If kernel_padding_mode is 'front', padding 1 at the front of `self.kernel_size`.
         # e.g., padding kernel_size [2, 2] to [1, 2, 2] when target size length is 3.
@@ -174,7 +176,7 @@ class Scaling:
             kernel_size = self._padding(self.kernel_size, len(target.shape), self.kernel_padding_val, 'back')
         else:
             raise ValueError(f'Unsupported kernel padding mode: {self.kernel_padding_mode}.')
-        return self._shrink(target, kernel_size, reduce_func)
+        return self._shrink(target, kernel_size, reduce_func, keepdim)
 
     def expand(self, target: Tensor, expand_size: List[int]):
         # Similar with `self.shrink`, canonicalize kernel_size to expand_size length at first.

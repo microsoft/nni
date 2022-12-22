@@ -48,8 +48,7 @@ class ModuleSetting:
         assert target_settings is not None, \
             f'{module_cls_name} is not registered, please register setting with {cls.__name__}.register().'
 
-        if target_names is None and update_settings is None and config:
-            cls._update_shortcut_setting(target_settings, config)
+        cls._update_shortcut_setting(target_settings, config)
 
         if update_settings:
             cls._update_setting(target_settings, update_settings)
@@ -112,7 +111,7 @@ class PruningSetting(ModuleSetting):
             'sparse_threshold': None,
             'global_group_id': None,
             'dependency_group_id': None,
-            'sparse_granularity': 'default',
+            'granularity': 'default',
             'internal_metric_block': None,
             'apply_method': 'mul',
         },
@@ -137,18 +136,26 @@ class QuantizationSetting(ModuleSetting):
     default_setting = {
         '_input_': {
             'quant_dtype': None,
+            'quant_scheme': None,
+            'granularity': 'default',
             'apply_method': 'clamp_round',
         },
         'weight': {
             'quant_dtype': None,
+            'quant_scheme': None,
+            'granularity': 'default',
             'apply_method': 'clamp_round',
         },
         'bias': {
             'quant_dtype': None,
+            'quant_scheme': None,
+            'granularity': 'default',
             'apply_method': 'clamp_round',
         },
         '_output_': {
             'quant_dtype': None,
+            'quant_scheme': None,
+            'granularity': 'default',
             'apply_method': 'clamp_round',
         }
     }

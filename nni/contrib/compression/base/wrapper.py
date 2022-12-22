@@ -5,11 +5,12 @@ from __future__ import annotations
 
 import logging
 import inspect
-from typing import Any, Dict, List, Tuple, Type, Union, Literal
+from typing import Any, Callable, Dict, List, Tuple, Type, Union, Literal
 
 import torch
 from torch import Tensor
 
+from .apply_method import quant_apply_methods
 from .config import select_modules_by_config
 from .setting import INPUT_PREFIX, OUTPUT_PREFIX, canonicalize_settings
 from .target_space import (
@@ -69,6 +70,9 @@ class ModuleWrapper(torch.nn.Module):
             self.extend_target_spaces(config.get('distillation'), 'distillation')
 
         self._frozen = False
+        # By default, input/output shape will be track during forward,
+        # more track functions can be registered by ``ModuleWrapper.register_track_info_func``.
+        self._track_funcs = [track_target_shape]
 
     def extra_repr(self) -> str:
         return f'module={self.module.__class__.__name__}({self.module.extra_repr()}), module_name={self.name}'
@@ -212,27 +216,48 @@ class ModuleWrapper(torch.nn.Module):
                 return torch.add(target, trans_mask)
             else:
                 raise TypeError('Only `mul` and `add` are supported for mask `apply_method`.')
+        elif target_space.type is TargetType.PARAMETER:
+            # Prevent registering buffer as a parameter
+            return target * 1.
         else:
             return target
 
     def _apply_quant_helper(self, target: Tensor, target_space: QuantizationTargetSpace) -> Tensor:
         if target_space.scale is not None and target_space.zero_point is not None:
-            if target_space.apply_method == 'clamp_round':
-                transformed_target = target_space.zero_point + target / target_space.scale
-                quantized_target = torch.round(torch.clamp(transformed_target, target_space.qmin, target_space.qmax))
-                dequantized_target = (quantized_target - target_space.zero_point) * target_space.scale
+            if target_space.apply_method in quant_apply_methods:
+                dequantized_target: Tensor = quant_apply_methods[target_space.apply_method](target, target_space)
             else:
-                raise TypeError('Only `clamp_round` are supported for quantization `apply_method`.')
+                raise TypeError(f'Only {list(quant_apply_methods.keys())} are supported for quantization `apply_method`.')
             return dequantized_target
+        elif target_space.type is TargetType.PARAMETER:
+            # Prevent registering buffer as a parameter
+            return target * 1.
         else:
             return target
 
     def _distil_observe_helper(self, target: Tensor, target_space: DistillationTargetSpace) -> Tensor:
         # NOTE: here will have a risk, we don't know if target will be inplace changed in the following.
-        target_space.hidden_state = target
+        target_space.hidden_state = target.clone().detach()
         return target
 
+    def _track_info(self, target_name: str, target: Tensor):
+        for track_func in self._track_funcs:
+            track_func(self, target_name, target)
+
+    def register_track_func(self, track_func: Callable[[ModuleWrapper, str, Tensor], None]):
+        """
+        Execute ``track_func`` sequentially according to the order of registration.
+
+        Parameters
+        ----------
+        track_func
+            The inputs of track_func are (wrapper, target_name, target).
+            TODO: add a simple track_func example.
+        """
+        self._track_funcs.append(track_func)
+
     def patch_helper(self, target_name: str, target: Tensor | Any) -> Tensor | Any:
+        self._track_info(target_name=target_name, target=target)
         # apply quantize-dequantize -> apply pruning mask -> record state for distil
         if target_name in self.quantization_target_spaces:
             target = self._apply_quant_helper(target, self.quantization_target_spaces[target_name])
@@ -248,7 +273,7 @@ class ModuleWrapper(torch.nn.Module):
 
         new_args = []
         for idx, arg_value in enumerate(pos_args):
-            target_name = f'{INPUT_PREFIX}{idx + 1}'
+            target_name = f'{INPUT_PREFIX}{idx}'
             new_args.append(self.patch_helper(target_name, arg_value))
         new_args.extend(self.patch_helper(f'{INPUT_PREFIX}{self._input_args_spec.varargs}', varargs))
 
@@ -334,3 +359,20 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
             configured_target_spaces[module_name] = target_spaces
 
     return module_wrappers, configured_target_spaces
+
+
+def track_target_shape(wrapper: ModuleWrapper, target_name: str, target: Tensor):
+    """
+    Track the input/output target shape and save the shape information to ``TargetSpace.shape``.
+    """
+    if not isinstance(target, Tensor):
+        return
+    if target_name in wrapper.quantization_target_spaces:
+        if wrapper.quantization_target_spaces[target_name].type is not TargetType.PARAMETER:
+            wrapper.quantization_target_spaces[target_name].shape = target.shape
+    if target_name in wrapper.pruning_target_spaces:
+        if wrapper.pruning_target_spaces[target_name].type is not TargetType.PARAMETER:
+            wrapper.pruning_target_spaces[target_name].shape = target.shape
+    if target_name in wrapper.distillation_target_spaces:
+        if wrapper.distillation_target_spaces[target_name].type is not TargetType.PARAMETER:
+            wrapper.distillation_target_spaces[target_name].shape = target.shape

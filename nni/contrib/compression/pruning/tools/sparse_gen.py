@@ -11,11 +11,12 @@ from typing import Callable, Dict, List, Tuple
 import numpy
 import torch
 
-from .common import _MASKS, _METRICS, _TARGET_SPACES
+from .common import _MASKS, _METRICS
+from ...base.compressor import _PRUNING_TARGET_SPACES
 from ...base.target_space import PruningTargetSpace, TargetType
 
 
-def generate_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASKS:
+def generate_sparsity(metrics: _METRICS, target_spaces: _PRUNING_TARGET_SPACES) -> _MASKS:
     def condition_dependency(target_space: PruningTargetSpace) -> bool:
         return target_space.dependency_group_id is not None
 
@@ -56,8 +57,8 @@ def generate_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASK
     return masks
 
 
-def target_spaces_filter(target_spaces: _TARGET_SPACES,
-                         condition: Callable[[PruningTargetSpace], bool]) -> Tuple[_TARGET_SPACES, _TARGET_SPACES]:
+def target_spaces_filter(target_spaces: _PRUNING_TARGET_SPACES,
+                         condition: Callable[[PruningTargetSpace], bool]) -> Tuple[_PRUNING_TARGET_SPACES, _PRUNING_TARGET_SPACES]:
     filtered_target_spaces = defaultdict(dict)
     remained_target_spaces = defaultdict(dict)
 
@@ -71,7 +72,7 @@ def target_spaces_filter(target_spaces: _TARGET_SPACES,
     return filtered_target_spaces, remained_target_spaces
 
 
-def _generate_ratio_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASKS:
+def _generate_ratio_sparsity(metrics: _METRICS, target_spaces: _PRUNING_TARGET_SPACES) -> _MASKS:
     # NOTE: smaller metric value means more un-important
     masks = defaultdict(dict)
     for module_name, ts in target_spaces.items():
@@ -84,7 +85,7 @@ def _generate_ratio_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -
     return masks
 
 
-def _generate_threshold_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASKS:
+def _generate_threshold_sparsity(metrics: _METRICS, target_spaces: _PRUNING_TARGET_SPACES) -> _MASKS:
     # NOTE: smaller metric value means more un-important
     masks = defaultdict(dict)
     for module_name, ts in target_spaces.items():
@@ -106,7 +107,7 @@ def _generate_threshold_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACE
     return masks
 
 
-def _generate_align_sparsity(masks: _MASKS, target_spaces: _TARGET_SPACES) -> _MASKS:
+def _generate_align_sparsity(masks: _MASKS, target_spaces: _PRUNING_TARGET_SPACES) -> _MASKS:
     align_masks = defaultdict(dict)
     for module_name, ts in target_spaces.items():
         for target_name, target_space in ts.items():
@@ -117,7 +118,7 @@ def _generate_align_sparsity(masks: _MASKS, target_spaces: _TARGET_SPACES) -> _M
     return align_masks
 
 
-def _generate_global_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASKS:
+def _generate_global_sparsity(metrics: _METRICS, target_spaces: _PRUNING_TARGET_SPACES) -> _MASKS:
     groups: Dict[str, List[Tuple[str, str, PruningTargetSpace]]] = defaultdict(list)
     for module_name, ts in target_spaces.items():
         for target_name, target_space in ts.items():
@@ -167,7 +168,7 @@ def _generate_global_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) 
     return masks
 
 
-def _generate_dependency_sparsity(metrics: _METRICS, target_spaces: _TARGET_SPACES) -> _MASKS:
+def _generate_dependency_sparsity(metrics: _METRICS, target_spaces: _PRUNING_TARGET_SPACES) -> _MASKS:
     groups: Dict[str, List[Tuple[str, str, PruningTargetSpace]]] = defaultdict(list)
     for module_name, ts in target_spaces.items():
         for target_name, target_space in ts.items():
@@ -266,7 +267,7 @@ def _metric_fuse(metrics: _METRICS) -> torch.Tensor:
     return fused_metric / count
 
 
-def _expand_masks(masks: _MASKS, target_spaces: _TARGET_SPACES) -> _MASKS:
+def _expand_masks(masks: _MASKS, target_spaces: _PRUNING_TARGET_SPACES) -> _MASKS:
     # expand the mask shape from metric shape to target shape
     new_masks = defaultdict(dict)
     for module_name, module_masks in masks.items():

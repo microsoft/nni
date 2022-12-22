@@ -5,10 +5,11 @@ from typing import Dict
 
 import torch
 
-from .common import _METRICS, _TARGET_SPACES
+from .common import _METRICS
+from ...base.compressor import _PRUNING_TARGET_SPACES
 
 
-def norm_metrics(p: str | int, data: Dict[str, Dict[str, torch.Tensor]], target_spaces: _TARGET_SPACES) -> _METRICS:
+def norm_metrics(p: str | int, data: Dict[str, Dict[str, torch.Tensor]], target_spaces: _PRUNING_TARGET_SPACES) -> _METRICS:
     metrics = defaultdict(dict)
     for module_name, module_data in data.items():
         for target_name, target_data in module_data.items():
