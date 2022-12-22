@@ -403,11 +403,11 @@ class Experiment:
     def _get_query_type(self, key: str):
         if key == 'trialConcurrency':
             return '?update_type=TRIAL_CONCURRENCY'
-        if key == 'maxExecDuration':
+        if key == 'maxExperimentDuration':
             return '?update_type=MAX_EXEC_DURATION'
         if key == 'searchSpace':
             return '?update_type=SEARCH_SPACE'
-        if key == 'maxTrialNum':
+        if key == 'maxTrialNumber':
             return '?update_type=MAX_TRIAL_NUM'
 
     def _update_experiment_profile(self, key: str, value: Any):
@@ -448,7 +448,7 @@ class Experiment:
             Strings like '1m' for one minute or '2h' for two hours.
             SUFFIX may be 's' for seconds, 'm' for minutes, 'h' for hours or 'd' for days.
         """
-        self._update_experiment_profile('maxExecDuration', value)
+        self._update_experiment_profile('maxExperimentDuration', value)
 
     def update_search_space(self, value: dict):
         """
@@ -471,4 +471,4 @@ class Experiment:
         value: int
             New max_trial_number value.
         """
-        self._update_experiment_profile('maxTrialNum', value)
+        self._update_experiment_profile('maxTrialNumber', value)
