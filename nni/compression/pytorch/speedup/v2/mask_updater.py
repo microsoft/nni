@@ -11,13 +11,11 @@ if TYPE_CHECKING:
     from .container import NodeInfo
 
 class MaskUpdater:
-    def detect(self, model_speedup: 'ModelSpeedup', node: Node) -> bool:
-        raise RuntimeError('detect method should be overrided!')
-
     @staticmethod
     def propagate_originally(model_speedup: 'ModelSpeedup', node: Node):
         """
         propagate normally to get informations of intermediate variables such as shape, dtype of tensors
+        this method is a static method. it will be executed before classify the MaskUpdater
         default action:
             execute and store values to slot.value_0(intermediate variables when assigned) and slot.value_1(intermediate variables after in-place ops)
         """
@@ -37,8 +35,10 @@ class MaskUpdater:
         if model_speedup.garbage_collect_values:
             # do memory collect to reduce memory usage
             for to_delete in model_speedup.user_to_last_uses.get(node, []):
-                model_speedup.slots[to_delete].value_1 = None
-            pass
+                del model_speedup.slots[to_delete].value_1
+
+    def detect(self, model_speedup: 'ModelSpeedup', node: Node) -> bool:
+        raise RuntimeError('detect method should be overrided!')
 
     def direct_update_preprocess(self, model_speedup: 'ModelSpeedup', node: Node):
         """
@@ -131,8 +131,8 @@ class DefaultMaskUpdater(MaskUpdater):
 
         if model_speedup.garbage_collect_values:
             # do memory collect to reduce memory usage
-            # model_speedup.slots[node].value_2 = None
-            pass
+            for to_delete in model_speedup.user_to_last_uses.get(node, []):
+                del model_speedup.slots[to_delete].value_2
 
     def direct_update_postprocess(self, model_speedup: 'ModelSpeedup', node: Node):
         pass
@@ -180,8 +180,7 @@ class DefaultMaskUpdater(MaskUpdater):
 
         if model_speedup.garbage_collect_values:
             # do memory collect to reduce memory usage
-            model_speedup.slots[node].mask_1 = None
-            pass
+            del model_speedup.slots[node].mask_1
 
     def indirect_update_postprocess(self, model_speedup: 'ModelSpeedup', node: Node):
         pass
@@ -261,11 +260,14 @@ class NoMaskUpdater(DefaultMaskUpdater):
 
         if model_speedup.garbage_collect_values:
             # do memory collect to reduce memory usage
-            # model_speedup.slots[node].value_2 = None
-            pass
+            for to_delete in model_speedup.user_to_last_uses.get(node, []):
+                del model_speedup.slots[to_delete].value_2
 
 class NoChangeMaskUpdater(DefaultMaskUpdater):
     """
+    for some special op that masks will not change when execute
+    1. for getitem op, it's no need to calc masks. do in fast path to run the algorithm faster.
+    2. for (softmax, log_softmax) ops, the default process will get a wrong mask. actually we should just copy the mask from input to output.
     """
     def direct_softmax(self, model_speedup: 'ModelSpeedup', node: Node):
         if len(node.args) != 0:
@@ -305,9 +307,6 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
         map_recursive_zip(model_speedup.indirect_pass_grad, sub_value_3, output_3)
 
     def detect(self, model_speedup: 'ModelSpeedup', node: Node) -> bool:
-        """
-        the default MaskUpdater for operators that will not change mask value
-        """
         if node.op == 'call_function':
             if node.target in (F.log_softmax, F.softmax):
                 model_speedup.node_infos[node].infos['direct'] = self.direct_softmax
@@ -336,8 +335,8 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
 
         if model_speedup.garbage_collect_values:
             # do memory collect to reduce memory usage
-            # model_speedup.slots[node].value_2 = None
-            pass
+            for to_delete in model_speedup.user_to_last_uses.get(node, []):
+                del model_speedup.slots[to_delete].value_2
 
     def indirect_update_process(self, model_speedup: 'ModelSpeedup', node: Node):
         output_3 = map_recursive(model_speedup.slot_getter_value_3, node)
@@ -351,5 +350,4 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
 
         if model_speedup.garbage_collect_values:
             # do memory collect to reduce memory usage
-            model_speedup.slots[node].mask_1 = None
-            pass
+            del model_speedup.slots[node].mask_1
