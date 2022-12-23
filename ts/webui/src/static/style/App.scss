@@ -25,6 +25,9 @@
     left: 56px;
     top: 0;
     width: calc(100vw - 56px);
+
+    /* fix nav position to avoid overlap */
+    min-width: 725px;
     height: 64px;
     background-color: #fff;
     z-index: 1000;
@@ -46,6 +49,7 @@
 .content {
     width: calc(100vw - 114px);
     min-height: calc(100vh - 80px);
+    min-width: 1116px;
 
     /* 包含滚动条的auto */
     margin: 0 auto;

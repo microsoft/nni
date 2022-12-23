@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Stack, StackItem, CommandBarButton, IContextualMenuProps, IStackTokens } from '@fluentui/react';
-// import TooltipHostForIcon from '@components/common/TooltipHostForIcon';
 import WebRouters from './WebsiteRouter';
-import TooltipHostForIcon from '@components/common/del/TooltipHostForIcon';
+import TooltipHostForIcon from './TooltipHostForIcon';
 import LinksIcon from '@components/nav/LinksIcon';
 import { MANAGER_IP, WEBUIDOC } from '@static/const';
 import ExperimentSummaryPanel from './slideNav/ExperimentSummaryPanel';
@@ -32,7 +31,9 @@ const NavCon = (props: NavProps): any => {
     const { changeInterval } = props;
     const [version, setVersion] = useState('999' as string);
     const [currentPage, setcurrentPage] = useState(
-        window.location.pathname === '/oview' ? 'Overview' : 'Trials detail'
+        window.location.pathname === '/oview' || window.location.pathname === '/'
+            ? 'Overview'
+            : ('Trials detail' as 'Overview' | 'Trials detail')
     );
     const [visibleExperimentPanel, setVisibleExperimentPanel] = useState(false);
     const [refreshText, setRefreshText] = useState('Auto refresh' as string);
@@ -57,7 +58,6 @@ const NavCon = (props: NavProps): any => {
     };
 
     const getInterval = (num: number): void => {
-        // 解开注释
         changeInterval(num); // notice parent component
         setRefreshFrequency(num === 0 ? '' : num);
         setRefreshText(num === 0 ? 'Disable auto' : 'Auto refresh');
@@ -78,7 +78,6 @@ const NavCon = (props: NavProps): any => {
                 }
             })
             .catch(_error => {
-                // TODO 测试这块有没有问题，一个404的api返回status是200.。。
                 setVersion('ERROR');
             });
     }, []);
@@ -121,12 +120,12 @@ const NavCon = (props: NavProps): any => {
 
     return (
         <React.Fragment>
-            {/* shu */}
+            {/* Vertical navigation bar */}
             <Stack className='nav-slider'>
                 {/* TODO: add click event for Stack>div */}
                 <Stack tokens={pageURLtoken}>
                     <img width='36' src={(getPrefix() || '') + '/icons/logo.png'} />
-                    <WebRouters changeCurrentPage={setcurrentPage} />
+                    <WebRouters changeCurrentPage={setcurrentPage} currentPage={currentPage} />
                     {/* <TooltipHostForIcon tooltip='Overview' iconName='overview' pageURL='/oview'/>
                     <TooltipHostForIcon tooltip='Trials detail' iconName='detail' pageURL='/detail'/> */}
                     <TooltipHostForIcon tooltip='All experiments' iconName='all-experiments' pageURL='/experiment' />
@@ -142,7 +141,7 @@ const NavCon = (props: NavProps): any => {
                     />
                 </Stack>
             </Stack>
-            {/* 横 */}
+            {/* Horizontal navigation bar */}
             <Stack horizontal horizontalAlign='space-between' className='nav-main'>
                 <StackItem grow={30} className='title'>
                     {currentPage}
