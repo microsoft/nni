@@ -202,14 +202,10 @@ const TableList = (props: TableListProps): any => {
             }
             const columnTitle = _inferColumnTitle(k);
             // TODO: add blacklist
-            // 0.85: tableWidth / screen
-            // const widths = window.innerWidth * 0.85;
             columns.push({
                 name: columnTitle,
                 key: k,
                 fieldName: k,
-                // minWidth: widths * 0.12,
-                // maxWidth: widths * 0.19,
                 minWidth:
                     columnsWidths.find(item => item.name === k) !== undefined
                         ? columnsWidths.find(item => item.name === k)!.value[0]
