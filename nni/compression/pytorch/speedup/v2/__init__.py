@@ -1,4 +1,4 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from .compressor import ModelSpeedup
+from .model_speedup import ModelSpeedup

@@ -7,7 +7,7 @@ from nni.common.concrete_trace_utils.utils import map_recursive, map_recursive_z
 from nni.compression.pytorch.utils.utils import randomize_tensor
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from .compressor import ModelSpeedup
+    from .model_speedup import ModelSpeedup
     from .container import NodeInfo
 
 class MaskUpdater:
