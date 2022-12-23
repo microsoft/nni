@@ -11,6 +11,7 @@ __all__ = [
 import copy
 import itertools
 import logging
+from collections.abc import Sequence, Mapping, Set
 from typing import TypeVar, Type, Any, Generic, Dict, Iterable, Callable, List, TYPE_CHECKING, cast
 
 import numpy as np
@@ -19,7 +20,7 @@ from scipy.stats import norm, lognorm, uniform, loguniform
 
 from .exception import SampleValidationError, SampleMissingError
 from .symbol import SymbolicExpression, Symbol
-from .utils import auto_label
+from .utils import auto_label, label_scope, label
 
 if TYPE_CHECKING:
     from scipy.stats import _distn_infrastructure
@@ -42,7 +43,68 @@ def _is_mutable_symbol(mutable: Mutable) -> bool:
     return isinstance(mutable, LabeledMutable)
 
 
-def dedup_labeled_mutables(mutables: Iterable[LabeledMutable]) -> dict[str, LabeledMutable]:
+def _mutable_equal(mutable1: Any, mutable2: Any) -> bool:
+    """Check if two mutables are equal with :meth:`Mutable.equals`.
+
+    Use this instead of ``==`` when comparing objects that could contain mutables.
+
+    Parameters
+    ----------
+    mutable1
+        The first mutable.
+    mutable2
+        The second mutable.
+
+    Returns
+    -------
+    True if the two mutables are equal, False otherwise.
+    """
+    if isinstance(mutable1, Mutable):
+        if isinstance(mutable2, Mutable):
+            return mutable1.equals(mutable2)
+        return False
+    if isinstance(mutable2, Mutable):
+        # mutable1 is not a Mutable, but mutable2 is.
+        return False
+    # Both are not Mutable.
+
+    # Dealing with mapping, sequence and set manually,
+    # because their ``==`` will invoke ``__eq__`` of their elements,
+    # but we want to invoke ``Mutable.equals`` instead.
+    if isinstance(mutable1, Mapping) and isinstance(mutable2, Mapping):
+        if len(mutable1) != len(mutable2):
+            return False
+        for key in mutable1:
+            if key not in mutable2:
+                return False
+            if not _mutable_equal(mutable1[key], mutable2[key]):
+                return False
+        return True
+    if isinstance(mutable1, Sequence) and isinstance(mutable2, Sequence):
+        if isinstance(mutable1, (str, label, label_scope)):
+            return mutable1 == mutable2  # exclude strings to avoid infinite recursion
+        if len(mutable1) != len(mutable2):
+            return False
+        for item1, item2 in zip(mutable1, mutable2):
+            if not _mutable_equal(item1, item2):
+                return False
+        return True
+    if isinstance(mutable1, Set):
+        if not isinstance(mutable2, Set):
+            return False
+        if len(mutable1) != len(mutable2):
+            return False
+        for item1 in mutable1:
+            for item2 in mutable2:
+                if _mutable_equal(item1, item2):
+                    break
+            else:
+                return False
+        return True
+    return mutable1 == mutable2
+
+
+def _dedup_labeled_mutables(mutables: Iterable[LabeledMutable]) -> dict[str, LabeledMutable]:
     """Deduplicate mutables based on labels, and reform a dict.
 
     Mutables are considered equal if they have the same label.
@@ -235,7 +297,7 @@ class Mutable:
         """
         if is_leaf is None:
             is_leaf = _is_mutable_symbol
-        return dedup_labeled_mutables(self.leaf_mutables(is_leaf))
+        return _dedup_labeled_mutables(self.leaf_mutables(is_leaf))
 
     def contains(self, sample: Sample) -> bool:
         """Check whether sample is validly sampled from the mutable space.
@@ -286,7 +348,7 @@ class Mutable:
         Please use :meth:`equals` to compare two mutables,
         instead of ``==``, because ``==`` will generate mutable expressions.
         """
-        return self.__class__ == other.__class__ and self.__dict__ == other.__dict__
+        return self.__class__ == other.__class__ and _mutable_equal(self.__dict__, other.__dict__)
 
     def default(self, memo: Sample | None = None) -> Any:
         """Return the default value of the mutable.
@@ -416,6 +478,12 @@ class Mutable:
 
         yield from _iter(0)
 
+    def _unwrap_parameter(self):
+        # Used in ``nni.trace``.
+        # Calling ``ensure_frozen()`` by default.
+        from .frozen import ensure_frozen
+        return ensure_frozen(self)
+
 
 class LabeledMutable(Mutable):
     """:class:`Mutable` with a label. This should be the super-class of most mutables.
@@ -457,7 +525,7 @@ class LabeledMutable(Mutable):
         raise NotImplementedError(f'grid() is not implemented in {self.__class__}.')
 
 
-class MutableExpression(Mutable, SymbolicExpression):
+class MutableExpression(Mutable, SymbolicExpression, Generic[T]):
     """
     Expression of mutables. Common use cases include:
     summation of several mutables, binary comparison between two mutables.
@@ -478,7 +546,7 @@ class MutableExpression(Mutable, SymbolicExpression):
     def expr_cls(self) -> Type[MutableExpression]:
         return MutableExpression
 
-    def freeze(self, sample: Sample) -> Any:
+    def freeze(self, sample: Sample) -> T:
         self.validate(sample)
         return self.evaluate(sample)
 
@@ -499,6 +567,11 @@ class MutableExpression(Mutable, SymbolicExpression):
                 _logger.warning('The expression contains non-mutable symbols. This is not recommended: %s', self)
                 break
             yield from symbol.leaf_mutables(is_leaf)
+
+    def equals(self, other: MutableExpression) -> bool:
+        if type(self) != type(other):
+            return False
+        return self.function == other.function and _mutable_equal(self.arguments, other.arguments)
 
     def __repr__(self) -> str:
         return self.symbolic_repr()
@@ -521,6 +594,9 @@ class MutableSymbol(LabeledMutable, Symbol, MutableExpression):
     """
 
     # MutableSymbol share the ``__init__`` with Symbol.
+
+    def equals(self, other: MutableSymbol) -> bool:
+        return Mutable.equals(self, other)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.extra_repr()})'
@@ -563,7 +639,7 @@ class Categorical(MutableSymbol, Generic[Choice]):
     ) -> None:
         values = list(values)
         assert values, 'Categorical values must not be empty.'
-        self.label = label or auto_label()
+        self.label = auto_label(label)
         self.values = values
         self.weights = weights if weights is not None else [1 / len(values)] * len(values)
 
@@ -571,8 +647,10 @@ class Categorical(MutableSymbol, Generic[Choice]):
             self.validate({self.label: default})
         self.default_value = default
 
-        assert not(any(isinstance(value, Mutable) for value in values)), 'Categorical values must not contain mutables.'
-        assert len(set(values)) == len(values), 'Values must be unique.'
+        assert not(any(isinstance(value, Mutable) for value in values)), 'Discrete values must not contain mutables.'
+        for i in range(len(values)):
+            for j in range(i + 1, len(values)):
+                assert values[i] != values[j], f'Discrete values must be unique, but {i} collides with {j}.'
         assert len(self.weights) == len(self.values), 'Distribution must have length n.'
         assert abs(sum(self.weights) - 1) < 1e-6, 'Distribution must sum to 1.'
 
@@ -722,8 +800,9 @@ class CategoricalMultiple(MutableSymbol, Generic[Choice]):
         label: str | None = None,
     ) -> None:
         values = list(values)
-        assert values, 'Categorical values must not be empty.'
-        self.label = label or auto_label()
+        assert values, 'Discrete values must not be empty.'
+        with label_scope(label) as self.label_scope:
+            self.label = self.label_scope.name
         self.values = values
         self.n_chosen = n_chosen
 
@@ -756,12 +835,13 @@ class CategoricalMultiple(MutableSymbol, Generic[Choice]):
             f'], n_chosen={self.n_chosen!r}, label={self.label!r}'
 
     def _simplify_to_categorical_format(self) -> list[LabeledMutable]:
-        mutables: list[LabeledMutable] = [Categorical([True, False], label=f'{self.label}/{i}') for i in range(len(self.values))]
-        if self.n_chosen is not None:
-            from .annotation import ExpressionConstraint  # pylint: disable=import-error
-            expr = sum(cast(List[Categorical], mutables)) == self.n_chosen
-            assert isinstance(expr, MutableExpression)
-            mutables.append(ExpressionConstraint(expr, label=f'{self.label}/n'))
+        with self.label_scope:
+            mutables: list[LabeledMutable] = [Categorical([True, False], label=str(i)) for i in range(len(self.values))]
+            if self.n_chosen is not None:
+                from .annotation import ExpressionConstraint
+                expr = sum(cast(List[Categorical], mutables)) == self.n_chosen
+                assert isinstance(expr, MutableExpression)
+                mutables.append(ExpressionConstraint(expr, label='n'))
         return mutables
 
     def _parse_simple_format(self, sample: Sample) -> SampleValidationError | list[Choice]:
@@ -982,7 +1062,7 @@ class Numerical(MutableSymbol):
         self.low = low
         self.high = high
 
-        self.label = label or auto_label()
+        self.label = auto_label(label)
 
         assert not(any(isinstance(value, Mutable) for value in [low, high, mu, sigma])), 'Numerical parameters must not be mutables.'
 
