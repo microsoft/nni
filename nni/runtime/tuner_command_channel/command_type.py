@@ -21,3 +21,4 @@ class CommandType(Enum):
     SendTrialJobParameter = b'SP'
     NoMoreTrialJobs = b'NO'
     KillTrialJob = b'KI'
+    Error = b'ER'

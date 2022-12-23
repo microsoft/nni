@@ -171,7 +171,7 @@ class NNIRestHandler {
             if (isNewExperiment()) {
                 this.nniManager.startExperiment(req.body).then((eid: string) => {
                     res.send({
-                        experiment_id: eid // eslint-disable-line @typescript-eslint/camelcase
+                        experiment_id: eid
                     });
                 }).catch((err: Error) => {
                     // Start experiment is a step of initialization, so any exception thrown is a fatal
@@ -211,7 +211,7 @@ class NNIRestHandler {
                     res.send();
                 } catch (err) {
                     // setClusterMetata is a step of initialization, so any exception thrown is a fatal
-                    this.handleError(NNIError.FromError(err), res, true);
+                    this.handleError(NNIError.FromError(err as any), res, true);
                 }
         });
     }

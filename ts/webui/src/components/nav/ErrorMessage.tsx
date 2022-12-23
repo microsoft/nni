@@ -6,6 +6,8 @@ import { Important, Cancel } from '@components/fluent/Icon';
 import { EXPERIMENT } from '@static/datamodel';
 import '@style/nav/slideNavBtns.scss';
 
+// This file is for <experiment error> message model
+// Position: show the message in the lower right corner of the page
 export const ErrorMessage: React.FunctionComponent = () => {
     const [hideDialog, setHideDialog] = useState(EXPERIMENT.status === 'ERROR' ? true : false);
     const [isShowLogPanel, setShowLogPanel] = useState(false);

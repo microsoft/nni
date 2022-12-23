@@ -53,7 +53,7 @@ If you are familiar with defining a model and training in pytorch, you can skip 
     import torch.nn.functional as F
     from torch.optim import SGD
 
-    from scripts.compression_mnist_model import TorchModel, trainer, evaluator, device
+    from nni_assets.compression.mnist_model import TorchModel, trainer, evaluator, device
 
     # define the model
     model = TorchModel().to(device)
@@ -66,8 +66,6 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
 
 .. rst-class:: sphx-glr-script-out
-
- Out:
 
  .. code-block:: none
 
@@ -109,13 +107,11 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    Average test loss: 0.4925, Accuracy: 8414/10000 (84%)
-    Average test loss: 0.2626, Accuracy: 9214/10000 (92%)
-    Average test loss: 0.2006, Accuracy: 9369/10000 (94%)
+    Average test loss: 1.3409, Accuracy: 6494/10000 (65%)
+    Average test loss: 0.3263, Accuracy: 9003/10000 (90%)
+    Average test loss: 0.2029, Accuracy: 9388/10000 (94%)
 
 
 
@@ -174,8 +170,6 @@ Pruners usually require `model` and `config_list` as input arguments.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
     TorchModel(
@@ -220,8 +214,6 @@ Pruners usually require `model` and `config_list` as input arguments.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
     conv1  sparsity :  0.5
@@ -257,12 +249,8 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    aten::log_softmax is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~
-    Note: .aten::log_softmax.12 does not have corresponding mask inference object
     /home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:417.)
       return self._grad
 
@@ -284,8 +272,6 @@ the model will become real smaller after speedup
 
 
 .. rst-class:: sphx-glr-script-out
-
- Out:
 
  .. code-block:: none
 
@@ -331,28 +317,23 @@ Because speedup will replace the masked big layers with dense small ones.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  30.730 seconds)
+   **Total running time of the script:** ( 1 minutes  0.810 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_quick_start_mnist.py:
 
+.. only:: html
 
-.. only :: html
-
- .. container:: sphx-glr-footer
-    :class: sphx-glr-footer-example
+  .. container:: sphx-glr-footer sphx-glr-footer-example
 
 
+    .. container:: sphx-glr-download sphx-glr-download-python
 
-  .. container:: sphx-glr-download sphx-glr-download-python
+      :download:`Download Python source code: pruning_quick_start_mnist.py <pruning_quick_start_mnist.py>`
 
-     :download:`Download Python source code: pruning_quick_start_mnist.py <pruning_quick_start_mnist.py>`
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
-
-  .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-     :download:`Download Jupyter notebook: pruning_quick_start_mnist.ipynb <pruning_quick_start_mnist.ipynb>`
+      :download:`Download Jupyter notebook: pruning_quick_start_mnist.ipynb <pruning_quick_start_mnist.ipynb>`
 
 
 .. only:: html

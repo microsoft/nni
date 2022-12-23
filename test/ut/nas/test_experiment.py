@@ -94,7 +94,8 @@ def get_mnist_evaluator():
         train_dataloader=train_loader, val_dataloaders=valid_loader,
         limit_train_batches=20,
         limit_val_batches=20,
-        max_epochs=1
+        max_epochs=1,
+        num_classes=10
     )
 
 
