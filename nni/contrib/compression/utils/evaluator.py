@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence, Mapping
 from copy import deepcopy
 import logging
 import types
@@ -189,17 +190,16 @@ class Evaluator:
 
         return reset_ddp_model(model, ddp_params) if is_ddp_model else model
 
-    def patch_loss(self, patch: Callable[[Tensor], Tensor]):
+    def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         """
         The patch may add additional loss or replace the original loss. Here is an example::
 
-            def loss_patch(original_loss):
+            def loss_patch(original_loss, batch, *args, **kwargs):
                 params_norm = 0
                 for param in model.parameters():
                     params_norm += torch.norm(param)
                 return original_loss + params_norm
-
-        Something like ``loss = patch(criterion(result, target))`` will happen during each time loss computation.
+        Something like ``loss = loss_patch(training_step(batch, *args, **kwargs), batch)`` will happen during each time loss computation.
         """
         raise NotImplementedError
 
@@ -454,16 +454,17 @@ class LightningEvaluator(Evaluator):
         assert isinstance(self.model, pl.LightningModule)
         self.model.configure_optimizers = self._ori_model_attr['configure_optimizers']
 
-    def patch_loss(self, patch: Callable[[Tensor], Tensor]):
+    def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         assert isinstance(self.model, pl.LightningModule)
         old_training_step = self.model.training_step
 
         def patched_training_step(_, *args, **kwargs):
             output = old_training_step(*args, **kwargs)
+            batch = args[0] if len(args) > 0 else kwargs['batch']
             if isinstance(output, Tensor):
-                output = patch(output)
+                output = patch(output, batch)
             else:
-                output['loss'] = patch(output['loss'])
+                output['loss'] = patch(output['loss'], batch)
             return output
 
         self.model.training_step = types.MethodType(patched_training_step, self.model)
@@ -552,10 +553,10 @@ class LightningEvaluator(Evaluator):
 
 
 _OPTIMIZERS = Union[Optimizer, List[Optimizer]]
-_CRITERION = Callable[[Any, Any], Any]
+_TRAINING_STEP = Callable[[Any], Tensor]
 _SCHEDULERS = Union[None, _LRScheduler, List[_LRScheduler]]
 _EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
-_TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _CRITERION, _SCHEDULERS, Optional[int], Optional[int]], None]
+_TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, _SCHEDULERS, Optional[int], Optional[int]], None]
 
 
 class TorchEvaluator(Evaluator):
@@ -567,7 +568,7 @@ class TorchEvaluator(Evaluator):
     ----------
     training_func
         The training function is used to train the model, note that this a entire optimization training loop.
-        Training function has three required parameters, ``model``, ``optimizers`` and ``criterion``,
+        Training function has three required parameters, ``model``, ``optimizers`` and ``training_step``,
         and three optional parameters, ``lr_schedulers``, ``max_steps``, ``max_epochs``.
 
         Let's explain these six parameters NNI passed in, but in most cases, users don't need to care about these.
@@ -576,8 +577,8 @@ class TorchEvaluator(Evaluator):
         * The ``model`` is a wrapped model from the original model, it has a similar structure to the model to be pruned,
           so it can share training function with the original model.
         * ``optimizers`` are re-initialized from the ``optimizers`` passed to the evaluator and the wrapped model's parameters.
-        * ``criterion`` also based on the ``criterion`` passed to the evaluator,
-          it might be modified modified by the pruner during model pruning.
+        * ``training_step`` also based on the ``training_step`` passed to the evaluator,
+          it might be modified by the compressor during model compression.
         * If users use ``lr_schedulers`` in the ``training_func``, NNI will re-initialize the ``lr_schedulers`` with the re-initialized
           optimizers.
         * ``max_steps`` is the NNI training duration limitation. It is for pruner (or quantizer) to control the number of training steps.
@@ -594,7 +595,7 @@ class TorchEvaluator(Evaluator):
         .. code-block:: python
 
             def training_func(model: torch.nn.Module, optimizers: torch.optim.Optimizer,
-                              criterion: Callable[[Any, Any], torch.Tensor],
+                              training_step: Callable[[Any, Any], torch.Tensor],
                               lr_schedulers: _LRScheduler | None = None, max_steps: int | None = None,
                               max_epochs: int | None = None, *args, **kwargs):
 
@@ -625,10 +626,16 @@ class TorchEvaluator(Evaluator):
         of a function/class, which can then be used by NNI to re-initialize the optimizer for a new but structurally similar model.
 
         E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
-    criterion
-        The criterion function used in trainer. Take model output and target as input, and return the loss.
-
-        E.g. ``criterion = torch.nn.functional.nll_loss``.
+    training_step
+        A callable function, the first argument of inputs should be ``batch``, and the outputs should contain loss.
+        Three kinds of outputs are supported: single loss, tuple with the first element is loss, a dict contains a key ``loss``.
+        .. code-block:: python
+            def training_step(batch, model, ...):
+                inputs, labels = batch
+                output = model(inputs)
+                ...
+                loss = loss_func(output, labels)
+                return loss
     lr_schedulers
         Optional. A single traced lr_scheduler instance or a list of traced lr_schedulers by ``nni.trace``.
         For the same reason with ``optimizers``, NNI needs the traced lr_scheduler to re-initialize it.
@@ -655,12 +662,12 @@ class TorchEvaluator(Evaluator):
     But, it is fine to provide more arguments than the pruner's (or quantizer's) need.
     """
 
-    def __init__(self, training_func: _TRAINING_FUNC, optimizers: Optimizer | List[Optimizer], criterion: _CRITERION,
+    def __init__(self, training_func: _TRAINING_FUNC, optimizers: Optimizer | List[Optimizer], training_step: _TRAINING_STEP,
                  lr_schedulers: _LRScheduler | List[_LRScheduler] | None = None, dummy_input: Any | None = None,
                  evaluating_func: _EVALUATING_FUNC | None = None):
         self.training_func = training_func
-        self._ori_criterion = criterion
-        self._criterion = self._ori_criterion
+        self._ori_training_step = training_step
+        self._training_step = self._ori_training_step
         self.dummy_input = dummy_input
         self.evaluating_func = evaluating_func
 
@@ -723,17 +730,28 @@ class TorchEvaluator(Evaluator):
         else:
             _logger.warning('Did not bind any model, no need to unbind model.')
 
-    def patch_loss(self, patch: Callable[[Tensor], Tensor]):
-        old_criterion = self._criterion
+    def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
+        old_training_step = self._training_step
 
-        def patched_criterion(*args, **kwargs):
-            loss = old_criterion(*args, **kwargs)
-            return patch(loss)
+        def patched_training_step(*args, **kwargs):
+            out = old_training_step(*args, **kwargs)
+            # we assume in training_step, ``batch`` is the first argument
+            batch = args[0] if len(args) > 0 else kwargs['batch']
+            if isinstance(out, Tensor):
+                out = patch(out, batch)
+            elif isinstance(out, Sequence) and not isinstance(out, str):
+                assert isinstance(out[0], Tensor)
+                new_loss = patch(out[0], batch)
+                out = (new_loss,) + out[1:]
+            elif isinstance(out, Mapping):
+                assert 'loss' in out and isinstance(out['loss'], Tensor)
+                out['loss'] = patch(out['loss'], batch)
+            return out
 
-        self._criterion = patched_criterion
+        self._training_step = patched_training_step
 
     def revert_loss(self):
-        self._criterion = self._ori_criterion
+        self._training_step = self._ori_training_step
 
     def patch_optimizer_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
         assert self._optimizers is not None
@@ -758,10 +776,12 @@ class TorchEvaluator(Evaluator):
     def train(self, max_steps: int | None = None, max_epochs: int | None = None):
         assert self.model is not None
         assert self._optimizers is not None
-        assert self._criterion is not None
-        optimizers = self._optimizers[0] if self._train_with_single_optimizer else self._optimizers
-        lr_schedulers = self._lr_schedulers[0] if self._train_with_single_scheduler else self._lr_schedulers  # type: ignore
-        self.training_func(self.model, optimizers, self._criterion, lr_schedulers, max_steps, max_epochs)
+        assert self._training_step is not None
+        optimizers = self._optimizers[0] if self._train_with_single_optimizer \
+            else self._optimizers if self._optimizers else None
+        lr_schedulers = self._lr_schedulers[0] if self._train_with_single_scheduler \
+            else self._lr_schedulers if self._lr_schedulers else None
+        self.training_func(self.model, optimizers, self._training_step, lr_schedulers, max_steps, max_epochs)
 
     def finetune(self):
         self.train()
@@ -901,15 +921,15 @@ class TransformersEvaluator(Evaluator):
         else:
             _logger.warning('Did not bind any model, no need to unbind model.')
 
-    def patch_loss(self, patch: Callable[[Tensor], Tensor]):
+    def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         old_compute_loss = self.trainer.compute_loss
 
         def patched_compute_loss(_, model: Any, inputs: Any, return_outputs: bool = False):
             result = old_compute_loss(model, inputs, return_outputs)
             if return_outputs:
-                return patch(result[0]), result[1]
+                return patch(result[0], inputs), result[1]
             else:
-                return patch(result)
+                return patch(result, inputs)
 
         self.trainer.compute_loss = types.MethodType(patched_compute_loss, self.trainer)
 
