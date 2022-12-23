@@ -667,13 +667,13 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError('Quantizer must overload quantize_input()')
 
-    # TODO: maybe a static member function
-    def _fold_bn(self, module, bn_module, weight, bias):
+    # TODO: to deal with affine=False and track_running_stats=False of the bn operator
+    def _fold_bn(self, bn_module, weight, bias):
         running_mean = bn_module.running_mean
         running_var = torch.sqrt(bn_module.running_var + bn_module.eps)
         bn_weight = bn_module.weight
         bn_bias = bn_module.bias
-        dimensions = len(module.weight.shape)
+        dimensions = len(weight.shape)
         shape = [-1] + [1] * (dimensions - 1)
         new_weight = weight * bn_weight.reshape(shape) / running_var.reshape(shape)
         if bias is not None:
@@ -708,7 +708,7 @@ class Quantizer(Compressor):
             _ = bn_module(output)
         weight = module.old_weight
         bias = module.old_bias if hasattr(module, 'old_bias') else None
-        new_weight, new_bias = self._fold_bn(module, bn_module, weight, bias)
+        new_weight, new_bias = self._fold_bn(bn_module, weight, bias)
         return new_weight, new_bias
 
     def _wrap_modules(self, layer, config):

@@ -248,7 +248,7 @@ class PtqQuantizer(Quantizer):
                 weight = module.weight
                 assert hasattr(module, 'bias')
                 bias = module.bias
-                new_weight, new_bias = self._fold_bn(module, bn_module, weight, bias)
+                new_weight, new_bias = self._fold_bn(bn_module, weight, bias)
                 module.weight.copy_(new_weight)
                 module.bias.copy_(new_bias)
                 module.register_buffer('old_bn_weight', module.weight.data)

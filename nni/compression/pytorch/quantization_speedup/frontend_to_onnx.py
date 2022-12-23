@@ -4,6 +4,8 @@
 import torch
 import onnx
 import onnx.numpy_helper
+from nni.compression.pytorch.utils.attr import set_nested_attr
+
 """
 The main function of this page is to convert pytorch model to onnx model.
 Convertion from pytorch model to onnx model is primary so that a critical
@@ -31,36 +33,6 @@ class LayernameModuleWrapper(torch.nn.Module):
         inputs = inputs*self.module_bits
         inputs = self.module(inputs)
         return inputs
-
-def _setattr(model, name, module):
-    """
-    Parameters
-    ----------
-    model : pytorch model
-        The model to speedup by quantization
-    name : str
-        name of pytorch module
-    module : torch.nn.Module
-        Layer module of pytorch model
-    """
-    name_list = name.split(".")
-    for name in name_list[:-1]:
-        model = getattr(model, name)
-    setattr(model, name_list[-1], module)
-
-def _getattr(module, name):
-    """
-    Parameters
-    ----------
-    model : pytorch model
-        The model to speedup by quantization
-    name : str
-        name of pytorch module
-    """
-    name_list = name.split(".")
-    for name in name_list:
-        module = getattr(module, name)
-    return module
 
 def unwrapper(model_onnx, index2name, config):
     """
@@ -147,10 +119,10 @@ def torch_to_onnx(model, config, input_shape, model_path, input_names, output_na
         if config is not None and name in config:
             assert type(module) in support_op
             wrapper_module = LayernameModuleWrapper(module, name2index[name])
-            _setattr(model, name, wrapper_module)
+            set_nested_attr(model, name, wrapper_module)
         elif type(module) in support_op:
             wrapper_module = LayernameModuleWrapper(module, -1)
-            _setattr(model, name, wrapper_module)
+            set_nested_attr(model, name, wrapper_module)
     # Convert torch model to onnx model and save it in model_path
     device = torch.device('cpu')
     dummy_input = torch.randn(input_shape)

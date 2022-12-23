@@ -1,56 +1,22 @@
 """
-SpeedUp Model with Calibration Config
+Speed Up Quantized Model with TensorRT
 ======================================
 
+Quantization algorithms quantize a deep learning model usually in a simulated way. That is, to simulate the effect of low-bit computation with float32 operators, the tensors are quantized to the targeted bit number and dequantized back to float32. Such a quantized model does not have any latency reduction. Thus, there should be a speedup stage to make the quantized model really accelerated with low-bit operators. 
+This tutorial demonstrates how to accelerate a quantized model with `TensorRT <https://developer.nvidia.com/tensorrt>`_ as the inference engine in NNI. More inference engines will be supported in future release.
 
-Introduction
-------------
+The process of speeding up a quantized model in NNI is that 1) the model with quantized weights and configuration is converted into onnx format, 2) the onnx model is fed into TensorRT to generate an inference engine. The engine is used for low latency model inference.
 
-Deep learning network has been computational intensive and memory intensive 
-which increases the difficulty of deploying deep neural network model. Quantization is a 
-fundamental technology which is widely used to reduce memory footprint and speedup inference 
-process. Many frameworks begin to support quantization, but few of them support mixed precision 
-quantization and get real speedup. Frameworks like `HAQ: Hardware-Aware Automated Quantization with Mixed Precision <https://arxiv.org/pdf/1811.08886.pdf>`__\, only support simulated mixed precision quantization which will 
-not speedup the inference process. To get real speedup of mixed precision quantization and 
-help people get the real feedback from hardware, we design a general framework with simple interface to allow NNI quantization algorithms to connect different 
-DL model optimization backends (e.g., TensorRT, NNFusion), which gives users an end-to-end experience that after quantizing their model 
-with quantization algorithms, the quantized model can be directly speeded up with the connected optimization backend. NNI connects 
-TensorRT at this stage, and will support more backends in the future.
-
-
-Design and Implementation
--------------------------
-
-To support speeding up mixed precision quantization, we divide framework into two part, frontend and backend.  
-Frontend could be popular training frameworks such as PyTorch, TensorFlow etc. Backend could be inference 
-framework for different hardwares, such as TensorRT. At present, we support PyTorch as frontend and 
-TensorRT as backend. To convert PyTorch model to TensorRT engine, we leverage onnx as intermediate graph 
-representation. In this way, we convert PyTorch model to onnx model, then TensorRT parse onnx 
-model to generate inference engine. 
-
-
-Quantization aware training combines NNI quantization algorithm 'QAT' and NNI quantization speedup tool.
-Users should set config to train quantized model using QAT algorithm(please refer to :doc:`NNI Quantization Algorithms <../compression/quantizer>`  ).
-After quantization aware training, users can get new config with calibration parameters and model with quantized weight. By passing new config and model to quantization speedup tool, users can get real mixed precision speedup engine to do inference.
-
-
-After getting mixed precision engine, users can do inference with input data.
-
-
-Note
-
-
-* Recommend using "cpu"(host) as data device(for both inference data and calibration data) since data should be on host initially and it will be transposed to device before inference. If data type is not "cpu"(host), this tool will transpose it to "cpu" which may increases unnecessary overhead.
-* User can also do post-training quantization leveraging TensorRT directly(need to provide calibration dataset).
-* Not all op types are supported right now. At present, NNI supports Conv, Linear, Relu and MaxPool. More op types will be supported in the following release.
+There are two modes of the speedup: with calibration data and without calibration data. As TensorRT has supported post-training quantization, directly leveraging this functionality is a natural way to use TensorRT. This mode is called "with calibration data". In this mode, the quantization-aware training algorithms (e.g., `QAT <https://nni.readthedocs.io/en/stable/reference/compression/quantizer.html#qat-quantizer>`_, `LSQ <https://nni.readthedocs.io/en/stable/reference/compression/quantizer.html#lsq-quantizer>`_) only take charge of adjusting model weights to be more quantization friendly, and leave the last-step quantization to the post-training quantization of TensorRT. In the other mode "without calibration data", the post-training quantization in TensorRT is not used, instead, the quantization bit-width and the range of tensor values are fed into TensorRT for speedup (i.e., with `trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS` configured).
 
 
 Prerequisite
 ------------
-When using TensorRT to speed up the quantized model, it is highly recommended to use the PyTorch docker image provided by NVIDIA.
+When using TensorRT to speed up a quantized model, you are highly recommended to use the PyTorch docker image provided by NVIDIA.
 Users can refer to `this web page <https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch>`__ for detailed usage of the docker image.
-The docker image "nvcr.io/nvidia/pytorch:22.09-py3" has been tested for the quantization speedup.
+The docker image "nvcr.io/nvidia/pytorch:22.09-py3" has been tested for the quantization speedup in NNI.
 
+An example command to launch the docker container is `nvidia-docker run -it nvcr.io/nvidia/pytorch:22.09-py3`.
 In the docker image, users should install nni>=3.0, pytorch_lightning, pycuda.
 
 Usage
