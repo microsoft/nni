@@ -1,176 +1,80 @@
-import * as React from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import * as d3 from 'd3';
 import { Dropdown, IDropdownOption, Stack, DefaultButton } from '@fluentui/react';
 import ParCoords from 'parcoord-es';
+import { AppContext } from '@/App';
+import { Trial } from '@model/trial';
 import { SearchSpace } from '@model/searchspace';
+import { getValue } from '@model/localStorage';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { SingleAxis, MultipleAxes } from '@static/interface';
-import { Trial } from '@model/trial';
 import ChangeColumnComponent from '../ChangeColumnComponent';
-import { optimizeModeValue } from './optimizeMode';
-import { getValue } from '@model/localStorage';
 
 import 'parcoord-es/dist/parcoords.css';
 import '@style/button.scss';
 import '@style/experiment/trialdetail/para.scss';
-
-interface ParaState {
-    dimName: string[];
-    selectedPercent: string;
-    userSelectOptimizeMode: string;
-    primaryMetricKey: string;
-    noChart: boolean;
-    customizeColumnsDialogVisible: boolean;
-    availableDimensions: string[];
-    chosenDimensions: string[];
-}
 
 interface ParaProps {
     trials: Trial[];
     searchSpace: SearchSpace;
 }
 
-class Para extends React.Component<ParaProps, ParaState> {
-    private paraRef = React.createRef<HTMLDivElement>();
-    private pcs: any;
+const chartMulineStyle = {
+    width: '100%',
+    height: 392,
+    margin: '0 auto'
+};
 
-    private chartMulineStyle = {
-        width: '100%',
-        height: 392,
-        margin: '0 auto'
-    };
-    private innerChartMargins = {
-        top: 32,
-        right: 20,
-        bottom: 20,
-        left: 28
-    };
+const innerChartMargins = {
+    top: 32,
+    right: 20,
+    bottom: 20,
+    left: 28
+};
 
-    constructor(props: ParaProps) {
-        super(props);
-        this.state = {
-            dimName: [],
-            primaryMetricKey: 'default',
-            selectedPercent: '1',
-            userSelectOptimizeMode: optimizeModeValue(EXPERIMENT.optimizeMode),
-            noChart: true,
-            customizeColumnsDialogVisible: false,
-            availableDimensions: [],
-            chosenDimensions:
-                localStorage.getItem(`${EXPERIMENT.profile.id}_paraColumns`) !== null &&
-                getValue(`${EXPERIMENT.profile.id}_paraColumns`) !== null
-                    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                      JSON.parse(getValue(`${EXPERIMENT.profile.id}_paraColumns`)!)
-                    : []
-        };
-    }
+// TODO: class 全局变量，需要调试
+let pcs: any;
+const paraRef = React.createRef<HTMLDivElement>();
+
+const Para = (props: ParaProps) => {
+    const { metricGraphMode, changeMetricGraphMode } = useContext(AppContext);
+    const { trials, searchSpace } = props;
+    const [selectedPercent, setSelectedPercent] = useState('1');
+    const [primaryMetricKey, setPrimaryMetricKey] = useState('default');
+    const [noChart, setNoChart] = useState(true);
+    const [customizeColumnsDialogVisible, setCustomizeColumnsDialogVisible] = useState(false);
+    const [availableDimensions, setAvailableDimensions] = useState([] as string[]);
+    const [chosenDimensions, setChosenDimensions] = useState(
+        localStorage.getItem(`${EXPERIMENT.profile.id}_paraColumns`) !== null &&
+            getValue(`${EXPERIMENT.profile.id}_paraColumns`) !== null
+            ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              JSON.parse(getValue(`${EXPERIMENT.profile.id}_paraColumns`)!)
+            : []
+    );
 
     // get percent value number
-    percentNum = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+    const percentNum = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
-            this.setState({ selectedPercent: item.key.toString() }, () => {
-                this.renderParallelCoordinates();
-            });
+            setSelectedPercent(item.key.toString()); // 触发useeffect
         }
     };
 
     // get user mode number 'max' or 'min'
-    updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+    const updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
-            this.setState({ userSelectOptimizeMode: item.key.toString() }, () => {
-                this.renderParallelCoordinates();
-            });
+            // setUserSelectOptimizeMode(item.key.toString()); // 原理同 percentNum function
+            changeMetricGraphMode(item.key.toString() as 'Maximize' | 'Minimize');
         }
     };
 
     // select all final keys
-    updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
+    const updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
-            this.setState({ primaryMetricKey: item.key }, () => {
-                this.renderParallelCoordinates();
-            });
+            setPrimaryMetricKey(item.key);
         }
     };
 
-    componentDidMount(): void {
-        this.renderParallelCoordinates();
-    }
-
-    componentDidUpdate(prevProps: ParaProps): void {
-        // FIXME: redundant update
-        if (this.props.trials !== prevProps.trials || this.props.searchSpace !== prevProps.searchSpace) {
-            this.renderParallelCoordinates();
-        }
-    }
-
-    render(): React.ReactNode {
-        const {
-            selectedPercent,
-            noChart,
-            customizeColumnsDialogVisible,
-            availableDimensions,
-            chosenDimensions,
-            userSelectOptimizeMode
-        } = this.state;
-
-        return (
-            <div className='parameter'>
-                <Stack horizontal className='para-filter' horizontalAlign='end'>
-                    <DefaultButton
-                        text='Add/Remove axes'
-                        onClick={(): void => {
-                            this.setState({ customizeColumnsDialogVisible: true });
-                        }}
-                        styles={{ root: { marginRight: 10 } }}
-                    />
-                    <Dropdown
-                        selectedKey={userSelectOptimizeMode}
-                        onChange={this.updateUserOptimizeMode}
-                        options={[
-                            { key: 'maximize', text: 'Maximize' },
-                            { key: 'minimize', text: 'Minimize' }
-                        ]}
-                        styles={{ dropdown: { width: 100 } }}
-                        className='para-filter-percent'
-                    />
-                    <Dropdown
-                        selectedKey={selectedPercent}
-                        onChange={this.percentNum}
-                        options={[
-                            { key: '0.01', text: 'Top 1%' },
-                            { key: '0.05', text: 'Top 5%' },
-                            { key: '0.2', text: 'Top 20%' },
-                            { key: '1', text: 'Top 100%' }
-                        ]}
-                        styles={{ dropdown: { width: 120 } }}
-                        className='para-filter-percent'
-                    />
-                    {this.finalKeysDropdown()}
-                </Stack>
-                {customizeColumnsDialogVisible && availableDimensions.length > 0 && (
-                    <ChangeColumnComponent
-                        selectedColumns={chosenDimensions}
-                        allColumns={availableDimensions.map(dim => ({ key: dim, name: dim }))}
-                        onSelectedChange={(selected: string[]): void => {
-                            this.setState({ chosenDimensions: selected }, () => {
-                                this.renderParallelCoordinates();
-                            });
-                        }}
-                        onHideDialog={(): void => {
-                            this.setState({ customizeColumnsDialogVisible: false });
-                        }}
-                        minSelected={2}
-                        whichComponent='para'
-                    />
-                )}
-                <div className='parcoords' style={this.chartMulineStyle} ref={this.paraRef} />
-                {noChart && <div className='nodata'>No data</div>}
-            </div>
-        );
-    }
-
-    private finalKeysDropdown(): any {
-        const { primaryMetricKey } = this.state;
+    const finalKeysDropdown = (): any => {
         if (TRIALS.finalKeys().length === 1) {
             return null;
         } else {
@@ -187,29 +91,77 @@ class Para extends React.Component<ParaProps, ParaState> {
                     <Dropdown
                         selectedKey={primaryMetricKey}
                         options={finalKeysDropdown}
-                        onChange={this.updateEntries}
+                        onChange={updateEntries}
                         styles={{ root: { width: 150, display: 'inline-block' } }}
                         className='para-filter-percent'
                     />
                 </div>
             );
         }
-    }
+    };
 
+    const getTrialsAsObjectList = (inferredSearchSpace: MultipleAxes, inferredMetricSpace: MultipleAxes): {}[] => {
+        return trials.map(s => {
+            const entries = Array.from(s.parameters(inferredSearchSpace).entries());
+            entries.push(...Array.from(s.metrics(inferredMetricSpace).entries()));
+            const ret = {};
+            for (const [k, v] of entries) {
+                ret[k.fullName] = v;
+            }
+            return ret;
+        });
+    };
+
+    const getRange = (): [number, number] => {
+        // Documentation is lacking.
+        // Reference: https://github.com/syntagmatic/parallel-coordinates/issues/308
+        // const range = this.pcs.height() - this.pcs.margin().top - this.pcs.margin().bottom;
+        const range = chartMulineStyle.height - innerChartMargins.top - innerChartMargins.bottom;
+        return [range, 1];
+    };
+
+    const convertToD3Scale = (axis: SingleAxis, initRange: boolean = true): any => {
+        const padLinear = ([x0, x1], k = 0.1): [number, number] => {
+            const dx = ((x1 - x0) * k) / 2;
+            return [x0 - dx, x1 + dx];
+        };
+        const padLog = ([x0, x1], k = 0.1): [number, number] => {
+            const [y0, y1] = padLinear([Math.log(x0), Math.log(x1)], k);
+            return [Math.exp(y0), Math.exp(y1)];
+        };
+        let scaleInst: any = undefined;
+        if (axis.scale === 'ordinal') {
+            if (axis.nested) {
+                // TODO: handle nested entries
+                scaleInst = d3.scalePoint().domain(Array.from(axis.domain.keys())).padding(0.2);
+            } else {
+                scaleInst = d3.scalePoint().domain(axis.domain).padding(0.2);
+            }
+        } else if (axis.scale === 'log') {
+            scaleInst = d3.scaleLog().domain(padLog(axis.domain));
+        } else if (axis.scale === 'linear') {
+            scaleInst = d3.scaleLinear().domain(padLinear(axis.domain));
+        }
+        if (initRange) {
+            scaleInst = scaleInst.range(getRange());
+        }
+        return scaleInst;
+    };
+
+    const _updateDisplayedColumns = (displayedColumns: string[]): void => {
+        setChosenDimensions(displayedColumns);
+    };
     /**
      * Render the parallel coordinates. Using trial data as base and leverage
      * information from search space at a best effort basis.
      * @param source Array of trial data
      * @param searchSpace Search space
      */
-    private renderParallelCoordinates(): void {
-        const { searchSpace } = this.props;
-        const percent = parseFloat(this.state.selectedPercent);
-        const { primaryMetricKey, chosenDimensions, userSelectOptimizeMode } = this.state;
-
+    const renderParallelCoordinates = (): void => {
+        const percent = parseFloat(selectedPercent);
         const inferredSearchSpace = TRIALS.inferredSearchSpace(searchSpace);
         const inferredMetricSpace = TRIALS.inferredMetricSpace();
-        let convertedTrials = this.getTrialsAsObjectList(inferredSearchSpace, inferredMetricSpace);
+        let convertedTrials = getTrialsAsObjectList(inferredSearchSpace, inferredMetricSpace);
 
         const dimensions: [string, any][] = [];
         let colorDim: string | undefined = undefined,
@@ -220,17 +172,18 @@ class Para extends React.Component<ParaProps, ParaState> {
                 k,
                 {
                     type: 'number',
-                    yscale: this.convertToD3Scale(v)
+                    yscale: convertToD3Scale(v)
                 }
             ]);
         }
         for (const [k, v] of inferredMetricSpace.axes) {
-            const scale = this.convertToD3Scale(v);
+            const scale = convertToD3Scale(v);
             if (k === primaryMetricKey && scale !== undefined && scale.interpolate) {
                 // set color for primary metrics
                 // `colorScale` is used to produce a color range, while `scale` is to produce a pixel range
-                colorScale = this.convertToD3Scale(v, false);
-                convertedTrials.sort((a, b) => (userSelectOptimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]));
+                colorScale = convertToD3Scale(v, false);
+                // convertedTrials.sort((a, b) => (userSelectOptimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]));
+                convertedTrials.sort((a, b) => (metricGraphMode === 'Minimize' ? a[k] - b[k] : b[k] - a[k]));
                 // filter top trials
                 if (percent != 1) {
                     const keptTrialNum = Math.max(Math.ceil(convertedTrials.length * percent), 1);
@@ -269,20 +222,18 @@ class Para extends React.Component<ParaProps, ParaState> {
             return;
         }
 
-        const firstRun = this.pcs === undefined;
+        const firstRun = pcs === undefined;
         if (firstRun) {
-            this.pcs = ParCoords()(this.paraRef.current);
+            pcs = ParCoords()(paraRef.current);
         }
-        this.pcs
-            .data(convertedTrials)
-            .dimensions(
-                dimensions
-                    .filter(([d, _]) => chosenDimensions.length === 0 || chosenDimensions.includes(d))
-                    .reduce((obj, entry) => ({ ...obj, [entry[0]]: entry[1] }), {})
-            );
+        pcs.data(convertedTrials).dimensions(
+            dimensions
+                .filter(([d, _]) => chosenDimensions.length === 0 || chosenDimensions.includes(d))
+                .reduce((obj, entry) => ({ ...obj, [entry[0]]: entry[1] }), {})
+        );
+
         if (firstRun) {
-            this.pcs
-                .margin(this.innerChartMargins)
+            pcs.margin(innerChartMargins)
                 .alphaOnBrushed(0.2)
                 .smoothness(0.1)
                 .brushMode('1D-axes')
@@ -290,69 +241,81 @@ class Para extends React.Component<ParaProps, ParaState> {
                 .interactive();
         }
         if (colorScale !== undefined) {
-            this.pcs.color(d => (colorScale as any)(d[colorDim as any]));
+            pcs.color(d => (colorScale as any)(d[colorDim as any]));
         }
-        this.pcs.render();
-        if (firstRun) {
-            this.setState({ noChart: false });
+        pcs.render();
+        // if (firstRun) {
+        if (convertedTrials.length >= 0) {
+            setNoChart(false);
         }
 
         // set new available dims
-        this.setState({
-            availableDimensions: dimensions.map(e => e[0]),
-            chosenDimensions: chosenDimensions.length === 0 ? dimensions.map(e => e[0]) : chosenDimensions
-        });
-    }
+        setAvailableDimensions(dimensions.map(e => e[0]));
+    };
 
-    private getTrialsAsObjectList(inferredSearchSpace: MultipleAxes, inferredMetricSpace: MultipleAxes): {}[] {
-        const { trials } = this.props;
+    useEffect(() => {
+        // FIXME: redundant update(comment for componentDidUpdate)
+        renderParallelCoordinates();
+        // return function clearPCS() {
+        //     pcs = undefined;
+        // };
+        // }, [chosenDimensions, selectedPercent, userSelectOptimizeMode, primaryMetricKey, trials, searchSpace]); // 百分比变化触发页面更新
+    }, [chosenDimensions, selectedPercent, metricGraphMode, primaryMetricKey, trials, searchSpace]); // 百分比变化触发页面更新
 
-        return trials.map(s => {
-            const entries = Array.from(s.parameters(inferredSearchSpace).entries());
-            entries.push(...Array.from(s.metrics(inferredMetricSpace).entries()));
-            const ret = {};
-            for (const [k, v] of entries) {
-                ret[k.fullName] = v;
-            }
-            return ret;
-        });
-    }
-
-    private getRange(): [number, number] {
-        // Documentation is lacking.
-        // Reference: https://github.com/syntagmatic/parallel-coordinates/issues/308
-        // const range = this.pcs.height() - this.pcs.margin().top - this.pcs.margin().bottom;
-        const range = this.chartMulineStyle.height - this.innerChartMargins.top - this.innerChartMargins.bottom;
-        return [range, 1];
-    }
-
-    private convertToD3Scale(axis: SingleAxis, initRange: boolean = true): any {
-        const padLinear = ([x0, x1], k = 0.1): [number, number] => {
-            const dx = ((x1 - x0) * k) / 2;
-            return [x0 - dx, x1 + dx];
-        };
-        const padLog = ([x0, x1], k = 0.1): [number, number] => {
-            const [y0, y1] = padLinear([Math.log(x0), Math.log(x1)], k);
-            return [Math.exp(y0), Math.exp(y1)];
-        };
-        let scaleInst: any = undefined;
-        if (axis.scale === 'ordinal') {
-            if (axis.nested) {
-                // TODO: handle nested entries
-                scaleInst = d3.scalePoint().domain(Array.from(axis.domain.keys())).padding(0.2);
-            } else {
-                scaleInst = d3.scalePoint().domain(axis.domain).padding(0.2);
-            }
-        } else if (axis.scale === 'log') {
-            scaleInst = d3.scaleLog().domain(padLog(axis.domain));
-        } else if (axis.scale === 'linear') {
-            scaleInst = d3.scaleLinear().domain(padLinear(axis.domain));
-        }
-        if (initRange) {
-            scaleInst = scaleInst.range(this.getRange());
-        }
-        return scaleInst;
-    }
-}
+    return (
+        <div className='parameter'>
+            <Stack horizontal className='para-filter' horizontalAlign='end'>
+                <DefaultButton
+                    text='Add/Remove axes'
+                    onClick={(): void => {
+                        setCustomizeColumnsDialogVisible(true);
+                    }}
+                    styles={{ root: { marginRight: 10 } }}
+                />
+                <Dropdown
+                    // selectedKey={userSelectOptimizeMode}
+                    selectedKey={metricGraphMode}
+                    onChange={updateUserOptimizeMode}
+                    options={[
+                        { key: 'Maximize', text: 'Maximize' },
+                        { key: 'Minimize', text: 'Minimize' }
+                    ]}
+                    styles={{ dropdown: { width: 100 } }}
+                    className='para-filter-percent'
+                />
+                <Dropdown
+                    selectedKey={selectedPercent}
+                    onChange={percentNum}
+                    options={[
+                        { key: '0.01', text: 'Top 1%' },
+                        { key: '0.05', text: 'Top 5%' },
+                        { key: '0.2', text: 'Top 20%' },
+                        { key: '1', text: 'Top 100%' }
+                    ]}
+                    styles={{ dropdown: { width: 120 } }}
+                    className='para-filter-percent'
+                />
+                {finalKeysDropdown()}
+            </Stack>
+            {customizeColumnsDialogVisible && availableDimensions.length > 0 && (
+                <ChangeColumnComponent
+                    selectedColumns={chosenDimensions}
+                    allColumns={availableDimensions.map(dim => ({ key: dim, name: dim }))}
+                    onSelectedChange={_updateDisplayedColumns}
+                    // onSelectedChange={(selected: string[]): void => {
+                    //     setChosenDimensions(selected);
+                    // }}
+                    onHideDialog={(): void => {
+                        setCustomizeColumnsDialogVisible(false);
+                    }}
+                    minSelected={2}
+                    whichComponent='para'
+                />
+            )}
+            <div className='parcoords' style={chartMulineStyle} ref={paraRef} />
+            {noChart && <div className='nodata'>No data</div>}
+        </div>
+    );
+};
 
 export default Para;

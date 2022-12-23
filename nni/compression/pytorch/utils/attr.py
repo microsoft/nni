@@ -30,3 +30,17 @@ def set_nested_attr(__obj: object, __name: str, __value: Any):
     """
     pre, _, post = __name.rpartition('.')
     return setattr(get_nested_attr(__obj, pre) if pre else __obj, post, __value)
+
+
+def has_nested_attr(__obj: object, __name: str) -> bool:
+    """
+    Determine whether a given object has an attribute with a `.` separated name.
+    """
+    pre, _, post = __name.rpartition('.')
+    if pre:
+        if has_nested_attr(__obj, pre):
+            return has_nested_attr(get_nested_attr(__obj, pre), post)
+        else:
+            return False
+    else:
+        return hasattr(__obj, post)
