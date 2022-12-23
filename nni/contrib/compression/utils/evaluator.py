@@ -781,8 +781,10 @@ class TorchEvaluator(Evaluator):
         assert self.model is not None
         assert self._optimizers is not None
         assert self._training_step is not None
-        optimizers = self._optimizers[0] if self._train_with_single_optimizer else self._optimizers
-        lr_schedulers = self._lr_schedulers[0] if self._train_with_single_scheduler else self._lr_schedulers  # type: ignore
+        optimizers = self._optimizers[0] if self._train_with_single_optimizer \
+            else self._optimizers if self._optimizers else None
+        lr_schedulers = self._lr_schedulers[0] if self._train_with_single_scheduler \
+            else self._lr_schedulers if self._lr_schedulers else None
         self.training_func(self.model, optimizers, self._training_step, lr_schedulers, max_steps, max_epochs)
 
     def finetune(self):

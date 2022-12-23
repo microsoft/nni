@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, List, Tuple, Type, Union, Literal
 import torch
 from torch import Tensor
 
-from .apply_method import quant_apply_methods
+from .apply_method import pruning_apply_methods, quant_apply_methods
 from .config import select_modules_by_config
 from .setting import INPUT_PREFIX, OUTPUT_PREFIX, canonicalize_settings
 from .target_space import (
@@ -22,7 +22,6 @@ from .target_space import (
 )
 
 _logger = logging.getLogger(__name__)
-SMALL_MASK_VALUE = -1000.0
 OUTPUT_FORMAT = Union[Tensor, Tuple[Tensor, Any], Dict[str, Union[Tensor, Any]]]
 
 
@@ -207,15 +206,12 @@ class ModuleWrapper(torch.nn.Module):
             return contx
 
     def _apply_mask_helper(self, target: Tensor, target_space: PruningTargetSpace) -> Tensor:
+        # NOTE: if mask is None, and is registered as buffer during training, will cause DDP sync problem.
         if target_space.mask is not None:
-            if target_space.apply_method == 'mul':
-                return torch.mul(target, target_space.mask)
-            elif target_space.apply_method == 'add':
-                # here we assume the target is a float dtype.
-                trans_mask = torch.where(target_space.mask == 1, torch.zeros_like(target_space.mask), SMALL_MASK_VALUE)
-                return torch.add(target, trans_mask)
+            if target_space.apply_method in pruning_apply_methods:
+                return pruning_apply_methods[target_space.apply_method](target, target_space)
             else:
-                raise TypeError('Only `mul` and `add` are supported for mask `apply_method`.')
+                raise TypeError(f'Only {list(pruning_apply_methods.keys())} are supported for mask `apply_method`.')
         elif target_space.type is TargetType.PARAMETER:
             # Prevent registering buffer as a parameter
             return target * 1.
@@ -223,6 +219,7 @@ class ModuleWrapper(torch.nn.Module):
             return target
 
     def _apply_quant_helper(self, target: Tensor, target_space: QuantizationTargetSpace) -> Tensor:
+        # NOTE: if scale or zero point is None, and is registered as buffer during training, will cause DDP sync problem.
         if target_space.scale is not None and target_space.zero_point is not None:
             if target_space.apply_method in quant_apply_methods:
                 dequantized_target: Tensor = quant_apply_methods[target_space.apply_method](target, target_space)

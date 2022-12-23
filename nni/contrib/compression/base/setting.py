@@ -41,6 +41,8 @@ class ModuleSetting:
             Used to update the given module type setting from the registry.
         """
         module_cls_name = cls._get_module_cls_name(module_cls_or_name)
+        # deepcopy because config might be pop key or modified context
+        config = deepcopy(config)
 
         target_names = config.pop('target_names', None)
         update_settings = config.pop('target_settings', None)
@@ -160,9 +162,26 @@ class QuantizationSetting(ModuleSetting):
         }
     }
 
+    avtivation_setting = {
+        '_input_': {
+            'quant_dtype': None,
+            'quant_scheme': None,
+            'granularity': 'default',
+            'apply_method': 'clamp_round',
+        },
+        '_output_': {
+            'quant_dtype': None,
+            'quant_scheme': None,
+            'granularity': 'default',
+            'apply_method': 'clamp_round',
+        }
+    }
+
     registry = {
         'Linear': default_setting,
         'Conv2d': default_setting,
+        'ReLU': avtivation_setting,
+        'ReLU6': avtivation_setting,
     }
 
 

@@ -22,7 +22,7 @@ class QATQuantizer(Quantizer):
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
                  quant_start_step: int = 0, existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         super().__init__(model, config_list, evaluator, existed_wrappers)
-        self.quant_start_step = quant_start_step
+        self.quant_start_step = max(quant_start_step, 0)
 
         # scale and zero point will be computed during training when self.current_step >= self.quant_start_step
         self.current_step = 0
@@ -30,11 +30,18 @@ class QATQuantizer(Quantizer):
         self.register_track_func()
 
     def register_qat_apply_method(self):
-        for _, ts in self._target_spaces.items():
-            for _, target_space in ts.items():
-                target_space.apply_method = 'qat_clamp_round'
+        if self.current_step < self.quant_start_step:
+            for _, ts in self._target_spaces.items():
+                for _, target_space in ts.items():
+                    target_space.apply_method = 'bypass'
+        else:
+            for _, ts in self._target_spaces.items():
+                for _, target_space in ts.items():
+                    target_space.apply_method = 'qat_clamp_round'
 
     def register_track_func(self):
+        # NOTE: tracked min max value will be registered as buffer after the first forward during training,
+        # scale and zero point will be registered as buffer after self.current_step >= self.quant_start_step.
         for module_name, _ in self._target_spaces.items():
             wrapper = self._module_wrappers[module_name]
             wrapper.register_track_func(self.track_min_max_val)
@@ -77,10 +84,21 @@ class QATQuantizer(Quantizer):
             zero_point = torch.clamp(zero_point, target_space.qmin, target_space.qmax)
             target_space.scale, target_space.zero_point = scale, zero_point
 
+    def track_forward(self, *args, **kwargs):
+        super().track_forward(*args, **kwargs)
+        for _, ts in self._target_spaces.items():
+            for _, target_space in ts.items():
+                if target_space.scale is None:
+                    target_space.scale = torch.empty_like(target_space.tracked_max)
+                if target_space.zero_point is None:
+                    target_space.zero_point = torch.empty_like(target_space.tracked_max)
+
     def register_trigger(self, evaluator: Evaluator):
 
         def optimizer_task():
             self.current_step += 1
+            if self.current_step == self.quant_start_step:
+                self.register_qat_apply_method()
 
         evaluator.patch_optimizer_step(before_step_tasks=[], after_step_tasks=[optimizer_task])
 

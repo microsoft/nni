@@ -100,6 +100,7 @@ class Compressor:
     def track_forward(self, *args, **kwargs):
         """
         Forward once to track information, such as the wrapped module input/output shape.
+        Make sure the input has the same batch size and data distribution with the batch sampled from dataloader.
         The track logic can be found in ``ModuleWrapper._track_info``.
 
         Parameters
@@ -218,15 +219,17 @@ class Quantizer(Compressor):
         for module_name, wrapper in self._module_wrappers.items():
             for target_name, target_space in wrapper.quantization_target_spaces.items():
                 calibration_config[module_name][target_name] = {
-                    'scale': target_space.scale,
-                    'zero_point': target_space.zero_point,
+                    'scale': target_space.scale.cpu() if isinstance(target_space.scale, torch.Tensor) \
+                        else target_space.scale,
+                    'zero_point': target_space.zero_point.cpu() if isinstance(target_space.zero_point, torch.Tensor) \
+                        else target_space.zero_point,
                     'quant_dtype': target_space.quant_dtype if target_space.quant_dtype else 'int8',
                     'quant_scheme': target_space.quant_scheme,
                 }
                 if target_space.tracked_max is not None:
-                    calibration_config[module_name][target_name]['tracked_max'] = target_space.tracked_max
+                    calibration_config[module_name][target_name]['tracked_max'] = target_space.tracked_max.cpu()
                 if target_space.tracked_min is not None:
-                    calibration_config[module_name][target_name]['tracked_min'] = target_space.tracked_min
+                    calibration_config[module_name][target_name]['tracked_min'] = target_space.tracked_min.cpu()
         return calibration_config
 
 
