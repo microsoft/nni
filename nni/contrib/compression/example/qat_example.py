@@ -62,8 +62,8 @@ def training_step(batch, model):
     return loss
 
 
-def training_model(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: _LRScheduler = None,
-                   max_steps: int | None = None, max_epochs: int | None = None, device: torch.device = device):
+def training_model(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: _LRScheduler | None = None,
+                   max_steps: int | None = None, max_epochs: int | None = None):
     model.train()
     max_epochs = max_epochs if max_epochs else 1 if max_steps is None else 100
     current_steps = 0
@@ -83,7 +83,7 @@ def training_model(model: torch.nn.Module, optimizer: Optimizer, training_step: 
             scheduler.step()
 
 
-def evaluating_model(model: torch.nn.Module, device: torch.device = device):
+def evaluating_model(model: torch.nn.Module):
     model.eval()
     # testing
     correct = 0
@@ -107,7 +107,7 @@ acc = evaluating_model(model)
 print(f'pure evaluating: {time.time() - start}s    Acc.: {acc}')
 
 optimizer = nni.trace(SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
-evaluator = TorchEvaluator(training_model, optimizer, training_step)
+evaluator = TorchEvaluator(training_model, optimizer, training_step)  # type: ignore
 
 config_list = [{
     'op_names': ['conv1', 'conv2', 'fc1', 'fc2'],

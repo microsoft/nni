@@ -22,9 +22,15 @@ class QATQuantizer(Quantizer):
                  quant_start_step: int = 0):
         ...
 
+    @overload
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
+                 quant_start_step: int = 0, existed_wrappers: Dict[str, ModuleWrapper] | None = None):
+        ...
+
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
                  quant_start_step: int = 0, existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         super().__init__(model, config_list, evaluator, existed_wrappers)
+        self.evaluator: Evaluator
         self.quant_start_step = max(quant_start_step, 0)
 
         # scale and zero point will be computed during training when self.current_step >= self.quant_start_step
@@ -77,7 +83,7 @@ class QATQuantizer(Quantizer):
                 scale = torch.max(scale, torch.full_like(scale, torch.finfo(torch.float32).eps))
                 # NOTE: here need to check, +1 because in pytorch, symmetric qint8 zp is 0, quint8 zp is 128.
                 zero_point_val = (target_space.qmax + target_space.qmin + 1) // 2
-                zero_point = zero_point.new_full(zero_point.size(), zero_point_val)
+                zero_point = torch.full_like(zero_point, zero_point_val)
             elif target_space.quant_scheme == 'affine':
                 scale = (tracked_max - tracked_min) / float(target_space.qmax - target_space.qmin)
                 scale = torch.max(scale, torch.full_like(scale, torch.finfo(torch.float32).eps))
@@ -92,8 +98,10 @@ class QATQuantizer(Quantizer):
         for _, ts in self._target_spaces.items():
             for _, target_space in ts.items():
                 if target_space.scale is None:
+                    assert target_space.tracked_max is not None
                     target_space.scale = torch.empty_like(target_space.tracked_max)
                 if target_space.zero_point is None:
+                    assert target_space.tracked_max is not None
                     target_space.zero_point = torch.empty_like(target_space.tracked_max)
 
     def register_trigger(self, evaluator: Evaluator):
