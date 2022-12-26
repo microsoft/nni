@@ -7,6 +7,7 @@ import torch
 
 # These need to run in global scope to handle nested calls correctly
 _orig_module_call: Callable = torch.nn.Module.__call__
+_orig_module_getattr: Callable = torch.nn.Module.__getattr__
 _orig_module_getattribute: Callable = torch.nn.Module.__getattribute__
 
 _orig_agfunc_apply: Callable = torch.autograd.function.Function.apply

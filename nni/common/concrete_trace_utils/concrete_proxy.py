@@ -361,7 +361,7 @@ def map_aggregate_not_proxy(a, fn):
         t = _orig_tuple(map_aggregate_not_proxy(elem, fn) for elem in a)
         # Support NamedTuple (if it has `_fields`) by repacking into original type.
         return t if not hasattr(a, '_fields') else type(a)(*t)
-    elif _orig_isinstance(a, _orig_list):
+    elif type(a) == _orig_list:
         return _orig_list(map_aggregate_not_proxy(elem, fn) for elem in a)
     elif _orig_isinstance(a, _orig_dict):
         return _orig_dict((k, map_aggregate_not_proxy(v, fn)) for k, v in a.items())

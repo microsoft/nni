@@ -30,6 +30,7 @@ from . import concrete_proxy as ep
 from .operator_patcher import OperatorPatcher, OperatorPatcherContext
 from .utils import (
     _orig_module_call,
+    _orig_module_getattr,
     _orig_module_getattribute,
 
     _orig_agfunc_apply,
@@ -581,9 +582,15 @@ class ConcreteTracer(TracerBase):
         @functools.wraps(_orig_module_getattribute)
         def module_getattribute_wrapper(mod, attr):
             if self.temp_disable_call | self.temp_disable_attr:
-                return _orig_module_getattribute(mod, attr)
+                try:
+                    return _orig_module_getattribute(mod, attr)
+                except AttributeError:
+                    return _orig_module_getattr(mod, attr)
             with self.do_temp_disable(call=True, attr=True):
-                attr_val = _orig_module_getattribute(mod, attr)
+                try:
+                    attr_val = _orig_module_getattribute(mod, attr)
+                except AttributeError:
+                    attr_val = _orig_module_getattr(mod, attr)
             if callable(attr_val):
                 return attr_val
             elif _orig_isinstance(attr_val, (_orig_tuple, _orig_list)):
@@ -757,9 +764,8 @@ class ConcreteTracer(TracerBase):
             self.clz_wrapper_map[wrapped] = clz
 
         for clz in self.fake_middle_class:
-            _orig_clz_getattr = clz.__getattribute__
-            wrapped = _create_wrapped_attr_for_middle_class(self, _orig_clz_getattr, self.the_path_of_middle_class)
-            self.wrapped_leaf[_orig_clz_getattr] = (((clz, '__getattribute__'),), wrapped)
+            wrapped = _create_wrapped_attr_for_middle_class(self, clz, self.the_path_of_middle_class)
+            self.wrapped_leaf[clz.__getattribute__] = (((clz, '__getattribute__'),), wrapped)
 
         @functools.wraps(_orig_isinstance)
         def isinstance_wrapper(instance, clz):
@@ -1118,11 +1124,22 @@ def _create_wrapped_leaf_iterable_class(tracer: ConcreteTracer, clz):
             raise Exception('more than 1 tracer detected. please report the issue')
     return clz_wrapper
 
-def _create_wrapped_attr_for_middle_class(tracer: ConcreteTracer, _orig_clz_getattribute, the_path_of_middle_class):
+def _create_wrapped_attr_for_middle_class(tracer: ConcreteTracer, clz, the_path_of_middle_class):
+    _orig_clz_getattribute = clz.__getattribute__
+    if hasattr(clz, '__getattr__'):
+        _orig_clz_getattr = clz.__getattr__
+    else:
+        _orig_clz_getattr = None
     @functools.wraps(_orig_clz_getattribute)
     def clz_getattr_wrapper(obj, attr):
         if tracer.temp_disable_call | tracer.temp_disable_attr:
-            return _orig_module_getattribute(obj, attr)
+            if _orig_clz_getattr == None:
+                return _orig_clz_getattribute(obj, attr)
+            else:
+                try:
+                    return _orig_clz_getattribute(obj, attr)
+                except AttributeError:
+                    return _orig_clz_getattr(obj, attr)
         else:
             return tracer.create_proxy('get_attr', f'{the_path_of_middle_class[id(obj)]}.{attr}', (), {})
     return clz_getattr_wrapper
