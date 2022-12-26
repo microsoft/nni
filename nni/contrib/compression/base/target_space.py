@@ -44,8 +44,8 @@ class TargetSpace:
 
     @property
     def shape(self) -> List[int] | None:
-        if self.type is TargetType.PARAMETER:
-            return self.target.shape
+        if self.type is TargetType.PARAMETER and self.target is not None:
+            return [_ for _ in self.target.shape]
         else:
             return self._shape
 
@@ -68,7 +68,7 @@ class TargetSpace:
 
     def _tensor_setter_helper(self, attr_name: str, val: Tensor | None):
         attr: Tensor | None = self._get_wrapper_attr(attr_name)
-        if attr is None:
+        if attr is None or val is None:
             self._set_wrapper_attr(attr_name, val)
         else:
             # here using inplace copy for ddp issue, and never set val to a torch.nn.Parameter.
@@ -82,7 +82,7 @@ class TargetSpace:
                 self._wrapper.register_parameter(self._target_name, torch.nn.Parameter(target.detach().clone()))
             elif isinstance(target, torch.Tensor):
                 self._wrapper.register_buffer(self._target_name, target.detach().clone())
-            elif isinstance(target, None):
+            elif target is None:
                 self._wrapper.register_buffer(self._target_name, None)
             else:
                 raise TypeError(f'Type of {self._target_name} is {type(target)}, can not register to {self._wrapper.name}.')
@@ -164,7 +164,7 @@ class PruningTargetSpace(TargetSpace):
     def granularity(self, val: List[int] | Tuple[List[int], str, int] | str | None):
         if isinstance(val, abc.Sequence):
             assert all(isinstance(v, int) for v in val) or \
-                   (all(isinstance(v, int) for v in val[0]) and \
+                   (all(isinstance(v, int) for v in val[0]) and  # type: ignore
                     isinstance(val[1], str) if len(val) > 1 else True and \
                     isinstance(val[2], int) if len(val) > 2 else True)
         else:
@@ -299,7 +299,7 @@ class QuantizationTargetSpace(TargetSpace):
     def granularity(self, val: List[int] | Tuple[List[int], str, int] | str | None):
         if isinstance(val, abc.Sequence):
             assert all(isinstance(v, int) for v in val) or \
-                   (all(isinstance(v, int) for v in val[0]) and \
+                   (all(isinstance(v, int) for v in val[0]) and  # type: ignore
                     isinstance(val[1], str) if len(val) > 1 else True and \
                     isinstance(val[2], int) if len(val) > 2 else True)
         else:
