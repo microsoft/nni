@@ -45,9 +45,9 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
             config['op_names_re'] = [f'.*{p_name}.*' for p_name in config.pop('op_partial_names')]
         if 'exclude' in config:
             config.pop('exclude')
-            ex_op_types.update(config.get('op_types'))
-            ex_op_names.update(config.get('op_names'))
-            ex_op_names_re.update(config.get('op_names_re'))
+            ex_op_types.update(config.get('op_types', set()))
+            ex_op_names.update(config.get('op_names', set()))
+            ex_op_names_re.update(config.get('op_names_re', set()))
     if ex_op_types or ex_op_names or ex_op_names_re:
         for config in config_list:
             config['exclude_op_types'] = list(ex_op_types)
