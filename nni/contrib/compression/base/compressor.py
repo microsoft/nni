@@ -159,7 +159,7 @@ class Pruner(Compressor):
 
     def _register_scalers(self):
         # scalers are used to support different sparse/quant granularity
-        register_scalers(self._target_spaces, self._set_default_sparse_granularity)
+        register_scalers(self._target_spaces, self._set_default_sparse_granularity)  # type: ignore
 
     def _set_default_sparse_granularity(self, target_space: PruningTargetSpace) -> List[int] | str | None:
         if target_space.type is TargetType.PARAMETER:
@@ -171,7 +171,7 @@ class Pruner(Compressor):
         masks = defaultdict(dict)
         for module_name, wrapper in self._module_wrappers.items():
             for target_name, target_space in wrapper.pruning_target_spaces.items():
-                masks[module_name][target_name] = target_space.mask.clone().cpu()
+                masks[module_name][target_name] = target_space.mask.clone().cpu() if target_space.mask is not None else None
         return masks
 
     def update_masks(self, masks: Dict[str, Dict[str, torch.Tensor]]):
@@ -179,19 +179,26 @@ class Pruner(Compressor):
             assert module_name in self._module_wrappers, f'{module_name} is not register in this compressor, can not update mask for it.'
             wrapper = self._module_wrappers[module_name]
             for target_name, target_mask in target_masks.items():
-                assert target_name in wrapper.pruning_target_spaces, \
-                    f'{module_name}.{target_name} is not a pruning target, can not update mask for it.'
-                try:
-                    device = next(wrapper.parameters()).device
-                except StopIteration:
+                target_space = wrapper.pruning_target_spaces.get(target_name, None)
+                if target_space is None:
+                    continue
+                if target_mask is None:
+                    target_space.mask = None
+                else:
+                    assert target_name in wrapper.pruning_target_spaces, \
+                        f'{module_name}.{target_name} is not a pruning target, can not update mask for it.'
                     try:
-                        device = next(wrapper.buffers()).device
+                        device = next(wrapper.parameters()).device
                     except StopIteration:
-                        if wrapper.pruning_target_spaces[target_name].mask is not None:
-                            device = wrapper.pruning_target_spaces[target_name].mask.device
-                        else:
-                            device = next(self.bound_model.parameters()).device
-                wrapper.pruning_target_spaces[target_name].mask = target_mask.to(device)
+                        try:
+                            device = next(wrapper.buffers()).device
+                        except StopIteration:
+                            if target_space.mask is not None:
+                                device = target_space.mask.device
+                            else:
+                                # NOTE: this will have risk in model parallel
+                                device = next(self.bound_model.parameters()).device
+                    target_space.mask = target_mask.to(device)
 
     def _collect_data(self) -> Dict[str, Dict[str, torch.Tensor]]:
         raise NotImplementedError()
@@ -223,7 +230,7 @@ class Quantizer(Compressor):
 
     def _register_scalers(self):
         # scalers are used to support different sparse/quant granularity
-        register_scalers(self._target_spaces, self._set_default_sparse_granularity)
+        register_scalers(self._target_spaces, self._set_default_sparse_granularity)  # type: ignore
 
     def _set_default_sparse_granularity(self, target_space: PruningTargetSpace) -> List[int] | str | None:
         return None
@@ -290,4 +297,4 @@ def register_scalers(target_spaces: _PRUNING_TARGET_SPACES | _QUANTIZATION_TARGE
                     kernel_padding_val = target_space.granularity[2]
                 kernel_padding_mode = kernel_padding_mode if kernel_padding_mode else 'front'
                 kernel_padding_val = kernel_padding_val if kernel_padding_val else 1
-                target_space._scaler = Scaling(kernel_size, kernel_padding_mode, kernel_padding_val)
+                target_space._scaler = Scaling(kernel_size, kernel_padding_mode, kernel_padding_val)  # type: ignore
