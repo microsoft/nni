@@ -402,7 +402,7 @@ class LightningEvaluator(Evaluator):
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
 
-        self.model = self.rewrap_if_ddp_model(model)
+        self.model = self.rewrap_if_ddp_model(model)  # type: ignore
         self._ori_model_attr.update({
             'training_step': model.training_step,
             'configure_optimizers': model.configure_optimizers,
@@ -824,7 +824,7 @@ class TransformersEvaluator(Evaluator):
         self.dummy_input = dummy_input
 
         self.model: Module | None = None
-        self._ori_trainer_attr = {
+        self._ori_trainer_attr: Dict[str, Any] = {
             'get_optimizer_cls_and_kwargs': HFTrainer.get_optimizer_cls_and_kwargs
         }
 
@@ -872,15 +872,15 @@ class TransformersEvaluator(Evaluator):
         self.model = self.rewrap_if_ddp_model(model)
 
         # re-initialized Trainer
-        args = list(self.traced_trainer.trace_args)
+        args = list(self.traced_trainer.trace_args)  # type: ignore
         kwargs = dict()
-        kwargs.update(self.traced_trainer.trace_kwargs)
+        kwargs.update(self.traced_trainer.trace_kwargs)  # type: ignore
         if len(args) != 0:
             assert isinstance(args[0], Module) or args[0] is None
             args[0] = self.model
         else:
             kwargs['model'] = self.model
-        self.trainer: HFTrainer = self.traced_trainer.trace_symbol(*args, **kwargs)
+        self.trainer: HFTrainer = self.traced_trainer.trace_symbol(*args, **kwargs)  # type: ignore
         self._ori_trainer_attr['compute_loss'] = self.trainer.compute_loss
 
         self._param_names_map = param_names_map
@@ -896,7 +896,7 @@ class TransformersEvaluator(Evaluator):
             self.trainer.optimizer = None
             self._param_names_map = None
             self._ori_trainer_attr.pop('compute_loss', None)
-            self.trainer = None
+            self.trainer = None  # type: ignore
             self.model = None
         else:
             _logger.warning('Did not bind any model, no need to unbind model.')
@@ -937,6 +937,7 @@ class TransformersEvaluator(Evaluator):
 
     def train(self, max_steps: int | None = None, max_epochs: int | None = None):
         assert self.model is not None
+        assert isinstance(self.trainer.optimizer, Optimizer)
         ori_steps, ori_epochs = self.trainer.args.max_steps, self.trainer.args.num_train_epochs
         if max_epochs is not None:
             self.trainer.args.num_train_epochs = max_epochs
@@ -953,7 +954,7 @@ class TransformersEvaluator(Evaluator):
         self.train()
 
     def evaluate(self) -> float | None | Tuple[float, Dict[str, Any]] | Tuple[None, Dict[str, Any]]:
-        return self.trainer.evaluate()
+        return self.trainer.evaluate()  # type: ignore
 
     def get_dummy_input(self) -> Any:
         return self.dummy_input
