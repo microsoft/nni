@@ -8,18 +8,9 @@ import torch
 import torch.nn as nn
 import torch.distributed as dist
 
-def get_torch_version():
-    pattern = r"\d+.\d+.\d+"
-    original_version = torch.__version__
-    version = re.findall(pattern, original_version)
-
-    return version[0] if len(version) > 0 else original_version
-
-
 def check_ddp_model(model: nn.Module):
     is_ddp_model = False
     ddp_params = {}
-    torch_version = get_torch_version()
     if isinstance(model, torch.nn.parallel.DistributedDataParallel):
         attr_dicts = model.__dict__
 
@@ -33,10 +24,10 @@ def check_ddp_model(model: nn.Module):
         ddp_params["check_reduction"] = attr_dicts.get("check_reduction", False)
 
         # when torch version <= 1.6.0, there is no parameter "gradient_as_bucket_view"
-        if "gradient_as_bucket_view" in attr_dicts:
+        if torch.__version__ >= '1.7.0':
             ddp_params["gradient_as_bucket_view"] = attr_dicts.get("gradient_as_bucket_view", False)
         # when torch version <= 1.10.0, there is no param "static_graph"
-        if "static_graph" in attr_dicts and torch_version not in ["1.9.0", "1.9.1", "1.10.0"]:
+        if torch.__version__ >= '1.11.0':
             ddp_params["static_graph"] = attr_dicts.get("static_graph", False)
 
         is_ddp_model = True

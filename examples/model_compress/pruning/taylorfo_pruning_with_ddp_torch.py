@@ -70,6 +70,7 @@ def create_dataloaders():
 
 def training(
     training_dataloader: DataLoader,
+    validation_dataloader: DataLoader,
     model: nn.Module,
     optimizer: torch.optim.Optimizer,
     criterion: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
@@ -101,8 +102,8 @@ def training(
 
         # evaluation for every 1000 steps
         if current_step % 1000 == 0 or current_step % len(training_dataloader) == 0:
-            acc = evaluation_func(model)
-            with (log_path).open('a+') as f:
+            acc = evaluation_func(validation_dataloader, model)
+            with log_path.open('a+') as f:
                 msg = '[{}] Epoch {}, Step {}: Acc: {} Loss:{}\n'.format(time.asctime(time.localtime(time.time())), \
                     current_epoch, current_step, acc, loss.item())
                 f.write(msg)
@@ -147,6 +148,7 @@ def optimizer_scheduler_generator(model, _lr=0.1, _momentum=0.9, _weight_decay=5
 
 def retrain_model(
     args,
+    local_rank: int,
     model: nn.Module = None,
 ):
     # create an ddp model
@@ -162,7 +164,7 @@ def retrain_model(
         epochs = args.finetune_epochs
         lr = args.finetune_lr
 
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank])
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
 
     # create dataloaders
     training_dataloader, validation_dataloader = create_dataloaders()
@@ -172,24 +174,23 @@ def retrain_model(
     criterion = torch.nn.CrossEntropyLoss()
 
     # training and evaluation process
-    evaluation_func = functools.partial(evaluation, validation_dataloader)
-    best_acc = training(training_dataloader, model, optimizer, criterion, lr_scheduler,\
-        args.max_steps, epochs, args.local_rank, save_best_model=True, \
+    best_acc = training(training_dataloader, validation_dataloader, model, optimizer, criterion, lr_scheduler,\
+        args.max_steps, epochs, local_rank, save_best_model=True, \
         save_path=Path(args.log_dir) / model_save_path, \
         log_path=Path(args.log_dir) / log_save_path, \
-        evaluation_func=evaluation_func)
+        evaluation_func=evaluation)
 
     # compute params and FLOPs
     flops, params, _ = count_flops_params(model, torch.randn([32, 1, 28, 28]).cuda())
 
     return flops, params, best_acc
 
-def pruned_model_process(args):
+def pruned_model_process(args, local_rank):
     # load the pretrained model
     model = Mnist().cuda()
     state_dict = torch.load(Path(args.log_dir) / "pretraining_best_model.pth")
     model.load_state_dict(state_dict)
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank])
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank])
     # create dataloaders
     training_dataloader, validation_dataloader = create_dataloaders()
     # build a config_list
@@ -198,9 +199,10 @@ def pruned_model_process(args):
     taylor_training = functools.partial(
         training,
         training_dataloader,
-        local_rank = args.local_rank,
+        validation_dataloader,
+        local_rank = local_rank,
         log_path = Path(args.log_dir) / "taylor_pruning.log",
-        evaluation_func = functools.partial(evaluation, validation_dataloader),
+        evaluation_func = evaluation,
     )
     traced_optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
     criterion = torch.nn.CrossEntropyLoss()
@@ -216,11 +218,8 @@ def pruned_model_process(args):
 
     return sub_module
 
-
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(description='PyTorch Example for model comporession with ddp')
-    parser.add_argument('--local_rank', type=int, default=-1,
-                        help='local_rank is needed when you use ddp mode')
     parser.add_argument('--finetune_lr', type=float, default=0.01,
                         help='the learning rate in the fine-tune process')
     parser.add_argument('--pretraining_lr', type=float, default=0.01,
@@ -240,18 +239,26 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     Path(args.log_dir).mkdir(parents=True, exist_ok=True)
-
+    #init ddp
     dist.init_process_group(backend='nccl')
-    torch.cuda.set_device(args.local_rank)
+    # get local_rank
+    rank = dist.get_rank()
+    local_rank = rank % torch.cuda.device_count()
+    print(f"local_rank:{local_rank}")
+    torch.cuda.set_device(local_rank)
 
     print('\n' + '=' * 50 + ' START TO TRAIN THE MODEL ' + '=' * 50)
-    original_flops, original_params, original_best_acc = retrain_model(args)
+    original_flops, original_params, original_best_acc = retrain_model(args, local_rank)
 
     # # Start to prune and speedup
     print('\n' + '=' * 50 + ' START TO PRUNE THE BEST ACCURACY PRETRAINED MODEL ' + '=' * 50)
-    model = pruned_model_process(args)
-
+    model = pruned_model_process(args, local_rank)
     print('\n' + '=' * 50 + ' START TO FINE TUNE THE MODEL ' + '=' * 50)
-    finetuned_flops, finetuned_params, finetuned_best_acc = retrain_model(args, model.cuda())
+    finetuned_flops, finetuned_params, finetuned_best_acc = retrain_model(args, local_rank, model.cuda())
     print(f'Pretrained model FLOPs {original_flops/1e6:.2f} M, #Params: {original_params/1e6:.2f}M, Accuracy: {original_best_acc: .2f}%')
     print(f'Finetuned model FLOPs {finetuned_flops/1e6:.2f} M, #Params: {finetuned_params/1e6:.2f}M, Accuracy: {finetuned_best_acc: .2f}%')
+
+
+
+if __name__ == '__main__':
+    main()
