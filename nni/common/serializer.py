@@ -149,8 +149,8 @@ class SerializableObject(Traceable):  # should be (Generic[T], Traceable), but c
     def trace_copy(self) -> 'SerializableObject':
         return SerializableObject(
             self.trace_symbol,
-            [arg for arg in self.trace_args],
-            {k: v for k, v in self.trace_kwargs.items()},
+            list(self.trace_args),
+            dict(self.trace_kwargs),
         )
 
     def get(self, traceable: bool = True) -> Any:
@@ -234,8 +234,8 @@ def _make_class_traceable(cls: T, create_wrapper: bool = False) -> T:
     def trace_copy(self):
         return SerializableObject(
             self.trace_symbol,
-            [arg for arg in self.trace_args],
-            {k: v for k, v in self.trace_kwargs.items()},
+            list(self.trace_args),
+            dict(self.trace_kwargs),
         )
 
     def get(self):
