@@ -48,10 +48,12 @@ SMALL_MASK_VALUE = -1000.0
 
 
 def mul_mask(target: torch.Tensor, target_space: PruningTargetSpace):
+    assert target_space.mask is not None
     return torch.mul(target, target_space.mask)
 
 
 def add_mask(target: torch.Tensor, target_space: PruningTargetSpace):
+    assert target_space.mask is not None
     trans_mask = torch.where(target_space.mask == 1, torch.zeros_like(target_space.mask), SMALL_MASK_VALUE)
     return torch.add(target, trans_mask)
 

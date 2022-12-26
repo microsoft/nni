@@ -22,7 +22,7 @@ from .target_space import (
 )
 
 _logger = logging.getLogger(__name__)
-OUTPUT_FORMAT = Union[Tensor, Tuple[Tensor, Any], Dict[str, Union[Tensor, Any]]]
+OUTPUT_FORMAT = Union[Tensor, Any, Tuple[Tensor, Any], Dict[str, Union[Tensor, Any]]]
 
 
 class ModuleWrapper(torch.nn.Module):
@@ -61,18 +61,18 @@ class ModuleWrapper(torch.nn.Module):
         self.quantization_target_spaces: Dict[str, QuantizationTargetSpace] = {}
         self.distillation_target_spaces: Dict[str, DistillationTargetSpace] = {}
 
-        if 'pruning' in config:
-            self.extend_target_spaces(config.get('pruning'), 'pruning')
-        if 'quantization' in config:
-            self.extend_target_spaces(config.get('quantization'), 'quantization')
-        if 'distillation' in config:
-            self.extend_target_spaces(config.get('distillation'), 'distillation')
+        if 'pruning' in self.config:
+            self.extend_target_spaces(self.config['pruning'], 'pruning')
+        if 'quantization' in self.config:
+            self.extend_target_spaces(self.config['quantization'], 'quantization')
+        if 'distillation' in self.config:
+            self.extend_target_spaces(self.config['distillation'], 'distillation')
 
         self._frozen = False
         # By default, input/output shape will be track during forward,
         # more track functions can be registered by ``ModuleWrapper.register_track_info_func``.
         # An example please refer ``track_target_shape``.
-        self._track_funcs = [track_target_shape]
+        self._track_funcs: List[Callable[[ModuleWrapper, str, Tensor], None]] = [track_target_shape]
 
     def extra_repr(self) -> str:
         return f'module={self.module.__class__.__name__}({self.module.extra_repr()}), module_name={self.name}'
@@ -131,10 +131,10 @@ class ModuleWrapper(torch.nn.Module):
         if mode == 'pruning':
             target_spaces = self.pruning_target_spaces
             target_space_cls = PruningTargetSpace
-        if mode == 'quantization':
+        elif mode == 'quantization':
             target_spaces = self.quantization_target_spaces
             target_space_cls = QuantizationTargetSpace
-        if mode == 'distillation':
+        else:
             target_spaces = self.distillation_target_spaces
             target_space_cls = DistillationTargetSpace
 
@@ -146,7 +146,7 @@ class ModuleWrapper(torch.nn.Module):
             _logger.warning(warn_msg)
             settings.pop(name)
         new_target_spaces = self._create_target_spaces(settings, target_space_cls)
-        target_spaces.update(new_target_spaces)
+        target_spaces.update(new_target_spaces)  # type: ignore
 
         # return the new registered target spaces
         return new_target_spaces
@@ -184,7 +184,7 @@ class ModuleWrapper(torch.nn.Module):
         pos_args_num = len(self._input_args_spec.args) - 1
         pos_args = args[:pos_args_num]
         if len(pos_args) < pos_args_num:
-            pos_args += (kwargs.pop(k) for k in self._input_args_spec.args[len(pos_args) + 1:])
+            pos_args += tuple(kwargs.pop(k) for k in self._input_args_spec.args[len(pos_args) + 1:])
         var_args = args[pos_args_num:]
         kwonly_args = {k: kwargs.pop(k) for k in self._input_args_spec.kwonlyargs}
         return pos_args, var_args, kwonly_args, kwargs
@@ -276,13 +276,15 @@ class ModuleWrapper(torch.nn.Module):
         for idx, arg_value in enumerate(pos_args):
             target_name = f'{INPUT_PREFIX}{idx}'
             new_args.append(self.patch_helper(target_name, arg_value))
+        # NOTE: by default, we do not support varargs, if it is need, override the patch_helper
         new_args.extend(self.patch_helper(f'{INPUT_PREFIX}{self._input_args_spec.varargs}', varargs))
 
         new_kwargs = {}
         for key, value in kwonly_args.items():
             target_name = f'{INPUT_PREFIX}{key}'
             new_kwargs[key] = self.patch_helper(target_name, value)
-        new_kwargs.update(self.patch_helper(f'{INPUT_PREFIX}{self._input_args_spec.varkw}', varkw))
+        # NOTE: by default, we do not support varkw, if it is need, override the patch_helper
+        new_kwargs.update(self.patch_helper(f'{INPUT_PREFIX}{self._input_args_spec.varkw}', varkw))  # type: ignore
 
         return new_args, new_kwargs
 
@@ -370,10 +372,10 @@ def track_target_shape(wrapper: ModuleWrapper, target_name: str, target: Tensor)
         return
     if target_name in wrapper.quantization_target_spaces:
         if wrapper.quantization_target_spaces[target_name].type is not TargetType.PARAMETER:
-            wrapper.quantization_target_spaces[target_name].shape = target.shape
+            wrapper.quantization_target_spaces[target_name].shape = [_ for _ in target.shape]
     if target_name in wrapper.pruning_target_spaces:
         if wrapper.pruning_target_spaces[target_name].type is not TargetType.PARAMETER:
-            wrapper.pruning_target_spaces[target_name].shape = target.shape
+            wrapper.pruning_target_spaces[target_name].shape = [_ for _ in target.shape]
     if target_name in wrapper.distillation_target_spaces:
         if wrapper.distillation_target_spaces[target_name].type is not TargetType.PARAMETER:
-            wrapper.distillation_target_spaces[target_name].shape = target.shape
+            wrapper.distillation_target_spaces[target_name].shape = [_ for _ in target.shape]
