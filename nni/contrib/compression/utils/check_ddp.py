@@ -33,7 +33,7 @@ def check_ddp_model(model: nn.Module):
     return is_ddp_model, ddp_params
 
 
-def reset_ddp_model(model: nn.Module, ddp_params: Dict):
+def reset_ddp_model(model: torch.nn.parallel.DistributedDataParallel, ddp_params: Dict):
     module = model.module
     return torch.nn.parallel.DistributedDataParallel(module=module, **ddp_params)
 
