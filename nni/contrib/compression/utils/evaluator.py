@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence, Mapping
+from collections.abc import Sequence, MutableMapping
 from copy import deepcopy
 import logging
 import types
@@ -91,15 +91,17 @@ class TensorHook(Hook):
     def __init__(self, target: Tensor, target_name: str, hook_factory: Callable[[List], Callable[[Tensor], Tensor | None]]):
         assert isinstance(target, Tensor)
         super().__init__(target, target_name, hook_factory)
+        self.target: Tensor
 
     def _register(self, hook_func: Callable[[Tensor], Tensor | None]) -> RemovableHandle:
-        return self.target.register_hook(hook_func)  # type: ignore
+        return self.target.register_hook(hook_func)
 
 
 class ModuleHook(Hook):
     def __init__(self, target: Module, target_name: str, hook_factory: Callable[[List], Callable[[Module, Any, Any], Any]]):
         assert isinstance(target, Module)
         super().__init__(target, target_name, hook_factory)
+        self.target: Module
 
 
 class ForwardHook(ModuleHook):
@@ -112,8 +114,8 @@ class ForwardHook(ModuleHook):
             return hook
     """
 
-    def _register(self, hook_func: Callable[[Module, Tuple[Any], Any], Any]):
-        return self.target.register_forward_hook(hook_func)  # type: ignore
+    def _register(self, hook_func: Callable[[Module, Tuple[Any], Any], None]):
+        return self.target.register_forward_hook(hook_func)
 
 
 class BackwardHook(ModuleHook):
@@ -127,7 +129,7 @@ class BackwardHook(ModuleHook):
     """
 
     def _register(self, hook_func: Callable[[Module, Tuple[Tensor] | Tensor, Tuple[Tensor] | Tensor], Any]):
-        return self.target.register_backward_hook(hook_func)  # type: ignore
+        return self.target.register_backward_hook(hook_func)
 
 
 class Evaluator:
@@ -182,13 +184,6 @@ class Evaluator:
         Unbind the model bound by ``bind_model``. Then ``Evaluator`` can be reused by binding a new model by `bind_model`.
         """
         raise NotImplementedError
-
-    def rewrap_if_ddp_model(self, model):
-        errmsg = "model is None, no need to rewrap model to DistributedDatapallel model"
-        assert model is not None, errmsg
-        is_ddp_model, ddp_params = check_ddp_model(model)
-
-        return reset_ddp_model(model, ddp_params) if is_ddp_model else model
 
     def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         """
@@ -402,7 +397,7 @@ class LightningEvaluator(Evaluator):
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
 
-        self.model = self.rewrap_if_ddp_model(model)  # type: ignore
+        self.model = model
         self._ori_model_attr.update({
             'training_step': model.training_step,
             'configure_optimizers': model.configure_optimizers,
@@ -490,7 +485,8 @@ class LightningEvaluator(Evaluator):
 
         def patched_configure_callbacks(_):
             callbacks = old_configure_callbacks()
-            callbacks.append(OptimizerCallback())  # type: ignore
+            callbacks = list(callbacks) if isinstance(callbacks, Sequence) else [callbacks]
+            callbacks.append(OptimizerCallback())
             return callbacks
 
         self.model.configure_callbacks = types.MethodType(patched_configure_callbacks, self.model)
@@ -553,7 +549,7 @@ class LightningEvaluator(Evaluator):
 
 
 _OPTIMIZERS = Union[Optimizer, List[Optimizer]]
-_TRAINING_STEP = Callable[[Any], Tensor]
+_TRAINING_STEP = Callable[[Any], Union[Tensor, Tuple[Tensor], Dict[str, Tensor]]]
 _SCHEDULERS = Union[None, _LRScheduler, List[_LRScheduler]]
 _EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
 _TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, _SCHEDULERS, Optional[int], Optional[int]], None]
@@ -701,6 +697,13 @@ class TorchEvaluator(Evaluator):
         delattr(self, '_tmp_lr_schedulers')
         self._initialization_complete = True
 
+    def _rewrap_if_ddp_model(self, model):
+        errmsg = "model is None, no need to rewrap model to DistributedDatapallel model"
+        assert model is not None, errmsg
+        is_ddp_model, ddp_params = check_ddp_model(model)
+
+        return reset_ddp_model(model, ddp_params) if is_ddp_model else model
+
     def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None):
         err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert self._initialization_complete is True, err_msg
@@ -709,7 +712,7 @@ class TorchEvaluator(Evaluator):
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
 
-        self.model = self.rewrap_if_ddp_model(model)
+        self.model = self._rewrap_if_ddp_model(model)
         self._param_names_map = param_names_map
         # initialize optimizers & lr_schedulers for the bound model here
         self._optimizers = [helper.call(model, param_names_map) for helper in self._optimizer_helpers]
@@ -742,13 +745,13 @@ class TorchEvaluator(Evaluator):
             elif isinstance(out, Sequence) and not isinstance(out, str):
                 assert isinstance(out[0], Tensor)
                 new_loss = patch(out[0], batch)
-                out = (new_loss,) + out[1:]
-            elif isinstance(out, Mapping):
+                out = (new_loss,) + tuple(out[1:])
+            elif isinstance(out, MutableMapping):
                 assert 'loss' in out and isinstance(out['loss'], Tensor)
                 out['loss'] = patch(out['loss'], batch)
             return out
 
-        self._training_step = patched_training_step
+        self._training_step: _TRAINING_STEP = patched_training_step
 
     def revert_loss(self):
         self._training_step = self._ori_training_step
@@ -777,10 +780,9 @@ class TorchEvaluator(Evaluator):
         assert self.model is not None
         assert self._optimizers is not None
         assert self._training_step is not None
-        optimizers = self._optimizers[0] if self._train_with_single_optimizer \
-            else self._optimizers if self._optimizers else None
-        lr_schedulers = self._lr_schedulers[0] if self._train_with_single_scheduler \
-            else self._lr_schedulers if self._lr_schedulers else None
+        optimizers = self._optimizers[0] if self._train_with_single_optimizer else self._optimizers
+        lr_schedulers = None if self._lr_schedulers is None else self._lr_schedulers[0] \
+            if self._train_with_single_scheduler else self._lr_schedulers
         self.training_func(self.model, optimizers, self._training_step, lr_schedulers, max_steps, max_epochs)
 
     def finetune(self):
@@ -889,7 +891,7 @@ class TransformersEvaluator(Evaluator):
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
 
-        self.model = self.rewrap_if_ddp_model(model)
+        self.model = model
 
         # re-initialized Trainer
         args = list(self.traced_trainer.trace_args)  # type: ignore
@@ -973,8 +975,14 @@ class TransformersEvaluator(Evaluator):
     def finetune(self):
         self.train()
 
-    def evaluate(self) -> float | None | Tuple[float, Dict[str, Any]] | Tuple[None, Dict[str, Any]]:
-        return self.trainer.evaluate()  # type: ignore
+    def evaluate(self) -> Tuple[float | None, Dict[str, Any]]:
+        metric =  self.trainer.evaluate()
+        nni_used_metric = metric.get('default', None)
+        if nni_used_metric is None:
+            warn_msg = f'Evaluation function returns a dict metric without key `default`,' + \
+                        'will return None as the model evaluation metric value.'
+            _logger.warning(warn_msg)
+        return nni_used_metric, metric
 
     def get_dummy_input(self) -> Any:
         return self.dummy_input
