@@ -29,7 +29,7 @@ def recompile_from_code(code: str, global_vars: dict):
     exec(code, global_vars, func_dict)
     return func_dict['forward']
 
-traced_model = concrete_trace(model, {'x': dummy_input})
+traced_model = concrete_trace(model, {'x': dummy_input}, use_function_patch=True)
 recompiled = recompile_from_code(traced_model.code, model.forward.__globals__)
 print('traced code:\n', traced_model.code)
 

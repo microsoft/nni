@@ -43,26 +43,15 @@ traced_model = concrete_trace(
         torch.finfo:                                ((), False),
         modeling_outputs.SequenceClassifierOutput:  ((), False),
         **ConcreteTracer.default_autowrap_leaf_class,
-        int:        ((), False),
-        reversed:   ((), False),
     },
-    
 )
 
 with torch.no_grad():
-    output_origin = model(**dummy_input)
-
-    output_traced = traced_model(**dummy_input)
+    new_dummy_input = tokenizer("I dislike you. I hate you", return_tensors="pt")
+    output_origin = model(**new_dummy_input)
+    output_traced = traced_model(**new_dummy_input)
 
     assert check_equal(output_origin, output_traced), 'check_equal failed.'
 
 print("traced code:\n", traced_model.code)
 print("trace succeeded!")
-# print(traced_model.graph)
-
-# import sys
-# sys.path.append("/home/v-junliang/DNNGen/concrete_trace_test/graph")
-# from MyGraph import transform
-# graph = transform(traced_model.graph)
-# print(graph)
-

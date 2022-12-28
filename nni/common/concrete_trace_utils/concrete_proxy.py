@@ -282,6 +282,7 @@ class ConcreteUnpackIterProxy(ConcreteProxy):
     """
     A more understandable way to deal with iterables.
     Only support 'tuple' and 'list'. Will transfer un-subscriptables such as 'set', to 'tuple'.
+    todo: support for 'zip'
 
     examples:
         1. `a, b = c` =>
