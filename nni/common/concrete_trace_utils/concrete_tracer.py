@@ -36,6 +36,7 @@ from .utils import (
     _orig_agfunc_apply,
     _orig_torch_assert,
 
+    _orig_type,
     _orig_isinstance,
     _orig_getattr,
 
@@ -71,15 +72,6 @@ class ConcreteTracer(TracerBase):
 
     default_autowrap_modules = (
         math,
-    )
-    default_autowrap_funcs = (
-        # no necessary input for tensor, so __torch_function__ will not be called. need to be wrapped manually.
-        # todo:
-        #   1. more needed to be tested.
-        #   2. some with no proxy input functions such as 'torch.rand' should also be traced.
-        torch.arange,
-        torch.meshgrid,
-        # operator.index,
     )
     default_autowrap_leaf_function: Dict[Any, List[Iterable[Union[ModuleType, Type], str], bool, Optional[Callable]]] = {
         # function
@@ -168,7 +160,6 @@ class ConcreteTracer(TracerBase):
     }
     @compatibility(is_backward_compatible=True)
     def __init__(self, autowrap_modules: Tuple[ModuleType] = default_autowrap_modules,
-                 autowrap_functions: Tuple[Callable, ...] = default_autowrap_funcs,
                  autowrap_leaf_function = default_autowrap_leaf_function,
                  autowrap_leaf_class = default_autowrap_leaf_class,
                  leaf_module = (),
@@ -184,14 +175,10 @@ class ConcreteTracer(TracerBase):
         self._autowrap_function_ids: Set[int] = {
             id(value) for name, value in chain(*[m.__dict__.items() for m in autowrap_modules])
             if not name.startswith("_") and callable(value)}
-        self._autowrap_function_ids.update(set([id(f) for f in autowrap_functions]))
 
         # Python modules to apply autowrap to at the start, in addition to
         # modules we see while tracing
         self._autowrap_search: List[ModuleType] = list(autowrap_modules)
-        for func in autowrap_functions:
-            if hasattr(func, '__module__'):
-                self._autowrap_search.append(sys.modules[func.__module__])
 
         self.submodule_paths: Optional[Dict[torch.nn.Module, str]] = None
 
@@ -374,7 +361,7 @@ class ConcreteTracer(TracerBase):
 
             return self.create_node('get_attr', qualname, (), {})
 
-        if type(a) in _proxyable_classes:
+        if _orig_type(a) in _proxyable_classes:
             # This is an instance of a proxyable class for which we did not
             # witness its construction. Intern this as a constant attribute
 
@@ -411,7 +398,19 @@ class ConcreteTracer(TracerBase):
             path = self.submodule_paths.get(mod)
             # TODO: better infomation
             if path is None:
-                raise NameError('module is not installed as a submodule')
+                if not hasattr(self.root, '_module_constants'):
+                    self.root._module_constants = torch.nn.ModuleList()
+                assert _orig_isinstance(self.root._module_constants, torch.nn.ModuleList)
+                module_constants: torch.nn.ModuleList = self.root._module_constants
+                if hasattr(mod, 'extra_repr'):
+                    sub_path = _orig_type(mod).__name__ + mod.extra_repr()
+                else:
+                    sub_path = str(_orig_len(module_constants))
+                if not hasattr(module_constants, sub_path):
+                    module_constants.add_module(sub_path, mod)
+                path = '_module_constants.%s' % sub_path
+                self.submodule_paths[mod] = path
+                return path
             assert isinstance(path, str)
             return path
         # O(N^2) fallback in the case that we didn't store the submodule
@@ -528,7 +527,7 @@ class ConcreteTracer(TracerBase):
             # TODO: better infomation
             assert hasattr(
                 root, forwrad_function_name
-            ), f"traced_func_name={forwrad_function_name} doesn't exist in {type(root).__name__}"
+            ), f"traced_func_name={forwrad_function_name} doesn't exist in {_orig_type(root).__name__}"
 
             fn = getattr(root, forwrad_function_name)
             self.submodule_paths = {mod: name for name, mod in root.named_modules()}
@@ -592,6 +591,8 @@ class ConcreteTracer(TracerBase):
                 except AttributeError:
                     attr_val = _orig_module_getattr(mod, attr)
             if callable(attr_val):
+                if attr_val in self.wrapped_leaf:
+                    return self.wrapped_leaf[attr_val][1]
                 return attr_val
             elif _orig_isinstance(attr_val, (_orig_tuple, _orig_list)):
                 if self.the_path_of_middle_class[id(mod)] == '':
@@ -617,53 +618,85 @@ class ConcreteTracer(TracerBase):
                 else:
                     return self.create_proxy('call_module', module_qualified_name, args, kwargs)
 
-        @functools.wraps(_orig_map)
-        def map_wrapper(the_func, *iterables: Iterable[Any]):
-            tracers = _orig_set()
-            for one_iter in iterables:
-                if _orig_isinstance(one_iter, ep.Proxy):
-                    tracers.add(one_iter.tracer)
-            if _orig_len(tracers) > 1:
-                raise Exception('more than 1 tracer detected. please report the issue')
-            elif _orig_len(tracers) == 1:
-                results = _orig_list()
-                for args in _orig_zip(*iterables):
-                    results.append(the_func(*args))
-                return next(iter(tracers)).create_proxy('call_function', _orig_tuple, (results,), {})
+        class map_wrapper_clz:
+            @functools.wraps(_orig_map)
+            def __call__(self, the_func, *iterables: Iterable[Any]):
+                tracers = _orig_set()
+                for one_iter in iterables:
+                    if _orig_isinstance(one_iter, ep.Proxy):
+                        tracers.add(one_iter.tracer)
+                if _orig_len(tracers) > 1:
+                    raise Exception('more than 1 tracer detected. please report the issue')
+                elif _orig_len(tracers) == 1:
+                    results = _orig_list()
+                    for args in _orig_zip(*iterables):
+                        results.append(the_func(*args))
+                    return next(iter(tracers)).create_proxy('call_function', _orig_tuple, (results,), {})
 
-            ## for the multi-level list/tuple
-            iterables = _orig_list(_orig_list(it) for it in iterables)
-            for it in iterables:
-                for arg in it:
-                    if _orig_isinstance(arg, ep.Proxy):
-                        tracers.add(arg.tracer)
-            if _orig_len(tracers) > 1:
-                raise Exception('more than 1 tracer detected. please report the issue')
-            elif _orig_len(tracers) == 1:
-                results = _orig_list()
-                for args in _orig_zip(*iterables):
-                    results.append(the_func(*args))
-                return next(iter(tracers)).create_proxy('call_function', _orig_tuple, (results,), {})
-            ## for the multi-level list/tuple end
+                ## for the multi-level list/tuple
+                iterables = _orig_list(_orig_list(it) for it in iterables)
+                for it in iterables:
+                    for arg in it:
+                        if _orig_isinstance(arg, ep.Proxy):
+                            tracers.add(arg.tracer)
+                if _orig_len(tracers) > 1:
+                    raise Exception('more than 1 tracer detected. please report the issue')
+                elif _orig_len(tracers) == 1:
+                    results = _orig_list()
+                    for args in _orig_zip(*iterables):
+                        results.append(the_func(*args))
+                    return next(iter(tracers)).create_proxy('call_function', _orig_tuple, (results,), {})
+                ## for the multi-level list/tuple end
 
-            return _orig_map(the_func, *iterables)
+                return _orig_map(the_func, *iterables)
+            def __eq__(self, __o: object) -> bool:
+                return id(__o) in (id(self), id(_orig_map))
+            def __hash__(self):
+                return id(self)
+        map_wrapper = map_wrapper_clz()
 
-        @functools.wraps(_orig_range)
-        def range_wrapper(*args):
-            # TODO: better infomation
-            assert 1 <= _orig_len(args) <= 3
-            args = (arg.value if _orig_isinstance(arg, ep.ConcreteProxy) else arg for arg in args)
-            return _orig_range(*args)
+        class range_wrapper_clz:
+            @functools.wraps(_orig_range)
+            def __call__(self, *args):
+                # TODO: better infomation
+                assert 1 <= _orig_len(args) <= 3
+                args = (arg.value if _orig_isinstance(arg, ep.ConcreteProxy) else arg for arg in args)
+                return _orig_range(*args)
+            def __eq__(self, __o: object) -> bool:
+                return id(__o) in (id(self), id(_orig_range))
+            def __hash__(self):
+                return id(self)
+        range_wrapper = range_wrapper_clz()
 
-        @functools.wraps(_orig_enumerate)
-        def enumerate_wrapper(iterable, start=0):
-            count = start
-            for elem in iterable:
-                if _orig_isinstance(elem, ep.ConcreteProxy) and _orig_isinstance(elem.value, (_orig_int, str)):
-                    yield count, elem.value
+        class enumerate_wrapper_clz:
+            @functools.wraps(_orig_enumerate)
+            def __call__(self, iterable, start=0):
+                count = start
+                for elem in iterable:
+                    if _orig_isinstance(elem, ep.ConcreteProxy) and _orig_isinstance(elem.value, (_orig_int, str)):
+                        yield count, elem.value
+                    else:
+                        yield count, elem
+                    count += 1
+            def __eq__(self, __o: object) -> bool:
+                return id(__o) in (id(self), id(_orig_enumerate))
+            def __hash__(self):
+                return id(self)
+        enumerate_wrapper = enumerate_wrapper_clz()
+
+        class type_wrapper_clz:
+            @functools.wraps(_orig_type)
+            def __call__(self, instance):
+                orig_type = _orig_type(instance)
+                if orig_type in (ep.ConcreteProxy, ep.ConcreteAttrProxy, ep.ConcreteUnpackIterProxy):
+                    return _orig_type(instance.value)
                 else:
-                    yield count, elem
-                count += 1
+                    return orig_type
+            def __eq__(self, __o: object) -> bool:
+                return id(__o) in (id(self), id(_orig_enumerate))
+            def __hash__(self):
+                return id(self)
+        type_wrapper = type_wrapper_clz()
 
         class AGFuncWrapper(torch.autograd.Function):
             @staticmethod
@@ -749,6 +782,7 @@ class ConcreteTracer(TracerBase):
             map_wrapper: _orig_map,
             enumerate_wrapper: _orig_enumerate,
             range_wrapper: _orig_range,
+            type_wrapper: _orig_type,
         }
         for clz, (positions, is_iterable) in self.autowrap_leaf_class.items():
             if clz.__module__.startswith('_'):
@@ -769,10 +803,10 @@ class ConcreteTracer(TracerBase):
 
         @functools.wraps(_orig_isinstance)
         def isinstance_wrapper(instance, clz):
-            if type(clz) in (tuple, list, _orig_slice, _orig_tuple, _orig_list):
+            if _orig_type(clz) in (slice, tuple, list, _orig_slice, _orig_tuple, _orig_list):
                 clz_wrapped = []
-                for type_wrapper, orig_type in self.clz_wrapper_map.items():
-                    if type_wrapper in clz:
+                for wrapped_type, orig_type in self.clz_wrapper_map.items():
+                    if wrapped_type in clz:
                         clz_wrapped.append(orig_type)
                 clz = (*clz_wrapped, *(aclz for aclz in clz if aclz not in self.clz_wrapper_map))
                 # use _orig_isinstance(clz, Iterable) will cause an endless recursive loop
@@ -817,11 +851,12 @@ class ConcreteTracer(TracerBase):
             self.patcher.patch_method(torch.autograd.Function, "apply", agfunc_apply_wrapper, deduplicate=False)
             self.patcher.patch_method(torch, "_assert", torch_assert_wrapper, deduplicate=False)
 
-            self.patcher.patch_method(builtins, "isinstance", isinstance_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "getattr", getattr_wrapper, deduplicate=False)
             self.patcher.patch_method(builtins, "map", map_wrapper, deduplicate=False)
             self.patcher.patch_method(builtins, "enumerate", enumerate_wrapper, deduplicate=False)
             self.patcher.patch_method(builtins, "range", range_wrapper, deduplicate=False)
+            self.patcher.patch_method(builtins, "type", type_wrapper, deduplicate=False)
+            self.patcher.patch_method(builtins, "isinstance", isinstance_wrapper, deduplicate=False)
+            self.patcher.patch_method(builtins, "getattr", getattr_wrapper, deduplicate=False)
 
             for obj, (positions, wrapped) in self.wrapped_leaf.items():
                 for path, name in positions:
@@ -832,8 +867,8 @@ class ConcreteTracer(TracerBase):
             _autowrap_check(self.patcher, fn_globals, self._autowrap_function_ids, self.autowrap_leaf_pairs)
             for module in self._autowrap_search:
                 _autowrap_check(self.patcher, module.__dict__, self._autowrap_function_ids, self.autowrap_leaf_pairs)
-            self.create_node('output', 'output', (self.create_arg(fn(*args, *more_args, **kwargs)),), {},
-                             type_expr=fn.__annotations__.get('return', None))
+            self.create_node('output', 'output', (self.create_arg(OperatorPatcherContext.patch_run(fn, *args, *more_args, **kwargs)),), {},
+                            type_expr=fn.__annotations__.get('return', None))
 
         self.submodule_paths = None
         OperatorPatcherContext.exit(self)
@@ -1082,46 +1117,64 @@ def _create_wrapped_leaf_method(tracer: ConcreteTracer, method, name: str, to_fu
     return method_wrapper
 
 def _create_wrapped_leaf_class(tracer: ConcreteTracer, clz):
-    @functools.wraps(clz)
-    def clz_wrapper(*args, **kwargs):
-        if tracer.temp_disable_call:
-            return clz(*args, **kwargs)
-        tracers = _orig_set()
-        def unwrap_detect_tracers(obj):
-            if isinstance(obj, ep.ConcreteProxy):
-                tracers.add(obj.tracer)
-        ep.map_aggregate_not_proxy(args, unwrap_detect_tracers)
-        ep.map_aggregate_not_proxy(kwargs, unwrap_detect_tracers)
-        if _orig_len(tracers) == 0:
-            return clz(*args, **kwargs)
-        elif _orig_len(tracers) == 1 and next(iter(tracers)) == tracer:
-            return tracer.create_proxy('call_function', clz, args, kwargs)
-        else:
-            raise Exception('more than 1 tracer detected. please report the issue')
-    return clz_wrapper
+    class clz_wrapper_clz:
+        @functools.wraps(clz)
+        def __call__(self, *args, **kwargs):
+            if tracer.temp_disable_call:
+                return clz(*args, **kwargs)
+            tracers = _orig_set()
+            def unwrap_detect_tracers(obj):
+                if isinstance(obj, ep.ConcreteProxy):
+                    tracers.add(obj.tracer)
+            ep.map_aggregate_not_proxy(args, unwrap_detect_tracers)
+            ep.map_aggregate_not_proxy(kwargs, unwrap_detect_tracers)
+            if _orig_len(tracers) == 0:
+                return clz(*args, **kwargs)
+            elif _orig_len(tracers) == 1 and next(iter(tracers)) == tracer:
+                return tracer.create_proxy('call_function', clz, args, kwargs)
+            else:
+                raise Exception('more than 1 tracer detected. please report the issue')
+        def __eq__(self, __o: object) -> bool:
+            return id(__o) in (id(self), id(clz))
+        def __hash__(self):
+            return id(self)
+    return clz_wrapper_clz()
 
 def _create_wrapped_leaf_iterable_class(tracer: ConcreteTracer, clz):
-    @functools.wraps(clz)
-    def clz_wrapper(*args, **kwargs):
-        if tracer.temp_disable_call:
-            return clz(*args, **kwargs)
-        tracers = _orig_set()
-        if _orig_len(args) != 0:
-            if _orig_isinstance(args[0], ep.Proxy):
-                tracers.add(args[0].tracer)
-            if _orig_isinstance(args[0], Iterator):
-                args = (clz(args[0]), *args[1:])
-            if _orig_isinstance(args[0], Iterable):
-                for item in args[0]:
-                    if _orig_isinstance(item, ep.Proxy):
-                        tracers.add(item.tracer)
-        if _orig_len(tracers) == 0:
-            return clz(*args, **kwargs)
-        elif _orig_len(tracers) == 1 and next(iter(tracers)) == tracer:
-            return tracer.create_proxy('call_function',
-                clz, args, kwargs)
-        else:
-            raise Exception('more than 1 tracer detected. please report the issue')
+    class clz_wrapper_clz:
+        @functools.wraps(clz)
+        def __call__(self, *args, **kwargs):
+            if tracer.temp_disable_call:
+                return clz(*args, **kwargs)
+            tracers = _orig_set()
+            if _orig_len(args) != 0:
+                if _orig_isinstance(args[0], ep.Proxy):
+                    tracers.add(args[0].tracer)
+                if _orig_isinstance(args[0], Iterator):
+                    args = (clz(args[0]), *args[1:])
+                if _orig_isinstance(args[0], Iterable):
+                    for item in args[0]:
+                        if _orig_isinstance(item, ep.Proxy):
+                            tracers.add(item.tracer)
+            if _orig_len(tracers) == 0:
+                return clz(*args, **kwargs)
+            elif _orig_len(tracers) == 1 and next(iter(tracers)) == tracer:
+                return tracer.create_proxy('call_function',
+                    clz, args, kwargs)
+            else:
+                raise Exception('more than 1 tracer detected. please report the issue')
+        def __eq__(self, __o: object) -> bool:
+            return id(__o) in (id(self), id(clz))
+        def __hash__(self):
+            return id(self)
+    clz_wrapper = clz_wrapper_clz()
+    for name in dir(clz):
+        attr = _orig_getattr(clz, name)
+        if not name.startswith('_'):
+            if _orig_isinstance(attr, Callable):
+                setattr(clz_wrapper, name, _create_wrapped_leaf_method(tracer, attr, name, None))
+            else:
+                setattr(clz_wrapper, name, attr)
     return clz_wrapper
 
 def _create_wrapped_attr_for_middle_class(tracer: ConcreteTracer, clz, the_path_of_middle_class):

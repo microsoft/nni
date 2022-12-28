@@ -5,7 +5,6 @@ import ast
 import inspect
 import logging
 
-from functools import lru_cache
 from textwrap import dedent
 from types import MethodType, FunctionType
 from typing import List, Optional
@@ -17,8 +16,11 @@ if TYPE_CHECKING:
     from .concrete_tracer import ConcreteTracer
 
 from .utils import (
+    _orig_type,
     _orig_isinstance,
     _orig_len,
+    _orig_dict,
+    _orig_zip,
 )
 
 _logger = logging.getLogger(__name__)
@@ -59,30 +61,27 @@ class TransformerOp(ast.NodeTransformer):
 
     def visit_While(self, node: ast.While):
         self.is_incond_status = 2
-        self.visit(node.test)
+        node.test = self.visit(node.test)
         self.is_incond_status = 0
-        for item in node.body:
-            self.visit(item)
-        for item in node.orelse:
-            self.visit(item)
+        node.body = [self.visit(item) for item in node.body]
+        node.orelse = [self.visit(item) for item in node.orelse]
         return node
 
     def visit_If(self, node: ast.If):
         self.is_incond_status = 2
-        self.visit(node.test)
+        node.test = self.visit(node.test)
         self.is_incond_status = 0
-        for item in node.body:
-            self.visit(item)
-        for item in node.orelse:
-            self.visit(item)
+        node.body = [self.visit(item) for item in node.body]
+        node.orelse = [self.visit(item) for item in node.orelse]
         return node
 
     def visit_IfExp(self, node: ast.IfExp):
+        node.body = self.visit(node.body)
         self.visit(node.body)
         self.is_incond_status = 2
-        self.visit(node.test)
+        node.test = self.visit(node.test)
         self.is_incond_status = 0
-        self.visit(node.orelse)
+        node.orelse = self.visit(node.orelse)
         return node
 
     def visit_UnaryOp(self, node: ast.UnaryOp):
@@ -112,12 +111,9 @@ class TransformerOp(ast.NodeTransformer):
             return self.generic_visit(node)
 
     def visit_Compare(self, node: ast.Compare):
-        if self.is_incond_status != 0:
-            self.is_incond_status = 2
-            return self.generic_visit(node)
         should_replace = False
         for op in node.ops:
-            if type(op) in (ast.Is, ast.IsNot, ast.In, ast.NotIn):
+            if _orig_type(op) in (ast.Is, ast.IsNot, ast.In, ast.NotIn):
                 should_replace = True
                 break
         if should_replace:
@@ -130,7 +126,7 @@ class TransformerOp(ast.NodeTransformer):
                 ast.IsNot: 'is_not',
                 ast.In: 'contains',
                 ast.NotIn: 'contains',
-            }[type(node.ops[0])]
+            }[_orig_type(node.ops[0])]
             if _orig_isinstance(node.ops[0], (ast.In, ast.NotIn)):
                 args = [node.comparators[0], node.left]
             else:
@@ -167,9 +163,16 @@ class OperatorPatcher:
     def __init__(self, use_operator_patch: bool, operator_patch_backlist: List[str]):
         self.use_operator_patch = use_operator_patch
         self.operator_patch_backlist = operator_patch_backlist
+        self.function_cache: dict[int, callable] = {}
+        self.function_cache_orig: dict[int, callable] = {}
 
-    @lru_cache
     def patch_inner(self, func):
+        if id(func) not in self.function_cache:
+            self.function_cache[id(func)] = self.patch_inner_helper(func)
+            self.function_cache_orig[id(func)] = func
+        return self.function_cache[id(func)]
+
+    def patch_inner_helper(self, func):
         if not hasattr(func, '__module__') or func.__module__ is None or func.__module__.startswith('torch'):
             return func
         if hasattr(func, '_Patcher__fx_already_patched'):
@@ -189,18 +192,20 @@ class OperatorPatcher:
 
         lines, lnum = inspect.findsource(func_inner)
         # align with original source code
-        lines_cut_start = ['\n' * lnum, *lines[lnum:]]
-        lines_cut_start_end = inspect.getblock(lines_cut_start)
+        # lines_cut_start = ['\n' * lnum, *lines[lnum:]]
+        # lines_cut_start_end = inspect.getblock(lines_cut_start)
 
-        source = ''.join(lines_cut_start_end)
+        # source = ''.join(lines_cut_start_end)
+        source = ''.join(['\n' * lnum, *inspect.getblock(lines[lnum:])])
         dedent_src = dedent(source)
         tree = ast.parse(dedent_src)
 
-        is_transformed, new_tree = self.transformer_op.visit_start(tree)
+        is_transformed, new_tree = OperatorPatcher.transformer_op.visit_start(tree)
         if not is_transformed:
             return func_inner
         else:
-            new_tree.body[0].body = [
+            body0: ast.FunctionDef = new_tree.body[0]
+            body0.body = [
                 # equals to:
                 # from operator import not_, is_, is_not, contains
                 ast.ImportFrom(
@@ -213,17 +218,32 @@ class OperatorPatcher:
                     ],
                     level=0
                 ),
-                *new_tree.body[0].body
+                *body0.body
             ]
-            new_tree.body[0].name = 'new_func'
+            body0.name = 'new_func'
+            # for deleting some annotations like 'add_start_docstrings_to_model_forward' or 'add_code_sample_docstrings'
+            body0.decorator_list = [i for i in body0.decorator_list
+                if _orig_isinstance(i, ast.Call) and _orig_isinstance(i.func, ast.Name) and i.func.id == 'patch_run' and
+                    _orig_isinstance(i.args[0], ast.Name) and
+                    i.args[0].id not in ('add_start_docstrings_to_model_forward', 'add_code_sample_docstrings')]
             ast.fix_missing_locations(new_tree)
+
+            # closure info
+            closure_dict = {}
+            closures = func_inner.__closure__
+            co_freevars = func_inner.__code__.co_freevars
+            if (closures != None and _orig_len(closures) != 0) or _orig_len(co_freevars) != 0:
+                assert _orig_len(closures) == _orig_len(co_freevars)
+                closure_dict = _orig_dict(_orig_zip(co_freevars, [c.cell_contents for c in closures]))
+
             var_dict = {}
-            # use func.__code__.co_filename to make the new function easily debuggable.
             exec(
+                # use func.__code__.co_filename to make the new function easily debuggable.
                 compile(new_tree, func_inner.__code__.co_filename, 'exec'),
                 {
                     'patch_run': OperatorPatcherContext.patch_run,
                     **func_inner.__globals__,
+                    **closure_dict,
                 },
                 var_dict)
             if the_self is not None:
