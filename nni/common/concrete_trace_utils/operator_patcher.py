@@ -252,25 +252,28 @@ class OperatorPatcher:
                 return var_dict['new_func']
 
 class OperatorPatcherContext:
-    tracer: Optional['ConcreteTracer'] = None
-    patcher: Optional[OperatorPatcher] = None
+    ctx_tracer: Optional['ConcreteTracer'] = None
+    ctx_patcher: Optional[OperatorPatcher] = None
 
-    @staticmethod
-    def create(tracer: 'ConcreteTracer', use_operator_patch: bool, operator_patch_backlist: List[str]):
-        assert OperatorPatcherContext.tracer is None
-        assert OperatorPatcherContext.patcher is None
-        OperatorPatcherContext.tracer = tracer
-        OperatorPatcherContext.patcher = OperatorPatcher(use_operator_patch, operator_patch_backlist)
+    def __init__(self, tracer: 'ConcreteTracer', use_operator_patch: bool, operator_patch_backlist: List[str]):
+        self.tracer = tracer
+        self.patcher = OperatorPatcher(use_operator_patch, operator_patch_backlist)
 
-    @staticmethod
-    def exit(tracer: 'ConcreteTracer'):
-        assert OperatorPatcherContext.tracer == tracer
-        OperatorPatcherContext.tracer = None
-        OperatorPatcherContext.patcher = None
+    def __enter__(self):
+        assert OperatorPatcherContext.ctx_tracer is None
+        assert OperatorPatcherContext.ctx_patcher is None
+        OperatorPatcherContext.ctx_tracer = self.tracer
+        OperatorPatcherContext.ctx_patcher = self.patcher
+
+    def __exit__(self, exc_type, exc_value, tb):
+        assert OperatorPatcherContext.ctx_tracer == self.tracer
+        OperatorPatcherContext.ctx_tracer = None
+        OperatorPatcherContext.ctx_patcher = None
+        return exc_type is None
 
     @staticmethod
     def patch_run(func, *args, **kwargs):
-        assert OperatorPatcherContext.patcher is not None
-        with OperatorPatcherContext.tracer.do_temp_disable(True, True, True):
-            new_func = OperatorPatcherContext.patcher.patch_inner(func)
+        assert OperatorPatcherContext.ctx_patcher is not None
+        with OperatorPatcherContext.ctx_tracer.do_temp_disable(True, True, True):
+            new_func = OperatorPatcherContext.ctx_patcher.patch_inner(func)
         return new_func(*args, **kwargs)

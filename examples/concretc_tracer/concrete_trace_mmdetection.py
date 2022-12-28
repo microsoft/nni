@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import sys
+import traceback
 import torch
 import mmcv
 import mmcv.cnn as mmcv_cnn
@@ -238,6 +238,13 @@ for config_file in (*config_files_correct,):
             out_orig = model.forward_dummy(img_tensor)
 
             torch.manual_seed(100)
+
+            if config_file == 'pvt/retinanet_pvt-l_fpn_1x_coco':
+                import torch.fx as torch_fx
+                from numpy import intc
+                orig_base_types = torch_fx.proxy.base_types
+                torch_fx.proxy.base_types = (*torch_fx.proxy.base_types, intc)
+
             traced_model = concrete_trace(model, {'img': img_tensor},
                                           use_function_patch = False, forwrad_function_name='forward_dummy',
                                           autowrap_leaf_function = {
@@ -263,7 +270,9 @@ for config_file in (*config_files_correct,):
             ), fake_middle_class = (
                 mmdet_core.anchor.anchor_generator.AnchorGenerator,
             ))
-            # print('traced code:\n', traced_model.code)
+
+            if config_file == 'pvt/retinanet_pvt-l_fpn_1x_coco':
+                torch_fx.proxy.base_types = orig_base_types
 
             torch.manual_seed(100)
             out_orig_traced = traced_model(img_tensor)
@@ -277,7 +286,7 @@ for config_file in (*config_files_correct,):
     except Exception as e:
         print('\n\nmodel file:', config_file)
         print('status: exception')
-        print('exception:', e.with_traceback(sys.exc_info()[2]))
+        traceback.print_exc()
     else:
         print('\n\nmodel file:', config_file)
         print('status: done')

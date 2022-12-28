@@ -520,7 +520,6 @@ class ConcreteTracer(TracerBase):
                 such as '__main__.FooModel' or '__main__.bar_func'. the namespace is
                 always needed.
         """
-        OperatorPatcherContext.create(self, use_operator_patch, operator_patch_backlist)
         if isinstance(root, torch.nn.Module):
             self.root = root
 
@@ -867,11 +866,11 @@ class ConcreteTracer(TracerBase):
             _autowrap_check(self.patcher, fn_globals, self._autowrap_function_ids, self.autowrap_leaf_pairs)
             for module in self._autowrap_search:
                 _autowrap_check(self.patcher, module.__dict__, self._autowrap_function_ids, self.autowrap_leaf_pairs)
-            self.create_node('output', 'output', (self.create_arg(OperatorPatcherContext.patch_run(fn, *args, *more_args, **kwargs)),), {},
-                            type_expr=fn.__annotations__.get('return', None))
+            with OperatorPatcherContext(self, use_operator_patch, operator_patch_backlist):
+                self.create_node('output', 'output', (self.create_arg(OperatorPatcherContext.patch_run(fn, *args, *more_args, **kwargs)),),
+                                 {}, type_expr=fn.__annotations__.get('return', None))
 
         self.submodule_paths = None
-        OperatorPatcherContext.exit(self)
         return self.graph
 
 # List of pairs of (global dict, function name) functions
