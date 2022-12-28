@@ -33,12 +33,9 @@ dummy_input = tokenizer("I like you. I love you", return_tensors="pt")
 model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
 traced_model = concrete_trace(
-    model, 
+    model,
     dummy_input,
     use_function_patch=True,
-    autowrap_leaf_function={
-        **ConcreteTracer.default_autowrap_leaf_function,
-    },
     autowrap_leaf_class={
         torch.finfo:                                ((), False),
         modeling_outputs.SequenceClassifierOutput:  ((), False),
@@ -53,5 +50,5 @@ with torch.no_grad():
 
     assert check_equal(output_origin, output_traced), 'check_equal failed.'
 
-print("traced code:\n", traced_model.code)
+print("traced code:", traced_model.code)
 print("trace succeeded!")
