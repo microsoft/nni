@@ -24,7 +24,7 @@
     "jest-environment-jsdom-fourteen": "^1.0.1",
     "jest-resolve": "^27.0.4",
     "jest-watch-typeahead": "^0.6.4",
-    "json5": "^2.1.1",
+    "json5": "^2.2.2",
     "mini-css-extract-plugin": "^1.6.0",
     "monaco-editor": "^0.25.0",
     "monaco-editor-webpack-plugin": "^4.0.0",
