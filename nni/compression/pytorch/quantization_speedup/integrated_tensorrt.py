@@ -16,12 +16,6 @@ TRT8 = 8
 TRT_LOGGER = trt.Logger()
 logger = logging.getLogger(__name__)
 
-# class CalibrateType:
-#     LEGACY = trt.CalibrationAlgoType.LEGACY_CALIBRATION
-#     ENTROPY = trt.CalibrationAlgoType.ENTROPY_CALIBRATION
-#     ENTROPY2 = trt.CalibrationAlgoType.ENTROPY_CALIBRATION_2
-#     MINMAX = trt.CalibrationAlgoType.MINMAX_CALIBRATION
-
 Precision_Dict = {
     8: trt.int8,
     16: trt.float16,

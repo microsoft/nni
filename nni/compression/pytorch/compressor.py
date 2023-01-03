@@ -733,7 +733,7 @@ class Quantizer(Compressor):
         # bound bn module to corresponding conv module
         bn_module = None
         if layer.name in self.conv_bn_patterns:
-            print('has batchnorm layer name: ', layer.name)
+            _logger.info('Has batchnorm layer name: %s', layer.name)
             bn_module_name = self.conv_bn_patterns[layer.name]
             for name, module in self.bound_model.named_modules():
                 if name == bn_module_name:

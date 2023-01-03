@@ -75,7 +75,6 @@ def unwrapper(model_onnx, index2name, config):
             model_onnx.graph.node.remove(mul_nd)
             idx = idx-2
         idx = idx+1
-    #print('onnx_config:', onnx_config)
     return model_onnx, onnx_config
 
 def torch_to_onnx(model, config, input_shape, model_path, input_names, output_names):
@@ -127,7 +126,6 @@ def torch_to_onnx(model, config, input_shape, model_path, input_names, output_na
     device = torch.device('cpu')
     dummy_input = torch.randn(input_shape)
     dummy_input = dummy_input.to(device)
-    #model.to('cpu')
     model.to(device)
     torch.onnx.export(model, dummy_input, model_path, verbose=False, input_names=input_names, output_names=output_names, export_params=True)
     # Load onnx model
