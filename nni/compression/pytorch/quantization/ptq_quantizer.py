@@ -188,7 +188,6 @@ class PtqQuantizer(Quantizer):
         self.evaluator.bind_model(self.bound_model)
         data_collector = self._prepare_data_collectors()
         data = data_collector.collect(mode='predict')
-        print('collected data: ', data)
 
         quant_result_conf = {}
         for layer, _ in self.get_modules_to_compress():
@@ -237,7 +236,6 @@ class PtqQuantizer(Quantizer):
         self.compressed = True
         # for removing hooks
         self.evaluator.unbind_model()
-        print('quant resulting config: ', quant_result_conf)
         return self.bound_model, quant_result_conf
 
     def _oneshot_fold_bn(self):

@@ -150,13 +150,11 @@ def config_network_precision(network, config):
         # assume the traverse order is topological
         layer = network.get_layer(layer_idx)
         if layer.name in config:
-            print('the layer name in config: ', layer.name)
             if layer.name[0:4] == 'Gemm':
                 _handle_gemm(layer, config[layer.name], out2layer, in2layer)
             else:
                 apply_precision_to_layer(layer, config[layer.name])
         else:
-            print('the layer name out of config: ', layer.name)
             precision, dynamic_range = propagate_from_low_bit_predecessor(layer, out2layer)
             if precision:
                 layer.precision = precision
