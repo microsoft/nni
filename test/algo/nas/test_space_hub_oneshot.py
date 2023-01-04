@@ -212,7 +212,7 @@ def test_hub_oneshot(space_type, strategy_type):
     model_space = _hub_factory(space_type)
 
     dataset_type = 'cifar10'
-    if 'imagenet' in space_type or space_type in ['mobilenetv3', 'proxylessnas', 'shufflenet', 'autoformer']:
+    if 'imagenet' in space_type or space_type in ['mobilenetv3', 'mobilenetv3_small', 'proxylessnas', 'shufflenet', 'autoformer']:
         dataset_type = 'imagenet'
 
     subset_size = 4
@@ -231,7 +231,8 @@ def test_hub_oneshot(space_type, strategy_type):
         gpus=1 if torch.cuda.is_available() else 0,  # 0 for my debug
         logger=False,  # disable logging and checkpoint to avoid too much log
         enable_checkpointing=False,
-        enable_model_summary=False
+        enable_model_summary=False,
+        num_classes=10 if dataset_type == 'cifar10' else 1000,
         # profiler='advanced'
     )
 

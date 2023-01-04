@@ -3,12 +3,11 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
-from .common.serializer import dump
 from .runtime.env_vars import trial_env_vars
-from .runtime import platform
-from .typehint import Parameters, TrialMetric
+from .runtime.trial_command_channel import get_default_trial_command_channel
+from .typehint import Parameters, TrialMetric, ParameterRecord
 
 __all__ = [
     'get_next_parameter',
@@ -22,10 +21,10 @@ __all__ = [
 ]
 
 
-_params = None
-_experiment_id = platform.get_experiment_id()
-_trial_id = platform.get_trial_id()
-_sequence_id = platform.get_sequence_id()
+_params: ParameterRecord | None = None
+_experiment_id = trial_env_vars.NNI_EXP_ID or 'STANDALONE'
+_trial_id = trial_env_vars.NNI_TRIAL_JOB_ID or 'STANDALONE'
+_sequence_id = int(trial_env_vars.NNI_TRIAL_SEQ_ID) if trial_env_vars.NNI_TRIAL_SEQ_ID is not None else 0
 
 
 def get_next_parameter() -> Parameters:
@@ -61,7 +60,7 @@ def get_next_parameter() -> Parameters:
         A hyperparameter set sampled from search space.
     """
     global _params
-    _params = platform.get_next_parameter()
+    _params = get_default_trial_command_channel().receive_parameter()
     if _params is None:
         return None  # type: ignore
     return _params['parameters']
@@ -130,15 +129,14 @@ def report_intermediate_result(metric: TrialMetric | dict[str, Any]) -> None:
     global _intermediate_seq
     assert _params or trial_env_vars.NNI_PLATFORM is None, \
         'nni.get_next_parameter() needs to be called before report_intermediate_result'
-    dumped_metric = dump({
-        'parameter_id': _params['parameter_id'] if _params else None,
-        'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
-        'type': 'PERIODICAL',
-        'sequence': _intermediate_seq,
-        'value': dump(metric)
-    })
+    get_default_trial_command_channel().send_metric(
+        parameter_id=_params['parameter_id'] if _params else None,
+        trial_job_id=trial_env_vars.NNI_TRIAL_JOB_ID,
+        type='PERIODICAL',
+        sequence=_intermediate_seq,
+        value=cast(TrialMetric, metric)
+    )
     _intermediate_seq += 1
-    platform.send_metric(dumped_metric)
 
 def report_final_result(metric: TrialMetric | dict[str, Any]) -> None:
     """
@@ -158,11 +156,10 @@ def report_final_result(metric: TrialMetric | dict[str, Any]) -> None:
     """
     assert _params or trial_env_vars.NNI_PLATFORM is None, \
         'nni.get_next_parameter() needs to be called before report_final_result'
-    dumped_metric = dump({
-        'parameter_id': _params['parameter_id'] if _params else None,
-        'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
-        'type': 'FINAL',
-        'sequence': 0,
-        'value': dump(metric)
-    })
-    platform.send_metric(dumped_metric)
+    get_default_trial_command_channel().send_metric(
+        parameter_id=_params['parameter_id'] if _params else None,
+        trial_job_id=trial_env_vars.NNI_TRIAL_JOB_ID,
+        type='FINAL',
+        sequence=0,
+        value=cast(TrialMetric, metric)
+    )

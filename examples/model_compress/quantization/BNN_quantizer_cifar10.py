@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.algorithms.compression.pytorch.quantization import BNNQuantizer
+from nni.compression.pytorch.quantization import BNNQuantizer
 
 
 class VGG_Cifar10(nn.Module):
@@ -134,11 +134,11 @@ def main():
         'op_names': ['features.6', 'features.9', 'features.13', 'features.16', 'features.20', 'classifier.2', 'classifier.5']
     }]
 
-    quantizer = BNNQuantizer(model, configure_list)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
+    quantizer = BNNQuantizer(model, configure_list, optimizer)
     model = quantizer.compress()
 
     print('=' * 10 + 'train' + '=' * 10)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
     best_top1 = 0
     for epoch in range(400):
         print('# Epoch {} #'.format(epoch))

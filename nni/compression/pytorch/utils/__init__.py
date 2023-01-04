@@ -1,10 +1,48 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# v2
+from .attr import (
+    get_nested_attr,
+    set_nested_attr
+)
+from .config_validation import CompressorSchema
+from .constructor_helper import (
+    OptimizerConstructHelper,
+    LRSchedulerConstructHelper
+)
+from .evaluator import (
+    Evaluator,
+    LightningEvaluator,
+    TorchEvaluator,
+    TransformersEvaluator,
+    Hook,
+    BackwardHook,
+    ForwardHook,
+    TensorHook
+)
+from .pruning import (
+    config_list_canonical,
+    unfold_config_list,
+    dedupe_config_list,
+    compute_sparsity_compact2origin,
+    compute_sparsity_mask2compact,
+    compute_sparsity,
+    get_model_weights_numel,
+    get_module_by_name,
+    get_output_batch_dims
+)
+from .scaling import Scaling
+from .check_ddp import (
+    check_ddp_model,
+    reset_ddp_model,
+    all_reduce_on_multiple_gpus
+)
+
+# v1
 from .counter import count_flops_params
 from .mask_conflict import ChannelMaskConflict, GroupMaskConflict
 from .utils import *
-from .sensitivity_analysis import SensitivityAnalysis
 from .shape_dependency import *
 
 def not_safe_to_prune(model, dummy_input):

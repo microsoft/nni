@@ -6,13 +6,6 @@ schedules:
     include: [ master ]
   always: true
 
-resources:
-  repositories:
-    - repository: azpfilter
-      type: github
-      name: microsoft/azure-pipeline-filter
-      endpoint: github-filter-connection
-
 variables:
   filter.modified.globs: 'examples/nas/**,nni/algorithms/nas/**,nni/nas/**,nni/retiarii/**,pipelines/full-test-nas.yml,test/ut/nas/**,test/algo/nas/**'
   filter.prbody.heading: '#### Test Options'

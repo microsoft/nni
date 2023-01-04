@@ -88,13 +88,6 @@ testCases:
   launchCommand: nnictl create --config $configFile --debug
   trainingService: remote pai kubeflow frameworkcontroller dlts
 
-# TODO: move this and following commented test cases to pytorch or tf2
-#- name: mnist-annotation
-#  configFile: test/training_service/config/examples/mnist-annotation.yml
-#  config:
-#    maxTrialNum: 1
-#    trialConcurrency: 1
-
 - name: cifar10-pytorch
   configFile: test/training_service/config/examples/cifar10-pytorch.yml
   config:
@@ -194,47 +187,6 @@ testCases:
 
 - name: assessor-medianstop
   configFile: test/training_service/config/assessors/medianstop.yml
-
-#########################################################################
-# nni tuners test
-#########################################################################
-#- name: tuner-annel
-#  configFile: test/training_service/config/tuners/anneal.yml
-
-#- name: tuner-evolution
-#  configFile: test/training_service/config/tuners/evolution.yml
-
-#- name: tuner-random
-#  configFile: test/training_service/config/tuners/random.yml
-
-#- name: tuner-smac
-#  configFile: test/training_service/config/tuners/smac.yml
-#  platform: linux darwin
-
-#- name: tuner-tpe
-#  configFile: test/training_service/config/tuners/tpe.yml
-
-#- name: tuner-batch
-#  configFile: test/training_service/config/tuners/batch.yml
-
-#- name: tuner-bohb
-#  configFile: test/training_service/config/tuners/bohb.yml
-#  platform: linux darwin
-
-#- name: tuner-gp
-#  configFile: test/training_service/config/tuners/gp.yml
-
-#- name: tuner-grid
-#  configFile: test/training_service/config/tuners/gridsearch.yml
-
-#- name: tuner-hyperband
-#  configFile: test/training_service/config/tuners/hyperband.yml
-
-#- name: tuner-metis
-#  configFile: test/training_service/config/tuners/metis.yml
-
-# - name: tuner-regularized_evolution
-#   configFile: test/training_service/config/tuners/regularized_evolution_tuner.yml
 
 #########################################################################
 # nni customized-tuners test

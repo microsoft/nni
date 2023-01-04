@@ -12,6 +12,7 @@ from typing import NewType, Any
 import nni
 from nni.common.version import version_check
 
+
 # NOTE: this is only for passing flake8, we cannot import RetiariiAdvisor
 # because it would induce cycled import
 RetiariiAdvisor = NewType('RetiariiAdvisor', Any)

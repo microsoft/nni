@@ -54,7 +54,7 @@ steps:
 
 - task: NodeTool@0
   inputs:
-    versionSpec: 16.13.2
+    versionSpec: 18.12.1
   displayName: Configure Node.js version
 
 - script: |

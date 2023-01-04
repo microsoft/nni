@@ -31,7 +31,7 @@ author = 'Microsoft'
 version = ''
 # The full version, including alpha/beta/rc tags
 # FIXME: this should be written somewhere globally
-release = 'v2.8'
+release = 'v2.10'
 
 # -- General configuration ---------------------------------------------------
 
@@ -113,6 +113,8 @@ linkcheck_ignore = [
     r'https://www\.openml\.org/',                           # OpenML
     r'https://ml\.informatik\.uni-freiburg\.de/',
     r'https://docs\.nvidia\.com/deeplearning/',
+    r'https://cla\.opensource\.microsoft\.com',
+    r'https://www\.docker\.com/',
 ]
 
 # Ignore all links located in release.rst
