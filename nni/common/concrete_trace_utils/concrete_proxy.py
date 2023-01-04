@@ -375,25 +375,23 @@ def map_aggregate_not_proxy(a, fn):
 
 # register or wrap common methods on 'ConcreteProxy'
 # for method in magic_methods:
-if hasattr(fx.graph, 'inplace_methods'):
-    from torch.fx.graph import inplace_methods
-else:
-    inplace_methods = {
-        'iadd': '{} += {}',
-        'iand': '{} &= {}',
-        'ifloordiv': '{} //= {}',
-        'ilshift': '{} <<= {}',
-        'imod': '{} %= {}',
-        'imul': '{} *= {}',
-        'imatmul': '{} @= {}',
-        'ior': '{} |= {}',
-        'ipow': '{} **= {}',
-        'irshift': '{} >>= {}',
-        'isub': '{} -= {}',
-        'itruediv': '{} /= {}',
-        'ixor': '{} ^= {}',
-        'setitem': '{}[{}] = {}',
-    }
+# torch.fx.graph.inplace_methods may not exist on some verion of pytorch
+inplace_methods = {
+    'iadd': '{} += {}',
+    'iand': '{} &= {}',
+    'ifloordiv': '{} //= {}',
+    'ilshift': '{} <<= {}',
+    'imod': '{} %= {}',
+    'imul': '{} *= {}',
+    'imatmul': '{} @= {}',
+    'ior': '{} |= {}',
+    'ipow': '{} **= {}',
+    'irshift': '{} >>= {}',
+    'isub': '{} -= {}',
+    'itruediv': '{} /= {}',
+    'ixor': '{} ^= {}',
+    'setitem': '{}[{}] = {}',
+}
 for method in {**magic_methods, **inplace_methods}:
     def _scope(method):
         def impl(*args, **kwargs):
