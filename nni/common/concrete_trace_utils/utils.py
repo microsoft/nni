@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import builtins
 import operator
 from typing import Any, Callable, Type

@@ -27,7 +27,7 @@ from torch.fx.node import Target, Node
 from torch.fx.proxy import TracerBase
 
 from . import concrete_proxy as ep
-from .operator_patcher import OperatorPatcher, OperatorPatcherContext
+from .operator_patcher import OperatorPatcherContext
 from .utils import (
     _orig_module_call,
     _orig_module_getattr,
@@ -386,7 +386,8 @@ class ConcreteTracer(TracerBase):
         """
         similar to _symbolic_trace.Tracer.is_leaf_module
         """
-        return (m.__module__.startswith('torch.nn') and not _orig_isinstance(m, (Sequential, ModuleList, ModuleDict))) or _orig_isinstance(m, self.leaf_module)
+        return (m.__module__.startswith('torch.nn') and not _orig_isinstance(m, (Sequential, ModuleList, ModuleDict)))\
+            or _orig_isinstance(m, self.leaf_module)
 
     @compatibility(is_backward_compatible=True)
     def path_of_module(self, mod: torch.nn.Module) -> str:
@@ -865,7 +866,8 @@ class ConcreteTracer(TracerBase):
                 for module in self._autowrap_search:
                     _autowrap_check(self.patcher, module.__dict__, self._autowrap_function_ids, self.autowrap_leaf_pairs)
                 with OperatorPatcherContext(self, use_operator_patch, operator_patch_backlist):
-                    self.create_node('output', 'output', (self.create_arg(OperatorPatcherContext.patch_run(fn, *args, *more_args, **kwargs)),),
+                    self.create_node('output', 'output',
+                                    (self.create_arg(OperatorPatcherContext.patch_run(fn, *args, *more_args, **kwargs)),),
                                     {}, type_expr=fn.__annotations__.get('return', None))
         finally:
             # for cuda versions of pytorch, autograd.Function.apply should be reverted manually

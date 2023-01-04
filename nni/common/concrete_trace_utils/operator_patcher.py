@@ -1,6 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .concrete_tracer import ConcreteTracer
+
 import ast
 import inspect
 import logging
@@ -10,10 +14,6 @@ from types import MethodType, FunctionType
 from typing import List, Optional
 
 import torch
-
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from .concrete_tracer import ConcreteTracer
 
 from .utils import (
     _orig_type,

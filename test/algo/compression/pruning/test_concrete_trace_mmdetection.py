@@ -147,8 +147,7 @@ config_files_now = (
     'wider_face/ssd300_wider_face',
 )
 
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-device = torch.device('cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def check_equal(a, b):
     if type(a) != type(b):
