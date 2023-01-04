@@ -11,7 +11,6 @@ import operator
 from typing import List, Optional, Iterable, Any, Set, Union
 
 import torch
-from torch import fx
 from torch.fx._compatibility import compatibility
 from torch.fx.graph import magic_methods, reflectable_magic_methods
 from torch.fx.node import Node
