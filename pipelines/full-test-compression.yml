@@ -49,7 +49,10 @@ stages:
 
     - script: |
         cd test/algo
+        rm -rf ../mmdetection
+        git clone https://github.com/open-mmlab/mmdetection.git ../mmdetection
         python -m pytest compression
+        rm -rf ../mmdetection
       displayName: Compression unit test
 
     - script: |

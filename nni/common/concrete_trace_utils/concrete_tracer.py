@@ -697,32 +697,25 @@ class ConcreteTracer(TracerBase):
                 return id(self)
         type_wrapper = type_wrapper_clz()
 
-        class AGFuncWrapper(torch.autograd.Function):
-            @staticmethod
-            def forward(ctx, clz, *args, **kwargs):
-                return clz.forward(ctx, *args, **kwargs)
-            @staticmethod
-            def backward(ctx, clz, *args, **kwargs):
-                return clz.backward(ctx, *args, **kwargs)
-            @staticmethod
-            def jvp(ctx, clz, *args, **kwargs):
-                return clz.jvp(ctx, *args, **kwargs)
-            @staticmethod
-            def vjp(ctx, clz, *args, **kwargs):
-                return clz.vjp(ctx, *args, **kwargs)
-        _orig_agfunc_wapper_apply = AGFuncWrapper.apply
-
         @classmethod
         @functools.wraps(_orig_agfunc_apply)
         def agfunc_apply_wrapper(clz, *args, **kwargs):
-            if self.temp_disable_agfunc_apply:
-                return _orig_agfunc_wapper_apply(clz, *args, **kwargs)
+            if clz not in self.agfunc_dict:
+                self.agfunc_dict[clz] = torch._C._FunctionBase.__dict__['apply'].__get__(None, clz)
+            if self.temp_disable_agfunc_apply or self.temp_disable_call:
+                return self.agfunc_dict[clz](*args, **kwargs)
+            tracers = _orig_set()
+            def unwrap_detect_tracers(obj):
+                if isinstance(obj, ep.ConcreteProxy):
+                    tracers.add(obj.tracer)
+            ep.map_aggregate_not_proxy(args, unwrap_detect_tracers)
+            ep.map_aggregate_not_proxy(kwargs, unwrap_detect_tracers)
+            if _orig_len(tracers) == 0:
+                return self.agfunc_dict[clz](*args, **kwargs)
+            elif _orig_len(tracers) == 1 and next(iter(tracers)) == self:
+                return self.create_proxy('call_function', self.agfunc_dict[clz], args, kwargs)
             else:
-                temp_disable_agfunc_apply = self.temp_disable_agfunc_apply
-                self.temp_disable_agfunc_apply = True
-                ret = self.create_proxy('call_method', 'apply', (clz, *args), kwargs)
-                self.temp_disable_agfunc_apply = temp_disable_agfunc_apply
-                return ret
+                raise Exception('more than 1 tracer detected. please report the issue')
 
         @functools.wraps(_orig_torch_assert)
         def torch_assert_wrapper(condition, message):
@@ -730,6 +723,7 @@ class ConcreteTracer(TracerBase):
                 condition = condition.value
             return _orig_torch_assert(condition, message)
 
+        self.agfunc_dict: dict[type, tuple[MethodType, MethodType]] = {}
         self.autowrap_leaf_pairs = {
             id(_orig_torch_assert): torch_assert_wrapper,
         }
@@ -740,7 +734,10 @@ class ConcreteTracer(TracerBase):
                 and func.__module__ is None and func.__name__ == 'apply' \
                 and hasattr(func, '__self__') and issubclass(func.__self__, torch.autograd.Function):
                 # torch.autograd.function
-                wrapped = _create_wrapped_leaf_func(self, func, to_func)
+                assert to_func == None, '<subclass of torch.autograd.Function>.apply should set to_func to None!'
+                if func.__self__ not in self.agfunc_dict:
+                    self.agfunc_dict[func.__self__] = func
+                wrapped = _create_wrapped_leaf_func(self, func, self.agfunc_dict[func.__self__])
             else:
                 if func.__qualname__.startswith('_TensorBase'):
                     positions = (*positions, (torch.Tensor, func.__name__))
@@ -842,33 +839,38 @@ class ConcreteTracer(TracerBase):
         self.temp_disable_call_level = 0
         self.temp_disable_attr_level = 0
         self.temp_disable_agfunc_apply_level = 0
-        with _Patcher() as self.patcher:
-            # allow duplicate patches to support the case of nested calls
-            self.patcher.patch_method(torch.nn.Module, "__getattribute__", module_getattribute_wrapper, deduplicate=False)
+        try:
+            with _Patcher() as self.patcher:
+                # allow duplicate patches to support the case of nested calls
+                self.patcher.patch_method(torch.nn.Module, "__getattribute__", module_getattribute_wrapper, deduplicate=False)
 
-            self.patcher.patch_method(torch.nn.Module, "__call__", module_call_wrapper, deduplicate=False)
-            self.patcher.patch_method(torch.autograd.Function, "apply", agfunc_apply_wrapper, deduplicate=False)
-            self.patcher.patch_method(torch, "_assert", torch_assert_wrapper, deduplicate=False)
+                self.patcher.patch_method(torch.nn.Module, "__call__", module_call_wrapper, deduplicate=False)
+                self.patcher.patch_method(torch.autograd.Function, "apply", agfunc_apply_wrapper, deduplicate=False)
+                self.patcher.patch_method(torch, "_assert", torch_assert_wrapper, deduplicate=False)
 
-            self.patcher.patch_method(builtins, "map", map_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "enumerate", enumerate_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "range", range_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "type", type_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "isinstance", isinstance_wrapper, deduplicate=False)
-            self.patcher.patch_method(builtins, "getattr", getattr_wrapper, deduplicate=False)
+                self.patcher.patch_method(builtins, "map", map_wrapper, deduplicate=False)
+                self.patcher.patch_method(builtins, "enumerate", enumerate_wrapper, deduplicate=False)
+                self.patcher.patch_method(builtins, "range", range_wrapper, deduplicate=False)
+                self.patcher.patch_method(builtins, "type", type_wrapper, deduplicate=False)
+                self.patcher.patch_method(builtins, "isinstance", isinstance_wrapper, deduplicate=False)
+                self.patcher.patch_method(builtins, "getattr", getattr_wrapper, deduplicate=False)
 
-            for obj, (positions, wrapped) in self.wrapped_leaf.items():
-                for path, name in positions:
-                    self.patcher.patch_method(path, name, wrapped, deduplicate=False)
-                self.autowrap_leaf_pairs[id(obj)] = wrapped
+                for obj, (positions, wrapped) in self.wrapped_leaf.items():
+                    for path, name in positions:
+                        self.patcher.patch_method(path, name, wrapped, deduplicate=False)
+                    self.autowrap_leaf_pairs[id(obj)] = wrapped
 
-            _patch_wrapped_functions(self.patcher)
-            _autowrap_check(self.patcher, fn_globals, self._autowrap_function_ids, self.autowrap_leaf_pairs)
-            for module in self._autowrap_search:
-                _autowrap_check(self.patcher, module.__dict__, self._autowrap_function_ids, self.autowrap_leaf_pairs)
-            with OperatorPatcherContext(self, use_operator_patch, operator_patch_backlist):
-                self.create_node('output', 'output', (self.create_arg(OperatorPatcherContext.patch_run(fn, *args, *more_args, **kwargs)),),
-                                 {}, type_expr=fn.__annotations__.get('return', None))
+                _patch_wrapped_functions(self.patcher)
+                _autowrap_check(self.patcher, fn_globals, self._autowrap_function_ids, self.autowrap_leaf_pairs)
+                for module in self._autowrap_search:
+                    _autowrap_check(self.patcher, module.__dict__, self._autowrap_function_ids, self.autowrap_leaf_pairs)
+                with OperatorPatcherContext(self, use_operator_patch, operator_patch_backlist):
+                    self.create_node('output', 'output', (self.create_arg(OperatorPatcherContext.patch_run(fn, *args, *more_args, **kwargs)),),
+                                    {}, type_expr=fn.__annotations__.get('return', None))
+        finally:
+            # for cuda versions of pytorch, autograd.Function.apply should be reverted manually
+            delattr(torch.autograd.Function, 'apply')
+            pass
 
         self.submodule_paths = None
         return self.graph
@@ -1169,7 +1171,7 @@ def _create_wrapped_leaf_iterable_class(tracer: ConcreteTracer, clz):
     clz_wrapper = clz_wrapper_clz()
     for name in dir(clz):
         attr = _orig_getattr(clz, name)
-        if not name.startswith('_'):
+        if not name.startswith('_') or name in ('__getitem__', '__setitem__', '__iter__', '__len__'):
             if _orig_isinstance(attr, Callable):
                 setattr(clz_wrapper, name, _create_wrapped_leaf_method(tracer, attr, name, None))
             else:
@@ -1215,13 +1217,18 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
     )
     graph = tracer.trace(root, concrete_args, use_function_patch, function_patch_backlist, forwrad_function_name)
     graph_check = tracer.trace(root, concrete_args, use_function_patch, function_patch_backlist, forwrad_function_name)
+    # compare to check equal
+    assert len(graph.nodes) == len(graph_check.nodes)
     for node_a, node_b in zip(graph.nodes, graph_check.nodes):
         node_a: Node
         node_b: Node
-        # TODO: better infomation
         if node_a.op == 'get_attr' and node_a.name.startswith('_tensor_constant'):
             assert node_b.op == 'get_attr' and node_b.name.startswith('_tensor_constant')
             assert torch.equal(getattr(root, node_a.name), getattr(root, node_b.name))
+        elif node_a.op == 'call_function' and node_a.target.__name__ == 'apply' and\
+            hasattr(node_a.target, '__self__') and issubclass(node_a.target.__self__, torch.autograd.Function):
+            assert node_b.op == 'call_function' and node_b.target.__name__ == 'apply' and\
+            hasattr(node_b.target, '__self__') and issubclass(node_b.target.__self__, torch.autograd.Function)
         else:
             assert node_a.op == node_b.op and node_a.target == node_b.target
 

@@ -26,7 +26,6 @@ def check_equal(a, b):
     else:
         return a == b
 
-torch.manual_seed(806)
 model_name = "distilbert-base-uncased-finetuned-sst-2-english"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 dummy_input = tokenizer("I like you. I love you", return_tensors="pt")
