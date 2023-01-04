@@ -20,9 +20,10 @@ from . import concrete_tracer as et
 from .utils import (
     _orig_tuple,
     _orig_list,
+    _orig_type,
     _orig_isinstance,
-    _orig_range,
     _orig_getattr,
+    _orig_range,
     _orig_dict,
     _orig_len,
     _orig_index,
@@ -281,6 +282,7 @@ class ConcreteUnpackIterProxy(ConcreteProxy):
     """
     A more understandable way to deal with iterables.
     Only support 'tuple' and 'list'. Will transfer un-subscriptables such as 'set', to 'tuple'.
+    todo: support for 'zip'
 
     examples:
         1. `a, b = c` =>
@@ -360,8 +362,8 @@ def map_aggregate_not_proxy(a, fn):
     elif _orig_isinstance(a, _orig_tuple):
         t = _orig_tuple(map_aggregate_not_proxy(elem, fn) for elem in a)
         # Support NamedTuple (if it has `_fields`) by repacking into original type.
-        return t if not hasattr(a, '_fields') else type(a)(*t)
-    elif _orig_isinstance(a, _orig_list):
+        return t if not hasattr(a, '_fields') else _orig_type(a)(*t)
+    elif _orig_type(a) == _orig_list:
         return _orig_list(map_aggregate_not_proxy(elem, fn) for elem in a)
     elif _orig_isinstance(a, _orig_dict):
         return _orig_dict((k, map_aggregate_not_proxy(v, fn)) for k, v in a.items())

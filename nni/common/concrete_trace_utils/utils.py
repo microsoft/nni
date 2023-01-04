@@ -7,11 +7,13 @@ import torch
 
 # These need to run in global scope to handle nested calls correctly
 _orig_module_call: Callable = torch.nn.Module.__call__
+_orig_module_getattr: Callable = torch.nn.Module.__getattr__
 _orig_module_getattribute: Callable = torch.nn.Module.__getattribute__
 
 _orig_agfunc_apply: Callable = torch.autograd.function.Function.apply
 _orig_torch_assert: Callable = torch._assert
 
+_orig_type: Callable = builtins.type
 _orig_isinstance: Callable = builtins.isinstance
 _orig_getattr: Callable = builtins.getattr
 
@@ -60,7 +62,7 @@ def map_recursive(fn: Callable, arg) -> Any:
     if (not _orig_isinstance(arg, torch.Size)) and _orig_isinstance(arg, _orig_tuple):
         t = _orig_tuple(map_recursive(fn, elem) for elem in arg)
         # Support NamedTuple (if it has `_fields`) by repacking into original type.
-        return t if not hasattr(arg, '_fields') else type(arg)(*t)
+        return t if not hasattr(arg, '_fields') else _orig_type(arg)(*t)
     elif _orig_isinstance(arg, _orig_list):
         return _orig_list(map_recursive(fn, elem) for elem in arg)
     elif _orig_isinstance(arg, _orig_dict):
