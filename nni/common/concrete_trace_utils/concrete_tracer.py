@@ -18,6 +18,7 @@ from contextlib import contextmanager
 import torch
 from torch._C import ScriptObject
 from torch.nn.modules.container import Sequential, ModuleList, ModuleDict, ParameterList, ParameterDict
+from torch.nn import functional as nn_functional
 
 from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
@@ -120,14 +121,14 @@ class ConcreteTracer(TracerBase):
         # use getattr to pass type check
         getattr(torch._C._VariableFunctions, 'split'): ([], False, None),
     }
-    for name in dir(torch.nn.functional):
-        attr = getattr(torch.nn.functional, name)
+    for name in dir(nn_functional):
+        attr = getattr(nn_functional, name)
         if callable(attr) and not _orig_isinstance(attr, Type) and not name.startswith('__')\
             and getattr(attr, '__module__', None) not in ('typing', 'torch.nn.modules.utils'):
             if attr not in default_autowrap_leaf_function:
                 default_autowrap_leaf_function[attr] = ([], False, getattr(torch.functional, name, None))
             if hasattr(attr, '__module__') and attr.__module__ != 'torch.nn.functional':
-                default_autowrap_leaf_function[attr][0].append((torch.nn.functional, name))
+                default_autowrap_leaf_function[attr][0].append((nn_functional, name))
     for name in dir(torch._C._VariableFunctions):
         attr = getattr(torch._C._VariableFunctions, name)
         if callable(attr) and not _orig_isinstance(attr, Type) and not name.startswith('__'):
