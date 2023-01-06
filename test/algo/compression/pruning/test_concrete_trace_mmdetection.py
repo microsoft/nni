@@ -14,7 +14,7 @@ from mmdet.datasets import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
 from nni.common.concrete_trace_utils import concrete_trace, ConcreteTracer
 
-folder_prefix = '../../../mmdetection' # replace this path with yours
+folder_prefix = '../../mmdetection' # replace this path with yours
 img = '%s/tests/data/color.jpg' % folder_prefix
 
 config_files_correct = (

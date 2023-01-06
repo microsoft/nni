@@ -42,9 +42,8 @@ stages:
 
     - script: |
         cd test/algo
-        ls -al
+        pwd
         rm -rf ../mmdetection
-        ls -al ..
         git clone https://github.com/open-mmlab/mmdetection.git ../mmdetection
         python -m pip install -U openmim
         python -m mim install mmcv-full

@@ -18,7 +18,6 @@ from contextlib import contextmanager
 import torch
 from torch._C import ScriptObject
 from torch.nn.modules.container import Sequential, ModuleList, ModuleDict, ParameterList, ParameterDict
-from torch.nn import functional as nn_functional
 
 from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
@@ -121,6 +120,9 @@ class ConcreteTracer(TracerBase):
         # use getattr to pass type check
         getattr(torch._C._VariableFunctions, 'split'): ([], False, None),
     }
+    # equals to `from torch.nn import functional as nn_functional`
+    # to pass pyright check
+    nn_functional = getattr(torch.nn, 'functional')
     for name in dir(nn_functional):
         attr = getattr(nn_functional, name)
         if callable(attr) and not _orig_isinstance(attr, Type) and not name.startswith('__')\
@@ -1053,7 +1055,7 @@ class MagicMethodPatcher:
         elif hasattr(orig_method, '__self__') and issubclass(orig_method.__self__, torch.autograd.Function):
             # for torch.autograd.Function
             return f'{orig_method.__self__.__module__}.{orig_method.__self__.__name__}'
-        for guess in [torch, torch.nn.functional]:
+        for guess in [torch, getattr(torch.nn, 'functional')]:
             if getattr(guess, name, None) is orig_method:
                 return guess.__name__
         raise RuntimeError(f'cannot find module for {orig_method}')
