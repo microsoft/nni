@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Literal, Callable
 
 import torch
 
-from .config import trans_legacy_config_list
+from .config import trans_legacy_config_list, default_config_schema
 from .target_space import TargetSpace, TargetType, DistillationTargetSpace, PruningTargetSpace, QuantizationTargetSpace
 from .wrapper import ModuleWrapper, register_wrappers
 from ..utils import Evaluator, Scaling
@@ -86,7 +86,9 @@ class Compressor:
         return cls(model=model, config_list=new_config_list, evaluator=evaluator, existed_wrappers=existed_wrappers, *args, **kwargs)
 
     def _validate_config(self):
-        pass
+        schema = default_config_schema(self.mode)
+        for config in self.config_list:
+            schema.validate(config)
 
     def wrap_model(self):
         """

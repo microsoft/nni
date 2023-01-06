@@ -14,9 +14,51 @@ from ..utils.evaluator import Evaluator
 
 
 class QATQuantizer(Quantizer):
+    r"""
+    Quantizer defined in:
+    `Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
+    <http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf>`__
+
+    Authors Benoit Jacob and Skirmantas Kligys provide an algorithm to quantize the model with training.
+
+    ..
+
+        We propose an approach that simulates quantization effects in the forward pass of training.
+        Backpropagation still happens as usual, and all weights and biases are stored in floating point
+        so that they can be easily nudged by small amounts.
+        The forward propagation pass however simulates quantized inference as it will happen in the inference engine,
+        by implementing in floating-point arithmetic the rounding behavior of the quantization scheme:
+
+        * Weights are quantized before they are convolved with the input. If batch normalization (see [17]) is used for the layer,
+          the batch normalization parameters are “folded into” the weights before quantization.
+
+        * Activations are quantized at points where they would be during inference,
+          e.g. after the activation function is applied to a convolutional or fully connected layer’s output,
+          or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
+
+    Parameters
+    ----------
+    model
+        Model to be quantized.
+    config_list
+        List of configurations for quantization. Supported keys for dict:
+            - quant_types : List[str]
+                Type of quantization you want to apply, currently support '_input_', 'weight', '_output_'.
+                Note that 
+            - quant_bits : Union[int, Dict[str, int]]
+                Bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
+                When the type is int, all quantization types share same bits length.
+            - quant_start_step : int
+                Disable quantization until model are run by certain number of steps, this allows the network to enter a more stable.
+                State where output quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0.
+            - op_types : List[str]
+                Types of nn.module you want to apply quantization, eg. 'Conv2d'.
+            - op_names : List[str]
+                Names of nn.module you want to apply quantization, eg. 'conv1'.
+            - exclude : bool
+                Set True then the layers setting by op_types and op_names will be excluded from quantization.
     """
-    TODO
-    """
+
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
                  quant_start_step: int = 0):
