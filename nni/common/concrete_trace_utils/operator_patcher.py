@@ -11,7 +11,7 @@ import logging
 
 from textwrap import dedent
 from types import MethodType, FunctionType
-from typing import List, Optional, Any, Callable
+from typing import List, Optional, Callable
 
 import torch
 
