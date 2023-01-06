@@ -46,6 +46,7 @@ stages:
         git clone https://github.com/open-mmlab/mmdetection.git ../mmdetection
         python -m pip install -U openmim
         python -m mim install mmcv-full
+        python -m pip install mmdet
         python -m pytest compression
         rm -rf ../mmdetection
       displayName: Compression unit test

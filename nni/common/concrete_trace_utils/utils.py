@@ -44,18 +44,18 @@ def run_onlyif_instance(cond_type: Type[Any], return_orig: bool = True, return_c
     def helper(fn):
         if return_orig:
             @functools.wraps(fn)
-            def wrapper(*args):
+            def wrapper_orig(*args):
                 if _orig_isinstance(args[-1], cond_type):
                     return fn(*args)
                 return args[-1]
-            return wrapper
+            return wrapper_orig
         else:
             @functools.wraps(fn)
-            def wrapper(*args):
+            def wrapper_const(*args):
                 if _orig_isinstance(args[-1], cond_type):
                     return fn(*args)
                 return return_const
-            return wrapper
+            return wrapper_const
     return helper
 
 def map_recursive(fn: Callable, arg) -> Any:
