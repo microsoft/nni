@@ -24,7 +24,9 @@ _DISTILLATION_TARGET_SPACES = Dict[str, Dict[str, DistillationTargetSpace]]
 
 
 class Compressor:
-    def __init__(self, model: torch.nn.Module, config_list: List[Dict], mode: Literal['pruning', 'quantization', 'distillation'],
+    mode: Literal['pruning', 'quantization', 'distillation']
+
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict],
                  evaluator: Evaluator | None = None, existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         """
         Compressor base class.
@@ -35,14 +37,12 @@ class Compressor:
             Model to be compressed.
         config_list
             Config list. TODO: please refer.
-        mode
-            One of ['pruning', 'quantization', 'distillation'] compress mode.
         evaluator
             TODO: please refer.
         existed_wrappers
             Use by class method ``from_compressor`` to inherit another compressor's wrapper.
         """
-        assert mode in ['pruning', 'quantization', 'distillation']
+        assert self.mode in ['pruning', 'quantization', 'distillation']
         self.bound_model = model
         self.config_list = trans_legacy_config_list(deepcopy(config_list))
         self._validate_config()
@@ -53,7 +53,7 @@ class Compressor:
                 evaluator._init_optimizer_helpers(self.bound_model)
 
         self._is_wrapped = False
-        self._module_wrappers, self._target_spaces = register_wrappers(self.bound_model, self.config_list, mode, existed_wrappers)
+        self._module_wrappers, self._target_spaces = register_wrappers(self.bound_model, self.config_list, self.mode, existed_wrappers)
         self.wrap_model()
 
     @classmethod
@@ -83,7 +83,6 @@ class Compressor:
             _logger.warning('compessor already has evaluator, the new evaluator passed to this function will be ignored.')
         evaluator = compressor.evaluator if compressor.evaluator else evaluator
 
-        # note that here don't have `mode` because subclass should know what its mode is.
         return cls(model=model, config_list=new_config_list, evaluator=evaluator, existed_wrappers=existed_wrappers, *args, **kwargs)
 
     def _validate_config(self):
@@ -150,10 +149,11 @@ class Compressor:
 
 
 class Pruner(Compressor):
+    mode = 'pruning'
+
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None,
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None):
-        super().__init__(model=model, config_list=config_list, mode='pruning', evaluator=evaluator,
-                         existed_wrappers=existed_wrappers)
+        super().__init__(model=model, config_list=config_list, evaluator=evaluator, existed_wrappers=existed_wrappers)
         self._target_spaces: _PRUNING_TARGET_SPACES
         self._register_scalers()
 
@@ -168,6 +168,15 @@ class Pruner(Compressor):
             return 'per_channel'
 
     def get_masks(self) -> Dict[str, Dict[str, torch.Tensor]]:
+        """
+        Get all masks registered in the wrappers.
+
+        Returns
+        -------
+        Dict[str, Dict[str, torch.Tensor]]
+            The masks' format is {module_name: {target_name: target_masks}}.
+            For example, {'layer.0.conv1': {'weight': weight_mask_tensor, 'bias': bias_mask_tensor}}.
+        """
         masks = defaultdict(dict)
         for module_name, wrapper in self._module_wrappers.items():
             for target_name, target_space in wrapper.pruning_target_spaces.items():
@@ -175,18 +184,31 @@ class Pruner(Compressor):
         return masks
 
     def update_masks(self, masks: Dict[str, Dict[str, torch.Tensor]]):
+        """
+        For given masks, update the masks in the wrappers.
+
+        Parameters
+        ----------
+        masks
+            The masks' format should be {module_name: {target_name: target_masks}}.
+            If the module is not registered as a wrapper in the model or the target is not registered as a target space in the compressor,
+            the related masks updating will be ignored.
+        """
         for module_name, target_masks in masks.items():
-            assert module_name in self._module_wrappers, f'{module_name} is not register in this compressor, can not update mask for it.'
+            if module_name not in self._module_wrappers:
+                _logger.warning(f'Wrapper {module_name} is not register in this compressor, the masks will be ignored.')
             wrapper = self._module_wrappers[module_name]
             for target_name, target_mask in target_masks.items():
                 target_space = wrapper.pruning_target_spaces.get(target_name, None)
                 if target_space is None:
+                    _logger.warning(f'Target space `{target_name}` is not in wrapper `{wrapper.name}`, the mask of it will be ignored.')
                     continue
                 if target_mask is None:
                     target_space.mask = None
                 else:
                     assert target_name in wrapper.pruning_target_spaces, \
                         f'{module_name}.{target_name} is not a pruning target, can not update mask for it.'
+                    # NOTE: try to auto get the device of the current module
                     try:
                         device = next(wrapper.parameters()).device
                     except StopIteration:
@@ -221,10 +243,11 @@ class Pruner(Compressor):
 
 
 class Quantizer(Compressor):
+    mode = 'quantization'
+
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None,
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None):
-        super().__init__(model=model, config_list=config_list, mode='quantization', evaluator=evaluator,
-                         existed_wrappers=existed_wrappers)
+        super().__init__(model=model, config_list=config_list, evaluator=evaluator, existed_wrappers=existed_wrappers)
         self._target_spaces: _QUANTIZATION_TARGET_SPACES
         self._register_scalers()
 
@@ -235,7 +258,20 @@ class Quantizer(Compressor):
     def _set_default_sparse_granularity(self, target_space: PruningTargetSpace) -> List[int] | str | None:
         return None
 
-    def get_calibration_config(self) -> Dict[str, Dict[str, torch.Tensor | Any]]:
+    def get_calibration_config(self) -> Dict[str, Dict[str, Dict[str, torch.Tensor | Any]]]:
+        """
+        Get all calibration information in the wrappers.
+
+        Returns
+        -------
+        Dict[str, Dict[str, Dict[str, torch.Tensor | Any]]]
+            The calibration config format is {module_name: {target_name: {info_key: val}}}.
+            By default, info_key contains ['scale', 'zero_point', 'quant_dtype', 'quant_scheme'] and
+            ['tracked_max', 'tracked_min'] if it has.
+
+            NOTE: The internal key of the calibration config for the target is not stable,
+            might be adjusted according to the needs of speedup.
+        """
         calibration_config = defaultdict(dict)
         for module_name, wrapper in self._module_wrappers.items():
             for target_name, target_space in wrapper.quantization_target_spaces.items():
@@ -255,15 +291,32 @@ class Quantizer(Compressor):
 
 
 class Distiller(Compressor):
+    mode = 'distillation'
+
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None,
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None):
-        super().__init__(model=model, config_list=config_list, mode='distillation', evaluator=evaluator,
-                         existed_wrappers=existed_wrappers)
+        super().__init__(model=model, config_list=config_list, evaluator=evaluator, existed_wrappers=existed_wrappers)
         self._target_spaces: _DISTILLATION_TARGET_SPACES
 
 
 def register_scalers(target_spaces: _PRUNING_TARGET_SPACES | _QUANTIZATION_TARGET_SPACES,
                      set_default_granularity: Callable[[TargetSpace], Any]):
+    """
+    Create and register scaler to the target space according to the granularity of target space.
+    Four string type granularity will be treated specially:
+
+        * ``default`` will be treated by function ``set_default_granularity``.
+        * ``in_channel`` means compressing on the 0-th dim of the paramter target.
+        * ``out_channel`` means compressing on the 1-th dim of the paramter target.
+        * ``per_channel`` means compressing on the 1-th dim of the input/output target (assume 0-th dim is batch dim).
+
+    Parameters
+    ----------
+    target_spaces
+        {module_name: {target_name: target_space}}.
+    set_default_granularity
+        A callable function, given a target space and return a scaler.
+    """
     # scalers are used to support different sparse/quant granularity
     for _, ts in target_spaces.items():
         for _, target_space in ts.items():

@@ -43,10 +43,12 @@ class QATQuantizer(Quantizer):
             for _, ts in self._target_spaces.items():
                 for _, target_space in ts.items():
                     target_space.apply_method = 'bypass'
-        else:
+        elif self.current_step == self.quant_start_step:
             for _, ts in self._target_spaces.items():
                 for _, target_space in ts.items():
                     target_space.apply_method = 'qat_clamp_round'
+        else:
+            pass
 
     def register_track_func(self):
         # NOTE: tracked min max value will be registered as buffer after the first forward during training,
