@@ -1,3 +1,10 @@
+resources:
+  repositories:
+  - repository: mmdetRepo
+    type: github
+    name: open-mmlab/mmdetection
+    ref: v2.27.0
+
 trigger: none
 
 schedules:
@@ -40,7 +47,7 @@ stages:
 
     - template: templates/download-test-data.yml
 
-    - checkout: git://open-mmlab/mmdetection@v2.27.0
+    - checkout: mmdetRepo
 
     - script: |
         cd test/algo
