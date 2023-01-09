@@ -47,8 +47,9 @@ stages:
 
     - template: templates/download-test-data.yml
 
-    # - checkout: mmdetRepo
-    #   fetchTags: true
+    - checkout: self
+    - checkout: mmdetRepo
+      fetchTags: true
 
     - script: |
         cd test/algo
