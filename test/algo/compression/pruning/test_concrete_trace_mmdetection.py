@@ -3,6 +3,7 @@
 
 import pytest
 
+import os
 import traceback
 import torch
 import mmcv
@@ -14,7 +15,8 @@ from mmdet.datasets import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
 from nni.common.concrete_trace_utils import concrete_trace, ConcreteTracer
 
-folder_prefix = '../../mmdetection' # replace this path with yours
+assert 'MMDET_DIR' in os.environ, 'please set env variable `MMDET_DIR` to your mmdetection folder!'
+folder_prefix = os.environ['MMDET_DIR']
 img = '%s/tests/data/color.jpg' % folder_prefix
 
 config_files_correct = (
@@ -141,12 +143,6 @@ config_files_other = (
     'wider_face/ssd300_wider_face',
 )
 
-config_files_now = (
-    # AssertionError: check_equal failure for original model
-    'seesaw_loss/cascade_mask_rcnn_r101_fpn_random_seesaw_loss_mstrain_2x_lvis_v1',
-    'wider_face/ssd300_wider_face',
-)
-
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def check_equal(a, b):
@@ -179,7 +175,7 @@ def test_mmdetection(config_file: str):
     config = mmcv.Config.fromfile(
         folder_prefix + '/configs/' + config_file + '.py')
 
-    # RoIAlign will cause many errors when use cpu. there are 4 ways to avoid it
+    # RoIAlign will cause many errors. there are 4 ways to avoid it
     # 1. add 'mmcv_ops.RoIAlign' to leaf_module when tracing, and set 'config_dict['use_torchvision'] = True' recursively
     # 2. add 'mmcv_ops.RoIAlign' to leaf_module when tracing, and set 'config_dict['aligned'] = False' recursively
     # 3. set 'config_dict['use_torchvision'] = True', and set 'config_dict['aligned'] = False' recursively, and
@@ -311,5 +307,5 @@ def test_mmdetection(config_file: str):
         del input_like, out_like, out_like_traced
 
 if __name__ == '__main__':
-    for config_file in config_files_now[:1]:
+    for config_file in config_files_correct:
         test_mmdetection(config_file)

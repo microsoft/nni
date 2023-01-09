@@ -40,17 +40,11 @@ stages:
 
     - template: templates/download-test-data.yml
 
-    - script: |
-        cd test/algo
-        pwd
-        rm -rf ../mmdetection
-        git clone https://github.com/open-mmlab/mmdetection.git ../mmdetection
-        python -m pip install -U openmim
-        python -m mim install mmcv-full
-        python -m pip install mmdet
-        python -m pytest compression
-      displayName: Compression unit test
+    - checkout: git://open-mmlab/mmdetection@v2.27.0
 
     - script: |
-        rm -rf ../mmdetection
-      displayName: Clean up temporary files
+        cd test/algo
+        python -m pytest compression
+      displayName: Compression unit test
+      env:
+        MMDET_DIR: $(Agent.BuildDirectory)/mmdetection
