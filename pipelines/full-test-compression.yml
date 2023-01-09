@@ -19,9 +19,9 @@ variables:
   filter.prbody.optionIndex: 3
 
 stages:
-- stage: pre work
+- stage: prework
   jobs:
-  - job: checkout-mmdetection
+  - job: checkout
     steps:
     - checkout: self
     - checkout: mmdetRepo
