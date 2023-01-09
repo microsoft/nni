@@ -2,6 +2,7 @@ resources:
   repositories:
   - repository: mmdetRepo
     type: github
+    endpoint: NNIOpenSource
     name: open-mmlab/mmdetection
     ref: v2.27.0
 
