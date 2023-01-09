@@ -767,7 +767,7 @@ def hook_to_dtype_layout(positional, keyword, undetermined, undetermined_special
 
     def ret_func(*args):
         the_self = args[0]
-        if the_self.layout != to_layout
+        if the_self.layout != to_layout:
             the_self = layout_names_to_trans_dict[to_layout](the_self)
         return real_to(the_self, *args[1:])
 
