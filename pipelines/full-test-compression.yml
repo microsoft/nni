@@ -4,7 +4,7 @@ resources:
     type: github
     endpoint: NNIOpenSource
     name: open-mmlab/mmdetection
-    ref: refs/tags/v2.27.0
+    ref: v2.27.0
 
 trigger: none
 
@@ -49,6 +49,7 @@ stages:
     - template: templates/download-test-data.yml
 
     - checkout: mmdetRepo
+      fetchTags: true
 
     - script: |
         cd test/algo
