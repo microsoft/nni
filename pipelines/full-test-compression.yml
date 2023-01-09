@@ -2,7 +2,7 @@ resources:
   repositories:
   - repository: mmdetRepo
     type: github
-    endpoint: NNIOpenSource
+    endpoint: mmdetection
     name: open-mmlab/mmdetection
 
 trigger: none

@@ -73,7 +73,7 @@ class ConcreteTracer(TracerBase):
     default_autowrap_modules = (
         math,
     )
-    default_autowrap_leaf_function: Dict[Any, Tuple[List[Union[ModuleType, Type, str]], bool, Optional[Callable]]] = {
+    default_autowrap_leaf_function: Dict[Any, Tuple[List[Tuple[Union[ModuleType, Type], str]], bool, Optional[Callable]]] = {
         # function
         _orig_len:                  ([], False, None),
         _orig_not:                  ([], False, None),
@@ -149,7 +149,7 @@ class ConcreteTracer(TracerBase):
             if attr not in default_autowrap_leaf_function:
                 default_autowrap_leaf_function[attr] = ([], False, getattr(torch.functional, name, None))
 
-    default_autowrap_leaf_class: Dict[Type, Tuple[List[Union[ModuleType, Type, str]], bool]] = {
+    default_autowrap_leaf_class: Dict[Type, Tuple[List[Tuple[Union[ModuleType, Type], str]], bool]] = {
         # class
         _orig_bool:                 ([], False),
         _orig_zip:                  ([], False),
@@ -764,7 +764,7 @@ class ConcreteTracer(TracerBase):
                     wrapped = _create_wrapped_leaf_method(self, func, func.__name__, to_func)
                 elif func.__name__ != func.__qualname__ and func.__qualname__ != 'boolean_dispatch.<locals>.fn':
                     # method
-                    if func.__module__.startswith('_'):
+                    if func.__module__.startswith('_') and func.__module__ != '__main__':
                         path = sys.modules[func.__module__[1:]]
                     else:
                         path = sys.modules[func.__module__]
@@ -773,7 +773,7 @@ class ConcreteTracer(TracerBase):
                     wrapped = _create_wrapped_leaf_method(self, func, func.__name__, to_func)
                 else:
                     # common function
-                    if func.__module__.startswith('_'):
+                    if func.__module__.startswith('_') and func.__module__ != '__main__':
                         path = sys.modules[func.__module__[1:]]
                     else:
                         path = sys.modules[func.__module__]
@@ -791,7 +791,7 @@ class ConcreteTracer(TracerBase):
             type_wrapper: _orig_type,
         }
         for clz, (positions, is_iterable) in self.autowrap_leaf_class.items():
-            if clz.__module__.startswith('_'):
+            if clz.__module__.startswith('_') and clz.__module__ != '__main__':
                 path = sys.modules[clz.__module__[1:]]
             else:
                 path = sys.modules[clz.__module__]
@@ -1220,6 +1220,131 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    autowrap_leaf_class = ConcreteTracer.default_autowrap_leaf_class,
                    leaf_module = (),
                    fake_middle_class = ()) -> GraphModule:
+    """
+    Concrete tracing API
+
+    Given an ``nn.Module`` or function instance ``root`` and a dummy input `concrete_args`, this function will return a ``GraphModule``
+    constructed by recording operations seen while tracing through ``root``.
+
+    It has solved many problems compared to fx.symbolic_trace, and can execute on many third-party models.
+
+    For example::
+
+        def f(a, b):
+            return a + b
+
+        traced_f = concrete_trace(f, concrete_args={'a': 1, 'b': 2})
+        # or `traced_f = concrete_trace(f, (1, 2))`
+        assert traced_f(3, 4) == 7
+
+        def f(x):
+            out1, out2 = 0, 0
+            for k, v in x.items():
+                out1 += k
+                out2 += v
+            return out1, out2
+        traced_f = concrete_trace(f, ({1: 1, 2: 2}, ))
+        assert traced_f({2: 3, 4: 5}) == (6, 8)
+
+    Note that we can only record static structure, so all the branches such as if-else or loop will be flattened::
+
+        def f(x):
+            out1, out2 = 0, 0
+            for k, v in x.items():
+                out1 += k
+                out2 += v
+            return out1, out2
+        traced_f = concrete_trace(f, ({1: 1, 2: 2}, ))
+        assert traced_f({2: 3, 4: 5, 6:7}) == (6, 8) # not (12, 15)
+
+        # traced code like:
+        def traced_f(self, x):
+            out1, out2 = 0, 0
+            items = x.items()
+
+            # for loop
+            iter = iter(items)
+
+            # first loop content
+            items0 = next(iter)
+            out1 += items0[0]
+            out2 += items0[1]
+
+            # second loop content
+            items1 = next(iter)
+            out1 += items1[0]
+            out2 += items1[1]
+
+            return (out1, out2)
+
+    If you want to trace 'is', 'is not', 'in' or 'not in' in your module, you can set use_function_patch to True::
+
+        def f(x, y):
+            if x is None:
+                return y
+            else:
+                return x - y
+        # traced_f = concrete_trace(f, (None, 1)) # bad
+        traced_f = concrete_trace(f, (None, 1), use_function_patch=True) # f should exist in a file.
+
+    If you have a function/method that should be treated as a leaf function but not trace into it, use autowrap_leaf_function to mark it::
+
+        def leaf_op(x, y, z):
+            # if not treated as a leaf function, then only 1 branch will exist.
+            if x > 0:
+                return y + z
+            else:
+                return y - z
+
+        def f(x):
+            return leaf_op(x, 3, 2)
+
+        traced_f = concrete_trace(f, (1, ), autowrap_leaf_function = {
+            leaf_op: ([], False, None), **ConcreteTracer.default_autowrap_leaf_function})
+        assert traced_f(1) == 5 and traced_f(-1) == 1
+
+    If you have a class that should be treated as a leaf class, use autowrap_leaf_class to mark it::
+
+        class leaf_clz:
+            def __init__(self, a, b):
+                self.c = a + b
+
+        def f(x, y):
+            return leaf_clz(x, y)
+
+        traced_f = concrete_trace(f, (1, 2), autowrap_leaf_class = {
+            leaf_clz: ([], False), **ConcreteTracer.default_autowrap_leaf_class})
+        assert isinstance(traced_f(3, 4), leaf_clz) and traced_f(3, 4).c == 7
+
+    Args:
+        root (Union[torch.nn.Module, Callable]): Module or function to be traced and converted into a Graph representation.
+        concrete_args (Union[Dict[str, Any], Tuple]): Dummy inputs to do concrete trace.
+
+        use_function_patch (bool): Use operator patcher recursively on function calls. Operator patcher will re-compile the function and
+            translate '{} is {}' into 'operator.is_({}, {})', then we can treat 'is', 'is not', 'in' and 'not in' as function calls.
+
+        function_patch_backlist (List[str]): Blacklist of the operator patcher.
+
+        autowrap_leaf_function (Dict[Any, Tuple[List[Tuple[Union[ModuleType, Type], str]], bool, Optional[Callable]]]): Leaf function dict,
+            such as 'add' or 'torch.xxx'. You can add your own leaf functions.
+
+            The struct of dict is: leaf_function: ([(module_path, module_name)], force_to_trace, replace_to_function).
+                (module_path, module_name): The place the function exists. Such as torch.meshgrid, there are `torch.meshgrid`,
+                    'torch.functional.meshgrid', 'torch._C._VariableFunctions.meshgrid', we should wrap them all.
+                force_to_trace: If set to false, the function will only be traced if input relates to concrete_args.
+                    Such as 'torch.rand', we should trace it even if it doesn't relate to concrete_args.
+                replace_to_function: If not `None`, we will use it to replace the original function in traced code.
+                    Such as ModuleList.__getitem__, we can use operator.getitem to replace it.
+
+        default_autowrap_leaf_class (Dict[Type, Tuple[List[Tuple[Union[ModuleType, Type], str]], bool]]): Leaf class dict, such as 'int',
+            'range' or 'zip'. You can add your own leaf functions such as 'torch.finfo' or 'modeling_outputs.SequenceClassifierOutput'.
+
+            The struct of dict is: leaf_class: ([(module_path, module_name)], is_iterator_class).
+                is_iterator_class: Is the class init from an iterator. Only 'tuple', 'list', 'set' or 'dict' needs to set it to True.
+
+    Returns:
+        fx.GraphModule: a Module created from the recorded operations from ``root``.
+    """
     tracer = ConcreteTracer(
         autowrap_leaf_function = autowrap_leaf_function,
         autowrap_leaf_class = autowrap_leaf_class,
