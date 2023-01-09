@@ -4,7 +4,7 @@ resources:
     type: github
     endpoint: NNIOpenSource
     name: open-mmlab/mmdetection
-    ref: v2.27.0
+    ref: refs/tags/v2.27.0
 
 trigger: none
 
