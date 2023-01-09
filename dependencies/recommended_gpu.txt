@@ -1,7 +1,6 @@
 # Recommended because some non-commonly-used modules/examples depend on those packages.
 
 -f https://download.pytorch.org/whl/torch_stable.html
--f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10/index.html
 tensorflow
 torch == 1.10.0+cu113
 torchvision == 0.11.1+cu113
@@ -13,5 +12,3 @@ graphviz
 gym
 tianshou >= 0.4.1
 timm >= 0.5.4
-mmcv-full==1.7.0
-mmdet
