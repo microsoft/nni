@@ -19,14 +19,6 @@ variables:
   filter.prbody.optionIndex: 3
 
 stages:
-- stage: prework
-  jobs:
-  - job: checkout
-    steps:
-    - checkout: self
-    - checkout: mmdetRepo
-      fetchTags: true
-
 - stage: filter
   jobs:
   - job: check
@@ -44,6 +36,11 @@ stages:
     timeoutInMinutes: 60
 
     steps:
+    - checkout: self
+
+    - checkout: mmdetRepo
+      fetchTags: true
+
     - template: templates/check-gpu-status.yml
 
     - template: templates/install-dependencies.yml
@@ -57,6 +54,10 @@ stages:
 
     - script: |
         cd test/algo
+        ls -al .
+        ls -al ..
+        ls -al ../..
+        ls -al ../../..
         python -m pytest compression
       displayName: Compression unit test
       env:
