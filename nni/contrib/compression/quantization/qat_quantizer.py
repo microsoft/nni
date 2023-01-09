@@ -164,6 +164,9 @@ class QATQuantizer(Quantizer):
         self.evaluator.unbind_model()
         return self.bound_model, self.get_calibration_config()
 
+    def compress_fuse(self, evaluator: Evaluator):
+        self.register_trigger(evaluator)
+
 
 def track_min_max_val(wrapper: ModuleWrapper, target_name: str, target: Tensor):
     def amin_reduce_func(converted_target: Tensor):

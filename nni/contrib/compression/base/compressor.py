@@ -56,6 +56,8 @@ class Compressor:
         self._module_wrappers, self._target_spaces = register_wrappers(self.bound_model, self.config_list, self.mode, existed_wrappers)
         self.wrap_model()
 
+        self.fused_compressors = [self]
+
     @classmethod
     def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], *args, evaluator: Evaluator | None = None, **kwargs):
         """
@@ -83,7 +85,10 @@ class Compressor:
             _logger.warning('compessor already has evaluator, the new evaluator passed to this function will be ignored.')
         evaluator = compressor.evaluator if compressor.evaluator else evaluator
 
-        return cls(model=model, config_list=new_config_list, evaluator=evaluator, existed_wrappers=existed_wrappers, *args, **kwargs)
+        new_compressor = cls(model=model, config_list=new_config_list, evaluator=evaluator, existed_wrappers=existed_wrappers,
+                             *args, **kwargs)
+        new_compressor.fused_compressors.extend(compressor.fused_compressors)
+        return new_compressor
 
     def _validate_config(self):
         schema = default_config_schema(self.mode)
@@ -147,6 +152,14 @@ class Compressor:
         return param_names_map
 
     def compress(self):
+        raise NotImplementedError()
+
+    def compress_fuse(self, evaluator: Evaluator):
+        """
+        (Experimental) This api is not stable.
+        Compressor can register compress logic into training/predict loop by this api.
+        It is recommended to decide whether to execute compress according to the current optimize step.
+        """
         raise NotImplementedError()
 
 
