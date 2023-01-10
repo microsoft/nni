@@ -17,7 +17,7 @@ from nni.compression.pytorch.speedup.v2 import ModelSpeedup
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import L1NormPruner
 
 class NaiveModel(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, acti, acti_kw):
         super().__init__()
         self.conv1 = torch.nn.Conv2d(1, 20, 5, 1)
         self.conv2 = torch.nn.Conv2d(20, 50, 5, 1)
@@ -25,6 +25,8 @@ class NaiveModel(torch.nn.Module):
         self.fc2 = torch.nn.Linear(500, 10)
         self.relu1 = torch.nn.ReLU6()
         self.relu2 = torch.nn.ReLU6()
+        self.acti = acti
+        self.acti_kw = acti_kw
         self.max_pool1 = torch.nn.MaxPool2d(2, 2)
         self.max_pool2 = torch.nn.MaxPool2d(2, 2)
 
@@ -34,15 +36,15 @@ class NaiveModel(torch.nn.Module):
         x = self.relu2(self.conv2(x))
         x = self.max_pool2(x)
         x = x.view(-1, x.size()[1:].numel())
-        x = F.log_softmax(self.fc1(x), dim=-1)
+        x = self.acti(self.fc1(x), **self.acti_kw)
         # x = F.relu6(self.fc1(x))
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
 class SpeedupSoftmaxTestCase(unittest.TestCase):
-    def test_log_softmax(self):
+    def do_test(self, acti, actikw):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = NaiveModel().to(device)
+        model = NaiveModel(acti, actikw).to(device)
         dummy_input = torch.randn([1000, 1, 28, 28]).to(device)
 
 
@@ -71,6 +73,12 @@ class SpeedupSoftmaxTestCase(unittest.TestCase):
         print('model after speedup', repr(traced_model))
         flops, params, _ = count_flops_params(traced_model, dummy_input, verbose=False)
         print(f'Pruned model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M')
+
+    def test_function(self):
+        return self.do_test(F.softmax, {'dim': 1})
+
+    def test_module(self):
+        return self.do_test(torch.nn.Softmax(dim=1), {})
 
 if __name__ == '__main__':
     unittest.main()
