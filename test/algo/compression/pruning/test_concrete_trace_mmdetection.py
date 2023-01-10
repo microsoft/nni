@@ -15,8 +15,9 @@ from mmdet.datasets import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
 from nni.common.concrete_trace_utils import concrete_trace, ConcreteTracer
 
-assert 'MMDET_DIR' in os.environ, 'please set env variable `MMDET_DIR` to your mmdetection folder!'
-folder_prefix = os.environ['MMDET_DIR']
+# assert 'MMDET_DIR' in os.environ, 'please set env variable `MMDET_DIR` to your mmdetection folder!'
+# folder_prefix = os.environ['MMDET_DIR']
+folder_prefix = '/run/media/louisj/partE/Works/MS/mmdetection'
 img = '%s/tests/data/color.jpg' % folder_prefix
 
 config_files_correct = (
@@ -75,7 +76,6 @@ config_files_correct = (
     'sparse_rcnn/sparse_rcnn_r50_fpn_1x_coco',
     'ssd/ssdlite_mobilenetv2_scratch_600e_coco',
     'swin/mask_rcnn_swin-s-p4-w7_fpn_fp16_ms-crop-3x_coco',
-    'timm_example/retinanet_timm_efficientnet_b1_fpn_1x_coco',
     'tood/tood_r50_fpn_1x_coco',
     'vfnet/vfnet_r2_101_fpn_mdconv_c3-c5_mstrain_2x_coco',
     'yolact/yolact_r50_1x8_coco',
@@ -96,7 +96,6 @@ config_files_maskrcnn = (
 # cannot run model: need gpu
 config_files_need_gpu = (
     'carafe/faster_rcnn_r50_fpn_carafe_1x_coco',
-    'convnext/cascade_mask_rcnn_convnext-s_p4_w7_fpn_giou_4conv1f_fp16_ms-crop_3x_coco',
     'efficientnet/retinanet_effb3_fpn_crop896_8x4_1x_coco',
     'gcnet/cascade_mask_rcnn_x101_32x4d_fpn_syncbn-backbone_1x_coco',
     'resnest/cascade_mask_rcnn_s50_fpn_syncbn-backbone+head_mstrain_1x_coco',
@@ -141,9 +140,14 @@ config_files_other = (
     # AssertionError: check_equal failure for original model
     'tridentnet/tridentnet_r50_caffe_1x_coco',
     'wider_face/ssd300_wider_face',
+    # ImportError
+    'timm_example/retinanet_timm_efficientnet_b1_fpn_1x_coco',
+    'convnext/cascade_mask_rcnn_convnext-s_p4_w7_fpn_giou_4conv1f_fp16_ms-crop_3x_coco',
 )
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+if device.type == 'cuda':
+    config_files_correct = (*config_files_correct, *config_files_need_gpu)
 
 def check_equal(a, b):
     if type(a) != type(b):
@@ -164,11 +168,12 @@ def check_equal(a, b):
                 return False
         return True
     elif isinstance(a, torch.Tensor):
-        return torch.equal(a, b)
+        # may not euqal on gpu
+        return torch.std(a - b).item() < 1e-6
     else:
         return a == b
 
-@pytest.mark.parametrize('config_file', config_files_correct[:])
+@pytest.mark.parametrize('config_file', config_files_correct)
 def test_mmdetection(config_file: str):
     torch.cuda.empty_cache()
     # Specify the path to model config and checkpoint file
@@ -199,31 +204,6 @@ def test_mmdetection(config_file: str):
                         roi_align_setter(v)
     roi_align_setter(config._cfg_dict['model'])
 
-    # we should wrap `mmcv.ops.deform_conv.deform_conv2d` in this way.
-    # TL;DR.
-    # the `mmcv.ops.deform_conv.deform_conv2d` is a local variable of `torch.autograd.Function.apply`.
-    # if we only wrap `DeformConv2dFunction.apply`, we only change the connection from `DeformConv2dFunction` to `DeformConv2dFunction.apply`,
-    # but `mmcv.ops.deform_conv.deform_conv2d` is still the original `DeformConv2dFunction.apply`.
-    # so we should wrap the classmethod apply functions manaully.
-    from mmcv.ops.deform_conv import deform_conv2d as mmcv_deform_conv2d
-    from mmcv.ops.modulated_deform_conv import modulated_deform_conv2d as mmcv_modulated_deform_conv2d
-    leaf_function_append = {
-        mmcv_deform_conv2d: ((), False, None),
-        mmcv_modulated_deform_conv2d: ((), False, None),
-    }
-    if RoIAlign_solution == 3:
-        # we should wrap `torchvision.ops.roi_align` in this way.
-        # TL;DR.
-        # the real op is at `torch.ops.torchvision.roi_align`. but we will get a `torch._ops.OpOverloadPacket`. it's a lazy-loader.
-        # so it's better to wrap the function `torchvision.ops.roi_align`.
-        # the `roi_align` is at `torchvision.ops.roi_align` and `torchvision.ops.roi_align.roi_align`.
-        from torchvision.ops import roi_align as tv_roi_align
-        import torchvision
-        leaf_function_append[tv_roi_align] = (((torchvision.ops, 'roi_align'),), False, None)
-    elif RoIAlign_solution == 4:
-        from mmcv.ops.roi_align import roi_align as mmcv_roi_align
-        leaf_function_append[mmcv_roi_align] = ((), False, None)
-
     leaf_module_append = ()
     if RoIAlign_solution in (1, 2):
         from mmcv import ops as mmcv_ops
@@ -251,8 +231,6 @@ def test_mmdetection(config_file: str):
         assert check_equal(out_orig_1, out_orig_2), 'check_equal failure for original model'
         del out_orig_1, out_orig_2
 
-        # torch.manual_seed(100)
-
         if config_file == 'pvt/retinanet_pvt-l_fpn_1x_coco':
             # to support numpy.intc
             import torch.fx as torch_fx
@@ -264,7 +242,6 @@ def test_mmdetection(config_file: str):
                                         use_function_patch = False, forwrad_function_name='forward_dummy',
                                         autowrap_leaf_function = {
             **ConcreteTracer.default_autowrap_leaf_function,
-            **leaf_function_append,
             all:                                                                    ((), False, None),
             min:                                                                    ((), False, None),
             max:                                                                    ((), False, None),

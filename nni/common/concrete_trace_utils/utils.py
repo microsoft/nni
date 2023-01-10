@@ -62,7 +62,7 @@ def map_recursive(fn: Callable, arg) -> Any:
     """
     Apply fn to each Node appearing arg. arg may be a list, tuple, slice, or dict with string keys.
     """
-    if (not _orig_isinstance(arg, torch.Size)) and _orig_isinstance(arg, _orig_tuple):
+    if _orig_type(arg) != torch.Size and _orig_isinstance(arg, _orig_tuple):
         t = _orig_tuple(map_recursive(fn, elem) for elem in arg)
         # Support NamedTuple (if it has `_fields`) by repacking into original type.
         return t if not hasattr(arg, '_fields') else _orig_type(arg)(*t)
@@ -77,7 +77,7 @@ def map_recursive_zip(fn: Callable, arg0, *args) -> Any:
     """
     Apply fn to each Node appearing arg. arg may be a list, tuple, slice, or dict with string keys.
     """
-    if (not _orig_isinstance(arg0, torch.Size)) and _orig_isinstance(arg0, _orig_tuple):
+    if _orig_type(arg0) != torch.Size and _orig_isinstance(arg0, _orig_tuple):
         for arg in args:
             assert (not _orig_isinstance(arg, torch.Size)) and _orig_isinstance(arg, _orig_tuple)
             assert len(arg0) == len(arg)
