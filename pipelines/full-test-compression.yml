@@ -37,9 +37,11 @@ stages:
 
     steps:
     - checkout: self
+      path: ./
 
     - checkout: mmdetRepo
       fetchTags: true
+      path: ./mmdetection
 
     - template: templates/check-gpu-status.yml
 
@@ -61,4 +63,4 @@ stages:
         python -m pytest compression
       displayName: Compression unit test
       env:
-        MMDET_DIR: $(Agent.BuildDirectory)/mmdetection
+        MMDET_DIR: $(Agent.BuildDirectory)/s/mmdetection
