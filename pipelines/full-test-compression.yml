@@ -37,7 +37,7 @@ stages:
 
     steps:
     - checkout: self
-      path: ./
+      path: ./s
 
     - checkout: mmdetRepo
       fetchTags: true
@@ -63,4 +63,4 @@ stages:
         python -m pytest compression
       displayName: Compression unit test
       env:
-        MMDET_DIR: $(Agent.BuildDirectory)/s/mmdetection
+        MMDET_DIR: $(Agent.BuildDirectory)/mmdetection
