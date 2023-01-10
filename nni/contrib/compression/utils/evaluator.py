@@ -664,6 +664,7 @@ class TorchEvaluator(Evaluator):
         self.training_func = training_func
         self._ori_training_step = training_step
         self._training_step = self._ori_training_step
+
         self.dummy_input = dummy_input
         self.evaluating_func = evaluating_func
 
