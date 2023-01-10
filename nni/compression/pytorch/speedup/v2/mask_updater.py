@@ -1,6 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .model_speedup import ModelSpeedup
+    from .container import NodeInfo
+
 import operator
 import torch
 from torch import nn
@@ -8,10 +13,6 @@ from torch.nn import functional as F
 from torch.fx.node import Node
 from nni.common.concrete_trace_utils.utils import map_recursive, map_recursive_zip
 from nni.compression.pytorch.utils.utils import randomize_tensor
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from .model_speedup import ModelSpeedup
-    from .container import NodeInfo
 
 class MaskUpdater:
     @staticmethod
@@ -20,7 +21,8 @@ class MaskUpdater:
         propagate normally to get informations of intermediate variables such as shape, dtype of tensors
         this method is a static method. it will be executed before classify the MaskUpdater
         default action:
-            execute and store values to slot.value_0(intermediate variables when assigned) and slot.value_1(intermediate variables after in-place ops)
+            execute and store values to slot.value_0(intermediate variables when assigned),
+                and slot.value_1(intermediate variables after in-place ops)
         """
         args, kwargs = node.args, node.kwargs
         args = map_recursive(model_speedup.slot_getter_value_1, args)
@@ -270,7 +272,8 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
     """
     for some special op that masks will not change when execute
     1. for getitem op, it's no need to calc masks. do in fast path to run the algorithm faster.
-    2. for (softmax, log_softmax) ops, the default process will get a wrong mask. actually we should just copy the mask from input to output.
+    2. for (softmax, log_softmax) ops, the default process will get a wrong mask. actually we should just copy the mask from input to
+        output.
     """
     def direct_softmax(self, model_speedup: 'ModelSpeedup', node: Node):
         if len(node.args) != 0:

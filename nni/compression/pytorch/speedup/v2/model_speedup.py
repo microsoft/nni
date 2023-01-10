@@ -3,19 +3,17 @@
 
 import copy
 import logging
-import queue
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Type, Union
+from typing import Any, Dict, Optional
 
 import torch
 import torch.fx
 import torch.nn as nn
 from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
-from torch.fx.node import Argument, Node, Target
+from torch.fx.node import Node, Target
 
 from nni.common.concrete_trace_utils.utils import (map_recursive,
-                                                   map_recursive_zip,
                                                    run_onlyif_instance)
 from nni.compression.pytorch.speedup.compress_modules import replace_module
 from nni.compression.pytorch.speedup.v2.container import NodeInfo, Slot
@@ -117,7 +115,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         setattr(attr_itr, target_atoms[-1], obj)
 
     @compatibility(is_backward_compatible=True)
-    def placeholder(self, target, args, kwargs) -> Any:
+    def placeholder(self, target: Target, args, kwargs) -> Any:
         """
         override the execution for 'placeholder' ops.
         """
@@ -127,7 +125,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         """
         detect the tensor should be seen as an intermediate tensor.
         sometimes
-        # TODO: an api to specify dim 
+        # TODO: an api to specify dim
         # now the dim is 0 and cannot be edited
         # and the check function should also be edited
         """
@@ -230,7 +228,7 @@ class ModelSpeedup(torch.fx.Interpreter):
 
     # utils for direct update tand indirect update
     def direct_calc_mask(self, obj):
-        # TODO: an api to specify dim 
+        # TODO: an api to specify dim
         # now the dim is 0 and cannot be edited
         if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj):
             obj: torch.Tensor

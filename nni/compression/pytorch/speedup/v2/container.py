@@ -1,11 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import torch
-
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .mask_updater import MaskUpdater
+
+import torch
 
 class Slot:
     def __init__(self) -> None:
