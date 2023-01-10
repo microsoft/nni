@@ -11,7 +11,7 @@ import logging
 
 from textwrap import dedent
 from types import MethodType, FunctionType
-from typing import List, Optional, Callable
+from typing import List, Optional, Callable, Dict
 
 import torch
 
@@ -150,12 +150,6 @@ class TransformerOp(ast.NodeTransformer):
 class OperatorPatcher:
     """
     An function patcher, to patch the un-wrappable operator 'not/is/is not/in/not in' to wrappable functions.
-    Todo: patch this operators:
-        LIST_TO_TUPLE
-        LIST_EXTEND(i)
-        SET_UPDATE(i)
-        DICT_UPDATE(i)
-        DICT_MERGE
     """
 
     transformer_op = TransformerOp()
@@ -163,8 +157,8 @@ class OperatorPatcher:
     def __init__(self, use_operator_patch: bool, operator_patch_backlist: List[str]):
         self.use_operator_patch = use_operator_patch
         self.operator_patch_backlist = operator_patch_backlist
-        self.function_cache: dict[int, Callable] = {}
-        self.function_cache_orig: dict[int, Callable] = {}
+        self.function_cache: Dict[int, Callable] = {}
+        self.function_cache_orig: Dict[int, Callable] = {}
 
     def patch_inner(self, func):
         if id(func) not in self.function_cache:
