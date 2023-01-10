@@ -8,17 +8,15 @@ import sys
 import string
 import random
 import time
-import tempfile
 import re
 from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
 from nni.experiment.config import ExperimentConfig, convert
-from nni.tools.annotation import expand_annotations, generate_search_space
 from nni.tools.package_utils.tuner_factory import get_builtin_module_class_name
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls, set_prefix_url
 from .config_utils import Config, Experiments
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal, detect_port, get_user
+from .common_utils import get_yml_content, get_json_content, print_error, print_normal, detect_port
 
 from .constants import NNI_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER
 from .command_utils import check_output_command, kill_command
@@ -396,20 +394,8 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
                                  , pid=rest_process.pid, logDir=log_dir, prefixUrl=args.url_prefix)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
-        path = os.path.join(tempfile.gettempdir(), get_user(), 'nni', 'annotation')
-        if not os.path.isdir(path):
-            os.makedirs(path)
-        path = tempfile.mkdtemp(dir=path)
-        if config_version == 1:
-            nas_mode = experiment_config['trial'].get('nasMode', 'classic_mode')
-            code_dir = expand_annotations(experiment_config['trial']['codeDir'], path, nas_mode=nas_mode)
-            experiment_config['trial']['codeDir'] = code_dir
-        else:
-            code_dir = expand_annotations(experiment_config['trialCodeDirectory'], path)
-            experiment_config['trialCodeDirectory'] = code_dir
-        search_space = generate_search_space(code_dir)
-        experiment_config['searchSpace'] = search_space
-        assert search_space, ERROR_INFO % 'Generated search space is empty'
+        print_error('You are using annotation to specify search space. This is not supported since NNI v3.0.')
+        exit(1)
     elif config_version == 1:
         if experiment_config.get('searchSpacePath'):
             search_space = get_json_content(experiment_config.get('searchSpacePath'))

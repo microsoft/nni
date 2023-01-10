@@ -50,7 +50,7 @@ export class PAIJobRestServer extends ClusterJobRestServer {
             } catch (err) {
                 this.log.error(`POST parameter-file-meta error: ${err}`);
                 res.status(500);
-                res.send(err.message);
+                res.send((err as any).message);
             }
         });
 
@@ -61,7 +61,7 @@ export class PAIJobRestServer extends ClusterJobRestServer {
             } catch (err) {
                 this.log.error(`GET parameter-file-meta error: ${err}`);
                 res.status(500);
-                res.send(err.message);
+                res.send((err as any).message);
             }
         });
 

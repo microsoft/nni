@@ -9,7 +9,9 @@
 }
 
 .SUCCEEDED {
-    color: #00ad56;
+    /* color: #00ad56;  */
+    color: #18c4a9;
+    background: #f1fafa;
 }
 
 .UNKNOWN {

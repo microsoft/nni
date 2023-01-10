@@ -1,19 +1,19 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .concrete_tracer import ConcreteTracer
+
 import ast
 import inspect
 import logging
 
 from textwrap import dedent
 from types import MethodType, FunctionType
-from typing import List, Optional
+from typing import List, Optional, Callable
 
 import torch
-
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from .concrete_tracer import ConcreteTracer
 
 from .utils import (
     _orig_type,
@@ -49,7 +49,7 @@ class TransformerOp(ast.NodeTransformer):
         return super().visit(node)
 
     def visit_Call(self, node: ast.Call):
-        if not _orig_isinstance(node.func, ast.Name) or node.func.id != 'patch_run':
+        if not isinstance(node.func, ast.Name) or node.func.id != 'patch_run':
             self.is_transformed = True
             return self.generic_visit(ast.Call(
                 func=ast.Name(id='patch_run', ctx=ast.Load()),
@@ -163,8 +163,8 @@ class OperatorPatcher:
     def __init__(self, use_operator_patch: bool, operator_patch_backlist: List[str]):
         self.use_operator_patch = use_operator_patch
         self.operator_patch_backlist = operator_patch_backlist
-        self.function_cache: dict[int, callable] = {}
-        self.function_cache_orig: dict[int, callable] = {}
+        self.function_cache: dict[int, Callable] = {}
+        self.function_cache_orig: dict[int, Callable] = {}
 
     def patch_inner(self, func):
         if id(func) not in self.function_cache:
@@ -223,8 +223,8 @@ class OperatorPatcher:
             body0.name = 'new_func'
             # for deleting some annotations like 'add_start_docstrings_to_model_forward' or 'add_code_sample_docstrings'
             body0.decorator_list = [i for i in body0.decorator_list
-                if _orig_isinstance(i, ast.Call) and _orig_isinstance(i.func, ast.Name) and i.func.id == 'patch_run' and
-                    _orig_isinstance(i.args[0], ast.Name) and
+                if isinstance(i, ast.Call) and isinstance(i.func, ast.Name) and i.func.id == 'patch_run' and
+                    isinstance(i.args[0], ast.Name) and
                     i.args[0].id not in ('add_start_docstrings_to_model_forward', 'add_code_sample_docstrings')]
             ast.fix_missing_locations(new_tree)
 
@@ -273,6 +273,7 @@ class OperatorPatcherContext:
 
     @staticmethod
     def patch_run(func, *args, **kwargs):
+        assert OperatorPatcherContext.ctx_tracer is not None
         assert OperatorPatcherContext.ctx_patcher is not None
         with OperatorPatcherContext.ctx_tracer.do_temp_disable(True, True, True):
             new_func = OperatorPatcherContext.ctx_patcher.patch_inner(func)

@@ -1,17 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from getpass import getuser
 import logging
 from pathlib import Path
-import tempfile
 
 from colorama import Fore
 import yaml
 
 from nni.experiment import Experiment, RunMode
 from nni.experiment.config import ExperimentConfig, convert, utils
-from nni.tools.annotation import expand_annotations, generate_search_space
 
 # used for v1-only legacy setup, remove them later
 from nni.experiment.launcher import get_stopped_experiment_config_json
@@ -31,7 +28,7 @@ def create_experiment(args):
         _logger.error(f'"{config_file}" is not a valid file.')
         exit(1)
 
-    with config_file.open() as config:
+    with config_file.open(encoding='utf_8') as config:
         config_content = yaml.safe_load(config)
 
     v1_platform = config_content.get('trainingServicePlatform')
@@ -71,14 +68,8 @@ def create_experiment(args):
         config = ExperimentConfig.load(config_file)
 
     if config.use_annotation:
-        path = Path(tempfile.gettempdir(), getuser(), 'nni', 'annotation')
-        path.mkdir(parents=True, exist_ok=True)
-        path = tempfile.mkdtemp(dir=path)
-        code_dir = expand_annotations(config.trial_code_directory, path)
-        config.trial_code_directory = code_dir
-        config.search_space = generate_search_space(code_dir)
-        assert config.search_space, 'ERROR: Generated search space is empty'
-        config.use_annotation = False
+        _logger.error('You are using annotation to specify search space. This is not supported since NNI v3.0.')
+        exit(1)
 
     exp = Experiment(config)
     exp.url_prefix = url_prefix

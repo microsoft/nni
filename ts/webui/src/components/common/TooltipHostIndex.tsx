@@ -18,11 +18,11 @@ const TooltipHostIndex = (props: TooltipHostIndexProps): any => {
                         directionalHint={DirectionalHint.bottomLeftEdge}
                         tooltipProps={TOOLTIPSTYLE}
                     >
-                        <div className='ellipsis'>{value}</div>
+                        <div className='ellipsis name'>{value}</div>
                     </TooltipHost>
                 </div>
             ) : (
-                <div>{value}</div>
+                <div className='name'>{value}</div>
             )}
         </>
     );

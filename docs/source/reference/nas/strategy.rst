@@ -103,33 +103,39 @@ base_lightning
 
 ..  automodule:: nni.retiarii.oneshot.pytorch.base_lightning
     :members:
+    :imported-members:
 
 dataloader
 """"""""""
 
 ..  automodule:: nni.retiarii.oneshot.pytorch.dataloader
     :members:
+    :imported-members:
 
 supermodule.differentiable
 """"""""""""""""""""""""""
 
 ..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.differentiable
     :members:
+    :imported-members:
 
 supermodule.sampling
 """"""""""""""""""""
 
 ..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.sampling
     :members:
+    :imported-members:
 
 supermodule.proxyless
 """""""""""""""""""""
 
 ..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.proxyless
     :members:
+    :imported-members:
 
 supermodule.operation
 """""""""""""""""""""
 
 ..  automodule:: nni.retiarii.oneshot.pytorch.supermodule.operation
     :members:
+    :imported-members:

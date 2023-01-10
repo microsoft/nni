@@ -12,9 +12,10 @@ from typing import List, Optional, Iterable, Any, Set, Union
 
 import torch
 from torch.fx._compatibility import compatibility
-from torch.fx.graph import magic_methods, inplace_methods, reflectable_magic_methods
+from torch.fx.graph import magic_methods, reflectable_magic_methods
 from torch.fx.node import Node
 from torch.fx.proxy import Proxy
+from torch.overrides import is_tensor_method_or_property
 
 from . import concrete_tracer as et
 from .utils import (
@@ -30,6 +31,7 @@ from .utils import (
     _orig_bool,
     _orig_slice,
     _orig_set,
+    map_recursive,
 )
 
 _logger = logging.getLogger(__name__)
@@ -41,6 +43,7 @@ class ConcreteProxy(Proxy):
     We can use it to trace a more compatibal model, and pass the branches.
     """
 
+    # TODO: python bytecode changes a lot in version 3.11. these ops should be updated.
     jump_opnames = (
         'JUMP_IF_FALSE_OR_POP',
         'JUMP_IF_TRUE_OR_POP',
@@ -82,7 +85,7 @@ class ConcreteProxy(Proxy):
     def __call__(self, *args, **kwargs) -> ConcreteProxy:
         return self.tracer.create_proxy('call_method', '__call__', (self,) + args, kwargs)
 
-    def __iter__(self) -> Iterable[ConcreteProxy]:
+    def __iter__(self) -> Union[Iterable, ConcreteProxy]:
         # to detect if in executing `*proxy`, or `a, b, c = atuple`
         frame = inspect.currentframe()
         assert frame is not None
@@ -118,10 +121,10 @@ class ConcreteProxy(Proxy):
         else:
             return self.tracer.create_proxy('call_function', iter, (self,), {})
 
-    def __next__(self) -> Iterable[ConcreteProxy]:
+    def __next__(self) -> ConcreteProxy:
         return self.tracer.create_proxy('call_function', next, (self,), {})
 
-    def __len__(self):
+    def __len__(self) -> Union[int, ConcreteProxy]:
         # to detect if in executing `*proxy`
         frame = inspect.currentframe()
         assert frame is not None
@@ -176,7 +179,7 @@ class ConcreteProxy(Proxy):
                             'otherwise the traced graph may be wrong')
             return _orig_bool(self.value)
         else:
-            return self.tracer.create_proxy('call_function', bool, (self,), {})
+            return self.tracer.create_proxy('call_function', _orig_bool, (self,), {})
 
     def __index__(self) -> Union[int, ConcreteProxy]:
         # should only be in list/tuple getitem
@@ -226,8 +229,8 @@ class ConcreteProxy(Proxy):
         def find_tracer(a):
             if _orig_isinstance(a, cls):
                 tracers.add(a.tracer)
-        torch.fx.node.map_aggregate(args, find_tracer)
-        torch.fx.node.map_aggregate(kwargs, find_tracer)
+        map_recursive(find_tracer, args)
+        map_recursive(find_tracer, kwargs)
 
         if _orig_len(tracers) > 1:
             raise RuntimeError(f'Found multiple different tracers {_orig_list(tracers)} while '
@@ -237,7 +240,7 @@ class ConcreteProxy(Proxy):
         if isinstance(orig_method, torch._C.ScriptMethod):
             args = (orig_method.owner,) + args
             return tracer.create_proxy('call_method', orig_method.name, args, kwargs)
-        if torch.overrides.is_tensor_method_or_property(orig_method):
+        if is_tensor_method_or_property(orig_method):
             return tracer.create_proxy('call_method', orig_method.__name__, args, kwargs)
         else:
             return tracer.create_proxy('call_function', orig_method, args, kwargs,
@@ -317,8 +320,9 @@ class ConcreteUnpackIterProxy(ConcreteProxy):
     def __init__(self, root: ConcreteProxy):
         if not hasattr(root.value, '__getitem__'):
             # transfer 'set' to 'tuple'
-            # it' tuple not _orig_tuple!
-            root = tuple(root)
+            # it's tuple not _orig_tuple!
+            # root = tuple(root)
+            root = root.tracer.create_proxy('call_function', _orig_tuple, (root,), {})
         self.root = root
         self.tracer = root.tracer
         self._node: Optional[Node] = None
@@ -374,6 +378,23 @@ def map_aggregate_not_proxy(a, fn):
 
 # register or wrap common methods on 'ConcreteProxy'
 # for method in magic_methods:
+# torch.fx.graph.inplace_methods may not exist on some verion of pytorch
+inplace_methods = {
+    'iadd': '{} += {}',
+    'iand': '{} &= {}',
+    'ifloordiv': '{} //= {}',
+    'ilshift': '{} <<= {}',
+    'imod': '{} %= {}',
+    'imul': '{} *= {}',
+    'imatmul': '{} @= {}',
+    'ior': '{} |= {}',
+    'ipow': '{} **= {}',
+    'irshift': '{} >>= {}',
+    'isub': '{} -= {}',
+    'itruediv': '{} /= {}',
+    'ixor': '{} ^= {}',
+    'setitem': '{}[{}] = {}',
+}
 for method in {**magic_methods, **inplace_methods}:
     def _scope(method):
         def impl(*args, **kwargs):
