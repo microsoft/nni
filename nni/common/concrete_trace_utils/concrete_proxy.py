@@ -43,6 +43,7 @@ class ConcreteProxy(Proxy):
     We can use it to trace a more compatibal model, and pass the branches.
     """
 
+    # TODO: python bytecode changes a lot in version 3.11. these ops should be updated.
     jump_opnames = (
         'JUMP_IF_FALSE_OR_POP',
         'JUMP_IF_TRUE_OR_POP',

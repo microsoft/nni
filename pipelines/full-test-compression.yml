@@ -56,10 +56,6 @@ stages:
 
     - script: |
         cd test/algo
-        ls -al .
-        ls -al ..
-        ls -al ../..
-        ls -al ../../..
         python -m pytest compression
       displayName: Compression unit test
       env:
