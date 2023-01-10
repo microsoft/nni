@@ -15,9 +15,8 @@ from mmdet.datasets import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
 from nni.common.concrete_trace_utils import concrete_trace, ConcreteTracer
 
-# assert 'MMDET_DIR' in os.environ, 'please set env variable `MMDET_DIR` to your mmdetection folder!'
-# folder_prefix = os.environ['MMDET_DIR']
-folder_prefix = '/run/media/louisj/partE/Works/MS/mmdetection'
+assert 'MMDET_DIR' in os.environ, 'please set env variable `MMDET_DIR` to your mmdetection folder!'
+folder_prefix = os.environ['MMDET_DIR']
 img = '%s/tests/data/color.jpg' % folder_prefix
 
 config_files_correct = (
