@@ -13,7 +13,6 @@ All model spaces should inherit :class:`BaseModelSpace`, which then divides into
 Type 2 will be converted to type 1 upon the launch of a NAS experiment.
 """
 
-from nni.mutable.exception import SampleValidationError
 
 __all__ = ['ModelStatus', 'BaseModelSpace', 'ExecutableModelSpace', 'RawFormatModelSpace', 'SimplifiedModelSpace']
 
@@ -23,7 +22,7 @@ from typing import NoReturn, Any, Callable, Iterable
 
 from nni.common.serializer import is_traceable, SerializableObject
 from nni.nas.evaluator import Evaluator
-from nni.mutable import Mutable, Sample, MutableDict, LabeledMutable, frozen_factory
+from nni.mutable import Mutable, Sample, MutableDict, LabeledMutable, SampleValidationError, frozen_factory
 from nni.typehint import TrialMetric
 from .frozen import model_context
 
@@ -180,10 +179,28 @@ class RawFormatModelSpace(ExecutableModelSpace):
 
     In the current version, :class:`RawFormatModelSpace` can't be serialized and sent to remote machines.
 
-    TODO: examples?
+    Examples
+    --------
+    A simple example of using :class:`RawFormatModelSpace` is as follows::
+
+        from nni.nas.nn.pytorch import ModelSpace
+        class MyModelSpace(ModelSpace):
+            ...
+
+        evaluator = FunctionEvaluator(evaluate_fn, learning_rate=nni.choice('lr', [0.1, 1.0]))
+        model_space = RawFormatModelSpace(MyModelSpace(), evaluator)
+
+    The space can then be simplified and freezed::
+
+        frozen_model = model_space.freeze({'layer1': 0, 'lr': 0.1})
+
+    The frozen model can be instantiated and executed::
+
+        model = frozen_model.executable_model()
+        evaluator.evaluate(model)
     """
 
-    def __init__(self, model_space: BaseModelSpace, evaluator: Evaluator) -> None:
+    def __init__(self, model_space: BaseModelSpace, evaluator: Evaluator | None) -> None:
         super().__init__()
         self.model_space = model_space
         self.evaluator = evaluator
@@ -239,7 +256,7 @@ class RawFormatModelSpace(ExecutableModelSpace):
         Notes
         -----
         The potential issues with serialization are in two folds:
-        
+
         1. The model space could be a deep learning model, and have been arbitrarily mutated by the strategy (e.g., one-shot).
            For example, one submodule is replaced by another, or a layer is removed.
            In this case, we surely cannot use the init arguments to recover the model.
@@ -275,7 +292,7 @@ class SimplifiedModelSpace(ExecutableModelSpace):
     Since the model will be recreated, ``freeze`` and ``contains`` method of model space is never used.
     """
 
-    def __init__(self, model: Any, mutables: dict[str, Any] | MutableDict, evaluator: Evaluator) -> None:
+    def __init__(self, model: Any, mutables: dict[str, Any] | MutableDict, evaluator: Evaluator | None) -> None:
         super().__init__()
         assert is_traceable(model), 'Model must be traceable.'
         self.model = model.trace_copy()  # Make a trace copy for recovery.

@@ -4,8 +4,8 @@
 __all__ = ['current_model', 'model_context']
 
 import copy
-from typing import Optional, Dict, Any
-from nni.mutable import frozen_context, ContextStack, Sample
+from typing import Optional
+from nni.mutable import frozen_context, Sample
 
 
 def current_model() -> Optional[Sample]:
@@ -31,7 +31,7 @@ def current_model() -> Optional[Sample]:
     return cur
 
 
-def model_context(sample: Sample) -> ContextStack:
+def model_context(sample: Sample) -> frozen_context:
     """Get a context stack of the current model sample (i.e., architecture dict).
 
     This should be used together with :func:`current_model`.

@@ -36,7 +36,7 @@ class Metrics:
         return f"Metrics(intermediates=<array of length {len(self.intermediates)}>, final={self.final})"
 
     def _dump(self) -> dict:
-        rv = {'intermediates': self._intermediates}
+        rv: dict[str, Any] = {'intermediates': self._intermediates}
         if self.final is not None:
             rv['final'] = self.final
         return rv
