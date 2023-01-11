@@ -4,7 +4,6 @@
 import pytest
 
 import os
-import traceback
 import torch
 import mmcv
 import mmcv.cnn as mmcv_cnn
