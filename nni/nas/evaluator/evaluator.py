@@ -6,15 +6,15 @@ from __future__ import annotations
 __all__ = ['Evaluator', 'MutableEvaluator', 'FrozenEvaluator']
 
 import logging
-from contextlib import contextmanager
-from typing import Any, Callable, Iterator, Iterable, TYPE_CHECKING, ContextManager
-from typing_extensions import Literal
+# from contextlib import contextmanager
+from typing import Any, Callable, Iterator, Iterable, TYPE_CHECKING  #, ContextManager
+# from typing_extensions import Literal
 
-import nni
+# import nni
 from nni.common.serializer import is_traceable, SerializableObject
 from nni.mutable import Mutable, Sample, LabeledMutable, SampleValidationError
 from nni.mutable.mutable import _mutable_equal
-from nni.runtime.trial_command_channel import TrialCommandChannel, set_default_trial_command_channel, get_default_trial_command_channel
+# from nni.runtime.trial_command_channel import TrialCommandChannel, set_default_trial_command_channel, get_default_trial_command_channel
 
 if TYPE_CHECKING:
     # from nni.nas.space import ExecutableModelSpace
