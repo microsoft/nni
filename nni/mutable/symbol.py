@@ -285,7 +285,7 @@ class SymbolicExpression:
         return self.expr_cls(round, 'round({})', [self])
 
     def __trunc__(self) -> NoReturn:
-        raise RuntimeError("Try to use `SymbolicExpression.to_int()` instead of `math.trunc()` on value choices.")
+        raise RuntimeError("Try to use `SymbolicExpression.to_int()` instead of `math.trunc()` on symbols.")
 
     def __floor__(self) -> Any:
         return self.expr_cls(math.floor, 'math.floor({})', [self])

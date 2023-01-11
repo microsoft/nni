@@ -1,5 +1,10 @@
 import pytest
 
+<<<<<<< HEAD:test/algo/nas/test_evaluator_lightning.py
+=======
+import nni
+import nni.retiarii.evaluator.pytorch.lightning as pl
+>>>>>>> 4d93790d667c4cfc19cbed49d43cfe501012b688:test/algo/nas/test_lightning_trainer.py
 import pytorch_lightning
 import torch
 import torch.nn as nn
@@ -9,12 +14,18 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
+<<<<<<< HEAD:test/algo/nas/test_evaluator_lightning.py
 import nni
 import nni.nas.evaluator.pytorch.lightning as pl
 from nni.nas.evaluator import FunctionalEvaluator, Evaluator
 from nni.nas.space import RawFormatModelSpace
 
 debug = True
+=======
+pytestmark = pytest.mark.skip(reason='Will be rewritten.')
+
+debug = False
+>>>>>>> 4d93790d667c4cfc19cbed49d43cfe501012b688:test/algo/nas/test_lightning_trainer.py
 
 enable_progress_bar = False
 if debug:
