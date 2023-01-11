@@ -5,9 +5,12 @@ from __future__ import annotations
 
 from collections import defaultdict
 import logging
-from typing import Dict
+from typing import Dict, List
+
+import torch
 
 from ..base.compressor import Pruner
+from ..base.wrapper import ModuleWrapper
 from ..utils import Evaluator
 from .basic_pruner import LevelPruner, L1NormPruner, L2NormPruner, TaylorFOWeightPruner
 
@@ -15,6 +18,37 @@ _logger = logging.getLogger(__name__)
 
 
 class ScheduledPruner(Pruner):
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None,
+                 existed_wrappers: Dict[str, ModuleWrapper] | None = None):
+        super().__init__(model, config_list, evaluator, existed_wrappers)
+
+        self.sparse_goals: Dict[str, Dict[str, Dict[str, float]]] = defaultdict(dict)
+        self._goals_initialized = False
+        self._scheduled_keys = ['sparse_ratio', 'sparse_threshold', 'max_sparse_ratio', 'min_sparse_ratio']
+
+    def _init_sparse_goals(self):
+        if self._goals_initialized:
+            _logger.warning('Sparse goals have already initialized.')
+            return
+        for module_name, ts in self._target_spaces.items():
+            for target_name, target_space in ts.items():
+                self.sparse_goals[module_name][target_name] = {}
+                for scheduled_key in self._scheduled_keys:
+                    if getattr(target_space, scheduled_key) is not None:
+                        self.sparse_goals[module_name][target_name][scheduled_key] = getattr(target_space, scheduled_key)
+        self._goals_initialized = True
+
+    def update_sparse_goals(self, current_times: int):
+        raise NotImplementedError()
+
+    def _update_sparse_goals_by_ratio(self, ratio: float):
+        for module_name, tg in self.sparse_goals.items():
+            for target_name, target_goals in tg.items():
+                for scheduled_key, goal in target_goals.items():
+                    setattr(self._target_spaces[module_name][target_name], scheduled_key, goal * ratio)
+
+
+class ComboPruner(ScheduledPruner):
     def __init__(self, pruner: Pruner, interval_steps: int, total_times: int, evaluator: Evaluator | None = None):
         assert isinstance(pruner, Pruner)
         assert hasattr(pruner, 'interval_steps') and hasattr(pruner, 'total_times')
@@ -39,28 +73,12 @@ class ScheduledPruner(Pruner):
         self.total_times = total_times
         self.bound_pruner = pruner
 
-        self.sparse_goals: Dict[str, Dict[str, Dict[str, float]]] = defaultdict(dict)
-        self._scheduled_keys = ['sparse_ratio', 'sparse_threshold', 'max_sparse_ratio', 'min_sparse_ratio']
-        for module_name, ts in self._target_spaces.items():
-            for target_name, target_space in ts.items():
-                self.sparse_goals[module_name][target_name] = {}
-                for scheduled_key in self._scheduled_keys:
-                    if getattr(target_space, scheduled_key) is not None:
-                        self.sparse_goals[module_name][target_name][scheduled_key] = getattr(target_space, scheduled_key)
+        self._init_sparse_goals()
         self._initial_ratio = 0.0
 
     @classmethod
     def from_compressor(cls, *args, **kwargs):
         raise NotImplementedError(f'{cls.__name__} can not initialized from any compressor.')
-
-    def update_sparse_goals(self, current_times: int):
-        raise NotImplementedError()
-
-    def _update_sparse_goals_by_ratio(self, ratio: float):
-        for module_name, tg in self.sparse_goals.items():
-            for target_name, target_goals in tg.items():
-                for scheduled_key, goal in target_goals.items():
-                    setattr(self._target_spaces[module_name][target_name], scheduled_key, goal * ratio)
 
     def _initialize_state(self):
         self._update_sparse_goals_by_ratio(self._initial_ratio)
@@ -97,13 +115,13 @@ class ScheduledPruner(Pruner):
         self.bound_pruner.compress_fuse(evaluator)
 
 
-class LinearPruner(ScheduledPruner):
+class LinearPruner(ComboPruner):
     def update_sparse_goals(self, current_times: int):
         ratio = (1 - self._initial_ratio) * current_times / self.total_times
         self._update_sparse_goals_by_ratio(ratio)
 
 
-class AGPPruner(ScheduledPruner):
+class AGPPruner(ComboPruner):
     def update_sparse_goals(self, current_times: int):
         ratio = 1 + (self._initial_ratio - 1) * (1 - (self.total_times - current_times) / self.total_times) ** 3
         self._update_sparse_goals_by_ratio(ratio)

@@ -10,7 +10,7 @@ from typing import Callable, Dict, List, Literal, overload
 
 import torch
 
-from .tools import _DATA, _METRICS, _MASKS, active_sparse_targets_filter, norm_metrics, generate_sparsity
+from .tools import _DATA, _METRICS, _MASKS, active_sparse_targets_filter, norm_metrics, generate_sparsity, is_active_target
 from ..base.compressor import Compressor, Pruner
 from ..base.target_space import TargetType, PruningTargetSpace
 from ..base.wrapper import ModuleWrapper
@@ -147,10 +147,14 @@ class TaylorFOWeightPruner(Pruner):
         hook_list = []
         for module_name, ts in self._target_spaces.items():
             for target_name, target_space in ts.items():
-                if target_space.type is TargetType.PARAMETER:
-                    hook = TensorHook(target_space.target, target_name, functools.partial(collector, target=target_space.target))
-                    hook_list.append(hook)
-                    self.hooks[module_name][target_name] = hook
+                if is_active_target(target_space):
+                    # TODO: add input/output
+                    if target_space.type is TargetType.PARAMETER:
+                        hook = TensorHook(target_space.target, target_name, functools.partial(collector, target=target_space.target))
+                        hook_list.append(hook)
+                        self.hooks[module_name][target_name] = hook
+                    else:
+                        raise NotImplementedError()
         evaluator.register_hooks(hook_list)
 
     def _register_trigger(self, evaluator: Evaluator):

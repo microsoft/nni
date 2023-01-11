@@ -74,7 +74,7 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
                     'sparse_ratio': sparse_ratio,
                     'max_sparse_ratio': max_sparse_ratio,
                     'global_group_id': group_id,
-                    'sparse_granularity': 'default',
+                    'granularity': 'default',
                 }
             }
 
@@ -169,8 +169,8 @@ def default_config_schema(mode: Literal['pruning', 'quantization', 'distillation
             Optional('global_group_id'): Or(int, str),
             Optional('dependency_group_id'): Or(int, str),
             Optional('internal_metric_block'): int,
-            Optional('granularity'): ('default', 'in_channel', 'out_channel', 'per_channel', list),
-            Optional('apply_method'): ('bypass', 'mul', 'add')
+            Optional('granularity'): Or('default', 'in_channel', 'out_channel', 'per_channel', list),
+            Optional('apply_method'): Or('bypass', 'mul', 'add')
         }
     elif mode == 'quantization':
         setting_schema = {

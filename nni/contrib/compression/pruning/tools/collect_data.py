@@ -8,6 +8,7 @@ from typing import Dict
 
 import torch
 
+from .utils import is_active_target
 from ...base.compressor import _PRUNING_TARGET_SPACES
 
 
@@ -19,6 +20,6 @@ def active_sparse_targets_filter(target_spaces: _PRUNING_TARGET_SPACES) -> _DATA
     active_targets = defaultdict(dict)
     for module_name, ts in target_spaces.items():
         for target_name, target_space in ts.items():
-            if target_space.sparse_ratio is not None or target_space.sparse_threshold is not None:
-                active_targets[module_name][target_name] = target_space.target.clone()
+            if is_active_target(target_space):
+                active_targets[module_name][target_name] = target_space.target.clone().detach()
     return active_targets

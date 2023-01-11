@@ -112,13 +112,15 @@ class PruningTargetSpace(TargetSpace):
     def mask(self, val: Tensor | None):
         self._tensor_setter_helper(self._mask_name, val)
 
-    # don't support setter
     @property
     def apply_method(self) -> str:
         _method = self.setting.get('apply_method', None)
         _method = _method if _method else 'mul'
-        assert _method in ['mul', 'add']
         return _method
+
+    @apply_method.setter
+    def apply_method(self, val: str):
+        self._setting['apply_method'] = val
 
     @property
     def sparse_ratio(self) -> float | None:
