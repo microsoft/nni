@@ -15,14 +15,16 @@ Type 2 will be converted to type 1 upon the launch of a NAS experiment.
 
 from nni.mutable.exception import SampleValidationError
 
-__all__ = ['ModelStatus', 'BaseModelSpace', 'ExecutableModelSpace', 'KeepModelSpace', 'SimplifiedModelSpace']
+__all__ = ['ModelStatus', 'BaseModelSpace', 'ExecutableModelSpace', 'RawFormatModelSpace', 'SimplifiedModelSpace']
 
+from copy import deepcopy
 from enum import Enum
 from typing import NoReturn, Any, Callable, Iterable
 
 from nni.common.serializer import is_traceable, SerializableObject
 from nni.nas.evaluator import Evaluator
 from nni.mutable import Mutable, Sample, MutableDict, LabeledMutable, frozen_factory
+from nni.typehint import TrialMetric
 from .frozen import model_context
 
 from .metrics import Metrics
@@ -63,13 +65,18 @@ class ModelStatus(str, Enum):
     Training = "training"
     Trained = "trained"
     Failed = "failed"
+    Interrupted = "interrupted"
 
     def __repr__(self):
         return f'{self.__class__.__name__}.{self.name}'
 
     def frozen(self):
         """Frozen model cannot be mutated any more."""
-        return self in [ModelStatus.Frozen, ModelStatus.Training, ModelStatus.Trained, ModelStatus.Failed]
+        return self in [ModelStatus.Frozen, ModelStatus.Training, ModelStatus.Trained, ModelStatus.Interrupted, ModelStatus.Failed]
+
+    def completed(self):
+        """Completed model status won't change any more."""
+        return self in [ModelStatus.Trained, ModelStatus.Failed, ModelStatus.Interrupted]
 
 
 class ExecutableModelSpace(BaseModelSpace):
@@ -102,6 +109,12 @@ class ExecutableModelSpace(BaseModelSpace):
     sample: Sample | None
     """The sample that is used to freeze this model. It's useful for debug and visualization.
     It could be left unset if sample is not used when freezing the model.
+
+    It's supposed to be a dict which is previously known as **architecture dict**
+    (however it can sometimes contain information about evaluator as well).
+
+    Subclasses should set this attribute in :meth:`freeze` if they want to use it.
+    They may also set a sample different from what they received in :meth:`freeze` if it's intended.
     """
 
     def __init__(self, status: ModelStatus = ModelStatus.Initialized) -> None:
@@ -112,8 +125,7 @@ class ExecutableModelSpace(BaseModelSpace):
         """Execute the training (and/or evaluation)."""
         if self.evaluator is None:
             raise ValueError('Evaluator is not set, but default execute requires an evaluator.')
-        executable_model = self.executable_model()
-        return self.evaluator.evaluate(executable_model)
+        return self.evaluator._execute(self)
 
     @classmethod
     def from_model(cls, model_space: BaseModelSpace, evaluator: Evaluator | None = None, **configs: Any) -> ExecutableModelSpace:
@@ -150,17 +162,14 @@ class ExecutableModelSpace(BaseModelSpace):
         raise NotImplementedError('`executable_model` is not implemented for {}'.format(self.__class__.__name__))
 
     @property
-    def metric(self) -> float | None:
+    def metric(self) -> TrialMetric | None:
         """Training result of the model, or ``None`` if it's not yet trained or has failed to train."""
-        result = self.metrics.final
-        # Didn't check the status here. Even if the model failed to train, it can still have metrics sometimes.
-        if isinstance(result, dict):
-            return result.get('default', None)
-        return result
+        return self.metrics.final
 
 
-class KeepModelSpace(ExecutableModelSpace):
-    """Model space that keeps the original model and does no conversion.
+class RawFormatModelSpace(ExecutableModelSpace):
+    """Model space that keeps the original model and does no conversion of model format
+    (in contrast to :class:`SimplifiedModelSpace` or :class:`~nni.nas.space.GraphModelSpace`).
 
     It's possible that strategies directly operate on this format of model space,
     but it will be very slow (since dealing with deep learning models directly) and inflexible.
@@ -169,7 +178,9 @@ class KeepModelSpace(ExecutableModelSpace):
     which requires source-code-level access to those two components.
     One typical use case is one-shot strategy.
 
-    In the current version, :class:`KeepModelSpace` can't be serialized and sent to remote machines.
+    In the current version, :class:`RawFormatModelSpace` can't be serialized and sent to remote machines.
+
+    TODO: examples?
     """
 
     def __init__(self, model_space: BaseModelSpace, evaluator: Evaluator) -> None:
@@ -181,6 +192,7 @@ class KeepModelSpace(ExecutableModelSpace):
     def extra_repr(self) -> str:
         return f'model_space={self.model_space!r}, ' + \
             f'evaluator={self.evaluator!r}, ' + \
+            (f'sample={self.sample!r}, ' if self.sample else '') + \
             (f'metrics={self.metrics!r}, ' if self.metrics else '') + \
             f'status={self.status!r}'
 
@@ -188,12 +200,12 @@ class KeepModelSpace(ExecutableModelSpace):
     def from_model(cls, model_space: BaseModelSpace, evaluator: Evaluator | None = None, **configs) -> ExecutableModelSpace:
         return cls(model_space, evaluator)
 
-    def freeze(self, sample: Sample) -> KeepModelSpace:
+    def freeze(self, sample: Sample) -> RawFormatModelSpace:
         if self.status != ModelStatus.Initialized:
             raise RuntimeError('Cannot freeze a model space that is not initialized.')
         self.validate(sample)
 
-        new_model = KeepModelSpace(
+        new_model = RawFormatModelSpace(
             self.model_space.freeze(sample),
             self.evaluator.freeze(sample) if isinstance(self.evaluator, Mutable) else self.evaluator
         )
@@ -222,18 +234,45 @@ class KeepModelSpace(ExecutableModelSpace):
             yield from self.evaluator.leaf_mutables(is_leaf)
 
     def _dump(self) -> NoReturn:
+        """Serialization of a :class:`RawFormatModelSpace` is not supported.
+
+        Notes
+        -----
+        The potential issues with serialization are in two folds:
+        
+        1. The model space could be a deep learning model, and have been arbitrarily mutated by the strategy (e.g., one-shot).
+           For example, one submodule is replaced by another, or a layer is removed.
+           In this case, we surely cannot use the init arguments to recover the model.
+        2. The model space could contain parameters (weights), that are meant to be part of the model space.
+           (That's why we have :class:`RawFormatModelSpace` other than :class:`SimplifiedModelSpace`).
+           In this case, we need to dump all the parameters, which could be potentially large and slow.
+
+        One potential solution to this problem might be introducing an advanced version of ``nni.trace``,
+        that allows users / strategies to define a function that recreates the current instance from scratch.
+        This function must be runnable in a completely new isolated process.
+
+        Another potential solution might be introducing several flags to evaluator to specific needs like one-shot.
+        But I don't think it's a good idea, because I want to make the evaluator semantically simple.
+        """
         raise NotImplementedError('`_dump` is not implemented for {}'.format(self.__class__.__name__))
 
     @classmethod
     def _load(cls, **kwargs) -> NoReturn:
-        raise NotImplementedError('`_load` is not implemented for {}'.format(KeepModelSpace.__name__))
+        raise NotImplementedError('`_load` is not implemented for {}'.format(RawFormatModelSpace.__name__))
 
 
 class SimplifiedModelSpace(ExecutableModelSpace):
-    """Model space that is simplified and only keeps the key information.
+    """Model space that is simplified (see :meth:`~nni.mutable.Mutable.simplify`),
+    and only keeps the key information.
 
-    All the details inside the model will be removed.
-    Only the mutables and necessary information to recover the model for execution will be kept.
+    With :class:`SimplifiedModelSpace`, all details inside the model will be removed,
+    which means, the weights, attributes, inplace modifications of the model will all be lost.
+    Only the simplified mutables and necessary init arguments to recover the model for execution will be kept.
+
+    To work with :class:`SimplifiedModelSpace`,
+    the model itself should detect :meth:`~nni.nas.space.current_model` context,
+    and init a sampled concrete model when it's inside the context.
+    Since the model will be recreated, ``freeze`` and ``contains`` method of model space is never used.
     """
 
     def __init__(self, model: Any, mutables: dict[str, Any] | MutableDict, evaluator: Evaluator) -> None:
@@ -260,7 +299,7 @@ class SimplifiedModelSpace(ExecutableModelSpace):
         model = self.__class__(self.model, self.mutables, self.evaluator)
         # Set status and sample
         model.status = ModelStatus.Frozen
-        model.sample = sample
+        model.sample = deepcopy(sample)
         # If evaluator is a mutable, freeze it here.
         if isinstance(self.evaluator, Mutable):
             model.evaluator = self.evaluator.freeze(sample)
@@ -285,6 +324,7 @@ class SimplifiedModelSpace(ExecutableModelSpace):
 
     def extra_repr(self) -> str:
         return f'model={self.model}, mutables={self.mutables}, evaluator={self.evaluator}, ' + \
+            (f'sample={self.sample!r}, ' if self.sample else '') + \
             (f'metrics={self.metrics!r}, ' if self.metrics else '') + \
             f'status={self.status!r}'
 
