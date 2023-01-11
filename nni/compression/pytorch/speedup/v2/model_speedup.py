@@ -150,7 +150,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         else:
             try:
                 return copy.deepcopy(obj)
-            except copy.Error:
+            except Exception:
                 return obj
 
     def tensor_randomizer(self, obj):
@@ -167,7 +167,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         else:
             try:
                 return copy.deepcopy(obj)
-            except copy.Error:
+            except Exception:
                 return obj
 
     def mask_applier(self, value, mask):

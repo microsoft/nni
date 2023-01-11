@@ -52,7 +52,6 @@ from .utils import (
     _orig_zip,
     _orig_enumerate,
     _orig_slice,
-    _orig_slice,
 
     _orig_len,
     _orig_not,
