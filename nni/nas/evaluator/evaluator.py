@@ -5,16 +5,22 @@ from __future__ import annotations
 
 __all__ = ['Evaluator', 'MutableEvaluator', 'FrozenEvaluator']
 
+import logging
 from contextlib import contextmanager
-from typing import Any, Callable, Iterator, Iterable, Union, TYPE_CHECKING, ContextManager
+from typing import Any, Callable, Iterator, Iterable, TYPE_CHECKING, ContextManager
+from typing_extensions import Literal
 
 import nni
 from nni.common.serializer import is_traceable, SerializableObject
 from nni.mutable import Mutable, Sample, LabeledMutable, SampleValidationError
 from nni.mutable.mutable import _mutable_equal
+from nni.runtime.trial_command_channel import TrialCommandChannel, set_default_trial_command_channel, get_default_trial_command_channel
 
 if TYPE_CHECKING:
     from nni.nas.space import ExecutableModelSpace
+    from nni.typehint import ParameterRecord, TrialMetric
+
+_logger = logging.getLogger(__name__)
 
 
 class Evaluator:
@@ -52,9 +58,8 @@ class Evaluator:
         2. Use :func:`nni.report_intermediate_result` to report intermediate results.
         3. Use :func:`nni.report_final_result` to report final results.
 
-        These APIs are only available when the evaluator is executed by NNI,
-        When using evaluator in a standalone way, either use :meth:`trial_available` to check if the APIs are available,
-        or use :meth:`mock_trial` to mock the APIs.
+        These APIs are only available when the evaluator is executed by NNI.
+        We recommend using ``nni.get_current_parameter() is not None`` to check if the APIs are available before using them.
         Please AVOID using :func:`nni.get_next_parameter()` because NAS framework has already handled the logic
         of retrieving the next parameter. Incorrectly using :func:`nni.get_next_parameter()` may cause unexpected behavior.
     """
@@ -73,13 +78,15 @@ class Evaluator:
     def extra_repr(self) -> str:
         return ''
 
+    @staticmethod
     @contextmanager
-    def mock_trial(self, model: ExecutableModelSpace) -> ContextManager[None]:
+    def mock_runtime(model: ExecutableModelSpace) -> ContextManager[None]:
         """
         Context manager to mock trial APIs for standalone usage.
 
-        Under the with-context of this method, :meth:`trial_available` will return ``True``,
-        and :func:`nni.get_current_parameter` will return the given model.
+        Under the with-context of this method, :func:`nni.get_current_parameter` will return the given model.
+
+        NOTE: This method might become a utility in trial command channel in future.
 
         Parameters
         ----------
@@ -92,36 +99,32 @@ class Evaluator:
         A typical use case is as follows:
 
         >>> frozen_model = model_space.freeze(sample)
-        >>> with evaluator.mock_trial(frozen_model):
+        >>> with evaluator.mock_runtime(frozen_model):
         ...     evaluator.evaluate(frozen_model.executable_model())
         """
 
-        if self.trial_available():
-            raise RuntimeError("Cannot mock trial when trial APIs are available.")
+        if nni.get_current_parameter() is not None:
+            raise RuntimeError("Cannot mock trial when trial APIs are already available.")
 
         from nni.nas.space import ExecutableModelSpace
         if not isinstance(model, ExecutableModelSpace):
             raise TypeError("model should be an ExecutableModelSpace object.")
 
-        import nni.trial
+        trial_command_channel = get_default_trial_command_channel()
         original_params = nni.trial._params
-        nni.trial._params = {
-            'parameter_id': 0,
-            'parameters': model
-        }
+        original_seq = nni.trial._intermediate_seq
 
         try:
+            set_default_trial_command_channel(_EvaluatorMockTrialCommandChannel(model))
+            assert nni.get_next_parameter() is model
             yield
         finally:
+            set_default_trial_command_channel(trial_command_channel)
+            # NOTE: It might have some side effects on nni.trial._params.
+            #       Might cause the trial_available() to still return true after the context.
+            #       The following hack might address the problem.
             nni.trial._params = original_params
-
-    def trial_available(self) -> bool:
-        """Whether the evaluator is executed as a trial.
-
-        If the evaluator is executed by NNI, it can use :doc:`NNI trial APIs </reference/hpo>`
-        to communicate with the exploration strategy.
-        """
-        return nni.get_current_parameter() is not None
+            nni.trial._intermediate_seq = original_seq
 
     @staticmethod
     def _load(**ir: Any) -> 'Evaluator':
@@ -132,9 +135,13 @@ class Evaluator:
         """Subclass implements ``_dump`` for their own serialization."""
         raise NotImplementedError()
 
-    def _execute(self, model_cls: Union[Callable[[], Any], Any]) -> Any:
-        """Override by subclass to implement the actual evaluation."""
-        raise NotImplementedError()
+    def _execute(self, model: ExecutableModelSpace) -> Any:
+        """Advanced users can overwrite this to avoid instantiation of the deep learning model.
+
+        For internal uses only.
+        """
+        executable_model = model.executable_model()
+        return self.evaluate(executable_model)
 
 
 class MutableEvaluator(Mutable, Evaluator):
@@ -218,8 +225,12 @@ class MutableEvaluator(Mutable, Evaluator):
                 yield from MutableEvaluator.expand_trace_kwargs(param)
 
     def freeze(self, sample: Sample) -> FrozenEvaluator:
-        """Upon freeze, :class:`MutableEvaluator` will freeze all the mutable parameters, and return a :class:`FrozenEvaluator`.
-        The evaluator will not be fully initialized to save the memory.
+        """Upon freeze, :class:`MutableEvaluator` will freeze all the mutable parameters
+        (as well as nested parameters),
+        and return a :class:`FrozenEvaluator`.
+
+        The evaluator will not be fully initialized to save the memory,
+        especially when parameters contain large objects such as datasets.
         To use the evaluator, call :meth:`FrozenEvaluator.get` to get the full usable evaluator.
 
         Returns
@@ -247,7 +258,12 @@ class MutableEvaluator(Mutable, Evaluator):
         return None
 
     def is_mutable(self) -> bool:
-        """Whether some arguments of the evaluator are mutable."""
+        """Whether some arguments of the evaluator are mutable.
+        
+        Although the evaluator is mutable, it may contain no mutable parameters,
+        i.e., all its parameters (including nested ones) are fixed values.
+        Return false if there is none.
+        """
         for _ in self.expand_trace_kwargs(self):
             return True
         return False
@@ -266,9 +282,14 @@ class MutableEvaluator(Mutable, Evaluator):
 
 
 class FrozenEvaluator(Evaluator):
-    """Wrapper of *empty-shell* mutators. Function as the freezing result of :class:`MutableEvaluator`.
+    """:meth:`MutableEvaluator.freeze` returns a :class:`FrozenEvaluator`,
+    which is purely an empty-shell (i.e., symbol and init parameters), and not instantiated.
 
-    When :meth:`evaluate` is invoked, it instantiates to the full evaluator and execute it.
+    For the evaluator itself and its parameters, if its constructor is decorated with ``nni.trace``,
+    in :attr:`frozen_obj`, it will be a :class:`SerializableObject` that contains the constructor (class / function)
+    as well as the arguments that have been used to instantiate the object.
+
+    When :meth:`evaluate` is invoked, it instantiates to the full evaluator recursively and execute it.
     """
 
     def __init__(self, frozen_obj: SerializableObject):
@@ -281,6 +302,7 @@ class FrozenEvaluator(Evaluator):
             # It has been instantiated
             return obj
 
+        # obj must be a SerializableObject here.
         updates = {}
         for key, param in obj.trace_kwargs.items():
             sub_update = FrozenEvaluator.recursive_instantiate(param)
@@ -290,6 +312,8 @@ class FrozenEvaluator(Evaluator):
         if updates:
             obj.trace_kwargs.update(updates)
 
+        # Calling get() of a SerializableObject gives a fully instantiated object.
+        # We can't bypass this get() even if updates is empty because obj is never instantiated.
         return obj.get()
 
     def get(self) -> Evaluator:
@@ -337,3 +361,25 @@ class FrozenEvaluator(Evaluator):
 
     def trace_copy(self):
         return FrozenEvaluator(self.frozen_obj.trace_copy())
+
+
+class _EvaluatorMockTrialCommandChannel(TrialCommandChannel):
+    """Mock a trial command channel for evaluator debugging."""
+
+    def __init__(self, model: ExecutableModelSpace):
+        self.model = model
+
+    def receive_parameter(self) -> ParameterRecord | None:
+        return {
+            'parameter_id': 0,
+            'parameters': self.model
+        }
+
+    def send_metric(self, type: Literal['PERIODICAL', 'FINAL'], parameter_id: int | None,
+                    trial_job_id: str, sequence: int, value: TrialMetric) -> None:
+        if type == 'FINAL':
+            self.model.metrics.final = value
+            _logger.info('[Mock] Final metric: %s', value)
+        else:
+            self.model.metrics.add_intermediate(value)
+            _logger.info('[Mock] Intermediate metric: %s', value)

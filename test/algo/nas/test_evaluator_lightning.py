@@ -1,25 +1,31 @@
-import json
 import pytest
 
-import nni
-import nni.retiarii.evaluator.pytorch.lightning as pl
 import pytorch_lightning
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from nni.retiarii.evaluator import FunctionalEvaluator
 from sklearn.datasets import load_diabetes
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
-pytestmark = pytest.mark.skip(reason='Rewrite this after trial command channel is merged.')
+import nni
+import nni.nas.evaluator.pytorch.lightning as pl
+from nni.nas.evaluator import FunctionalEvaluator, Evaluator
+from nni.nas.space import RawFormatModelSpace
 
-debug = False
+debug = True
 
 enable_progress_bar = False
 if debug:
     enable_progress_bar = True
+
+
+@pytest.fixture
+def mocked_model():
+    model = RawFormatModelSpace(None, None)
+    with Evaluator.mock_runtime(model):
+        yield model
 
 
 class MNISTModel(nn.Module):
@@ -73,24 +79,12 @@ class DiabetesDataset(Dataset):
         return self.length
 
 
-def _get_final_result():
-    return float(json.loads(nni.runtime.platform.test._last_metric)['value'])
-
-
-def _foo(model_cls):
-    assert model_cls == MNISTModel
-
-
-def _reset():
-    # this is to not affect other tests in sdk
-    nni.trial._intermediate_seq = 0
-    nni.trial._params = {'foo': 'bar', 'parameter_id': 0, 'parameters': {}}
-    nni.runtime.platform.test._last_metric = None
+def _foo(model):
+    assert isinstance(model, MNISTModel)
 
 
 @pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
-def test_mnist():
-    _reset()
+def test_mnist(mocked_model):
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = nni.trace(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
     test_dataset = nni.trace(MNIST)(root='data/mnist', train=False, download=True, transform=transform)
@@ -99,15 +93,13 @@ def test_mnist():
                                   max_epochs=2, limit_train_batches=0.25,  # for faster training
                                   enable_progress_bar=enable_progress_bar,
                                   num_classes=10)
-    lightning._execute(MNISTModel)
-    assert _get_final_result() > 0.7
-    _reset()
+    lightning.evaluate(MNISTModel())
+    assert mocked_model.metric > 0.7
+    assert len(mocked_model.metrics.intermediates) == 2
 
 
 @pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
-def test_diabetes():
-    _reset()
-    nni.runtime.platform.test._last_metric = None
+def test_diabetes(mocked_model):
     train_dataset = DiabetesDataset(train=True)
     test_dataset = DiabetesDataset(train=False)
     lightning = pl.Regression(optimizer=torch.optim.SGD,
@@ -115,19 +107,18 @@ def test_diabetes():
                               val_dataloaders=pl.DataLoader(test_dataset, batch_size=20),
                               max_epochs=100,
                               enable_progress_bar=enable_progress_bar)
-    lightning._execute(FCNet(train_dataset.x.shape[1], 1))
-    assert _get_final_result() < 2e4
-    _reset()
+    lightning.evaluate(FCNet(train_dataset.x.shape[1], 1))
+    assert mocked_model.metric < 2e4
+    assert len(mocked_model.metrics.intermediates) == 100
 
 
 @pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
 def test_functional():
-    FunctionalEvaluator(_foo)._execute(MNISTModel)
+    FunctionalEvaluator(_foo).evaluate(MNISTModel())
 
 
 @pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
-def test_fit_api():
-    _reset()
+def test_fit_api(mocked_model):
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = nni.trace(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
     test_dataset = nni.trace(MNIST)(root='data/mnist', train=False, download=True, transform=transform)
@@ -139,14 +130,4 @@ def test_fit_api():
                                               num_classes=10)
     # Lightning will have some cache in models / trainers,
     # which is problematic if we call fit multiple times.
-    lightning().fit(lambda: MNISTModel())
-    lightning().fit(MNISTModel)
-    lightning().fit(MNISTModel())
-    _reset()
-
-
-if __name__ == '__main__':
-    test_mnist()
-    test_diabetes()
-    test_functional()
-    test_fit_api()
+    lightning().evaluate(MNISTModel())

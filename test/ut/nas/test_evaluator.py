@@ -188,42 +188,37 @@ def test_choice_in_classification():
 
 def test_mock_trial_api(caplog):
     from nni.nas.nn.pytorch import ModelSpace, LayerChoice
-    from nni.nas.space import KeepModelSpace
+    from nni.nas.space import RawFormatModelSpace
 
     class Net(ModelSpace):
         def __init__(self):
             super().__init__()
-            self.layer = LayerChoice([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)])
+            self.layer = LayerChoice([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)], label='layer')
 
         def forward(self, x):
             return self.layer(x)
 
-
     def foo(model):
         import nni
         nni.report_intermediate_result(0.5)
-        assert 'Intermediate result: 0.5' in caplog.text
+        assert 'Intermediate metric: 0.5' in caplog.text
         nni.report_final_result(0.6)
-        assert 'Final result: 0.6' in caplog.text
+        assert 'Final metric: 0.6' in caplog.text
 
     space = Net()
-    space_cvt = KeepModelSpace.from_model(space)
+    space_cvt = RawFormatModelSpace.from_model(space)
     model = space_cvt.random()
     evaluator = FunctionalEvaluator(foo)
 
-    with pytest.raises(AssertionError, match='needs to be called'):
-        assert not evaluator.trial_available()
-        evaluator.evaluate(model)
-
     with pytest.raises(TypeError, match='ExecutableModelSpace'):
         m = model.executable_model()
-        with evaluator.mock_trial(m):
+        with evaluator.mock_runtime(m):
             evaluator.evaluate(m)
 
-    with evaluator.mock_trial(model):
+    with evaluator.mock_runtime(model):
         import nni
         assert nni.get_current_parameter() == model
-        assert evaluator.trial_available()
         evaluator.evaluate(model.executable_model())
+        assert '[Mock] Final' in caplog.text
 
-    assert not evaluator.trial_available()
+    assert nni.get_current_parameter() is None
