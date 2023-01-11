@@ -5,7 +5,7 @@ import logging
 import os
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Union, Optional, List, Type, Callable
+from typing import Any, Dict, Union, Optional, List, Type
 
 import pytorch_lightning as pl
 import torch.nn as nn
@@ -52,7 +52,7 @@ class LightningModule(pl.LightningModule):
 
     def set_model(self, model: nn.Module) -> None:
         """Set the inner model (architecture) to train / evaluate.
-        
+
         As there is no explicit method to "unset" a model,
         the model is left in the lightning module after the method is called.
         We don't recommend relying on this behavior.
@@ -115,7 +115,7 @@ class Lightning(MutableEvaluator):
 
         import nni
         from nni.nas.evaluator.pytorch.lightning import Lightning, LightningModule, Trainer, DataLoader
-        
+
     """
 
     def __init__(self, lightning_module: LightningModule, trainer: Trainer,
@@ -287,7 +287,7 @@ class SupervisedLearningModule(LightningModule):
             return self.trainer.callback_metrics[f'{stage}_{metric_name}'].item()
         else:
             warnings.warn('Multiple metrics without "default" is not supported by current framework.')
-            return {name: self.trainer.callback_metrics[f'{stage}_{metric_name}'].item() for name in self.metrics}
+            return {name: self.trainer.callback_metrics[f'{stage}_{name}'].item() for name in self.metrics}
 
 
 class _AccuracyWithLogits(torchmetrics.Accuracy):
