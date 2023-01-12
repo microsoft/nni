@@ -84,6 +84,7 @@ def test_functional_nested(capsys):
     assert capsys.readouterr().out == '1.5 c 9\n'
 
 
+@pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Lightning 1.0 required')
 def test_classification_mutate():
     evaluator = Classification(
         criterion=nn.CrossEntropyLoss,
