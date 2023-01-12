@@ -222,7 +222,7 @@ class MutableEvaluator(Mutable, Evaluator):
             if isinstance(param, Mutable):
                 yield param
             # Recursively yield all the nested parameters
-            if is_traceable(param):
+            if is_traceable(param, must_be_instance=True):
                 yield from MutableEvaluator.expand_trace_kwargs(param)
 
     def freeze(self, sample: Sample) -> FrozenEvaluator | MutableEvaluator:

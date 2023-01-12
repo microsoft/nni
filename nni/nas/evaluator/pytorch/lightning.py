@@ -14,7 +14,6 @@ import torch.optim as optim
 import torchmetrics
 import torchmetrics.classification
 import torch.utils.data as torch_data
-from pytorch_lightning.trainer.states import TrainerFn
 
 import nni
 from nni.common.serializer import is_traceable
@@ -265,10 +264,13 @@ class SupervisedLearningModule(LightningModule):
             nni.report_intermediate_result(self._get_result_for_report())
 
     def on_fit_end(self):
+        # Inline import to avoid errors with unsupported lightning version
+        from pytorch_lightning.trainer.states import TrainerFn
         if self.trainer.state.fn == TrainerFn.FITTING:
             self._final_report()
 
     def on_validation_end(self):
+        from pytorch_lightning.trainer.states import TrainerFn
         if self.trainer.state.fn == TrainerFn.VALIDATING:
             self._final_report()
 
