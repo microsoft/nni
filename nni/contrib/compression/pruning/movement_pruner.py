@@ -11,7 +11,7 @@ import torch
 from torch.optim import Adam
 
 from .scheduled_pruner import ScheduledPruner
-from .tools import is_active_target, generate_sparsity, sum_metric
+from .tools import is_active_target, generate_sparsity, sum_sigmoid_metric
 from ..base.target_space import TargetType
 from ..base.wrapper import ModuleWrapper
 from ..utils import Evaluator
@@ -86,6 +86,8 @@ class MovementPruner(ScheduledPruner):
         evaluator.patch_optimizer_step(before_step_tasks=[optimizer_task], after_step_tasks=[])
 
     def _patch_loss(self, evaluator: Evaluator):
+        def reduce_func(t: torch.Tensor) -> torch.Tensor:
+            return t.sum(dim=-1).sigmoid()
 
         def loss_patch(original_loss, batch):
             reg_loss = 0.
@@ -94,9 +96,13 @@ class MovementPruner(ScheduledPruner):
                 for target_name, target_space in ts.items():
                     score: torch.Tensor = getattr(target_space._wrapper, MOVEMENT_SCORE_PNAME.format(target_name), None)
                     if target_space.sparse_threshold is not None and score is not None:
-                        reg_loss += torch.norm(torch.sigmoid(score), p=1) / score.numel()
+                        if target_space._scaler is not None:
+                            score = target_space._scaler.shrink(score, reduce_func)
+                        else:
+                            score = score.sigmoid()
+                        reg_loss += torch.norm(score, p=1) / score.numel()
                         count += 1
-            ratio = max(0., min(1., 1 - self._remaining_times / self.total_times ** 3))
+            ratio = max(0., min(1., 1 - (self._remaining_times / self.total_times) ** 3))
             if count > 0:
                 reg_loss = self.regular_scale * ratio * reg_loss / count
             return original_loss + reg_loss
@@ -138,7 +144,7 @@ class MovementPruner(ScheduledPruner):
         return data
 
     def _calculate_metrics(self, data: Dict[str, Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, torch.Tensor]]:
-        return sum_metric(data=data, target_spaces=self._target_spaces)
+        return sum_sigmoid_metric(data=data, target_spaces=self._target_spaces)
 
     def _generate_sparsity(self, metrics: Dict[str, Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, torch.Tensor]]:
         return generate_sparsity(metrics=metrics, target_spaces=self._target_spaces)
