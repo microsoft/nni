@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+import inspect
 import torch
 import torch.fx
 import torch.nn as nn
@@ -247,6 +248,15 @@ class ModelSpeedup(torch.fx.Interpreter):
         else:
             return None
 
+    def mask_merger(self, a, b):
+        if isinstance(a, torch.Tensor) and self.tensor_propagate_check(a):
+            assert isinstance(b, torch.Tensor) and a.shape == b.shape
+            # equals to: torch.maximum(a + b, torch.ones_like(a)) - 1
+            return torch.relu(a + b - 1)
+        else:
+            assert a is None and b is None
+            return None
+
     def indirect_calc_mask(self, mask, obj):
         if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj):
             assert isinstance(mask, torch.Tensor) and obj.shape == mask.shape
@@ -439,10 +449,9 @@ class ModelSpeedup(torch.fx.Interpreter):
 
         # to store intermediate infomations
         self.slots: Dict[Node, Slot] = {node: Slot() for node in self.module.graph.nodes}
-        # for mask_updater to store extended infos
-        self.node_infos: Dict[Node, NodeInfo] = {node: NodeInfo() for node in self.module.graph.nodes}
 
     def initialize_update_sparsity(self):
+        # for mask_updater to store extended infos
         self.node_infos: Dict[Node, NodeInfo] = {node: NodeInfo() for node in self.module.graph.nodes}
         for node in self.module.graph.nodes:
             node: Node
@@ -451,16 +460,91 @@ class ModelSpeedup(torch.fx.Interpreter):
                     self.node_infos[node].mask_updater = mask_updater
                     break
 
+        # mask init
+        node_to_masks = {k: [] for k in self.module.graph.nodes}
+        for node in (node for node in self.module.graph.nodes if self.node_infos[node].module is not None):
+            # some 'call_module's has no 'module' such as 'log_softmax'
+            param_masks = self.masks_file.get(node.target, {})
+            if '_output_' in param_masks:
+                node_to_masks[node].append(param_masks['_output_'])
+            if '_input_' in param_masks:
+                func = self.fetch_attr(node.target).forward
+                while hasattr(func, '__wrapped__'):
+                    func = func.__wrapped__
+                arg_list = inspect.getfullargspec(func).args
+                kw_to_posi = dict(zip(arg_list[1:], range(len(arg_list))[1:]))
+                node_kw = {
+                    **dict(zip(range(len(arg_list))[1:], node.args)),
+                    **dict(zip(arg_list[1:], node.args)),
+                    **{kw_to_posi[k]: v for k, v in node.kwargs.items()},
+                    **node.kwargs,
+                }
+                for key, mask in param_masks['_input_'].items():
+                    node_to_masks[node_kw[key]].append(mask)
+        def check_equal(a, b):
+            if type(a) != type(b):
+                return False
+            if isinstance(a, (list, tuple)):
+                if len(a) != len(b):
+                    return False
+                for sub_a, sub_b in zip(a, b):
+                    if not check_equal(sub_a, sub_b):
+                        return False
+                return True
+            elif isinstance(a, dict):
+                if len(set(a.keys()).symmetric_difference(b.keys())) != 0:
+                    return False
+                for key in a.keys():
+                    if not check_equal(a[key], b[key]):
+                        return False
+                return True
+            else:
+                assert isinstance(a, torch.Tensor), f'contents in masks can only be (list, tuple, dict, Tensor), not ({type(a)})'
+                return torch.equal(a, b) # totally equal, no bias
+        def check_valid(a, b):
+            if isinstance(a, (list, tuple)):
+                if not isinstance(b, (list, tuple)):
+                    return False
+                if len(a) != len(b):
+                    return False
+                for sub_a, sub_b in zip(a, b):
+                    if not check_equal(sub_a, sub_b):
+                        return False
+                return True
+            elif isinstance(a, dict):
+                if not isinstance(b, dict):
+                    return False
+                if len(set(a.keys()).symmetric_difference(b.keys())) != 0:
+                    return False
+                for key in a.keys():
+                    if not check_equal(a[key], b[key]):
+                        return False
+                return True
+            elif isinstance(a, torch.Tensor):
+                if not isinstance(b, torch.Tensor):
+                    return False
+                return a.shape == b.shape
+            else:
+                return b is None
+        for node, masks in node_to_masks.items():
+            if len(masks) >= 1:
+                mask = masks[0]
+                for mask_next in masks[1:]:
+                    assert check_equal(mask, mask_next), f'preset-masks of slot "{node}" are not euqal!'
+                assert check_valid(self.slots[node].value_0, mask),\
+                    f'structure of preset-mask and value of slot "{node}" are not euqal!'
+                self.slots[node].mask_0 = masks[0]
+
     def run(self, *, args, masks_file, map_location=None) -> Any:
         """
         This class is to speedup the model with provided weight mask.
 
         Parameters
         ----------
-        args : list
+        args : tuple/list
             the dummy_input to execute the model
         masks_file : str/dict
-            The path of user provided mask file, or the mask object
+            The path of user provided mask file, or the mask object.
         map_location : str
             the device on which masks are placed, same to map_location in ```torch.load```
         """
@@ -470,7 +554,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         if isinstance(masks_file, (str, Path)) and Path(masks_file).exists():
             self.masks_file = torch.load(masks_file, map_location)
         elif isinstance(masks_file, dict):
-            self.masks_file = masks_file
+            self.masks_file = copy.deepcopy(masks_file)
         else:
             raise Exception('Please provide the mask or the path of the mask file')
 

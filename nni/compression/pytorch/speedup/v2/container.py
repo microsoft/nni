@@ -4,8 +4,7 @@
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .mask_updater import MaskUpdater
-
-import torch
+    import torch
 
 class Slot:
     def __init__(self) -> None:
@@ -13,6 +12,7 @@ class Slot:
         self.value_1 = None
         self.value_2 = None
         self.value_3 = None
+        self.mask_0 = None
         self.mask_1 = None
         self.mask_2 = None
         self.status = {

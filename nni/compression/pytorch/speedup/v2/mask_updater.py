@@ -131,7 +131,11 @@ class DefaultMaskUpdater(MaskUpdater):
 
             output = getattr(model_speedup, node.op)(node.target, args_2, kwargs_2)
 
-            model_speedup.slots[node].mask_1 = map_recursive(model_speedup.direct_calc_mask, output)
+            calc_mask = map_recursive(model_speedup.direct_calc_mask, output)
+            mask_0 = model_speedup.slots[node].mask_0
+            if mask_0 is not None:
+                calc_mask = map_recursive_zip(model_speedup.mask_merger, mask_0, calc_mask)
+            model_speedup.slots[node].mask_1 = calc_mask
             model_speedup.slots[node].status['mask_1'] += 1
 
         if model_speedup.garbage_collect_values:
