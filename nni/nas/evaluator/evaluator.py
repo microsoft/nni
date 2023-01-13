@@ -266,6 +266,7 @@ class MutableEvaluator(Mutable, Evaluator):
         i.e., all its parameters (including nested ones) are fixed values.
         Return false if there is none.
         """
+        # It's a clever way to check whether an iterator is not empty, without expanding it.
         for _ in self.expand_trace_kwargs(self):
             return True
         return False

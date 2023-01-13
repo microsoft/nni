@@ -27,6 +27,9 @@ class FunctionalEvaluator(MutableEvaluator):
     def extra_repr(self):
         return f"{self.function!r}, arguments={self.arguments!r})"
 
+    # NOTE: FunctionalEvaluator implements the traceable interface by itself,
+    #       so that it doesn't need the `nni.trace` decorator.
+
     @property
     def trace_symbol(self):
         return self.__class__
