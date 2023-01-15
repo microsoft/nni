@@ -6,18 +6,18 @@ from __future__ import annotations
 __all__ = ['Evaluator', 'MutableEvaluator', 'FrozenEvaluator']
 
 import logging
-# from contextlib import contextmanager
-from typing import Any, Callable, Iterator, Iterable, TYPE_CHECKING  #, ContextManager
-# from typing_extensions import Literal
+from contextlib import contextmanager
+from typing import Any, Callable, Iterator, Iterable, TYPE_CHECKING, ContextManager
+from typing_extensions import Literal
 
-# import nni
+import nni
 from nni.common.serializer import is_traceable, SerializableObject
 from nni.mutable import Mutable, Sample, LabeledMutable, SampleValidationError
 from nni.mutable.mutable import _mutable_equal
-# from nni.runtime.trial_command_channel import TrialCommandChannel, set_default_trial_command_channel, get_default_trial_command_channel
+from nni.runtime.trial_command_channel import TrialCommandChannel, set_default_trial_command_channel, get_default_trial_command_channel
 
 if TYPE_CHECKING:
-    # from nni.nas.space import ExecutableModelSpace
+    from nni.nas.space import ExecutableModelSpace
     from nni.typehint import ParameterRecord, TrialMetric
 
 _logger = logging.getLogger(__name__)
@@ -78,53 +78,53 @@ class Evaluator:
     def extra_repr(self) -> str:
         return ''
 
-    # @staticmethod
-    # @contextmanager
-    # def mock_runtime(model: ExecutableModelSpace) -> ContextManager[None]:
-    #     """
-    #     Context manager to mock trial APIs for standalone usage.
+    @staticmethod
+    @contextmanager
+    def mock_runtime(model: ExecutableModelSpace) -> ContextManager[None]:
+        """
+        Context manager to mock trial APIs for standalone usage.
 
-    #     Under the with-context of this method, :func:`nni.get_current_parameter` will return the given model.
+        Under the with-context of this method, :func:`nni.get_current_parameter` will return the given model.
 
-    #     NOTE: This method might become a utility in trial command channel in future.
+        NOTE: This method might become a utility in trial command channel in future.
 
-    #     Parameters
-    #     ----------
-    #     model
-    #         The model to be evaluated. It should be a :class:`~nni.nas.space.ExecutableModelSpace` object.
+        Parameters
+        ----------
+        model
+            The model to be evaluated. It should be a :class:`~nni.nas.space.ExecutableModelSpace` object.
 
-    #     Examples
-    #     --------
-    #     This method should be mostly used when testing a evaluator.
-    #     A typical use case is as follows:
+        Examples
+        --------
+        This method should be mostly used when testing a evaluator.
+        A typical use case is as follows:
 
-    #     >>> frozen_model = model_space.freeze(sample)
-    #     >>> with evaluator.mock_runtime(frozen_model):
-    #     ...     evaluator.evaluate(frozen_model.executable_model())
-    #     """
+        >>> frozen_model = model_space.freeze(sample)
+        >>> with evaluator.mock_runtime(frozen_model):
+        ...     evaluator.evaluate(frozen_model.executable_model())
+        """
 
-    #     if nni.get_current_parameter() is not None:
-    #         raise RuntimeError("Cannot mock trial when trial APIs are already available.")
+        if nni.get_current_parameter() is not None:
+            raise RuntimeError("Cannot mock trial when trial APIs are already available.")
 
-    #     from nni.nas.space import ExecutableModelSpace
-    #     if not isinstance(model, ExecutableModelSpace):
-    #         raise TypeError("model should be an ExecutableModelSpace object.")
+        from nni.nas.space import ExecutableModelSpace
+        if not isinstance(model, ExecutableModelSpace):
+            raise TypeError("model should be an ExecutableModelSpace object.")
 
-    #     trial_command_channel = get_default_trial_command_channel()
-    #     original_params = nni.trial._params
-    #     original_seq = nni.trial._intermediate_seq
+        trial_command_channel = get_default_trial_command_channel()
+        original_params = nni.trial._params
+        original_seq = nni.trial._intermediate_seq
 
-    #     try:
-    #         set_default_trial_command_channel(_EvaluatorMockTrialCommandChannel(model))
-    #         assert nni.get_next_parameter() is model
-    #         yield
-    #     finally:
-    #         set_default_trial_command_channel(trial_command_channel)
-    #         # NOTE: It might have some side effects on nni.trial._params.
-    #         #       Might cause the trial_available() to still return true after the context.
-    #         #       The following hack might address the problem.
-    #         nni.trial._params = original_params
-    #         nni.trial._intermediate_seq = original_seq
+        try:
+            set_default_trial_command_channel(_EvaluatorMockTrialCommandChannel(model))
+            assert nni.get_next_parameter() is model
+            yield
+        finally:
+            set_default_trial_command_channel(trial_command_channel)
+            # NOTE: It might have some side effects on nni.trial._params.
+            #       Might cause the trial_available() to still return true after the context.
+            #       The following hack might address the problem.
+            nni.trial._params = original_params
+            nni.trial._intermediate_seq = original_seq
 
     @staticmethod
     def _load(**ir: Any) -> 'Evaluator':
@@ -370,23 +370,23 @@ class FrozenEvaluator(Evaluator):
         return FrozenEvaluator(self.frozen_obj.trace_copy())
 
 
-# class _EvaluatorMockTrialCommandChannel(TrialCommandChannel):
-#     """Mock a trial command channel for evaluator debugging."""
+class _EvaluatorMockTrialCommandChannel(TrialCommandChannel):
+    """Mock a trial command channel for evaluator debugging."""
 
-#     def __init__(self, model: ExecutableModelSpace):
-#         self.model = model
+    def __init__(self, model: ExecutableModelSpace):
+        self.model = model
 
-#     def receive_parameter(self) -> ParameterRecord | None:
-#         return {
-#             'parameter_id': 0,
-#             'parameters': self.model
-#         }
+    def receive_parameter(self) -> ParameterRecord | None:
+        return {
+            'parameter_id': 0,
+            'parameters': self.model
+        }
 
-#     def send_metric(self, type: Literal['PERIODICAL', 'FINAL'], parameter_id: int | None,  # pylint: disable=redefined-builtin
-#                     trial_job_id: str, sequence: int, value: TrialMetric) -> None:
-#         if type == 'FINAL':
-#             self.model.metrics.final = value
-#             _logger.info('[Mock] Final metric: %s', value)
-#         else:
-#             self.model.metrics.add_intermediate(value)
-#             _logger.info('[Mock] Intermediate metric: %s', value)
+    def send_metric(self, type: Literal['PERIODICAL', 'FINAL'], parameter_id: int | None,  # pylint: disable=redefined-builtin
+                    trial_job_id: str, sequence: int, value: TrialMetric) -> None:
+        if type == 'FINAL':
+            self.model.metrics.final = value
+            _logger.info('[Mock] Final metric: %s', value)
+        else:
+            self.model.metrics.add_intermediate(value)
+            _logger.info('[Mock] Intermediate metric: %s', value)

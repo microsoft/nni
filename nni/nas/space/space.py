@@ -13,7 +13,6 @@ All model spaces should inherit :class:`BaseModelSpace`, which then divides into
 Type 2 will be converted to type 1 upon the launch of a NAS experiment.
 """
 
-
 __all__ = ['ModelStatus', 'BaseModelSpace', 'ExecutableModelSpace', 'RawFormatModelSpace', 'SimplifiedModelSpace']
 
 from copy import deepcopy
@@ -87,8 +86,11 @@ class ExecutableModelSpace(BaseModelSpace):
     They only differ in the status flag (see :class:`ModelStatus`).
 
     Since the single models that are directly evaluated are also of this type,
-    this class has an :meth:`execute` method which defines how the training pipeline works based on the data in the instance.
-    The models sent to execution engine for training should be frozen models and also instances of this class.
+    this class has an :meth:`execute` method which defines how the training pipeline works,
+    i.e., how to assemble the evaluator and the model, and how to execute the training and evaluation.
+
+    By convention, only frozen models (status is :attr:`ModelStatus.Frozen`) and instances of :class:`ExecutableModelSpace`
+    can be sent to execution engine for training.
 
     In most cases, :class:`ExecutableModelSpace` only contains the necessary information
     that is required for NAS mutations and reconstruction of the original model.
@@ -286,10 +288,15 @@ class SimplifiedModelSpace(ExecutableModelSpace):
     which means, the weights, attributes, inplace modifications of the model will all be lost.
     Only the simplified mutables and necessary init arguments to recover the model for execution will be kept.
 
-    To work with :class:`SimplifiedModelSpace`,
-    the model itself should detect :meth:`~nni.nas.space.current_model` context,
-    and init a sampled concrete model when it's inside the context.
-    Since the model will be recreated, ``freeze`` and ``contains`` method of model space is never used.
+    The :meth:`freeze` method does nothing but remembers the sample.
+    When the model is actually executed for real (i.e., when :meth;`executable_model` is called),
+    the model will be recreated from scratch, and the sample will be applied to the model.
+    To be specific, it will create the model with traced symbols and arguments,
+    but under a :meth:`~nni.nas.space.model_context`.
+    The context can be detected via :meth:`~nni.nas.space.current_model`.
+    It's the responsibility of the model space to check whether the context is available,
+    and create a frozen model directly if it is (note that ``freeze`` and ``contains`` method of model space is never used).
+    :class:`~nni.nas.nn.pytorch.MutableModule` is an example which has already implemented this logic.
     """
 
     def __init__(self, model: Any, mutables: dict[str, Any] | MutableDict, evaluator: Evaluator | None) -> None:
