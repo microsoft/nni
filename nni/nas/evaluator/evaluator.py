@@ -7,7 +7,7 @@ __all__ = ['Evaluator', 'MutableEvaluator', 'FrozenEvaluator']
 
 import logging
 from contextlib import contextmanager
-from typing import Any, Callable, Iterator, Iterable, TYPE_CHECKING, ContextManager
+from typing import Any, Callable, Iterator, Iterable, Generator, TYPE_CHECKING, cast
 from typing_extensions import Literal
 
 import nni
@@ -18,7 +18,7 @@ from nni.runtime.trial_command_channel import TrialCommandChannel, set_default_t
 
 if TYPE_CHECKING:
     from nni.nas.space import ExecutableModelSpace
-    from nni.typehint import ParameterRecord, TrialMetric
+    from nni.typehint import ParameterRecord, TrialMetric, Parameters
 
 _logger = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class Evaluator:
 
     @staticmethod
     @contextmanager
-    def mock_runtime(model: ExecutableModelSpace) -> ContextManager[None]:
+    def mock_runtime(model: ExecutableModelSpace) -> Generator[None, None, None]:
         """
         Context manager to mock trial APIs for standalone usage.
 
@@ -379,7 +379,7 @@ class _EvaluatorMockTrialCommandChannel(TrialCommandChannel):
     def receive_parameter(self) -> ParameterRecord | None:
         return {
             'parameter_id': 0,
-            'parameters': self.model
+            'parameters': cast(Parameters, self.model)
         }
 
     def send_metric(self, type: Literal['PERIODICAL', 'FINAL'], parameter_id: int | None,  # pylint: disable=redefined-builtin
