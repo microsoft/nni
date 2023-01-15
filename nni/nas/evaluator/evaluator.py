@@ -15,10 +15,10 @@ from nni.common.serializer import is_traceable, SerializableObject
 from nni.mutable import Mutable, Sample, LabeledMutable, SampleValidationError
 from nni.mutable.mutable import _mutable_equal
 from nni.runtime.trial_command_channel import TrialCommandChannel, set_default_trial_command_channel, get_default_trial_command_channel
+from nni.typehint import ParameterRecord, TrialMetric, Parameters
 
 if TYPE_CHECKING:
     from nni.nas.space import ExecutableModelSpace
-    from nni.typehint import ParameterRecord, TrialMetric, Parameters
 
 _logger = logging.getLogger(__name__)
 
