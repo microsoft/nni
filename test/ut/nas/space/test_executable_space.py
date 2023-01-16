@@ -52,6 +52,12 @@ def test_keep_model_space():
     assert exec_model.contains({'a': 1, 'b': 4, 'c': -1}) is False
     assert exec_model.contains({'a': 0, 'b': 4, 'c': 0}) is False
 
+    print(exec_model.evaluator.__dict__)
+    print(exec_model.evaluator.arguments)
+    print(type(exec_model.evaluator.arguments['a']))
+    print(repr(exec_model.evaluator.arguments['a']))
+    print(repr(exec_model.evaluator))
+
     assert repr(exec_model).startswith('RawFormatModelSpace(model_space=MyModelSpace(), evaluator=FunctionalEvaluator(<function foo at ')
     assert repr(exec_model).endswith(">, arguments={'a': Categorical([0, 1], label='c')})), status=ModelStatus.Initialized)")
     frozen_model = exec_model.freeze({'a': 2, 'b': 6, 'c': 1})
@@ -74,7 +80,7 @@ def test_simplified_model_space():
     assert exec_model.metric is None
     expected_dump_result = {
         'status': ModelStatus.Initialized,
-        'model_symbol': MyModelSpace.__wrapped__,
+        'model_symbol': getattr(MyModelSpace, '__wrapped__', MyModelSpace),
         'model_args': [],
         'model_kwargs': {},
         'evaluator': FunctionalEvaluator(
