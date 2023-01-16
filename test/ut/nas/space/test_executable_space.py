@@ -113,7 +113,7 @@ def test_simplified_model_space():
 
     expected_dump_result = {
         'status': ModelStatus.Frozen,
-        'model_symbol': MyModelSpace.__wrapped__,
+        'model_symbol': getattr(MyModelSpace, '__wrapped__', MyModelSpace),
         'model_args': [],
         'model_kwargs': {},
         'sample': {'a': 2, 'b': 6, 'c': 1},

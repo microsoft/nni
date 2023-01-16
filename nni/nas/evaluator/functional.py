@@ -21,6 +21,7 @@ class FunctionalEvaluator(MutableEvaluator):
     """
 
     def __init__(self, function, **kwargs):
+        print('function', function, kwargs)
         self.function = function
         self.arguments = kwargs
 
