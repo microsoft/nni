@@ -10,8 +10,8 @@ from nni.nas.space import *
 @nni.trace
 class MyModelSpace(BaseModelSpace):
     def __init__(self):
-        self.a = nni.choice('a', [1, 2, 3])
-        self.b = nni.choice('b', [4, 5, 6, 7])
+        self.a = Categorical([1, 2, 3], label='a')
+        self.b = Categorical([4, 5, 6, 7], label='b')
 
         if current_model() is not None:
             self.a1 = ensure_frozen(self.a)
@@ -36,7 +36,7 @@ def foo(model, a):
 
 def test_keep_model_space():
     model_space = MyModelSpace()
-    evaluator = FunctionalEvaluator(foo, a=nni.choice('c', [0, 1]))
+    evaluator = FunctionalEvaluator(foo, a=Categorical([0, 1], label='c'))
     exec_model = RawFormatModelSpace.from_model(model_space, evaluator)
     assert exec_model.sample is None
     assert exec_model.status == ModelStatus.Initialized
@@ -44,9 +44,9 @@ def test_keep_model_space():
     with pytest.raises(NotImplementedError):
         exec_model._dump()
     assert _mutable_equal(exec_model.simplify(), {
-        'a': nni.choice('a', [1, 2, 3]),
-        'b': nni.choice('b', [4, 5, 6, 7]),
-        'c': nni.choice('c', [0, 1])
+        'a': Categorical([1, 2, 3], label='a'),
+        'b': Categorical([4, 5, 6, 7], label='b'),
+        'c': Categorical([0, 1], label='c')
     })
 
     assert exec_model.contains({'a': 1, 'b': 4, 'c': -1}) is False
@@ -68,7 +68,7 @@ def test_keep_model_space():
 
 def test_simplified_model_space():
     model_space = MyModelSpace()
-    evaluator = FunctionalEvaluator(foo, a=nni.choice('c', [0, 1]))
+    evaluator = FunctionalEvaluator(foo, a=Categorical([0, 1], label='c'))
     exec_model = SimplifiedModelSpace.from_model(model_space, evaluator)
     assert exec_model.status == ModelStatus.Initialized
     assert exec_model.metric is None
@@ -90,9 +90,9 @@ def test_simplified_model_space():
     assert SimplifiedModelSpace._load(**expected_dump_result)._dump() == expected_dump_result
 
     assert _mutable_equal(exec_model.simplify(), {
-        'a': nni.choice('a', [1, 2, 3]),
-        'b': nni.choice('b', [4, 5, 6, 7]),
-        'c': nni.choice('c', [0, 1])
+        'a': Categorical([1, 2, 3], label='a'),
+        'b': Categorical([4, 5, 6, 7], label='b'),
+        'c': Categorical([0, 1], label='c')
     })
     assert exec_model.contains({'a': 1, 'b': 4, 'c': -1}) is False
     assert exec_model.contains({'a': 0, 'b': 4, 'c': 0}) is False

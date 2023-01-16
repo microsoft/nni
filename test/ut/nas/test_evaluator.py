@@ -188,16 +188,17 @@ def test_choice_in_classification():
 
 
 def test_mock_trial_api(caplog):
-    from nni.nas.nn.pytorch import ModelSpace, LayerChoice
-    from nni.nas.space import RawFormatModelSpace
+    from nni.nas.space import RawFormatModelSpace, BaseModelSpace
 
-    class Net(ModelSpace):
-        def __init__(self):
-            super().__init__()
-            self.layer = LayerChoice([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)], label='layer')
+    class DummyModelSpace(BaseModelSpace):
+        def check_contains(self, sample):
+            return None
 
-        def forward(self, x):
-            return self.layer(x)
+        def leaf_mutables(self, is_leaf):
+            yield from ()
+
+        def freeze(self, sample):
+            return self
 
     def foo(model):
         import nni
@@ -206,7 +207,7 @@ def test_mock_trial_api(caplog):
         nni.report_final_result(0.6)
         assert 'Final metric: 0.6' in caplog.text
 
-    space = Net()
+    space = DummyModelSpace()
     space_cvt = RawFormatModelSpace.from_model(space)
     model = space_cvt.random()
     evaluator = FunctionalEvaluator(foo)
