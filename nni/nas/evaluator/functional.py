@@ -21,7 +21,6 @@ class FunctionalEvaluator(MutableEvaluator):
     """
 
     def __init__(self, function, **kwargs):
-        print('function', function, kwargs)
         self.function = function
         self.arguments = kwargs
 
@@ -30,6 +29,7 @@ class FunctionalEvaluator(MutableEvaluator):
 
     # NOTE: FunctionalEvaluator implements the traceable interface by itself,
     #       so that it doesn't need the `nni.trace` decorator.
+    #       But I guess it works with the decorator as well.
 
     @property
     def trace_symbol(self):

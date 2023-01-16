@@ -37,8 +37,14 @@ class custom_class:
         return f'c {self.c}'
 
 
-def test_functional_mutate(capsys):
-    evaluator = FunctionalEvaluator(_print_params, a=Categorical([1, 2], label='x'), b=Categorical([3, 4], label='y'))
+@pytest.mark.parametrize('trace_decorator', [False, True])
+def test_functional_mutate(capsys, trace_decorator):
+    if trace_decorator:
+        # The evaluator works with or without trace decorator.
+        cls = nni.trace(FunctionalEvaluator)
+    else:
+        cls = FunctionalEvaluator
+    evaluator = cls(_print_params, a=Categorical([1, 2], label='x'), b=Categorical([3, 4], label='y'))
     assert _mutable_equal(evaluator.simplify(), {'x': Categorical([1, 2], label='x'), 'y': Categorical([3, 4], label='y')})
     _dump_result = {
         'a': Categorical([1, 2], label='x'),
@@ -46,9 +52,10 @@ def test_functional_mutate(capsys):
         'function': _print_params,
     }
     assert evaluator.is_mutable()
-    assert re.match(r"FunctionalEvaluator\(<.*>, arguments={'a': Categorical.*, 'b': Categorical.*", repr(evaluator))
+    if not trace_decorator:
+        assert re.match(r"FunctionalEvaluator\(<.*>, arguments={'a': Categorical.*, 'b': Categorical.*", repr(evaluator))
     assert _mutable_equal(evaluator._dump(), _dump_result)
-    assert FunctionalEvaluator._load(**_dump_result) == evaluator
+    assert cls._load(**_dump_result) == evaluator
 
     evaluator = evaluator.freeze({'x': 1, 'y': 3})
     assert isinstance(evaluator, FrozenEvaluator)

@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 import nni
@@ -59,7 +61,9 @@ def test_keep_model_space():
     print(repr(exec_model.evaluator))
 
     assert repr(exec_model).startswith('RawFormatModelSpace(model_space=MyModelSpace(), evaluator=FunctionalEvaluator(<function foo at ')
-    assert repr(exec_model).endswith(">, arguments={'a': Categorical([0, 1], label='c')})), status=ModelStatus.Initialized)")
+    if sys.platform == 'linux':
+        # Otherwise trace will make the repr different
+        assert repr(exec_model).endswith(">, arguments={'a': Categorical([0, 1], label='c')})), status=ModelStatus.Initialized)")
     frozen_model = exec_model.freeze({'a': 2, 'b': 6, 'c': 1})
     assert frozen_model.status == ModelStatus.Frozen
     assert frozen_model.sample == {'a': 2, 'b': 6, 'c': 1}
