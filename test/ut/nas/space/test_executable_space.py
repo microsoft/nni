@@ -54,12 +54,6 @@ def test_keep_model_space():
     assert exec_model.contains({'a': 1, 'b': 4, 'c': -1}) is False
     assert exec_model.contains({'a': 0, 'b': 4, 'c': 0}) is False
 
-    print(exec_model.evaluator.__dict__)
-    print(exec_model.evaluator.arguments)
-    print(type(exec_model.evaluator.arguments['a']))
-    print(repr(exec_model.evaluator.arguments['a']))
-    print(repr(exec_model.evaluator))
-
     assert repr(exec_model).startswith('RawFormatModelSpace(model_space=MyModelSpace(), evaluator=FunctionalEvaluator(<function foo at ')
     if sys.platform == 'linux':
         # Otherwise trace will make the repr different
