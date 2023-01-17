@@ -4,7 +4,6 @@
 import pytest
 
 import os
-import traceback
 import torch
 import mmcv
 import mmcv.cnn as mmcv_cnn
@@ -14,10 +13,6 @@ from mmcv.parallel import collate
 from mmdet.datasets import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
 from nni.common.concrete_trace_utils import concrete_trace, ConcreteTracer
-
-assert 'MMDET_DIR' in os.environ, 'please set env variable `MMDET_DIR` to your mmdetection folder!'
-folder_prefix = os.environ['MMDET_DIR']
-img = '%s/tests/data/color.jpg' % folder_prefix
 
 config_files_correct = (
     'atss/atss_r50_fpn_1x_coco',
@@ -172,9 +167,14 @@ def check_equal(a, b):
     else:
         return a == b
 
+@pytest.mark.skipif('MMDET_DIR' not in os.environ, reason='please set env variable `MMDET_DIR` to your mmdetection folder!')
 @pytest.mark.parametrize('config_file', config_files_correct)
 def test_mmdetection(config_file: str):
     torch.cuda.empty_cache()
+
+    folder_prefix = os.environ['MMDET_DIR']
+    img = '%s/tests/data/color.jpg' % folder_prefix
+
     # Specify the path to model config and checkpoint file
     config = mmcv.Config.fromfile(
         folder_prefix + '/configs/' + config_file + '.py')

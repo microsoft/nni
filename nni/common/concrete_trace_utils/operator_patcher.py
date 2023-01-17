@@ -44,7 +44,7 @@ class TransformerOp(ast.NodeTransformer):
 
     def visit(self, node):
         if self.is_incond_status != 0:
-            # if the status is 'in brunch test',
+            # if the status is 'in branch test',
             self.is_incond_status -= 1
         return super().visit(node)
 
@@ -186,11 +186,7 @@ class OperatorPatcher:
 
         lines, lnum = inspect.findsource(func_inner)
         # align with original source code
-        # lines_cut_start = ['\n' * lnum, *lines[lnum:]]
-        # lines_cut_start_end = inspect.getblock(lines_cut_start)
-
-        # source = ''.join(lines_cut_start_end)
-        source = ''.join(['\n' * lnum, *inspect.getblock(lines[lnum:])])
+        source = ''.join(('\n' * lnum, *inspect.getblock(lines[lnum:])))
         dedent_src = dedent(source)
         tree = ast.parse(dedent_src)
 
