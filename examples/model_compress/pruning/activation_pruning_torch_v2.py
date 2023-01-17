@@ -44,7 +44,7 @@ test_loader = torch.utils.data.DataLoader(
     ])),
     batch_size=128, shuffle=False)
 
-def trainer(model, optimizer, criterion):
+def train(model, optimizer, criterion):
     global g_epoch
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -60,7 +60,7 @@ def trainer(model, optimizer, criterion):
                 100. * batch_idx / len(train_loader), loss.item()))
     g_epoch += 1
 
-def evaluator(model):
+def evaluate(model):
     model.eval()
     correct = 0.0
     with torch.no_grad():
@@ -97,9 +97,9 @@ if __name__ == '__main__':
     best_state_dict = None
 
     for i in range(args.pretrain_epochs):
-        trainer(model, optimizer, criterion)
+        train(model, optimizer, criterion)
         scheduler.step()
-        acc = evaluator(model)
+        acc = evaluate(model)
         if acc > pre_best_acc:
             pre_best_acc = acc
             best_state_dict = model.state_dict()
@@ -118,16 +118,16 @@ if __name__ == '__main__':
     # make sure you have used nni.trace to wrap the optimizer class before initialize
     traced_optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
     if 'apoz' in args.pruner:
-        pruner = ActivationAPoZRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
+        pruner = ActivationAPoZRankPruner(model, config_list, train, traced_optimizer, criterion, training_batches=20)
     else:
-        pruner = ActivationMeanRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
+        pruner = ActivationMeanRankPruner(model, config_list, train, traced_optimizer, criterion, training_batches=20)
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
     pruner._unwrap_model()
     traced_model = concrete_trace(model, {'x': torch.rand([10, 3, 32, 32]).to(device)})
     ModelSpeedup(traced_model).run(args=[torch.rand([10, 3, 32, 32]).to(device)], masks_file=masks)
     print('\n' + '=' * 50 + ' EVALUATE THE MODEL AFTER SPEEDUP ' + '=' * 50)
-    evaluator(traced_model)
+    evaluate(traced_model)
 
     # Optimizer used in the pruner might be patched, so recommend to new an optimizer for fine-tuning stage.
     print('\n' + '=' * 50 + ' START TO FINE TUNE THE MODEL ' + '=' * 50)
@@ -136,9 +136,9 @@ if __name__ == '__main__':
     best_acc = 0.0
     g_epoch = 0
     for i in range(args.fine_tune_epochs):
-        trainer(traced_model, optimizer, criterion)
+        train(traced_model, optimizer, criterion)
         scheduler.step()
-        best_acc = max(evaluator(traced_model), best_acc)
+        best_acc = max(evaluate(traced_model), best_acc)
     flops, params, results = count_flops_params(traced_model, torch.randn([128, 3, 32, 32]).to(device))
     print(f'Pretrained model FLOPs {pre_flops/1e6:.2f} M, #Params: {pre_params/1e6:.2f}M, Accuracy: {pre_best_acc: .2f}%')
     print(f'Finetuned model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M, Accuracy: {best_acc: .2f}%')

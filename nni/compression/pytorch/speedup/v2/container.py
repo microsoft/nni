@@ -7,13 +7,30 @@ if TYPE_CHECKING:
     import torch
 
 class Slot:
+    """
+    Stores the infomation of each intermediate variable.
+    The relationship and transmission of information can be seen in the comments of `MaskUpdater`.
+    """
     def __init__(self) -> None:
+        # the original value
+        # assigned in `propagate_originally_process`
         self.value_0 = None
+        # the value at the first-time assign
+        # assigned in `direct_process`
         self.value_1 = None
+        # the value at the end(may be unequal to value_1 if there are in-placement ops)
+        # assigned in `direct_process`
         self.value_2 = None
+        # the grad data of the slot
+        # assigned in `indirect_process`
         self.value_3 = None
+        # pre-assigned mask. `None` equals to `torch.ones`
         self.mask_0 = None
+        # the mask of the slot
+        # assigned in `direct_process`
         self.mask_1 = None
+        # the mask of the slot
+        # assigned in `indirect_process`
         self.mask_2 = None
         self.status = {
             'value_0': 0,
