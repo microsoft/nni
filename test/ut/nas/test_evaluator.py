@@ -37,8 +37,14 @@ class custom_class:
         return f'c {self.c}'
 
 
-def test_functional_mutate(capsys):
-    evaluator = FunctionalEvaluator(_print_params, a=Categorical([1, 2], label='x'), b=Categorical([3, 4], label='y'))
+@pytest.mark.parametrize('trace_decorator', [False, True])
+def test_functional_mutate(capsys, trace_decorator):
+    if trace_decorator:
+        # The evaluator works with or without trace decorator.
+        cls = nni.trace(FunctionalEvaluator)
+    else:
+        cls = FunctionalEvaluator
+    evaluator = cls(_print_params, a=Categorical([1, 2], label='x'), b=Categorical([3, 4], label='y'))
     assert _mutable_equal(evaluator.simplify(), {'x': Categorical([1, 2], label='x'), 'y': Categorical([3, 4], label='y')})
     _dump_result = {
         'a': Categorical([1, 2], label='x'),
@@ -46,9 +52,10 @@ def test_functional_mutate(capsys):
         'function': _print_params,
     }
     assert evaluator.is_mutable()
-    assert re.match(r"FunctionalEvaluator\(<.*>, arguments={'a': Categorical.*, 'b': Categorical.*", repr(evaluator))
+    if not trace_decorator:
+        assert re.match(r"FunctionalEvaluator\(<.*>, arguments={'a': Categorical.*, 'b': Categorical.*", repr(evaluator))
     assert _mutable_equal(evaluator._dump(), _dump_result)
-    assert FunctionalEvaluator._load(**_dump_result) == evaluator
+    assert cls._load(**_dump_result) == evaluator
 
     evaluator = evaluator.freeze({'x': 1, 'y': 3})
     assert isinstance(evaluator, FrozenEvaluator)
@@ -187,40 +194,40 @@ def test_choice_in_classification():
     evaluator.freeze({})
 
 
-# Uncomment this test when executable space is merged.
-# def test_mock_trial_api(caplog):
-#     from nni.nas.nn.pytorch import ModelSpace, LayerChoice
-#     from nni.nas.space import RawFormatModelSpace
+def test_mock_trial_api(caplog):
+    from nni.nas.space import RawFormatModelSpace, BaseModelSpace
 
-#     class Net(ModelSpace):
-#         def __init__(self):
-#             super().__init__()
-#             self.layer = LayerChoice([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)], label='layer')
+    class DummyModelSpace(BaseModelSpace):
+        def check_contains(self, sample):
+            return None
 
-#         def forward(self, x):
-#             return self.layer(x)
+        def leaf_mutables(self, is_leaf):
+            yield from ()
 
-#     def foo(model):
-#         import nni
-#         nni.report_intermediate_result(0.5)
-#         assert 'Intermediate metric: 0.5' in caplog.text
-#         nni.report_final_result(0.6)
-#         assert 'Final metric: 0.6' in caplog.text
+        def freeze(self, sample):
+            return self
 
-#     space = Net()
-#     space_cvt = RawFormatModelSpace.from_model(space)
-#     model = space_cvt.random()
-#     evaluator = FunctionalEvaluator(foo)
+    def foo(model):
+        import nni
+        nni.report_intermediate_result(0.5)
+        assert 'Intermediate metric: 0.5' in caplog.text
+        nni.report_final_result(0.6)
+        assert 'Final metric: 0.6' in caplog.text
 
-#     with pytest.raises(TypeError, match='ExecutableModelSpace'):
-#         m = model.executable_model()
-#         with evaluator.mock_runtime(m):
-#             evaluator.evaluate(m)
+    space = DummyModelSpace()
+    space_cvt = RawFormatModelSpace.from_model(space)
+    model = space_cvt.random()
+    evaluator = FunctionalEvaluator(foo)
 
-#     with evaluator.mock_runtime(model):
-#         import nni
-#         assert nni.get_current_parameter() == model
-#         evaluator.evaluate(model.executable_model())
-#         assert '[Mock] Final' in caplog.text
+    with pytest.raises(TypeError, match='ExecutableModelSpace'):
+        m = model.executable_model()
+        with evaluator.mock_runtime(m):
+            evaluator.evaluate(m)
 
-#     assert nni.get_current_parameter() is None
+    with evaluator.mock_runtime(model):
+        import nni
+        assert nni.get_current_parameter() == model
+        evaluator.evaluate(model.executable_model())
+        assert '[Mock] Final' in caplog.text
+
+    assert nni.get_current_parameter() is None
