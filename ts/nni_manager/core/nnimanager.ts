@@ -33,6 +33,7 @@ import { createDispatcherInterface, IpcInterface } from './ipcInterface';
  * NNIManager which implements Manager interface
  */
 class NNIManager implements Manager {
+    private pollInterval: number; // for unittest to modify the polling interval
     private trainingService!: TrainingService;
     private dispatcher: IpcInterface | undefined;
     private currSubmittedTrialNum: number;  // need to be recovered
@@ -52,6 +53,7 @@ class NNIManager implements Manager {
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
 
     constructor() {
+        this.pollInterval = 5;
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
         this.dispatcherPid = 0;
@@ -746,7 +748,7 @@ class NNIManager implements Manager {
                     }
                 }
             }
-            await delay(1000 * 5); // 5 seconds
+            await delay(1000 * this.pollInterval); // 5 seconds
         }
     }
 

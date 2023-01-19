@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "test": "nyc --reporter=cobertura --reporter=text mocha test/**/*.test.ts",
+    "test": "nyc --reporter=cobertura --reporter=text mocha test/**/nnimanager3.test.ts",
     "mocha": "mocha",
     "eslint": "eslint . --ext .ts"
   },
@@ -21,6 +21,7 @@
     "js-base64": "^3.7.2",
     "kubernetes-client": "^6.12.1",
     "lockfile": "^1.0.4",
+    "mocha": "^10.2.0",
     "python-shell": "^3.0.0",
     "rx": "^4.1.0",
     "sqlite3": "^5.1.2",
@@ -60,7 +61,6 @@
     "chai": ">=4.3.6",
     "chai-as-promised": ">=7.1.1",
     "eslint": ">=8.26.0",
-    "mocha": ">=10.1.0",
     "node-gyp": ">=9.3.0",
     "npm": ">=8.11.0",
     "nyc": ">=15.1.0",

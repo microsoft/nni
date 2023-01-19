@@ -111,6 +111,7 @@ describe('Unit test for nnimanager', function () {
 
 
     before(async () => {
+        console.log('hello');
         await initContainer();
         fs.writeFileSync('.experiment.test', JSON.stringify(mockedInfo));
         nniManager = component.get(Manager);
@@ -127,7 +128,7 @@ describe('Unit test for nnimanager', function () {
         manager.trainingService.removeTrialJobMetricListener(manager.trialJobMetricListener);
         manager.trainingService.cleanUp();
 
-        manager.trainingService = new MockedTrainingService();
+        manager.trainingService = new MockedTrainingService('create_stage');
     })
 
     after(async () => {
@@ -289,8 +290,11 @@ describe('Unit test for nnimanager', function () {
         })
     })
 
-    //it('test resumeExperiment', async () => {
-       //TODO: add resume experiment unit test
-    //})
+    // it('test resumeExperiment', async () => {
+    //     //TODO: add resume experiment unit test
+    //     nniManager.stopExperiment()
+    //     // ...
+    //     const expId: string = await nniManager.startExperiment(experimentParams);
+    // })
 
 })
