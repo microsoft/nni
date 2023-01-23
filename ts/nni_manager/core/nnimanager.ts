@@ -124,7 +124,7 @@ class NNIManager implements Manager {
         return this.dataStore.exportTrialHpConfigs();
     }
 
-    public addRecoveredTrialJob(allTrialJobs: Array<TrialJobInfo>): void {
+    public addRecoveredTrialJob(allTrialJobs: Array<TrialJobInfo>): number {
         const jobs: Array<TrialJobInfo> = allTrialJobs.filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING');
         const trialData: any[] = [];
         let maxSequeceId = 0;
@@ -161,6 +161,7 @@ class NNIManager implements Manager {
 
         // next sequenceId
         this.experimentProfile.nextSequenceId = maxSequeceId + 1;
+        return trialData.length;
     }
 
     public addCustomizedTrialJob(hyperParams: string): Promise<number> {
@@ -265,7 +266,10 @@ class NNIManager implements Manager {
 
         // Resume currSubmittedTrialNum
         this.currSubmittedTrialNum = allTrialJobs.length;
-        this.addRecoveredTrialJob(allTrialJobs);
+        const recoveredTrialNum = this.addRecoveredTrialJob(allTrialJobs);
+        // minus the number of the recovered trials,
+        // the recovered trials should not be counted in maxTrialNumber.
+        this.currSubmittedTrialNum -= recoveredTrialNum;
 
         // Collect generated trials and imported trials
         const finishedTrialData: string = await this.exportData();

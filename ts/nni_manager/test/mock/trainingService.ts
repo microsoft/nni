@@ -3,7 +3,6 @@
 
 'use strict';
 
-import internal from 'stream';
 import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
 import { Provider } from 'typescript-ioc';
@@ -34,49 +33,24 @@ const idStatusList = [
     {id: '1234', status: 'RUNNING'},
     {id: '3456', status: 'RUNNING'},
     {id: '5678', status: 'RUNNING'},
-    {id: '7890', status: 'WAITING'},
-    {id: '5678', status: 'SUCCEEDED'},
-    {id: '7890', status: 'SUCCEEDED'}];
+    {id: '7890', status: 'WAITING'}];
 
-// let jobDetail1: TrialJobDetail = Object.assign({},
-//     jobDetailTemplate, {id: '1234', status: 'SUCCEEDED'});
-
-// let jobDetail2: TrialJobDetail = Object.assign({},
-//     jobDetailTemplate, {id: '3456', status: 'SUCCEEDED'});
-
-// let jobDetail3: TrialJobDetail = Object.assign({},
-//     jobDetailTemplate, {id: '5678', status: 'RUNNING'});
-
-// let jobDetail4: TrialJobDetail = Object.assign({},
-//     jobDetailTemplate, {id: '7890', status: 'WAITING'});
-
-// let jobDetail3updated: TrialJobDetail = Object.assign({},
-//     jobDetailTemplate, {id: '5678', status: 'SUCCEEDED'});
-
-// let jobDetail4updated: TrialJobDetail = Object.assign({},
-//     jobDetailTemplate, {id: '7890', status: 'SUCCEEDED'});
+const idStatusListResume = [
+    {id: '5678', status: 'RUNNING'},
+    {id: '7890', status: 'RUNNING'},
+    {id: '9012', status: 'RUNNING'}];
 
 class MockedTrainingService implements TrainingService {
     private readonly eventEmitter: EventEmitter;
     private mockedMetaDataValue: string = "default";
     private jobDetailList: Map<string, TrialJobDetail>;
-    // private mode: string;
+    private mode: string;
     private submittedCnt: number = 0;
 
     constructor(mode: string) {
         this.eventEmitter = new EventEmitter();
-        // this.mode = mode;
+        this.mode = mode;
         this.jobDetailList = new Map<string, TrialJobDetail>();
-        if (mode === 'create_stage') {
-            // this.jobDetailList.push(jobDetail1);
-            // this.jobDetailList.push(jobDetail2);
-            // this.jobDetailList.push(jobDetail3);
-            // this.jobDetailList.push(jobDetail4);
-        }
-        else if (mode === 'resume_stage') {
-            // this.jobDetailList.push(jobDetail3updated);
-            // this.jobDetailList.push(jobDetail4updated);
-        }
     }
 
     public listTrialJobs(): Promise<TrialJobDetail[]> {
@@ -111,32 +85,62 @@ class MockedTrainingService implements TrainingService {
     }
 
     public submitTrialJob(_form: TrialJobApplicationForm): Promise<TrialJobDetail> {
-        const submittedOne: TrialJobDetail = Object.assign({},
-            jobDetailTemplate, idStatusList[this.submittedCnt],
-            {submitTime: Date.now(), startTime: Date.now(), form: _form});
-        this.jobDetailList.set(submittedOne.id, submittedOne);
-        this.submittedCnt++;
-        // Emit metric data here for simplicity
-        // Set timeout to make sure when the metric is received by nnimanager,
-        // the corresponding trial job exists.
-        setTimeout(() => {
-            this.eventEmitter.emit('metric', {
-                id: submittedOne.id,
-                data: JSON.stringify({
-                    'parameter_id': JSON.parse(submittedOne.form.hyperParameters.value)['parameter_id'],
-                    'trial_job_id': submittedOne.id,
-                    'type': 'FINAL',
-                    'sequence': 0,
-                    'value': '0.9'})
-            });
-        }, 200);
-        // only update the first two trials to SUCCEEDED
-        if (['1234', '3456'].includes(submittedOne.id)) {
+        if (this.mode === 'create_stage') {
+            const submittedOne: TrialJobDetail = Object.assign({},
+                jobDetailTemplate, idStatusList[this.submittedCnt],
+                {submitTime: Date.now(), startTime: Date.now(), form: _form});
+            this.jobDetailList.set(submittedOne.id, submittedOne);
+            this.submittedCnt++;
+            // only update the first two trials to SUCCEEDED
+            if (['1234', '3456'].includes(submittedOne.id)) {
+                // Emit metric data here for simplicity
+                // Set timeout to make sure when the metric is received by nnimanager,
+                // the corresponding trial job exists.
+                setTimeout(() => {
+                    this.eventEmitter.emit('metric', {
+                        id: submittedOne.id,
+                        data: JSON.stringify({
+                            'parameter_id': JSON.parse(submittedOne.form.hyperParameters.value)['parameter_id'],
+                            'trial_job_id': submittedOne.id,
+                            'type': 'FINAL',
+                            'sequence': 0,
+                            'value': '0.9'})
+                    });
+                }, 200);
+                setTimeout(() => {
+                    this.jobDetailList.set(submittedOne.id, Object.assign({}, submittedOne, {endTime: Date.now(), status: 'SUCCEEDED'}));
+                }, 1000);
+            }
+            return Promise.resolve(submittedOne);
+        }
+        else if (this.mode === 'resume_stage') {
+            const submittedOne: TrialJobDetail = Object.assign({},
+                jobDetailTemplate, idStatusListResume[this.submittedCnt],
+                {submitTime: Date.now(), startTime: Date.now(), form: _form});
+            this.jobDetailList.set(submittedOne.id, submittedOne);
+            this.submittedCnt++;
+            // Emit metric data here for simplicity
+            // Set timeout to make sure when the metric is received by nnimanager,
+            // the corresponding trial job exists.
+            setTimeout(() => {
+                this.eventEmitter.emit('metric', {
+                    id: submittedOne.id,
+                    data: JSON.stringify({
+                        'parameter_id': JSON.parse(submittedOne.form.hyperParameters.value)['parameter_id'],
+                        'trial_job_id': submittedOne.id,
+                        'type': 'FINAL',
+                        'sequence': 0,
+                        'value': '0.9'})
+                });
+            }, 200);
             setTimeout(() => {
                 this.jobDetailList.set(submittedOne.id, Object.assign({}, submittedOne, {endTime: Date.now(), status: 'SUCCEEDED'}));
             }, 1000);
+            return Promise.resolve(submittedOne);
         }
-        return Promise.resolve(submittedOne);
+        else {
+            throw new Error('Unknown mode for the mocked training service!');
+        }
     }
 
     public updateTrialJob(_trialJobId: string, _form: TrialJobApplicationForm): Promise<TrialJobDetail> {
