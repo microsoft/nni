@@ -25,7 +25,7 @@ import { UnitTestHelpers } from 'core/ipcInterface';
 import { RestServer } from '../../rest_server';
 import globals, { initGlobals } from '../../common/globals';
 import * as timersPromises from 'timers/promises';
-import { before, it } from 'node:test';
+// import { before, it } from 'node:test';
 
 let nniManager: NNIManager;
 let experimentParams: any = {
@@ -144,6 +144,7 @@ async function cleanExperiment(): Promise<void> {
 // }
 
 async function testListTrialJobs(): Promise<void> {
+    await timersPromises.setTimeout(200);
     const trialJobDetails = await nniManager.listTrialJobs();
     assert.isAtLeast(trialJobDetails.length, 2);
 }
@@ -195,7 +196,8 @@ async function testUpdateExperimentProfileMaxExecDuration(): Promise<void> {
 
 async function testUpdateExperimentProfileSearchSpace(): Promise<void> {
     let expParams = Object.assign({}, experimentParams); // skip deep copy of inner object
-    const newSearchSpace = '{"lr": {"_type": "choice", "_value": [0.01,0.001,0.002,0.004,0.008]}}';
+    // The search space here should be dict, it is stringified within nnimanager's updateSearchSpace
+    const newSearchSpace = {'lr': {'_type': 'choice', '_value': [0.01, 0.001, 0.002, 0.004, 0.008]}};
     expParams.searchSpace = newSearchSpace;
     experimentProfile.params = expParams;
     await nniManager.updateExperimentProfile(experimentProfile, 'SEARCH_SPACE');
@@ -220,6 +222,7 @@ async function testGetStatus(): Promise<void> {
 async function testGetMetricDataWithTrialJobId(): Promise<void> {
     // Query an exist trialJobId
     // The metric is synthesized in the mocked training service
+    await timersPromises.setTimeout(600);
     const metrics = await nniManager.getMetricData('1234');
     assert.strictEqual(metrics.length, 1);
     assert.strictEqual(metrics[0].type, 'FINAL');
@@ -263,6 +266,14 @@ async function testGetTrialJobStatistics(): Promise<void> {
 //     })
 // }
 
+async function testFinalExperimentStatus(): Promise<void> {
+    await timersPromises.setTimeout(3000);
+    const status = await nniManager.getStatus();
+    console.log(status);
+    assert.strictEqual(status.status, 'DONE');
+    // assert.strictEqual('1', '1');
+}
+
 
 // FIXME: timeout on macOS
 describe('Unit test for nnimanager hello world', function () {
@@ -271,62 +282,21 @@ describe('Unit test for nnimanager hello world', function () {
 
     // it('test addCustomizedTrialJob', () => testAddCustomizedTrialJob());
     it('test listTrialJobs', () => testListTrialJobs());
-    // it('test getTrialJob valid', () => testGetTrialJobValid());
-    // it('test getTrialJob with invalid id', () => testGetTrialJobWithInvalidId());
-    // it('test cancelTrialJobByUser', () => testCancelTrialJobByUser());
-    // it('test getExperimentProfile', () => testGetExperimentProfile());
-    // it('test updateExperimentProfile TRIAL_CONCURRENCY', () => testUpdateExperimentProfileTrialConcurrency());
-    // it('test updateExperimentProfile MAX_EXEC_DURATION', () => testUpdateExperimentProfileMaxExecDuration());
-    // // it('test updateExperimentProfile SEARCH_SPACE', () => testUpdateExperimentProfileSearchSpace());
-    // it('test updateExperimentProfile MAX_TRIAL_NUM', () => testUpdateExperimentProfileMaxTrialNum());
-    // it('test getStatus', () => testGetStatus());
-    // it('test getMetricData with trialJobId', () => testGetMetricDataWithTrialJobId());
-    // it('test getMetricData with invalid trialJobId', () => testGetMetricDataWithInvalidTrialJobId());
-    // it('test getTrialJobStatistics', () => testGetTrialJobStatistics());
-    // // it('test addCustomizedTrialJob reach maxTrialNumber', () => testAddCustomizedTrialJobReachMaxTrialNumber());
-    // // it('test the final experiment status is not ERROR', () => testFinalExperimentStatus());
+    it('test getTrialJob valid', () => testGetTrialJobValid());
+    it('test getTrialJob with invalid id', () => testGetTrialJobWithInvalidId());
+    it('test cancelTrialJobByUser', () => testCancelTrialJobByUser());
+    it('test getExperimentProfile', () => testGetExperimentProfile());
+    it('test updateExperimentProfile TRIAL_CONCURRENCY', () => testUpdateExperimentProfileTrialConcurrency());
+    it('test updateExperimentProfile MAX_EXEC_DURATION', () => testUpdateExperimentProfileMaxExecDuration());
+    it('test updateExperimentProfile SEARCH_SPACE', () => testUpdateExperimentProfileSearchSpace());
+    it('test updateExperimentProfile MAX_TRIAL_NUM', () => testUpdateExperimentProfileMaxTrialNum());
+    it('test getStatus', () => testGetStatus());
+    it('test getMetricData with trialJobId', () => testGetMetricDataWithTrialJobId());
+    it('test getMetricData with invalid trialJobId', () => testGetMetricDataWithInvalidTrialJobId());
+    it('test getTrialJobStatistics', () => testGetTrialJobStatistics());
+    // it('test addCustomizedTrialJob reach maxTrialNumber', () => testAddCustomizedTrialJobReachMaxTrialNumber());
+    it('test the final experiment status is not ERROR', () => testFinalExperimentStatus());
 
     after(cleanExperiment);
 
-})
-
-// async function resumeExperiment(): Promise<void> {
-//     await initContainer();
-//     fs.writeFileSync('.experiment.test', JSON.stringify(mockedInfo));
-//     nniManager = component.get(Manager);
-
-//     // it resumes the experiment with expId 'unittest'
-//     await nniManager.resumeExperiment(false);
-
-//     const manager = nniManager as any;
-//     assert.strictEqual(manager.experimentProfile.id, 'unittest');
-
-//     manager.trainingService.removeTrialJobMetricListener(manager.trialJobMetricListener);
-//     manager.trainingService.cleanUp();
-
-//     manager.trainingService = new MockedTrainingService('resume_stage');
-// }
-
-// describe('Unit test for nnimanager with real resume', function () {
-
-//     before(resumeExperiment);
-
-//     // it('test addCustomizedTrialJob', () => testAddCustomizedTrialJob());
-//     it('test listTrialJobs', () => testListTrialJobs());
-//     // it('test getTrialJob valid', () => testGetTrialJobValid());
-//     // it('test getTrialJob with invalid id', () => testGetTrialJobWithInvalidId());
-//     // it('test cancelTrialJobByUser', () => testCancelTrialJobByUser());
-//     // it('test getExperimentProfile', () => testGetExperimentProfile());
-//     // it('test updateExperimentProfile TRIAL_CONCURRENCY', () => testUpdateExperimentProfileTrialConcurrency());
-//     // it('test updateExperimentProfile MAX_EXEC_DURATION', () => testUpdateExperimentProfileMaxExecDuration());
-//     // it('test updateExperimentProfile SEARCH_SPACE', () => testUpdateExperimentProfileSearchSpace());
-//     // it('test updateExperimentProfile MAX_TRIAL_NUM', () => testUpdateExperimentProfileMaxTrialNum());
-//     // it('test getStatus', () => testGetStatus());
-//     // it('test getMetricData with trialJobId', () => testGetMetricDataWithTrialJobId());
-//     // it('test getMetricData with invalid trialJobId', () => testGetMetricDataWithInvalidTrialJobId());
-//     // it('test getTrialJobStatistics', () => testGetTrialJobStatistics());
-//     // it('test addCustomizedTrialJob reach maxTrialNumber', () => testAddCustomizedTrialJobReachMaxTrialNumber());
-
-//     after(cleanExperiment);
-
-// })
+});

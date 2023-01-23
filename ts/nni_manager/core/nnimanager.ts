@@ -587,7 +587,7 @@ class NNIManager implements Manager {
         }
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
             this.dispatcher.sendCommand(PING);
-            await delay(1000 * 5);
+            await delay(1000 * this.pollInterval); // 5 seconds
         }
     }
 

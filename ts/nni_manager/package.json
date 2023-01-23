@@ -9,6 +9,7 @@
     "eslint": "eslint . --ext .ts"
   },
   "dependencies": {
+    "@types/mocha": "^9.0.0",
     "app-module-path": "^2.2.0",
     "azure-storage": "^2.10.7",
     "child-process-promise": "^2.2.1",
@@ -21,7 +22,7 @@
     "js-base64": "^3.7.2",
     "kubernetes-client": "^6.12.1",
     "lockfile": "^1.0.4",
-    "mocha": "^10.2.0",
+    "mocha": "^9.0.0",
     "python-shell": "^3.0.0",
     "rx": "^4.1.0",
     "sqlite3": "^5.1.2",
@@ -45,7 +46,6 @@
     "@types/http-proxy": ">=1.17.7",
     "@types/js-yaml": ">=4.0.1",
     "@types/lockfile": ">=1.0.0",
-    "@types/mocha": ">=8.2.3",
     "@types/node": ">=18.11.9",
     "@types/request": ">=2.48.5",
     "@types/rx": ">=4.1.2",
