@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { assert } from 'chai';
 import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
 import { Provider } from 'typescript-ioc';
@@ -35,10 +36,14 @@ const idStatusList = [
     {id: '5678', status: 'RUNNING'},
     {id: '7890', status: 'WAITING'}];
 
+// the first two are the resumed trials
+// the last three are newly submitted, among which there is one customized trial
 const idStatusListResume = [
     {id: '5678', status: 'RUNNING'},
     {id: '7890', status: 'RUNNING'},
-    {id: '9012', status: 'RUNNING'}];
+    {id: '9012', status: 'RUNNING'},
+    {id: '1011', status: 'RUNNING'},
+    {id: '1112', status: 'RUNNING'}];
 
 class MockedTrainingService implements TrainingService {
     private readonly eventEmitter: EventEmitter;
@@ -86,6 +91,7 @@ class MockedTrainingService implements TrainingService {
 
     public submitTrialJob(_form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         if (this.mode === 'create_stage') {
+            assert(this.submittedCnt < idStatusList.length);
             const submittedOne: TrialJobDetail = Object.assign({},
                 jobDetailTemplate, idStatusList[this.submittedCnt],
                 {submitTime: Date.now(), startTime: Date.now(), form: _form});
@@ -106,14 +112,15 @@ class MockedTrainingService implements TrainingService {
                             'sequence': 0,
                             'value': '0.9'})
                     });
-                }, 200);
+                }, 100);
                 setTimeout(() => {
                     this.jobDetailList.set(submittedOne.id, Object.assign({}, submittedOne, {endTime: Date.now(), status: 'SUCCEEDED'}));
-                }, 1000);
+                }, 150);
             }
             return Promise.resolve(submittedOne);
         }
         else if (this.mode === 'resume_stage') {
+            assert(this.submittedCnt < idStatusListResume.length);
             const submittedOne: TrialJobDetail = Object.assign({},
                 jobDetailTemplate, idStatusListResume[this.submittedCnt],
                 {submitTime: Date.now(), startTime: Date.now(), form: _form});
@@ -132,10 +139,10 @@ class MockedTrainingService implements TrainingService {
                         'sequence': 0,
                         'value': '0.9'})
                 });
-            }, 200);
+            }, 100);
             setTimeout(() => {
                 this.jobDetailList.set(submittedOne.id, Object.assign({}, submittedOne, {endTime: Date.now(), status: 'SUCCEEDED'}));
-            }, 1000);
+            }, 150);
             return Promise.resolve(submittedOne);
         }
         else {

@@ -129,13 +129,6 @@ async function cleanExperiment(): Promise<void> {
     await restServer.shutdown();
 }
 
-// async function testAddCustomizedTrialJob(): Promise<void> {
-//     await nniManager.addCustomizedTrialJob('"hyperParams"').then(() => {
-//     }).catch((error) => {
-//         assert.fail(error);
-//     })
-// }
-
 async function testListTrialJobs(): Promise<void> {
     await timersPromises.setTimeout(200);
     const trialJobDetails = await nniManager.listTrialJobs();
@@ -169,13 +162,13 @@ async function testGetExperimentProfile(): Promise<void> {
     assert.strictEqual(profile.logDir, path.join(os.homedir(),'nni-experiments','unittest'));
 }
 
-async function testUpdateExperimentProfileTrialConcurrency(): Promise<void> {
+async function testUpdateExperimentProfileTrialConcurrency(concurrency: number): Promise<void> {
     let expParams = Object.assign({}, experimentParams); // skip deep copy of inner object
-    expParams.trialConcurrency = 4;
+    expParams.trialConcurrency = concurrency;
     experimentProfile.params = expParams;
     await nniManager.updateExperimentProfile(experimentProfile, 'TRIAL_CONCURRENCY');
     const profile = await nniManager.getExperimentProfile();
-    assert.strictEqual(profile.params.trialConcurrency, 4);
+    assert.strictEqual(profile.params.trialConcurrency, concurrency);
 }
 
 async function testUpdateExperimentProfileMaxExecDuration(): Promise<void> {
@@ -187,10 +180,10 @@ async function testUpdateExperimentProfileMaxExecDuration(): Promise<void> {
     assert.strictEqual(profile.params.maxExperimentDuration, '11s');
 }
 
-async function testUpdateExperimentProfileSearchSpace(): Promise<void> {
+async function testUpdateExperimentProfileSearchSpace(space: number[]): Promise<void> {
     let expParams = Object.assign({}, experimentParams); // skip deep copy of inner object
     // The search space here should be dict, it is stringified within nnimanager's updateSearchSpace
-    const newSearchSpace = {'lr': {'_type': 'choice', '_value': [0.01, 0.001, 0.002, 0.004, 0.008]}};
+    const newSearchSpace = {'lr': {'_type': 'choice', '_value': space}};
     expParams.searchSpace = newSearchSpace;
     experimentProfile.params = expParams;
     await nniManager.updateExperimentProfile(experimentProfile, 'SEARCH_SPACE');
@@ -245,7 +238,12 @@ async function testGetTrialJobStatistics(): Promise<void> {
     // { trialJobStatus: 'WAITING', trialJobNumber: 1 }
     // ]
 
-    await timersPromises.setTimeout(1000);
+    for (let i = 0; i < 5; i++) {
+        await timersPromises.setTimeout(500);
+        const trialJobDetails = await nniManager.listTrialJobs();
+        if (trialJobDetails.length >= 4)
+            break;
+    }
     const statistics = await nniManager.getTrialJobStatistics();
     assert.isAtLeast(statistics.length, 2);
     const succeededTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'SUCCEEDED');
@@ -258,11 +256,11 @@ async function testGetTrialJobStatistics(): Promise<void> {
         assert.strictEqual(runningTrials.trialJobNumber, 1);
     else
         assert.fail('RUNNING trial not found!');
-    // const waitingTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'WAITING');
-    // if (waitingTrials)
-    //     assert.strictEqual(waitingTrials.trialJobNumber, 1);
-    // else
-    //     assert.fail('RUNNING trial not found!');
+    const waitingTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'WAITING');
+    if (waitingTrials)
+        assert.strictEqual(waitingTrials.trialJobNumber, 1);
+    else
+        assert.fail('RUNNING trial not found!');
 }
 
 async function testFinalExperimentStatus(): Promise<void> {
@@ -281,9 +279,9 @@ describe('Unit test for nnimanager basic testing', function () {
     it('test getTrialJob with invalid id', () => testGetTrialJobWithInvalidId());
     it('test cancelTrialJobByUser', () => testCancelTrialJobByUser());
     it('test getExperimentProfile', () => testGetExperimentProfile());
-    it('test updateExperimentProfile TRIAL_CONCURRENCY', () => testUpdateExperimentProfileTrialConcurrency());
+    it('test updateExperimentProfile TRIAL_CONCURRENCY', () => testUpdateExperimentProfileTrialConcurrency(4));
     it('test updateExperimentProfile MAX_EXEC_DURATION', () => testUpdateExperimentProfileMaxExecDuration());
-    it('test updateExperimentProfile SEARCH_SPACE', () => testUpdateExperimentProfileSearchSpace());
+    it('test updateExperimentProfile SEARCH_SPACE', () => testUpdateExperimentProfileSearchSpace([0.01,0.001,0.002,0.003,0.004,0.005]));
     it('test updateExperimentProfile MAX_TRIAL_NUM', () => testUpdateExperimentProfileMaxTrialNum(4));
     it('test getStatus', () => testGetStatus());
     it('test getMetricData with trialJobId', () => testGetMetricDataWithTrialJobId());
@@ -323,9 +321,31 @@ async function resumeExperiment(): Promise<void> {
 }
 
 async function testMaxTrialNumberAfterResume(): Promise<void> {
-    await timersPromises.setTimeout(2000);
+    // testing the resumed nnimanager correctly counts (max) trial number
+    // waiting 4 seconds to make trials reach maxTrialNum, waiting this long
+    // because trial concurrency is set to 1.
+    await timersPromises.setTimeout(4000);
     const trialJobDetails = await nniManager.listTrialJobs();
     assert.strictEqual(trialJobDetails.length, 5);
+}
+
+async function testAddCustomizedTrialJobFail(): Promise<void> {
+    // will fail because the max trial number has already reached
+    await nniManager.addCustomizedTrialJob('{"lr": 0.006}')
+    .catch((err: Error) => {
+        assert.strictEqual(err.message, 'reach maxTrialNum');
+    });
+}
+
+async function testAddCustomizedTrialJob(): Promise<void> {
+    // max trial number has been extended to 7, adding customized trial here will be succeeded
+    const sequenceId = await nniManager.addCustomizedTrialJob('{"lr": 0.006}');
+    await timersPromises.setTimeout(1000);
+    const trialJobDetails = await nniManager.listTrialJobs();
+    const customized = trialJobDetails.find(element =>
+        element.hyperParameters !== undefined
+        && element.hyperParameters[0] === '{"parameter_id":null,"parameter_source":"customized","parameters":{"lr":0.006}}');
+    assert.notEqual(customized, undefined);
 }
 
 // NOTE: this describe should be executed in couple with the above describe
@@ -333,9 +353,18 @@ describe('Unit test for nnimanager resume testing', function() {
 
     before(resumeExperiment);
 
-    // First update maxTrialNumber to 5 for the following tests
+    // First update maxTrialNumber to 5 for the second test
+    it('test updateExperimentProfile TRIAL_CONCURRENCY', () => testUpdateExperimentProfileTrialConcurrency(1));
     it('test updateExperimentProfile MAX_TRIAL_NUM', () => testUpdateExperimentProfileMaxTrialNum(5));
-    it('test listTrialJobs', () => testMaxTrialNumberAfterResume());
+    it('test max trial number after resume', () => testMaxTrialNumberAfterResume());
+    it('test add customized trial job failure', () => testAddCustomizedTrialJobFail());
+    // update search to contain only one hyper config, update maxTrialNum to add additional two trial budget,
+    // then a customized trial can be submitted successfully.
+    // NOTE: trial concurrency should be set to 1 to avoid tuner sending too many trials before the space is updated
+    it('test updateExperimentProfile SEARCH_SPACE', () => testUpdateExperimentProfileSearchSpace([0.008]));
+    it('test updateExperimentProfile MAX_TRIAL_NUM', () => testUpdateExperimentProfileMaxTrialNum(7));
+    it('test add customized trial job succeeded', () => testAddCustomizedTrialJob());
+    it('test the final experiment status is not ERROR', () => testFinalExperimentStatus());
 
     after(cleanExperiment);
 
