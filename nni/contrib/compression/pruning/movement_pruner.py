@@ -60,8 +60,12 @@ class MovementPruner(ScheduledPruner):
                 if is_active_target(target_space):
                     # TODO: add input / output
                     if target_space.type is TargetType.PARAMETER:
+                        # TODO: here using a shrinked score to save memory, but need to test the speed.
+                        score_val = torch.zeros_like(target_space.target)
+                        if target_space._scaler is not None:
+                            score_val = target_space._scaler.shrink(score_val)
                         target_space._wrapper.register_parameter(MOVEMENT_SCORE_PNAME.format(target_name),
-                                                                 torch.nn.Parameter(torch.zeros_like(target_space.target)))
+                                                                 torch.nn.Parameter(score_val))
                         score = target_space._get_wrapper_attr(MOVEMENT_SCORE_PNAME.format(target_name))
                         self.scores[module_name][target_name] = score
                     else:
@@ -69,9 +73,9 @@ class MovementPruner(ScheduledPruner):
 
     def _register_scores_optimization(self, evaluator: Evaluator):
         scores = []
-        for _, v in self.scores.items():
-            for _, s in v.items():
-                scores.append(s)
+        for _, target_scores in self.scores.items():
+            for _, score in target_scores.items():
+                scores.append(score)
 
         if not scores:
             return
@@ -86,21 +90,14 @@ class MovementPruner(ScheduledPruner):
         evaluator.patch_optimizer_step(before_step_tasks=[optimizer_task], after_step_tasks=[])
 
     def _patch_loss(self, evaluator: Evaluator):
-        def reduce_func(t: torch.Tensor) -> torch.Tensor:
-            return t.sum(dim=-1).sigmoid()
-
         def loss_patch(original_loss, batch):
             reg_loss = 0.
             count = 0
-            for _, ts in self._target_spaces.items():
-                for target_name, target_space in ts.items():
-                    score: torch.Tensor = getattr(target_space._wrapper, MOVEMENT_SCORE_PNAME.format(target_name), None)
-                    if target_space.sparse_threshold is not None and score is not None:
-                        if target_space._scaler is not None:
-                            score = target_space._scaler.shrink(score, reduce_func)
-                        else:
-                            score = score.sigmoid()
-                        reg_loss += torch.norm(score, p=1) / score.numel()
+            for module_name, target_scores in self.scores.items():
+                for target_name, score in target_scores.items():
+                    target_space = self._target_spaces[module_name][target_name]
+                    if target_space.sparse_threshold is not None:
+                        reg_loss += torch.norm(score.sigmoid(), p=1) / score.numel()
                         count += 1
             ratio = max(0., min(1., 1 - (self._remaining_times / self.total_times) ** 3))
             if count > 0:
@@ -144,7 +141,14 @@ class MovementPruner(ScheduledPruner):
         return data
 
     def _calculate_metrics(self, data: Dict[str, Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, torch.Tensor]]:
-        return sum_sigmoid_metric(data=data, target_spaces=self._target_spaces)
+        metrics = defaultdict(dict)
+        for module_name, td in data.items():
+            for target_name, target_data in td.items():
+                if self._target_spaces[module_name][target_name].sparse_threshold is not None:
+                    metrics[module_name][target_name] = target_data.sigmoid()
+                else:
+                    metrics[module_name][target_name] = target_data
+        return metrics
 
     def _generate_sparsity(self, metrics: Dict[str, Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, torch.Tensor]]:
         return generate_sparsity(metrics=metrics, target_spaces=self._target_spaces)

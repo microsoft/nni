@@ -123,5 +123,5 @@ class LinearPruner(ComboPruner):
 
 class AGPPruner(ComboPruner):
     def update_sparse_goals(self, current_times: int):
-        ratio = 1 + (self._initial_ratio - 1) * (1 - (self.total_times - current_times) / self.total_times) ** 3
+        ratio = 1 - (1 - self._initial_ratio) * (1 - current_times / self.total_times) ** 3
         self._update_sparse_goals_by_ratio(ratio)

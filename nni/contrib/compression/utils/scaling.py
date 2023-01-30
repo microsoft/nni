@@ -168,7 +168,7 @@ class Scaling:
         # step 3: expanding the new target to _expand_size and reshape to expand_size.
         # Note that we can also give an interface for how to expand the tensor, like `reduce_func` in `_shrink`,
         # currently we don't have that need.
-        result = new_target.expand(_expand_size).reshape(expand_size).clone()
+        result = new_target.expand(_expand_size).reshape(expand_size)
 
         return result
 

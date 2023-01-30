@@ -976,7 +976,7 @@ class TransformersEvaluator(Evaluator):
         self.train()
 
     def evaluate(self) -> Tuple[float | None, Dict[str, Any]]:
-        metric =  self.trainer.evaluate()
+        metric = self.trainer.evaluate()
         nni_used_metric = metric.get('default', None)
         if nni_used_metric is None:
             warn_msg = f'Evaluation function returns a dict metric without key `default`,' + \
