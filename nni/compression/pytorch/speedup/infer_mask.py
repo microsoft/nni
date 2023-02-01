@@ -128,8 +128,12 @@ class AutoMaskInference:
         # rules for ReLU6 to break this range constraint.
         with torch.no_grad():
             for index, tensor in enumerate(self.dummy_input):
-                if isinstance(tensor, torch.Tensor) and len(tensor.size()) > self.batch_dim\
-                    and tensor.size(self.batch_dim) == self.batch_size:
+                # NOTE: tensor.size(self.batch_dim) % self.batch_size == 0 is a workaround,
+                # sometimes batch_dim size might be dynamic internal,
+                # i.e., input size is (batch_size * node_num, seq_len, hidden_size),
+                # this workaround only duel with these situations.
+                if isinstance(tensor, torch.Tensor) and len(tensor.size()) > self.batch_dim \
+                    and tensor.size(self.batch_dim) % self.batch_size == 0:
                     # if the input tensor only has one dimension, which means
                     # it doesn't have the batch dimension, then we don't randomize
                     # this tensor, because our tensor scrambling is on the batch

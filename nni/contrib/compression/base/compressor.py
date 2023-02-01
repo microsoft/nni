@@ -195,7 +195,7 @@ class Pruner(Compressor):
         masks = defaultdict(dict)
         for module_name, wrapper in self._module_wrappers.items():
             for target_name, target_space in wrapper.pruning_target_spaces.items():
-                masks[module_name][target_name] = target_space.mask.clone().cpu() if target_space.mask is not None else None
+                masks[module_name][target_name] = target_space.mask.clone() if target_space.mask is not None else None
         return masks
 
     def update_masks(self, masks: Dict[str, Dict[str, torch.Tensor]]):
