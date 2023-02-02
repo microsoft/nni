@@ -88,10 +88,9 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
                 quant_bit = quant_bits if isinstance(quant_bits, int) else quant_bits['input']
                 target_settings[INPUT_PREFIX] = {'quant_dtype': f'int{quant_bit}'}
             if 'weight' in quant_types:
-                target_names.extend(['weight', 'bias'])
+                target_names.extend(['weight'])
                 quant_bit = quant_bits if isinstance(quant_bits, int) else quant_bits['weight']
                 target_settings['weight'] = {'quant_dtype': f'int{quant_bit}'}
-                target_settings['bias'] = {'quant_dtype': f'int{quant_bit}'}
             if 'output' in quant_types:
                 target_names.append(OUTPUT_PREFIX)
                 quant_bit = quant_bits if isinstance(quant_bits, int) else quant_bits['output']
@@ -103,19 +102,39 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
 
 def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> Tuple[Dict[str, torch.nn.Module], Dict[str, Any]]:
     """
+    This is a helper function for selecting the modules in model specified in config.
+
+    There are six optional keys in config to specify the module,
+    note that the module name should be the same as the name obtained from ``model.named_modules()``,
+    module type is the ``__name__`` of the module class:
+        - ``op_names``: a module name list, the modules with these names will be selected.
+        - ``op_types``: a module type name list, the modules satisfied these types will be selected.
+        - ``op_names_re``: a regular expression list, the modules satisfied the regular expressions will be selected.
+        - ``exclude_op_names``: a module name list, the modules with these names will be excluded.
+        - ``exclude_op_types``: a module type name list, the modules satisfied these types will be excluded.
+        - ``exclude_op_names_re``: a regular expression list, the modules satisfied the regular expressions will be excluded.
+
+    A module is selected if it satisfies all the following conditions:
+        1. If ``op_names`` or ``op_names_re`` is not empty, the module name should in ``op_names``
+           or satisfied one of regular expressions in ``op_names_re``.
+        2. If ``op_types`` is not empty, the module type name should in ``op_types``.
+        3. If ``exclude_op_names`` or ``exclude_op_names_re`` is not empty, the module name should not in ``exclude_op_names``
+           and should not satisfied each of regular expressions in ``exclude_op_names_re``.
+        4. If ``exclude_op_types`` is not empty, the module type name should not in ``exclude_op_types``.
+
     Parameters
     ----------
     model
         The modules selected from.
     config
-        The config contains keys ['op_names', 'op_types', 'op_names_re', 'exclude_op_names', 'exclude_op_types', 'exclude_op_names_re']
+        A dict contains keys ['op_names', 'op_types', 'op_names_re', 'exclude_op_names', 'exclude_op_types', 'exclude_op_names_re']
 
     Returns
     -------
     Tuple[Dict[str, torch.nn.Module], Dict[str, Any]]
         (named_module_dict, public_config).
         Named module dict is {module_name: selected_module}
-        Public config is the config without keys
+        Public config is the passed in config without keys:
         ['op_names', 'op_types', 'op_names_re', 'exclude_op_names', 'exclude_op_types', 'exclude_op_names_re'].
     """
     # intersection(union(op_names, op_names_re), op_types) - exclude_op_names - exclude_op_names_re - exclude_op_types
