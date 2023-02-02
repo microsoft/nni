@@ -24,7 +24,7 @@ class TargetSpace:
     """
     TargetSpace is a container to handle all compression information related to a specific compression target,
     note that it has the ability to register information in the wrapper,
-    this because in most comopression cases need to register tensor (mask, scale, zero point) as buffer/parameter in the model.
+    this because in most compression cases need to register tensor (mask, scale, zero point) as buffer/parameter in the model.
 
     Parameters
     ----------
