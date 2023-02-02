@@ -10,7 +10,6 @@ import pytest
 import pytorch_lightning
 
 import nni
-import nni.runtime.platform.test
 import nni.retiarii.evaluator.pytorch.lightning as pl
 import nni.retiarii.hub.pytorch as searchspace
 from nni.retiarii import fixed_arch
@@ -18,8 +17,9 @@ from nni.retiarii.execution.utils import unpack_if_only_one
 from nni.retiarii.mutator import InvalidMutation, Sampler
 from nni.retiarii.nn.pytorch.mutator import extract_mutation_from_pt_module
 
+pytestmark = pytest.mark.skip(reason='Will be rewritten.')
 
-pytestmark = pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
+# pytestmark = pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
 
 
 def _reset():

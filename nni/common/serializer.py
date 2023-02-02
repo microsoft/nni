@@ -77,6 +77,8 @@ class Translatable(abc.ABC):
     """
     Inherit this class and implement ``translate`` when the wrapped class needs a different
     parameter from the wrapper class in its init function.
+
+    .. deprecated:: 3.0
     """
 
     @abc.abstractmethod
@@ -85,23 +87,29 @@ class Translatable(abc.ABC):
 
     @staticmethod
     def _translate_argument(d: Any) -> Any:
+        warnings.warn('Translatable is deprecated, please use `_unwrap_parameter` instead', DeprecationWarning)
         if isinstance(d, Translatable):
             return d._translate()
         return d
 
 
-def is_traceable(obj: Any) -> bool:
+def is_traceable(obj: Any, must_be_instance: bool = False) -> bool:
     """
     Check whether an object is a traceable instance or type.
 
     Note that an object is traceable only means that it implements the "Traceable" interface,
     and the properties have been implemented. It doesn't necessary mean that its type is wrapped with trace,
     because the properties could be added **after** the instance has been created.
+
+    If ``must_be_instance`` is set to true, the check returns false if ``obj`` is a type.
     """
+    if must_be_instance and is_wrapped_with_trace(obj):
+        return False
     return hasattr(obj, 'trace_copy') and \
         hasattr(obj, 'trace_symbol') and \
         hasattr(obj, 'trace_args') and \
         hasattr(obj, 'trace_kwargs')
+
 
 
 def is_wrapped_with_trace(cls_or_func: Any) -> bool:
@@ -119,6 +127,9 @@ class SerializableObject(Traceable):  # should be (Generic[T], Traceable), but c
     """
     Serializable object is a wrapper of existing python objects, that supports dump and load easily.
     Stores a symbol ``s`` and a dict of arguments ``args``, and the object can be restored with ``s(**args)``.
+
+    :class:`SerializableObject` is not always a full object. Sometimes it could only
+    contain necessary init arguments that are required to recreate another object.
     """
 
     def __init__(self, symbol: Type, args: List[Any], kwargs: Dict[str, Any], call_super: bool = False):
@@ -138,14 +149,24 @@ class SerializableObject(Traceable):  # should be (Generic[T], Traceable), but c
     def trace_copy(self) -> 'SerializableObject':
         return SerializableObject(
             self.trace_symbol,
-            [copy.copy(arg) for arg in self.trace_args],
-            {k: copy.copy(v) for k, v in self.trace_kwargs.items()},
+            list(self.trace_args),
+            dict(self.trace_kwargs),
         )
 
-    def get(self) -> Any:
+    def get(self, traceable: bool = True) -> Any:
+        """Get the original instance. Reinstantiating if necessary.
+
+        Parameters
+        ----------
+        traceable
+            If true, the returned object is guaranteed to be still traceable.
+        """
         if not self._get_nni_attr('call_super'):
             # Reinitialize
-            return trace(self.trace_symbol)(*self.trace_args, **self.trace_kwargs)
+            if traceable:
+                return trace(self.trace_symbol)(*self.trace_args, **self.trace_kwargs)
+            else:
+                return self.trace_symbol(*self.trace_args, **self.trace_kwargs)
 
         return self
 
@@ -175,6 +196,8 @@ class SerializableObject(Traceable):  # should be (Generic[T], Traceable), but c
         self.__dict__['_nni_kwargs'] = kwargs
 
     def _get_nni_attr(self, name: str) -> Any:
+        if ('_nni_' + name) not in self.__dict__:
+            raise AttributeError(f'Attribute {name} not found in SerializableObject')
         return self.__dict__['_nni_' + name]
 
     def __repr__(self):
@@ -211,8 +234,8 @@ def _make_class_traceable(cls: T, create_wrapper: bool = False) -> T:
     def trace_copy(self):
         return SerializableObject(
             self.trace_symbol,
-            [copy.copy(arg) for arg in self.trace_args],
-            {k: copy.copy(v) for k, v in self.trace_kwargs.items()},
+            list(self.trace_args),
+            dict(self.trace_kwargs),
         )
 
     def get(self):
@@ -251,7 +274,10 @@ def trace(cls_or_func: T = cast(T, None), *, kw_only: bool = True, inheritable: 
     One exception is that if your function returns None, it will return an empty traceable object instead,
     which should raise your attention when you want to check whether the None ``is None``.
 
-    When parameters of functions are received, it is first stored, and then a shallow copy will be passed to wrapped function/class.
+    When parameters of functions are received, it is first stored as ``trace_args`` and ``trace_kwargs``.
+    ``_unwrap_parameter()`` will be invoked if it's defined on the parameter to do some transformations
+    (e.g., :class:`~nni.mutable.Mutable` parameters can be transformed to fixed value to make the wrapped function happy).
+    And then a shallow copy will be passed to wrapped function/class.
     This is to prevent mutable objects gets modified in the wrapped function/class.
     When the function finished execution, we also record extra information about where this object comes from.
     That's why it's called "trace".
@@ -264,12 +290,13 @@ def trace(cls_or_func: T = cast(T, None), *, kw_only: bool = True, inheritable: 
     If ``inheritable`` is true, the trace information from superclass will also be available in subclass.
     This however, will make the subclass un-trace-able. Note that this argument has no effect when tracing functions.
 
-    .. warning::
+    Warnings
+    --------
+    Generators will be first expanded into a list, and the resulting list will be further passed into the wrapped function/class.
+    This might hang when generators produce an infinite sequence. We might introduce an API to control this behavior in future.
 
-        Generators will be first expanded into a list, and the resulting list will be further passed into the wrapped function/class.
-        This might hang when generators produce an infinite sequence. We might introduce an API to control this behavior in future.
-
-    Example:
+    Examples
+    --------
 
     .. code-block:: python
 
@@ -314,6 +341,10 @@ def dump(obj: Any, fp: Optional[Any] = None, *, use_trace: bool = True, pickle_s
     Use json-tricks as main backend. For unhandled cases in json-tricks, use cloudpickle.
     The serializer is not designed for long-term storage use, but rather to copy data between processes.
     The format is also subject to change between NNI releases.
+
+    It's recommended to use ``dump`` with ``trace``. The traced object can be stored with their traced arguments.
+    For more complex objects, it will look for ``_dump`` and ``_load`` pair in the class.
+    If not found, it will fallback to binary dump with cloudpickle.
 
     To compress the payload, please use :func:`dump_bytes`.
 
@@ -380,6 +411,7 @@ def _dump(*, obj: Any, fp: Optional[Any], use_trace: bool, pickle_size_limit: in
         json_tricks.json_set_encode,
         json_tricks.numeric_types_encode,
         functools.partial(_json_tricks_serializable_object_encode, use_trace=use_trace),
+        _json_tricks_customize_encode,      # After serializable object
         functools.partial(_json_tricks_func_or_cls_encode, pickle_size_limit=pickle_size_limit),
         functools.partial(_json_tricks_any_object_encode, pickle_size_limit=pickle_size_limit),
     ]
@@ -428,6 +460,7 @@ def load(string: Optional[str] = None, *, fp: Optional[Any] = None,
         json_tricks.json_set_hook,
         json_tricks.numeric_types_hook,
         _json_tricks_serializable_object_decode,
+        _json_tricks_customize_decode,
         _json_tricks_func_or_cls_decode,
         _json_tricks_any_object_decode
     ]
@@ -654,7 +687,14 @@ def _argument_processor(arg):
     # 1) translate
     # handle cases like ValueChoice
     # This is needed because sometimes the recorded arguments are meant to be different from what the wrapped object receives.
-    arg = Translatable._translate_argument(arg)
+
+    if hasattr(arg, '_unwrap_parameter'):
+        arg = arg._unwrap_parameter()
+
+    # deprecated
+    if isinstance(arg, Translatable):
+        arg = Translatable._translate_argument(arg)
+
     # 2) prevent the stored parameters to be mutated by wrapped class.
     # an example: https://github.com/microsoft/nni/issues/4329
     if isinstance(arg, (collections.abc.MutableMapping, collections.abc.MutableSequence, collections.abc.MutableSet)):
@@ -829,7 +869,7 @@ def _json_tricks_serializable_object_encode(obj: Any, primitives: bool = False, 
     # Encodes a serializable object instance to json.
 
     # do nothing to instance that is not a serializable object and do not use trace
-    if not (use_trace and hasattr(obj, '__class__') and is_traceable(type(obj))):
+    if not (use_trace and is_traceable(obj, must_be_instance=True)):
         return obj
 
     if isinstance(obj.trace_symbol, property):
@@ -850,6 +890,30 @@ def _json_tricks_serializable_object_decode(obj: Dict[str, Any]) -> Any:
         args = obj.get('__args__', [])
         kwargs = obj.get('__kwargs__', {})
         return trace(symbol)(*args, **kwargs)
+    return obj
+
+
+def _json_tricks_customize_encode(obj: Any, primitives: bool = False) -> Any:
+    # Dealing with classes with dump and load pair.
+    if hasattr(obj, '_dump') and hasattr(obj, '_load'):
+        dump_res = obj._dump()
+        if not isinstance(dump_res, dict):
+            raise ValueError(f'Customized object {obj} must return a dict when calling _dump().')
+        if '__instance_type__' in dump_res:
+            raise ValueError(f'Customized object {obj} cannot have key "__instance_type__" in the dict returned by _dump().')
+        dump_res['__instance_type__'] = get_hybrid_cls_or_func_name(type(obj))
+        return dump_res
+    return obj
+
+
+def _json_tricks_customize_decode(obj: Dict[str, Any]) -> Any:
+    if isinstance(obj, dict) and '__instance_type__' in obj:
+        cls = import_cls_or_func_from_hybrid_name(obj['__instance_type__'])
+        if not hasattr(cls, '_load'):
+            raise ValueError(f'Customized object {cls} must have a static method _load() to load from a dict.')
+        kwargs = obj.copy()
+        kwargs.pop('__instance_type__')
+        return cls._load(**kwargs)
     return obj
 
 

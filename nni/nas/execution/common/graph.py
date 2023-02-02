@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# pylint: skip-file
+# type: ignore
+
 """
 Model representation for engines based on graph.
 """

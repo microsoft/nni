@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from functools import reduce
-from typing import Callable, List, overload
+from typing import Callable, List
 from typing_extensions import Literal
 
 import torch
@@ -192,14 +192,6 @@ class Scaling:
         else:
             raise ValueError(f'Unsupported kernel padding mode: {self.kernel_padding_mode}.')
         return self._expand(target, kernel_size, expand_size)
-
-    @overload
-    def validate(self, target: List[int]):
-        ...
-
-    @overload
-    def validate(self, target: Tensor):
-        ...
 
     def validate(self, target: List[int] | Tensor):
         """

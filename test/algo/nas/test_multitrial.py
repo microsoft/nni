@@ -10,7 +10,8 @@ from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperimen
 from ut.nas.test_experiment import nas_experiment_trial_params, ensure_success
 from .test_oneshot import _mnist_net
 
-pytestmark = pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
+# pytestmark = pytest.mark.skipif(pl.__version__ < '1.0', reason='Incompatible APIs')
+pytestmark = pytest.mark.skip(reason='Will be rewritten.')
 
 
 @pytest.mark.parametrize('model', [

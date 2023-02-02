@@ -3,7 +3,7 @@
 
 from nni.common.framework import shortcut_framework
 
-from .evaluator import Evaluator
+from .evaluator import *
 from .functional import FunctionalEvaluator
 
 shortcut_framework(__name__)

@@ -49,6 +49,22 @@ class EmptyClass:
     pass
 
 
+class CustomizeLoadDump:
+    def __init__(self, a, b=1):
+        self._a = a
+        self._b = b
+
+    def _dump(self):
+        return {
+            'a': self._a,
+            'any': self._b
+        }
+
+    @staticmethod
+    def _load(*, a, any):
+        return CustomizeLoadDump(a, any)
+
+
 class UnserializableSimpleClass:
     def __init__(self):
         self._a = 1
@@ -65,6 +81,12 @@ def test_simple_class():
     instance = nni.load(dump_str)
     assert instance._a == 1
     assert instance._b == 2
+
+
+def test_customize_class():
+    instance = CustomizeLoadDump(1, 2)
+    dump_str = nni.dump(instance)
+    # FIXME
 
 
 def test_external_class():
@@ -411,7 +433,7 @@ def test_get():
 
 
 def test_model_wrapper_serialize():
-    from nni.retiarii import model_wrapper
+    from nni.nas.utils import model_wrapper
 
     @model_wrapper
     class Model(nn.Module):
@@ -429,3 +451,18 @@ def test_model_wrapper_across_process():
     main_file = os.path.join(os.path.dirname(__file__), 'imported', '_test_serializer_main.py')
     subprocess.run([sys.executable, main_file, '0'], check=True)
     subprocess.run([sys.executable, main_file, '1'], check=True)
+
+
+class CustomParameter:
+    def __init__(self, x):
+        self._wrapped = x
+
+    def _unwrap_parameter(self):
+        return self._wrapped
+
+
+def test_unwrap_parameter():
+    c = CustomParameter(1)
+    cls = SimpleClass(c)
+    assert cls._a == 1
+    assert cls.trace_kwargs['a'] == c
