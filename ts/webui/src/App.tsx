@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Stack } from '@fluentui/react';
-import { SlideNavBtns } from '@components/nav/slideNav/SlideNavBtns';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import NavCon from '@components/nav/Nav';
 import MessageInfo from '@components/common/MessageInfo';
@@ -21,14 +20,18 @@ export const AppContext = React.createContext({
     columnList: COLUMN,
     experimentUpdateBroadcast: 0,
     trialsUpdateBroadcast: 0,
-    metricGraphMode: 'max',
+    metricGraphMode: 'Maximize',
     bestTrialEntries: '10',
     maxDurationUnit: 'm',
     expandRowIDs: new Set(['']),
+    expandRowIDsDetailTable: new Set(['']),
+    selectedRowIds: [] as string[],
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeSelectedRowIds: (_val: string[]): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     changeColumn: (_val: string[]): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeMetricGraphMode: (_val: 'max' | 'min'): void => {},
+    changeMetricGraphMode: (_val: 'Maximize' | 'Minimize'): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     changeMaxDurationUnit: (_val: string): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -39,6 +42,8 @@ export const AppContext = React.createContext({
     updateDetailPage: () => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     changeExpandRowIDs: (_val: string, _type?: string): void => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeExpandRowIDsDetailTable: (_val: string, _type?: string): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     startTimer: () => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -53,11 +58,13 @@ interface AppState {
     experimentUpdateBroadcast: number;
     trialsUpdateBroadcast: number;
     maxDurationUnit: string;
-    metricGraphMode: 'max' | 'min'; // tuner's optimize_mode filed
+    metricGraphMode: 'Maximize' | 'Minimize'; // tuner's optimize_mode filed
     isillegalFinal: boolean;
     expWarningMessage: string;
     bestTrialEntries: string; // for overview page: best trial entreis
-    expandRowIDs: Set<string>;
+    expandRowIDs: Set<string>; // for overview page: open row
+    expandRowIDsDetailTable: Set<string>; // for overview page: open row
+    selectedRowIds: string[]; // for detail page: selected trial - checkbox
     timerIdList: number[];
 }
 
@@ -71,12 +78,14 @@ class App extends React.Component<{}, AppState> {
             columnList: COLUMN,
             experimentUpdateBroadcast: 0,
             trialsUpdateBroadcast: 0,
-            metricGraphMode: 'max',
+            metricGraphMode: 'Maximize',
             maxDurationUnit: 'm',
             isillegalFinal: false,
             expWarningMessage: '',
             bestTrialEntries: '10',
             expandRowIDs: new Set(),
+            expandRowIDsDetailTable: new Set(),
+            selectedRowIds: [],
             timerIdList: []
         };
     }
@@ -88,7 +97,7 @@ class App extends React.Component<{}, AppState> {
         this.setState(state => ({
             experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
             trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1,
-            metricGraphMode: EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max'
+            metricGraphMode: EXPERIMENT.optimizeMode === 'minimize' ? 'Minimize' : 'Maximize'
         }));
 
         this.startTimer();
@@ -105,7 +114,9 @@ class App extends React.Component<{}, AppState> {
             expWarningMessage,
             bestTrialEntries,
             maxDurationUnit,
-            expandRowIDs
+            expandRowIDs,
+            expandRowIDsDetailTable,
+            selectedRowIds
         } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;
@@ -125,13 +136,11 @@ class App extends React.Component<{}, AppState> {
                     <Stack className='nni' style={{ minHeight: window.innerHeight }}>
                         <div className='header'>
                             <div className='headerCon'>
-                                <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
+                                <NavCon changeInterval={this.changeInterval} />
                             </div>
                         </div>
                         <Stack className='contentBox'>
                             <Stack className='content'>
-                                {/* search space & config & dispatcher, nnimanagerlog*/}
-                                <SlideNavBtns />
                                 {/* if api has error field, show error message */}
                                 {errorList.map(
                                     (item, key) =>
@@ -161,7 +170,11 @@ class App extends React.Component<{}, AppState> {
                                         changeMetricGraphMode: this.changeMetricGraphMode,
                                         changeEntries: this.changeEntries,
                                         expandRowIDs,
+                                        expandRowIDsDetailTable,
+                                        selectedRowIds,
+                                        changeSelectedRowIds: this.changeSelectedRowIds,
                                         changeExpandRowIDs: this.changeExpandRowIDs,
+                                        changeExpandRowIDsDetailTable: this.changeExpandRowIDsDetailTable,
                                         updateOverviewPage: this.updateOverviewPage,
                                         updateDetailPage: this.updateDetailPage, // update current record without fetch api
                                         refreshDetailTable: this.refreshDetailTable, // update record with fetch api
@@ -221,6 +234,7 @@ class App extends React.Component<{}, AppState> {
         this.setState({ columnList: columnList });
     };
 
+    // for succeed table in the overview page
     public changeExpandRowIDs = (id: string, type?: string): void => {
         const currentExpandRowIDs = this.state.expandRowIDs;
 
@@ -235,7 +249,23 @@ class App extends React.Component<{}, AppState> {
         this.setState({ expandRowIDs: currentExpandRowIDs });
     };
 
-    public changeMetricGraphMode = (val: 'max' | 'min'): void => {
+    // for details table in the detail page
+    public changeExpandRowIDsDetailTable = (id: string): void => {
+        const currentExpandRowIDs = this.state.expandRowIDsDetailTable;
+
+        if (!currentExpandRowIDs.has(id)) {
+            currentExpandRowIDs.add(id);
+        } else {
+            currentExpandRowIDs.delete(id);
+        }
+
+        this.setState({ expandRowIDsDetailTable: currentExpandRowIDs });
+    };
+
+    public changeSelectedRowIds = (val: string[]): void => {
+        this.setState({ selectedRowIds: val });
+    };
+    public changeMetricGraphMode = (val: 'Maximize' | 'Minimize'): void => {
         this.setState({ metricGraphMode: val });
     };
 
