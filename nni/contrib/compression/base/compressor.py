@@ -84,7 +84,7 @@ class Compressor:
         evaluator = compressor.evaluator if compressor.evaluator else evaluator
 
         # note that here don't have `mode` because subclass should know what its mode is.
-        return cls(model=model, config_list=new_config_list, evaluator=evaluator, existed_wrappers=existed_wrappers, *args, **kwargs)
+        return cls(model=model, config_list=new_config_list, evaluator=evaluator, existed_wrappers=existed_wrappers, **kwargs)
 
     def _validate_config(self):
         pass
