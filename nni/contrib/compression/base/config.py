@@ -134,7 +134,7 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
     Tuple[Dict[str, torch.nn.Module], Dict[str, Any]]
         (named_module_dict, public_config).
         Named module dict is {module_name: selected_module}
-        Public config is the passed in config without keys:
+        Public config is the passed-in config without keys:
         ['op_names', 'op_types', 'op_names_re', 'exclude_op_names', 'exclude_op_types', 'exclude_op_names_re'].
     """
     # intersection(union(op_names, op_names_re), op_types) - exclude_op_names - exclude_op_names_re - exclude_op_types
