@@ -20,3 +20,4 @@ import os
 
 os.environ['NNI_PLATFORM'] = 'unittest'
 os.environ['NNI_TRIAL_JOB_ID'] = 'test_trial_job_id'
+os.environ['NNI_EXP_ID'] = 'test_experiment'

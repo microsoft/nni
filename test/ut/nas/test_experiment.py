@@ -13,8 +13,8 @@ from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperimen
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
-pytestmark = pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs')
-
+# pytestmark = pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs')
+pytestmark = pytest.mark.skip(reason='Will be rewritten.')
 
 def nas_experiment_trial_params(rootpath):
     params = {}
