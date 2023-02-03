@@ -19,7 +19,7 @@
     "http-proxy": "^1.18.1",
     "ignore": "^5.1.8",
     "js-base64": "^3.7.2",
-    "kubernetes-client": "^6.12.1",
+    "kubernetes-client": "^9.0.0",
     "lockfile": "^1.0.4",
     "python-shell": "^3.0.0",
     "rx": "^4.1.0",
