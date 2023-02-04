@@ -610,10 +610,10 @@ class GraphConverter:
             candidate_name_list = []
             for cand_name in module.names:
                 cand = module[cand_name]
-                script_cand = script_module._modules[cand_name]
+                script_cand = script_module._modules[str(cand_name)]
                 # FIXME: should use cand_name instead of cand_full_name
-                cand_full_name = build_cand_name(cand_name, module.label)
-                cand_python_name = build_python_name(module_python_name, cand_name)
+                cand_full_name = build_cand_name(str(cand_name), module.label)
+                cand_python_name = build_python_name(module_python_name, str(cand_name))
                 candidate_name_list.append(cand_full_name)
                 subgraph, attrs = self._convert_module(script_cand, cand, cand_full_name, cand_python_name, ir_model)
                 if subgraph is not None:
@@ -751,11 +751,11 @@ class GraphConverterWithShape(GraphConverter):
 
                 for cand_name in submodule.names:
                     cand = submodule[cand_name]
-                    cand_name = build_cand_name(cand_name, submodule.label)
+                    cand_name = build_cand_name(str(cand_name), submodule.label)
                     # TODO: Feed the exact input tensor if user provides input,
                     # in case the path changes according to input data.
                     lc_inputs = [torch.randn(shape) for shape in lc_node.operation.attributes['input_shape']]
-                    self._trace_module(cand, cand_name, ir_model, lc_inputs)
+                    self._trace_module(cand, str(cand_name), ir_model, lc_inputs)
 
     def propagate_shape(self, ir_model: GraphModelSpace):
 

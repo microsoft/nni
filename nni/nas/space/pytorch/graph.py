@@ -6,14 +6,12 @@ from __future__ import annotations
 __all__ = ['PytorchGraphModelSpace']
 
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, ClassVar
 
 import torch
 
-from nni.common.device import Device
-
 from nni.nas.evaluator import Evaluator
-from nni.nas.space import GraphModelSpace, Mutator, Node
+from nni.nas.space import GraphModelSpace, Mutator
 from nni.nas.nn.pytorch.repeat import repeat_jit_forward_patch
 from .codegen import model_to_pytorch_script
 from .converter import GraphConverter, GraphConverterWithShape
@@ -45,14 +43,6 @@ class PytorchGraphModelSpace(GraphModelSpace):
     """
 
     framework_type: str = 'pytorch'
-
-    placement: dict[Node, Device]
-
-    def __init__(self, *, _internal=False):
-        super().__init__(_internal=_internal)
-
-        # Placement is used in CGO engine
-        self.placement = {}
 
     @classmethod
     @repeat_jit_forward_patch()
@@ -124,7 +114,7 @@ class PytorchGraphModelSpace(GraphModelSpace):
 
     def executable_model(self) -> Any:
         """Convert the model to Python code, and execute the code to get the model."""
-        model_code = model_to_pytorch_script(self, self.placement)
+        model_code = model_to_pytorch_script(self)
         _logger.debug('Generated model code:')
         _logger.debug(model_code)
         exec_vars = {}

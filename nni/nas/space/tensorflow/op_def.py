@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from nni.nas.execution.common import TensorFlowOperation
+from nni.nas.space.graph_op import TensorFlowOperation
 
 
 class Conv2D(TensorFlowOperation):

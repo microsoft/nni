@@ -6,9 +6,11 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Any, Callable, Iterable, List, Optional, TYPE_CHECKING, ContextManager
 
+from numpy.random import RandomState
+
 from nni.mutable import (
     LabeledMutable, MutableList, MutableDict, Categorical, Mutable, SampleValidationError,
-    label_scope, auto_label, frozen_context
+    Sample, SampleMissingError, label_scope, auto_label, frozen_context
 )
 
 from .space import ModelStatus
@@ -82,7 +84,7 @@ class Mutator(LabeledMutable):
         # Same as `leaf_mutables` in LabeledMutable.
         return super().leaf_mutables(is_leaf)
 
-    def check_contains(self, sample: dict[str, Any]) -> tuple[bool, str]:
+    def check_contains(self, sample: Sample) -> SampleValidationError | None:
         """Check if the sample is valid for this mutator.
 
         See Also
@@ -90,10 +92,10 @@ class Mutator(LabeledMutable):
         nni.mutable.Mutable.check_contains
         """
         if self.label not in sample:
-            return False, f"Mutator {self.label} not found in sample."
+            return SampleMissingError(f"Mutator {self.label} not found in sample.")
         if not isinstance(sample[self.label], MutationSampler):
-            return False, f"Mutator {self.label} is not a MutationSampler."
-        return True, ''
+            return SampleValidationError(f"Mutator {self.label} is not a MutationSampler.")
+        return None
 
     def freeze(self, sample: dict[str, Any]) -> GraphModelSpace:
         """When freezing a mutator, we need a model to mutate on, as well as a sampler to generate choices.
@@ -173,6 +175,26 @@ class Mutator(LabeledMutable):
         self._cur_choice_idx += 1
         return ret
 
+    def random(self, memo: Sample | None = None, random_state: RandomState | None = None) -> GraphModelSpace | None:
+        """Use a :class:`_RandomSampler` that generates a random sample when mutates.
+
+        See Also
+        --------
+        nni.mutable.Mutable.random
+        """
+        sample: Sample = {} if memo is None else memo
+        if random_state is None:
+            random_state = RandomState()
+        if self.label not in sample:
+            sample[self.label] = _RandomSampler(random_state)
+        if self.model is not None:
+            # Model is binded, perform the freeze.
+            return self.freeze(sample)
+        else:
+            # This will only affect the memo.
+            # Parent random will take care of the freeze afterwards.
+            return None
+    
 
 class StationaryMutator(Mutator):
     """A mutator that can be dry run.
@@ -227,6 +249,7 @@ class StationaryMutator(Mutator):
         new_model = self.apply(model)
         self.sampler = sampler_backup
 
+        # Local import to avoid name conflict.
         from nni.mutable.utils import label
         # NOTE: This is hacky. It fakes a label object by splitting the label string.
         _label = label(self.label.split('/'))
@@ -241,6 +264,10 @@ class StationaryMutator(Mutator):
             # Only one choice.
             choices = [Categorical(recorder.recorded_candidates[0], label=_label)]
         return {c.label: c for c in choices}, new_model
+
+    def random(self, memo: Sample | None = None, random_state: RandomState | None = None) -> GraphModelSpace | None:
+        """Use :meth:`nni.mutable.Mutable.random` to generate a random sample."""
+        return Mutable.random(self, memo, random_state)
 
 
 class MutatorSequence(MutableList):
@@ -311,6 +338,14 @@ class _FixedSampler(MutationSampler):
         if self.samples[index] not in candidates:
             raise RuntimeError(f'Invalid sample {self.samples[index]} for candidates {candidates}')
         return self.samples[index]
+
+
+class _RandomSampler(MutationSampler):
+    def __init__(self, random_state: RandomState):
+        self.random_state = random_state
+
+    def choice(self, candidates, mutator, model, index):
+        return self.random_state.choice(candidates)
 
 
 class InvalidMutation(SampleValidationError):

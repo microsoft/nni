@@ -16,10 +16,11 @@ __all__ = [
 
 import json
 from typing import (TYPE_CHECKING, Any, Dict, Callable, Iterable, List,
-                    Optional, Set, Tuple, Union, cast, overload)
+                    Optional, Set, Tuple, Union, ClassVar, cast, overload)
 
 import nni
-from nni.mutable import Mutable, LabeledMutable, uid
+from nni.common.device import Device, GPUDevice
+from nni.mutable import Mutable, LabeledMutable, Sample, uid
 from .graph_op import Cell, Operation, _IOPseudoOperation
 from .mutator import MutatorSequence, Mutation
 from .space import ExecutableModelSpace, ModelStatus
@@ -64,7 +65,7 @@ class GraphModelSpace(ExecutableModelSpace):
         Intermediate as well as final metrics.
     """
 
-    framework_type: str | None = None
+    framework_type: ClassVar[str] | None = None
 
     def __init__(self, *, _internal=False):
         super().__init__()
@@ -78,6 +79,10 @@ class GraphModelSpace(ExecutableModelSpace):
         self.mutators: MutatorSequence = MutatorSequence([])
 
         self.parent: Mutation | None = None
+        self.sample: Sample | None = None
+
+        # Placement is used in CGO engine.
+        self.placement: dict[Node, Device] | None = None
 
     def extra_repr(self):
         return f'model_id={self.model_id}, status={self.status}, graphs={list(self.graphs.keys())}, ' + \
@@ -108,6 +113,7 @@ class GraphModelSpace(ExecutableModelSpace):
         if isinstance(self.evaluator, Mutable):
             model.evaluator = self.evaluator.freeze(sample)
         model.status = ModelStatus.Frozen
+        model.sample = sample
         return model
 
     @property
@@ -166,6 +172,10 @@ class GraphModelSpace(ExecutableModelSpace):
             model.evaluator = ir.pop('_evaluator')       # Use evaluator's native load
         if '_mutators' in ir:
             model.mutators = ir.pop('_mutators')
+        if '_sample' in ir:
+            model.sample = ir.pop('_sample')
+        if '_placement' in ir:
+            model.placement = ir.pop('_placement')
         for graph_name, graph_data in ir.items():
             Graph._load(model, graph_name, graph_data)._register()
         return model
@@ -179,6 +189,10 @@ class GraphModelSpace(ExecutableModelSpace):
             ret['_mutators'] = self.mutators
         if self.evaluator is not None:
             ret['_evaluator'] = self.evaluator
+        if self.sample is not None:
+            ret['_sample'] = self.sample
+        if self.placement is not None:
+            ret['_placement'] = self.placement
         return ret
 
     def get_nodes(self) -> Iterable['Node']:
@@ -247,6 +261,20 @@ class GraphModelSpace(ExecutableModelSpace):
             nodes = [node for node in graph.nodes if isinstance(node.operation, Cell)]
             matched_nodes.extend(nodes)
         return matched_nodes
+
+    def export_placement_constraint(self):
+        """
+        Export the placement constraint used in training service.
+        """
+        if self.placement is None:
+            return None
+        unique_gpus = sorted(set([e for e in self.placement.values() if isinstance(e, GPUDevice)]))
+        placement_constraint = None
+        if len(unique_gpus) > 0:
+            placement_constraint = {}
+            placement_constraint['type'] = 'Device'
+            placement_constraint['gpus'] = [(e.node_id, e.gpu_id) for e in unique_gpus]
+        return placement_constraint
 
 
 _InputPseudoUid = -1

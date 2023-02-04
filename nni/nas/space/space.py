@@ -15,6 +15,7 @@ Type 2 will be converted to type 1 upon the launch of a NAS experiment.
 
 __all__ = ['ModelStatus', 'BaseModelSpace', 'ExecutableModelSpace', 'RawFormatModelSpace', 'SimplifiedModelSpace']
 
+import weakref
 from copy import deepcopy
 from enum import Enum
 from typing import NoReturn, Any, Callable, Iterable
@@ -64,17 +65,19 @@ class ModelStatus(str, Enum):
     Trained = "trained"
     Failed = "failed"
     Interrupted = "interrupted"
+    Invalid = "invalid"
+    Retrying = "retrying"
 
     def __repr__(self):
         return f'{self.__class__.__name__}.{self.name}'
 
     def frozen(self):
         """Frozen model cannot be mutated any more."""
-        return self in [ModelStatus.Frozen, ModelStatus.Training, ModelStatus.Trained, ModelStatus.Interrupted, ModelStatus.Failed]
+        return self not in [ModelStatus.Initialized, ModelStatus.Mutating]
 
     def completed(self):
         """Completed model status won't change any more."""
-        return self in [ModelStatus.Trained, ModelStatus.Failed, ModelStatus.Interrupted]
+        return self in [ModelStatus.Trained, ModelStatus.Failed, ModelStatus.Interrupted, ModelStatus.Invalid]
 
 
 class ExecutableModelSpace(BaseModelSpace):
@@ -204,16 +207,37 @@ class RawFormatModelSpace(ExecutableModelSpace):
 
     def __init__(self, model_space: BaseModelSpace, evaluator: Evaluator | None) -> None:
         super().__init__()
+
+        # `model_space` attribute will always be the original space regardless of whether the object is frozen.
         self.model_space = model_space
         self.evaluator = evaluator
         self.sample = None
 
+        # The frozen model can be very memory-consuming since it has deepcopied the model space.
+        # Use a weak reference to avoid storing unused model data.
+        self._frozen_model: weakref.ReferenceType[ExecutableModelSpace] | None = None
+        # Sometimes, the frozen model is not created with "sample".
+        # We should only use the sample, when the "official freeze" is used.
+        self._should_freeze_with_sample: bool = False
+
     def extra_repr(self) -> str:
-        return f'model_space={self.model_space!r}, ' + \
+        model_space_repr = repr(self.model_space)
+        if len(model_space_repr) > 100:
+            model_space_repr = model_space_repr[:100] + '...'
+        return f'model_space={model_space_repr}, ' + \
             f'evaluator={self.evaluator!r}, ' + \
             (f'sample={self.sample!r}, ' if self.sample else '') + \
             (f'metrics={self.metrics!r}, ' if self.metrics else '') + \
             f'status={self.status!r}'
+
+    def __str__(self) -> str:
+        if self.sample is None:
+            return repr(self)
+        else:
+            # Short-ver of repr.
+            return f'{self.__class__.__name__}({self.sample}' + \
+                (f', {self.metrics!r}' if self.metrics else '') + \
+                f', {self.status.value!r})'
 
     @classmethod
     def from_model(cls, model_space: BaseModelSpace, evaluator: Evaluator | None = None, **configs) -> ExecutableModelSpace:
@@ -224,12 +248,13 @@ class RawFormatModelSpace(ExecutableModelSpace):
             raise RuntimeError('Cannot freeze a model space that is not initialized.')
         self.validate(sample)
 
-        new_model = RawFormatModelSpace(
-            self.model_space.freeze(sample),
+        new_model = self.__class__(
+            self.model_space,  # Should be self.model_space.freeze(sample) but it's deferred.
             self.evaluator.freeze(sample) if isinstance(self.evaluator, Mutable) else self.evaluator
         )
         new_model.sample = sample
         new_model.status = ModelStatus.Frozen
+        new_model._should_freeze_with_sample = True
         return new_model
 
     def check_contains(self, sample: Sample) -> SampleValidationError | None:
@@ -245,7 +270,32 @@ class RawFormatModelSpace(ExecutableModelSpace):
         return None
 
     def executable_model(self) -> Any:
-        return self.model_space
+        """Return a trainable deep learning model.
+
+        Calling this method twice do not guarantee returning the same model instance.
+        It might be two models with different weights.
+        Memorizing the returning result if needed.
+
+        See Also
+        --------
+        ExecutableModelSpace.executable_model
+        """
+        if not self.status.frozen():
+            raise RuntimeError('Model space is not frozen yet.')
+
+        if self._should_freeze_with_sample:
+            if self._frozen_model is None or self._frozen_model() is None:
+                # Use a weak reference, so that next time it's called it can directly return,
+                # without re-freeze.
+                frozen_model = self.model_space.freeze(self.sample)
+                self._frozen_model = weakref.ref(frozen_model)
+            else:
+                frozen_model = self._frozen_model()
+        else:
+            # Model-space is custom frozen. Typical one-shot case.
+            frozen_model = self.model_space
+
+        return frozen_model
 
     def leaf_mutables(self, is_leaf: Callable[[Mutable], bool]) -> Iterable[LabeledMutable]:
         yield from self.model_space.leaf_mutables(is_leaf)
@@ -258,7 +308,7 @@ class RawFormatModelSpace(ExecutableModelSpace):
         Notes
         -----
         The potential issues with serialization are in two folds:
-
+        
         1. The model space could be a deep learning model, and have been arbitrarily mutated by the strategy (e.g., one-shot).
            For example, one submodule is replaced by another, or a layer is removed.
            In this case, we surely cannot use the init arguments to recover the model.
@@ -352,6 +402,15 @@ class SimplifiedModelSpace(ExecutableModelSpace):
             (f'metrics={self.metrics!r}, ' if self.metrics else '') + \
             f'status={self.status!r}'
 
+    def __str__(self) -> str:
+        if self.sample is None:
+            return repr(self)
+        else:
+            # Short-ver of repr.
+            return f'{self.__class__.__name__}({self.sample}' + \
+                (f', {self.metrics!r}' if self.metrics else '') + \
+                f', {self.status.value!r})'
+
     def executable_model(self) -> Any:
         if self.sample is None:
             raise RuntimeError('Cannot get executable model from a model space that is not frozen.')
@@ -382,7 +441,7 @@ class SimplifiedModelSpace(ExecutableModelSpace):
 
     @classmethod
     def _load(cls, **attrs) -> SimplifiedModelSpace:
-        rv = SimplifiedModelSpace(
+        rv = cls(
             SerializableObject(attrs['model_symbol'], attrs['model_args'], attrs['model_kwargs']),
             attrs['mutables'] if attrs['status'] == ModelStatus.Initialized else {},
             attrs['evaluator'],
