@@ -17,7 +17,7 @@ from torchvision.datasets import MNIST
 from nni.common.serializer import is_traceable
 
 if True:  # prevent auto formatting
-    # sys.path.insert(0, Path(__file__).parent.as_posix())
+    sys.path.insert(0, Path(__file__).parent.as_posix())
     # from imported.model import ImportTest
 
     # this test cannot be directly put in this file. It will cause syntax error for python <= 3.7.
