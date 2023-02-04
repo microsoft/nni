@@ -35,7 +35,7 @@ Utilities
 Customization
 -------------
 
-..  autoclass:: nni.nas.Evaluator
+..  autoclass:: nni.nas.evaluator.Evaluator
     :members:
 
 ..  autoclass:: nni.nas.evaluator.pytorch.Lightning
