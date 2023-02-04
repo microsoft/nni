@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any, List, Optional, Tuple, Dict, Iterator, Iterable, cast
+from typing import Any, List, Tuple, Dict, Iterable, cast
 
 from nni.mutable import MutableExpression, Categorical, frozen_context, label_scope
 from nni.nas.space import Graph, GraphModelSpace, Node, StationaryMutator, Mutator

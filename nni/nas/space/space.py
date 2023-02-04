@@ -284,6 +284,7 @@ class RawFormatModelSpace(ExecutableModelSpace):
             raise RuntimeError('Model space is not frozen yet.')
 
         if self._should_freeze_with_sample:
+            assert self.sample is not None
             if self._frozen_model is None or self._frozen_model() is None:
                 # Use a weak reference, so that next time it's called it can directly return,
                 # without re-freeze.

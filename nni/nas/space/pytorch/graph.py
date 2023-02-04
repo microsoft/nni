@@ -6,7 +6,7 @@ from __future__ import annotations
 __all__ = ['PytorchGraphModelSpace']
 
 import logging
-from typing import Any, TYPE_CHECKING, ClassVar
+from typing import Any, TYPE_CHECKING
 
 import torch
 
@@ -58,7 +58,7 @@ class PytorchGraphModelSpace(GraphModelSpace):
             raise
         if dummy_input is not None:
             if isinstance(dummy_input, tuple) and all(isinstance(i, int) for i in dummy_input):
-                dummy_input = torch.randn(*dummy_input)
+                dummy_input = torch.randn(*dummy_input)  # type: ignore
             converter = GraphConverterWithShape()
             base_model_ir = cls.convert_to_graph(script_module, model_space, converter, dummy_input=dummy_input)
         else:

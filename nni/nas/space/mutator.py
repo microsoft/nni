@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Any, Callable, Iterable, List, Optional, TYPE_CHECKING, ContextManager
+from typing import Any, Callable, Iterable, List, Optional, TYPE_CHECKING, Iterator
 
 from numpy.random import RandomState
 
@@ -119,7 +119,7 @@ class Mutator(LabeledMutable):
         return self
 
     @contextmanager
-    def bind_model(self, model: GraphModelSpace) -> ContextManager[Mutator]:
+    def bind_model(self, model: GraphModelSpace) -> Iterator[Mutator]:
         """Mutators need a model, based on which they generate new models.
         This context manager binds a model to the mutator, and unbinds it after the context.
 
@@ -229,6 +229,10 @@ class StationaryMutator(Mutator):
 
     def freeze(self, sample: dict[str, Any]) -> GraphModelSpace:
         self.validate(sample)
+
+        assert self._dry_run_choices is not None
+        assert self.model is not None
+
         # The orders should be preserved here
         samples = [sample[label] for label in self._dry_run_choices]
         # We fake a FixedSampler in this freeze to consume the already-generated samples.s
@@ -285,7 +289,7 @@ class MutatorSequence(MutableList):
         self.model: Optional[GraphModelSpace] = None
 
     @contextmanager
-    def bind_model(self, model: GraphModelSpace) -> ContextManager[Mutator]:
+    def bind_model(self, model: GraphModelSpace) -> Iterator[MutatorSequence]:
         """Bind the model to a list of mutators.
         The model (as well as its successors) will be bounded to the mutators one by one.
         The model will be unbinded after the context.
@@ -309,6 +313,7 @@ class MutatorSequence(MutableList):
                 with mutator.bind_model(model):
                     yield from mutator.leaf_mutables(is_leaf)
                     model = mutator.model
+                    assert model is not None
 
     def freeze(self, sample: dict[str, Any]) -> GraphModelSpace:
         assert self.model is not None, 'Mutator must be bound to a model before freezing.'
