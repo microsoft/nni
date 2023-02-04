@@ -17,8 +17,8 @@ from torchvision.datasets import MNIST
 from nni.common.serializer import is_traceable
 
 if True:  # prevent auto formatting
-    sys.path.insert(0, Path(__file__).parent.as_posix())
-    from imported.model import ImportTest
+    # sys.path.insert(0, Path(__file__).parent.as_posix())
+    # from imported.model import ImportTest
 
     # this test cannot be directly put in this file. It will cause syntax error for python <= 3.7.
     if tuple(sys.version_info) >= (3, 8):
@@ -185,6 +185,7 @@ class Foo:
         return self.aa == other.aa and self.bb == other.bb
 
 
+@pytest.mark.skip(reason='Adding back when nas.nn is merged.')
 def test_basic_unit_and_custom_import():
     module = ImportTest(3, 0.5)
     ss = nni.dump(module)
