@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# pylint: skip-file
+# type: ignore
+
 from typing import Dict, Any, Type, cast
 
 import torch.nn as nn

@@ -10,7 +10,7 @@ __all__ = [
 from typing import Any, Iterable, Iterator, Mapping, Callable, Sequence
 
 from .exception import SampleValidationError
-from .mutable import Mutable, Sample, LabeledMutable
+from .mutable import Mutable, Sample, LabeledMutable, _mutable_equal
 
 
 class MutableList(Mutable):
@@ -90,6 +90,11 @@ class MutableList(Mutable):
         for mutable in self:
             if isinstance(mutable, Mutable):
                 yield from mutable.leaf_mutables(is_leaf)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return _mutable_equal(self.mutables, other.mutables)
+        return False
 
     def __getitem__(self, idx: int | slice) -> Mutable | MutableList:
         if isinstance(idx, slice):
@@ -284,6 +289,11 @@ class MutableDict(Mutable):
         for mutable in self.values():
             if isinstance(mutable, Mutable):
                 yield from mutable.leaf_mutables(is_leaf)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return _mutable_equal(self.mutables, other.mutables)
+        return False
 
     def __getitem__(self, key: str) -> Mutable:
         return self.mutables[key]
