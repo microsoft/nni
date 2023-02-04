@@ -161,35 +161,8 @@ Mutators (advanced)
 Mutator
 ^^^^^^^
 
-..  autoclass:: nni.retiarii.Mutator
-    :members:
-
-..  autoclass:: nni.retiarii.Sampler
-    :members:
-
-..  autoclass:: nni.retiarii.InvalidMutation
-    :members:
-
 Placeholder
 ^^^^^^^^^^^
 
-..  autoclass:: nni.retiarii.nn.pytorch.Placeholder
-    :members:
-
 Graph
 ^^^^^
-
-..  autoclass:: nni.retiarii.Model
-    :members:
-
-..  autoclass:: nni.retiarii.Graph
-    :members:
-
-..  autoclass:: nni.retiarii.Node
-    :members:
-
-..  autoclass:: nni.retiarii.Edge
-    :members:
-
-..  autoclass:: nni.retiarii.Operation
-    :members:

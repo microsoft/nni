@@ -4,12 +4,6 @@ Uncategorized Modules
 Experiment
 ----------
 
-..  autoclass:: nni.retiarii.experiment.pytorch.RetiariiExeConfig
-    :members:
-
-..  autoclass:: nni.retiarii.experiment.pytorch.RetiariiExperiment
-    :members:
-
 NAS Benchmarks
 --------------
 
@@ -17,10 +11,6 @@ NAS Benchmarks
 
 NAS-Bench-101
 ^^^^^^^^^^^^^
-
-.. automodule:: nni.nas.benchmarks.nasbench101
-   :members:
-   :imported-members:
 
 .. _nas-bench-201-reference:
 

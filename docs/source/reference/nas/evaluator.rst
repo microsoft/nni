@@ -46,12 +46,3 @@ Customization
 
 Cross-graph Optimization (experimental)
 ---------------------------------------
-
-..  autoclass:: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule
-    :members:
-
-..  autoclass:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification
-    :members:
-
-..  autoclass:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression
-    :members:
