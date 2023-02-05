@@ -19,7 +19,7 @@ from torch import nn
 
 from nni.mutable import (
     Mutable, LabeledMutable, Sample, SampleValidationError,
-    ensure_frozen, frozen_context, label_scope,
+    ensure_frozen, frozen_context, label_scope, frozen
 )
 from nni.nas.space import BaseModelSpace, current_model, model_context
 
@@ -113,6 +113,7 @@ class MutableModule(Mutable, nn.Module):
         ...     def __init__(self):
         ...         super().__init__()
         ...         token_size = nni.choice('t', [4, 8, 16])        # Categorical variable here
+        ...         self.add_mutable(token_size)                    # Register the mutable to this module.
         ...         real_token_size = ensure_frozen(token_size)     # Real number. 4 during dry run. 4, 8 or 16 during search.
         ...         self.token = nn.Parameter(torch.randn(real_token_size, 1))
 
@@ -147,20 +148,30 @@ class MutableModule(Mutable, nn.Module):
 
         self._mutables.append(mutable)
 
-        # Disable dry run if we are in a model_context.
-        # This makes the `current_model()` read-only.
+        # Disable dry run when:
+        # 1. Inside a model_context; the `current_model()` needs to be read-only.
+        # 2. ensure_frozen_strict is disabled. The `default()` can be called when `ensure_frozen()` is called.
         if current_model() is None:
             # We will "dry run" the mutable here, to obtain a default value for it.
             context = frozen_context.current()
             if context is None:
-                _logger.warning(
-                    'No context found when `add_mutable()`. '
-                    'You are probably creating a MutableModule outside the `__init__` of a ModelSpace.'
-                )
+                if frozen._ENSURE_FROZEN_STRICT:
+                    _logger.warning(
+                        'No context found when `add_mutable()`. '
+                        'You are probably adding a MutableModule outside the `__init__` of a ModelSpace. '
+                        'This can possibly make the MutableModule untrackable and inconsistent: %s',
+                        mutable
+                    )
             else:
                 context_before_keys = set(context.keys())
 
-                mutable.robust_default(context)
+                try:
+                    mutable.robust_default(context)
+                except ValueError:
+                    _logger.error('Error when trying to dry run the mutable: %r. It could be conflicted with current context: %s.',
+                                  mutable, context)
+                    raise
+
                 frozen_context.update(
                     {key: value for key, value in context.items() if key not in context_before_keys}
                 )
@@ -206,6 +217,13 @@ class MutableModule(Mutable, nn.Module):
             exception = mutable.check_contains(sample)
             if exception is not None:
                 return exception
+
+        for name, module in self.named_mutable_descendants():
+            exception = module.check_contains(sample)
+            if exception is not None:
+                exception.paths.append(name)
+                return exception
+
         return None
 
     def leaf_mutables(self, is_leaf: Callable[[Mutable], bool]) -> Iterable[LabeledMutable]:
@@ -216,19 +234,25 @@ class MutableModule(Mutable, nn.Module):
             yield from module.leaf_mutables(is_leaf)
 
     def mutable_descendants(self) -> Iterable['MutableModule']:
+        """:meth:`named_mutable_descendants` without names."""
+        for _, module in self.named_mutable_descendants():
+            yield module
+
+    def named_mutable_descendants(self) -> Iterable[Tuple[str, 'MutableModule']]:
         """Traverse the module subtree, find all descendants that are :class:`MutableModule`.
         
         - If a child module is :class:`MutableModule`, return it directly, and its subtree will be ignored.
         - If not, it will be recursively expanded, until :class:`MutableModule` is found.
         """
-        def _iter(module: nn.Module) -> Iterable[MutableModule]:
-            for child in module.children():
+        def _iter(name: str, module: nn.Module) -> Iterable[MutableModule]:
+            for subname, child in module.named_children():
+                name_ = name + '.' + subname if name else subname
                 if isinstance(child, MutableModule):
-                    yield child
+                    yield name_, child
                 else:
-                    yield from _iter(child)
+                    yield from _iter(name_, child)
 
-        yield from _iter(self)
+        yield from _iter('', self)
 
     def freeze(self, sample: Dict[str, Any]) -> nn.Module:
         """Return a frozen version of current mutable module.
@@ -340,9 +364,9 @@ class ModelSpace(
     directly exporting its weights are unreliable and prone to error.
     Use :ref:`one-shot strategies <one-shot-nas>` to mutate the model space into a supernet for such needs.
 
-    Every model space have a label prefix, which is used to provide a stable automatic label generation.
-    The default label prefix is ``model``.
-    All the mutables initialized in a subclass of ModelSpace
+    Mutables in model space **must all be labeled manually**, unless a label prefix is provided.
+    Every model space can have a label prefix, which is used to provide a stable automatic label generation.
+    For example, if the label prefix is ``model``, all the mutables initialized in a subclass of ModelSpace
     (in ``__init__`` function of itself and submodules, to be specific),
     will be automatically labeled with a prefix ``model/``.
     The label prefix can be manually specified upon definition of the class::
@@ -365,7 +389,7 @@ class ModelSpace(
     _label_prefix: Optional[str]
     """The label prefix of the model space."""
 
-    def __init_subclass__(cls, disable_init_wrapper: bool = False, label_prefix: Optional[str] = 'model', **kwargs) -> None:
+    def __init_subclass__(cls, disable_init_wrapper: bool = False, label_prefix: Optional[str] = None, **kwargs) -> None:
         # The init wrapper can be turned off in tricky cases.
         if not disable_init_wrapper:
             cls._init_wrapped = cls.__init__
@@ -377,6 +401,20 @@ class ModelSpace(
     def load_searched_model(cls, name: str, pretrained: bool = False, download: bool = False, progress: bool = True) -> nn.Module:
         """Load a pre-searched model with given name."""
         raise NotImplementedError('`load_searched_model` is not implemented, which means that no pre-searched model is available.')
+
+
+class strict_label_scope(label_scope):
+    """A strict label scope that raises error when label is not manually specified."""
+
+    def next_label(self) -> str:
+        raise ValueError('Label must be specified manually in NAS, or provide a `label_prefix` to the model space.')
+
+    @property
+    def path(self) -> Optional[List[str]]:
+        """A strict label scope is only used for label checking. It shouldn't have its own name."""
+        if self._path is None:
+            return self._path
+        return self._path[:-1]
 
 
 def model_space_init_wrapper(original_init_fn: Callable[..., None]) -> Callable[..., None]:
@@ -407,8 +445,11 @@ def model_space_init_wrapper(original_init_fn: Callable[..., None]) -> Callable[
         # Save init arguments first. Skips if already saved.
         self.auto_save_init_arguments(*args, **kwargs)
 
-        if not hasattr(self, '_label_scope') and self._label_prefix is not None:
-            self._label_scope = label_scope(self._label_prefix)
+        if not hasattr(self, '_label_scope'):
+            if self._label_prefix is not None:
+                self._label_scope = label_scope(self._label_prefix)
+            else:
+                self._label_scope = strict_label_scope('_unused_')  # the name is not used
         if hasattr(self, '_label_scope') and not self._label_scope.activated:
             # Has a label scope but it's not activated. Create a "with".
             with self._label_scope:
@@ -436,6 +477,9 @@ class ParametrizedModule(
                 self.t = x   # Will be a fixed number, e.g., 3.
 
         MyModule(nni.choice('choice1', [1, 2, 3]))
+
+    Note that the mutable arguments need to be directly posed as arguments to ``__init__``.
+    They can't be hidden in a list or dict.
 
     If users want to make a 3rd-party module *parametrized*,
     it's recommended to do the following (taking ``nn.Conv2d`` as an example):
@@ -542,6 +586,7 @@ class ParametrizedModule(
         """Freeze all the mutable arguments in init.
         
         Note that a brand new module will be created, and all previous weights will be lost.
+        Supernet must be created with one-shot strategies if you want to keep the weights.
         """
         args, kwargs = self.freeze_init_arguments(sample, *self.trace_args, **self.trace_kwargs)
         with model_context(sample):  # provide a context for nested mutable modules
@@ -586,6 +631,8 @@ def parametrized_module_init_wrapper(original_init_fn: Callable[..., None]) -> C
         for arg in itertools.chain(args, kwargs.values()):
             if isinstance(arg, Mutable):
                 self.add_mutable(arg)
+            else:
+                _warn_if_nested_mutable(arg)
         # Sometimes, arguments will be hijacked to make the inner wrapped class happy.
         # For example Conv2d(choice([3, 5, 7])) should be Conv2d(3) instead,
         # because Conv2d doesn't recognize choice([3, 5, 7]).
@@ -593,3 +640,22 @@ def parametrized_module_init_wrapper(original_init_fn: Callable[..., None]) -> C
         return original_init_fn(self, *args, **kwargs)
 
     return new_init
+
+
+def _warn_if_nested_mutable(obj: Any) -> None:
+    # Warn for cases like MutableConv2d(kernel_size=(nni.choice([3, 5]), nni.choice([3, 5])))
+    # This is not designed to be reliable, but only to be user-friendly.
+    def _iter(o):
+        if isinstance(o, Mutable):
+            _logger.warning(f'Found a nested mutable {o} in parameter {obj}. '
+                            'This is not recommended, because the mutable will not be tracked. '
+                            'Please use MutableList, MutableDict instead, or write every options in a `nni.choice`.')
+        else:
+            if isinstance(o, (list, tuple, set)):
+                for item in o:
+                    _iter(item)
+            elif isinstance(o, dict):
+                for value in o.values():
+                    _iter(value)
+
+    _iter(obj)

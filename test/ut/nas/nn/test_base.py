@@ -6,10 +6,22 @@ import torch
 import nni
 from torch import nn
 from nni.common.serializer import is_traceable
-from nni.mutable import Categorical, ExpressionConstraint, ensure_frozen, frozen_context, SampleMissingError
+from nni.mutable import Categorical, ExpressionConstraint, ensure_frozen, frozen_context, label_scope, auto_label, SampleMissingError
 from nni.mutable.mutable import _mutable_equal
 from nni.nas.nn.pytorch import ModelSpace, MutableModule, ParametrizedModule
 from nni.nas.space import model_context
+
+
+def test_label_scope():
+    from nni.nas.nn.pytorch.base import strict_label_scope
+
+    with strict_label_scope('_unused_'):
+        with pytest.raises(ValueError, match='Label'):
+            Categorical([1, 2, 3])
+        assert Categorical([1, 2, 3], label='x').label == 'x'
+        with label_scope('hello'):
+            assert auto_label() == 'hello/1'
+            assert Categorical([1, 2, 3], label='x').label == 'hello/x'
 
 
 def test_ensure_frozen():
@@ -45,17 +57,17 @@ def test_ensure_frozen_freeze():
 
     model = Net()
     assert model.dry_run_value == 1
-    assert model.contains({'model/x': 1})
+    assert model.contains({'x': 1})
     assert not model.contains({})
-    assert not model.contains({'model/x': 4})
-    model1 = model.freeze({'model/x': 2})
+    assert not model.contains({'x': 4})
+    model1 = model.freeze({'x': 2})
     assert model1.dry_run_value == 2
-    model2 = model.freeze({'model/x': 3})
+    model2 = model.freeze({'x': 3})
     assert model2.dry_run_value == 3
 
 
 def test_ensure_frozen_freeze_fail(caplog):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.module = Categorical([1, 2, 3], label='x')
@@ -74,7 +86,7 @@ def test_ensure_frozen_freeze_fail(caplog):
 
 
 def test_ensure_frozen_no_register(caplog):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.module = Categorical([1, 2, 3])
@@ -86,7 +98,7 @@ def test_ensure_frozen_no_register(caplog):
 
 
 def test_ensure_frozen_in_forward():
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.module = Categorical([1, 2, 3])
@@ -101,7 +113,7 @@ def test_ensure_frozen_in_forward():
 
 
 def test_ensure_frozen_constraint_first():
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self, s: int = 4):
             super().__init__()
             discrete1 = Categorical([1, 2, 3])
@@ -127,7 +139,8 @@ def test_ensure_frozen_constraint_first():
         model = Net(10)
 
 
-def test_ensure_frozen_consistency():
+@pytest.mark.parametrize('label_prefix', [None, 'model'])
+def test_ensure_frozen_consistency(label_prefix):
     class Submodule(MutableModule):
         def __init__(self):
             super().__init__()
@@ -204,8 +217,8 @@ def test_model_space_inherit():
 
     model = ModelSpace2(5)
     assert model.trace_kwargs == {'c': 5}
-    assert model.c.label == 'model/c'
-    assert model.d.label == 'model/d'
+    assert model.c.label == 'c'
+    assert model.d.label == 'd'
     assert model.trace_symbol == ModelSpace2
 
 
@@ -254,17 +267,40 @@ def test_model_space_no_label_prefix(caplog):
     with pytest.raises(ValueError, match='be empty'):
         ModelSpace1()
 
-    class ModelSpace2(ModelSpace, label_prefix=None):
+    class ModelSpace2(ModelSpace):
         def __init__(self):
             super().__init__()
             self.a = self.add_mutable(Categorical([1, 2, 3], label='a'))
-            self.b = self.add_mutable(Categorical([1, 2, 3]))
+            assert self.a.label == 'a'
+            with pytest.raises(ValueError, match='must be specified'):
+                self.b = self.add_mutable(Categorical([1, 2, 3]))
 
-    assert 'numbering' not in caplog.text
-    model = ModelSpace2()
-    assert 'numbering' in caplog.text
-    assert model.a.label == 'a'
-    assert model.b.label.startswith('global/')
+    ModelSpace2()
+
+    class ModelSpace3(ModelSpace):
+        def __init__(self):
+            super().__init__()
+            self.a = self.add_mutable(Categorical([1, 2, 3], label='a'))
+            assert self.a.label == 'model4/a'
+            with pytest.raises(ValueError, match='must be specified'):
+                self.b = self.add_mutable(Categorical([1, 2, 3]))
+
+    class ModelSpace4(ModelSpace, label_prefix='model4'):
+        def __init__(self):
+            super().__init__()
+            ModelSpace3()
+            self.a = self.add_mutable(Categorical([1, 2, 3], label='a'))
+            assert self.a.label == 'model4/a'
+            self.b = self.add_mutable(Categorical([1, 2, 3]))
+            assert self.b.label == 'model4/1'
+
+    class ModelSpace5(ModelSpace):
+        def __init__(self):
+            super().__init__()
+            ModelSpace4()
+
+    ModelSpace5()
+
 
 
 def test_import_nas_nn_as_nn():
@@ -287,7 +323,7 @@ def test_import_nas_nn_as_nn():
 def test_label():
     from nni.nas.nn.pytorch import LayerChoice
 
-    class Model(ModelSpace):
+    class Model(ModelSpace, label_prefix='model'):
         def __init__(self, in_channels):
             super().__init__()
             self.conv1 = nn.Conv2d(in_channels, 10, 3)
@@ -342,7 +378,7 @@ def test_label_hierarchy():
             x = self.net2(x)
             return x
 
-    class ModelNested(ModelSpace):
+    class ModelNested(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.fc1 = ModelInner()
@@ -390,8 +426,11 @@ def test_deepcopy():
 def test_mutable_descendants():
     class A(MutableModule):
         pass
+
     class B(MutableModule):
-        pass
+        def check_contains(self, sample):
+            if 'test' in sample:
+                return SampleMissingError('test')
 
     class C(MutableModule):
         def __init__(self):
@@ -412,6 +451,7 @@ def test_mutable_descendants():
     e = E()
     descendants = list(e.mutable_descendants())
     assert len(descendants) == 2
+    assert [_[0] for _ in e.named_mutable_descendants()] == ['a', 'd.c']
     assert isinstance(descendants[0], A)
     assert isinstance(descendants[1], C)
 
@@ -426,6 +466,10 @@ def test_mutable_descendants():
     frozen_e = e.freeze({})
     assert e is not frozen_e
     assert repr(e) == repr(frozen_e)
+
+    e.validate({})
+    with pytest.raises(SampleMissingError, match='d.c'):
+        e.validate({'test': 1})
 
 
 def test_parametrized_module():
@@ -496,3 +540,36 @@ def test_nested_parametrized_module():
     assert module2.flag == 5
     with pytest.raises(SampleMissingError):
         module.freeze({'x': 1, 'a': 2})
+
+
+def test_empty_parameterized_module():
+    class MutableConv(ParametrizedModule):
+        def __init__(self):
+            super().__init__()
+            self.conv1 = nn.Conv2d(3, 3, kernel_size=1)
+            self.conv2 = nn.Conv2d(3, 5, kernel_size=1)
+
+        def forward(self, x: torch.Tensor, index: int):
+            if index == 0:
+                return self.conv1(x)
+            else:
+                return self.conv2(x)
+
+    class MyModelSpace(ModelSpace):
+        def __init__(self):
+            super().__init__()
+            self.conv = MutableConv()
+            self.index = ensure_frozen(self.add_mutable(nni.choice('x', [0, 1])))
+
+        def freeze(self, sample):
+            with model_context(sample):
+                return self.__class__()
+
+        def forward(self, x: torch.Tensor):
+            return self.conv(x, self.index)
+
+    space = MyModelSpace()
+    model = space.freeze({'x': 0})
+    assert model(torch.randn(1, 3, 5, 5)).shape == (1, 3, 5, 5)
+    model = space.freeze({'x': 1})
+    assert model(torch.randn(1, 3, 5, 5)).shape == (1, 5, 5, 5)
