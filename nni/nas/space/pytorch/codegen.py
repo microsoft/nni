@@ -8,8 +8,8 @@ import re
 from typing import Dict, List, Tuple, Any, cast
 
 from nni.common.device import Device, GPUDevice
-from nni.nas.execution.common.graph import IllegalGraphError, Edge, Graph, Node, Model
-from nni.nas.execution.common.graph_op import PyTorchOperation
+from nni.nas.space.graph import IllegalGraphError, Edge, Graph, Node, GraphModelSpace
+from nni.nas.space.graph_op import PyTorchOperation
 from nni.nas.utils import STATE_DICT_PY_MAPPING
 
 from .op_def import ToDevice
@@ -17,11 +17,11 @@ from .op_def import ToDevice
 _logger = logging.getLogger(__name__)
 
 
-def model_to_pytorch_script(model: Model, placement=None) -> str:
+def model_to_pytorch_script(model: GraphModelSpace) -> str:
     graphs = []
     total_pkgs = set()
     for name, cell in model.graphs.items():
-        import_pkgs, graph_code = graph_to_pytorch_model(name, cell, placement=placement)
+        import_pkgs, graph_code = graph_to_pytorch_model(name, cell, placement=model.placement)
         graphs.append(graph_code)
         total_pkgs.update(import_pkgs)
     pkgs_code = '\n'.join(['import {}'.format(pkg) for pkg in total_pkgs])

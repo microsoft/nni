@@ -5,7 +5,7 @@ from typing import Optional
 
 from typing_extensions import TypeGuard
 
-from nni.nas.execution.common import Cell, Model, Graph, Node, Edge
+from nni.nas.space.graph import Cell, GraphModelSpace, Graph, Node, Edge
 
 
 def build_full_name(prefix, name, seq=None):
@@ -27,7 +27,7 @@ def build_python_name(prefix, name):
 
 
 def build_cand_name(name, label):
-    return f'layerchoice_{label}_{name}'
+    return f"layerchoice_{label.replace('/', '__')}_{name}"
 
 
 def _convert_name(name: str) -> str:
@@ -87,7 +87,7 @@ def is_layerchoice_node(ir_node: Optional[Node]) -> TypeGuard[Node]:
         return False
 
 
-def get_full_name_by_scope_name(ir_model: Model, scope_names, prefix=''):
+def get_full_name_by_scope_name(ir_model: GraphModelSpace, scope_names, prefix=''):
     full_name = prefix
 
     for last_scope in range(len(scope_names)):
@@ -101,7 +101,7 @@ def get_full_name_by_scope_name(ir_model: Model, scope_names, prefix=''):
     return full_name
 
 
-def match_node(ir_model: Model, torch_node, prefix=''):
+def match_node(ir_model: GraphModelSpace, torch_node, prefix=''):
     """
     Match the corresponding node of a torch._C.Value
     """
@@ -124,7 +124,7 @@ def _without_shape_info(node: Node):
     return not node.operation.attributes['input_shape'] and not node.operation.attributes['output_shape']
 
 
-def flatten_model_graph(ir_model: Model):
+def flatten_model_graph(ir_model: GraphModelSpace):
     """
     Flatten the subgraph into root graph.
     """
@@ -186,7 +186,7 @@ def flatten_model_graph(ir_model: Model):
     return new_ir_model
 
 
-def flatten_model_graph_without_layerchoice(ir_model: Model):
+def flatten_model_graph_without_layerchoice(ir_model: GraphModelSpace):
     """
     Flatten the subgraph into root graph and jump all layerchoice
     """

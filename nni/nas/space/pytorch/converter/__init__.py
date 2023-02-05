@@ -1,4 +1,4 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from .mutator import *
+from .graph_gen import GraphConverter, GraphConverterWithShape
