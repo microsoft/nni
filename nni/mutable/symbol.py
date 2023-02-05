@@ -230,15 +230,15 @@ class SymbolicExpression:
         return true if pred else false
 
     @symbolic_staticmethod
-    def case(pred_expr_pairs: list[tuple[Any, Any]]) -> SymbolicExpression | Any:
+    def case(pred_expr_pairs: list[tuple[Any, Any]]) -> SymbolicExpression | Any:  # type: ignore
         """Return the first expression with predicate that is true.
-        
+
         For example::
 
             if (x < y) return 17;
             else if (x > z) return 23;
             else (y > z) return 31;
-        
+
         Equivalent to::
 
             SymbolicExpression.case([(x < y, 17), (x > z, 23), (y > z, 31)])

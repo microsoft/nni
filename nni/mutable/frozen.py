@@ -220,7 +220,7 @@ class frozen_factory:
 
     # NOTE: mutations on ``init_args`` and ``init_kwargs`` themselves are not supported.
 
-    def __init__(self, callable: Callable[..., Any], sample: Sample | frozen_context):
+    def __init__(self, callable: Callable[..., Any], sample: Sample | frozen_context):  # pylint: disable=redefined-builtin
         self.callable = callable
         if not isinstance(sample, frozen_context):
             self.sample = frozen_context(sample)

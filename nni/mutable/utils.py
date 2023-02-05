@@ -194,6 +194,7 @@ class label_scope:
                 self.basename = parent_scope.next_label()
 
             if parent_scope is not None:
+                assert parent_scope.path is not None, 'Parent scope is not entered.'
                 self._path = parent_scope.path + [self.basename]
             else:
                 self._path = [self.basename]
