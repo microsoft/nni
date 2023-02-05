@@ -13,7 +13,7 @@ import { getBasePort, getExperimentId } from 'common/experimentStartupInfo';
 import { getLogger, Logger } from 'common/log';
 import { TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from 'common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, mkDirPSync, randomSelect, uniqueString } from 'common/utils';
-import { ExperimentConfig, SharedStorageConfig } from 'common/experimentConfig';
+import { ExperimentConfig, SharedStorageConfig, TrainingServiceConfig, FrameworkControllerConfig } from 'common/experimentConfig';
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from 'core/commands';
 import { ScheduleResultType } from 'training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
@@ -30,6 +30,7 @@ import { SharedStorageService } from './sharedStorage';
 import { NFSSharedStorageService } from './shared_storages/nfsStorageService'
 import { AzureBlobSharedStorageService } from './shared_storages/azureblobStorageService'
 import { TrialDetail } from './trial';
+import { assert } from 'console';
 
 /**
  * It uses to manage jobs on training platforms 
@@ -228,9 +229,6 @@ class TrialDispatcher implements TrainingService {
     public async run(): Promise<void> {
         await Promise.all(this.environmentServiceList.map(env => env.init()));
         for(const environmentService of this.environmentServiceList) {
-            
-            
-
             await environmentService.getCommandChannel.start();
             this.log.info(`TrialDispatcher: started channel: ${environmentService.getCommandChannel.constructor.name}`);
     
@@ -495,6 +493,7 @@ class TrialDispatcher implements TrainingService {
             for (const environment of this.environments.values()) {
                 if (environment.isAlive === true) {
                     liveEnvironmentsCount++;
+                    // FIXME: post warning message that environment/pod takes too long to be ready!!!
                     if (environment.status === "RUNNING" && environment.isRunnerReady) {
                         // if environment is not reusable and used, stop and not count as idle;
                         const reuseMode = Array.isArray(this.config.trainingService) || (this.config.trainingService as any).reuseMode;
@@ -640,7 +639,7 @@ class TrialDispatcher implements TrainingService {
         return randomSelect(validEnvironmentServiceList);
     }
 
-    private async prefetchEnvironments (): Promise<void> {
+    private async prefetchEnvironments(): Promise<void> {
         for (const environmentService of this.environmentServiceList) {
             const number = environmentService.prefetchedEnvironmentCount;
             this.log.info(`Initialize environments total number: ${number}`);
@@ -648,6 +647,19 @@ class TrialDispatcher implements TrainingService {
                 await this.requestEnvironment(environmentService);
             }
         }
+    }
+
+    private extractTrialCommands(trainingServiceName: string, trainingService: TrainingServiceConfig): string[] {
+        // FIXME: deal with different training services.
+        const trialCommands: string[] = [];
+        if (trainingServiceName === 'frameworkcontroller') {
+            // FIXME: deal with the mode of referencing backend's (e.g., frameworkcontroller) own configuration file
+            for (const taskRole of (trainingService as FrameworkControllerConfig).taskRoles) {
+                trialCommands.push(taskRole.command);
+            }
+        }
+        // else...
+        return trialCommands;
     }
 
     private async setEnvironmentSetting(environment: EnvironmentInformation): Promise<void> {
@@ -660,14 +672,35 @@ class TrialDispatcher implements TrainingService {
         runnerSettings.nniManagerPort = getBasePort() + 1;
         runnerSettings.commandChannel = environmentService.getCommandChannel.channelName;
         runnerSettings.enableGpuCollector = this.enableGpuScheduler;
-        runnerSettings.command = this.config.trialCommand;
+        // trialCommand might be empty, in which case trialCommand is specified in taskRoles
+        // FIXME: rethink the relation between config.trialCommand and the command(s) in trainingservice config,
+        // maybe we should not provide such flexibility.
+        if (this.config.trialCommand === '') {
+            runnerSettings.command = [this.config.trialCommand];
+        }
+        else {
+            if (this.config.trainingService instanceof Array) {
+                const foundTS = this.config.trainingService.find(element => element.platform === environmentService.getName);
+                if (foundTS !== undefined)
+                runnerSettings.command = this.extractTrialCommands(environmentService.getName, foundTS);
+                else
+                    throw new Error(`${environmentService.getName} of the environment service cannot be found in config!`);
+            }
+            else {
+                runnerSettings.command = this.extractTrialCommands(environmentService.getName, this.config.trainingService);
+            }
+        }
         runnerSettings.nniManagerVersion = this.enableVersionCheck ? await getVersion() : '';
         runnerSettings.logCollection = this.logCollection;
         runnerSettings.platform = environmentService.getName;
         runnerSettings.experimentId = this.experimentId;
+        this.log.info('zql setting config: ', this.config);
+        this.log.info('zql setting config: ', JSON.stringify(this.config));
         const storageService: StorageService = this.getStorageService(environmentService);
         const envDir = storageService.joinPath("envs");
         const runnerSettingsConfig = storageService.joinPath(envDir, environment.id, "settings.json");
+        this.log.info('zql runnerSettings: ', runnerSettings);
+        this.log.info('zql runnerSettings: ', JSON.stringify(runnerSettings));
         await storageService.save(JSON.stringify(runnerSettings), runnerSettingsConfig);
     }
 
@@ -693,6 +726,7 @@ class TrialDispatcher implements TrainingService {
         // Generate setting.json file per environment to avoid conflict
         await this.setEnvironmentSetting(environment);
 
+        // FIXME: handles errors
         await environmentService.startEnvironment(environment);
         this.environments.set(environment.id, environment);
 

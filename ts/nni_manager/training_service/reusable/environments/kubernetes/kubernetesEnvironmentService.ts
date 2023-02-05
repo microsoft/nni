@@ -151,7 +151,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
     protected async createNFSStorage(nfsServer: string, nfsPath: string): Promise<void> {
         await cpp.exec(`mkdir -p ${this.nfsRootDir}`);
         try {
-            await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.nfsRootDir}`);
+            await cpp.exec(`echo 'quzha' | sudo -S mount ${nfsServer}:${nfsPath} ${this.nfsRootDir}`);
         } catch (error) {
             const mountError: string = `Mount NFS ${nfsServer}:${nfsPath} to ${this.nfsRootDir} failed, error is ${error}`;
             this.log.error(mountError);

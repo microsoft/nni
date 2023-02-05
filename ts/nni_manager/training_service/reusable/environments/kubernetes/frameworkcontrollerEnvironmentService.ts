@@ -72,6 +72,8 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         }
         let configTaskRoles: any = undefined;
         configTaskRoles = this.config.taskRoles;
+        this.log.info('zql configTaskRoles: ', configTaskRoles);
+        this.log.info('zql configTaskRoles: ', JSON.stringify(configTaskRoles));
         //Generate the port used for taskRole
         this.generateContainerPort(configTaskRoles);
 
@@ -94,6 +96,11 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             frameworkcontrollerJobName
         );
         // Create kubeflow job based on generated kubeflow job resource config
+        this.log.info('zql environment service config: ', frameworkcontrollerJobConfig);
+        this.log.info('zql environment service config: ', JSON.stringify(frameworkcontrollerJobConfig));
+        // FIXME: dump the config for easy debuggability
+        // ...
+        // throw new Error("zql throw test");
         await this.kubernetesCRDClient.createKubernetesJob(frameworkcontrollerJobConfig);
     }
 
@@ -136,11 +143,15 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
     private async prepareFrameworkControllerConfig(envId: string, trialWorkingFolder: string, frameworkcontrollerJobName: string):
             Promise<any> {
         const podResources: any = [];
+        this.log.info('zql this.config: ', this.config);
+        this.log.info('zql this.config: ', JSON.stringify(this.config));
         for (const taskRole of this.config.taskRoles) {
             const resource: any = {};
             resource.requests = this.generatePodResource(toMegaBytes(taskRole.memorySize), taskRole.cpuNumber, taskRole.gpuNumber);
             resource.limits = {...resource.requests};
             podResources.push(resource);
+            this.log.info('zql resource: ', resource);
+            this.log.info('zql resource: ', JSON.stringify(resource));
         }
         // Generate frameworkcontroller job resource config object
         const frameworkcontrollerJobConfig: any =
@@ -247,10 +258,17 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
                 }]);
         }
 
+        const securityContext: any = {
+            fsGroup: 1013,
+            runAsUser: 1013,
+            runAsGroup: 1013
+        };
+
         const containers: any = [
             {
                 name: 'framework',
                 image: replicaImage,
+                securityContext: securityContext,
                 command: ['sh', `${path.join(trialWorkingFolder, runScriptFile)}`],
                 volumeMounts: [
                     {

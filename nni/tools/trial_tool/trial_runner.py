@@ -167,7 +167,8 @@ if __name__ == '__main__':
     args.command_channel = settings["commandChannel"]
 
     if args.trial_command is None:
-        args.trial_command = settings["command"]
+        # FIXME: deal with distributed trial which has more than one trial command
+        args.trial_command = settings["command"][0]
     if args.nnimanager_ip is None:
         args.nnimanager_ip = settings["nniManagerIP"]
     if args.nnimanager_port is None:

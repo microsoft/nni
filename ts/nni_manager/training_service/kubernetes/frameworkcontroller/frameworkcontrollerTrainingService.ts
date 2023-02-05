@@ -186,6 +186,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 frameworkcontrollerJobName
             );
         }
+        this.log.info('zql config: ', frameworkcontrollerJobConfig);
         await this.kubernetesCRDClient.createKubernetesJob(frameworkcontrollerJobConfig);
 
         // Set trial job detail until create frameworkcontroller job successfully
