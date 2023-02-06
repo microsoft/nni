@@ -305,8 +305,10 @@ class SymbolicExpression:
                            'Please try methods like `SymbolicExpression.max(a, b)` to see whether that meets your needs.')
 
     def __eq__(self, other: Any) -> Any:
-        # Bypass some unnecessary expressions.
+        # FIXME: This override causes trouble for many cases which only cares about the values of the expression.
+        # Might need to rethink about this before first release.
         if self is other:
+            # Bypass some unnecessary expressions.
             return True
         return self.expr_cls(operator.eq, '{} == {}', [self, other])
 

@@ -59,6 +59,7 @@ extensions = [
     'IPython.sphinxext.ipython_console_highlighting',
     'sphinx_tabs.tabs',
     'sphinx_copybutton',
+    'sphinx_comments',
 
     # Custom extensions in extension/ folder.
     'tutorial_links',  # this has to be after sphinx-gallery

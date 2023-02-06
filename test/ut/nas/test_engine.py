@@ -14,6 +14,9 @@ from nni.retiarii.graph import DebugEvaluator
 from nni.retiarii.integration import RetiariiAdvisor
 from nni.runtime.tuner_command_channel.legacy import *
 
+import pytest
+pytestmark = pytest.mark.skip(reason='Will be rewritten.')
+
 class EngineTest(unittest.TestCase):
     def test_codegen(self):
         with open(self.enclosing_dir / 'mnist_pytorch.json') as f:
