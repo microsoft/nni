@@ -142,8 +142,8 @@ nni.report_final_result(param['x'])
     assert.ok(trialStarted.get(trial2!).settled);
 
     // exit code should be 0
-    assert.equal(exitCodes[trial1!], 0);
-    assert.equal(exitCodes[trial2!], 0);
+    assert.equal(exitCodes[trial1!], 0, 'trial #1 exit code should be 0');
+    assert.equal(exitCodes[trial2!], 0, 'trial #2 exit code should be 0');
 
     // each trial should consume 1 parameter and yield 3 metrics
     assert.equal(parameters.length, origParamLen - 2);
