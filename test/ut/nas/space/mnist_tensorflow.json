@@ -1,0 +1,43 @@
+{
+    "framework": "tensorflow",
+
+    "_model": {
+        "inputs": ["image"],
+        "outputs": ["metric"],
+
+        "nodes": {
+            "stem": {"operation": {"type": "_cell", "parameters": {}, "attributes": {}, "cell_name": "stem"}},
+            "flatten": {"operation": {"type": "Flatten", "parameters": {}, "attributes": {}}},
+            "fc1": {"operation": {"type": "Dense", "parameters": {"units": 1024, "activation": "relu"}, "attributes": {}}},
+            "fc2": {"operation": {"type": "Dense", "parameters": {"units": 10}, "attributes": {}}},
+            "softmax": {"operation": {"type": "Softmax", "parameters": {}, "attributes": {}}}
+        },
+
+        "edges": [
+            {"head": ["_inputs", 0], "tail": ["stem", 0]},
+            {"head": ["stem", 0], "tail": ["flatten", null]},
+            {"head": ["flatten", null], "tail": ["fc1", null]},
+            {"head": ["fc1", null], "tail": ["fc2", null]},
+            {"head": ["fc2", null], "tail": ["softmax", null]},
+            {"head": ["softmax", null], "tail": ["_outputs", 0]}
+        ]
+    },
+
+    "stem": {
+        "nodes": {
+            "conv1": {"operation": {"type": "Conv2D", "parameters": {"filters": 32, "kernel_size": 5, "activation": "relu"}, "attributes": {}}},
+            "pool1": {"operation": {"type": "MaxPool2D", "parameters": {"pool_size": 2}, "attributes": {}}},
+            "conv2": {"operation": {"type": "Conv2D", "parameters": {"filters": 64, "kernel_size": 5, "activation": "relu"}, "attributes": {}}},
+            "pool2": {"operation": {"type": "MaxPool2D", "parameters": {"pool_size": 2}, "attributes": {}}}
+        },
+
+        "edges": [
+            {"head": ["_inputs", 0], "tail": ["conv1", null]},
+            {"head": ["conv1", null], "tail": ["pool1", null]},
+            {"head": ["pool1", null], "tail": ["conv2", null]},
+            {"head": ["conv2", null], "tail": ["pool2", null]},
+            {"head": ["pool2", null], "tail": ["_outputs", 0]}
+        ]
+    }
+
+}

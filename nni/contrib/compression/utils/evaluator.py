@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence, MutableMapping
 from copy import deepcopy
 import logging
 import types
@@ -90,15 +91,17 @@ class TensorHook(Hook):
     def __init__(self, target: Tensor, target_name: str, hook_factory: Callable[[List], Callable[[Tensor], Tensor | None]]):
         assert isinstance(target, Tensor)
         super().__init__(target, target_name, hook_factory)
+        self.target: Tensor
 
     def _register(self, hook_func: Callable[[Tensor], Tensor | None]) -> RemovableHandle:
-        return self.target.register_hook(hook_func)  # type: ignore
+        return self.target.register_hook(hook_func)
 
 
 class ModuleHook(Hook):
     def __init__(self, target: Module, target_name: str, hook_factory: Callable[[List], Callable[[Module, Any, Any], Any]]):
         assert isinstance(target, Module)
         super().__init__(target, target_name, hook_factory)
+        self.target: Module
 
 
 class ForwardHook(ModuleHook):
@@ -111,8 +114,8 @@ class ForwardHook(ModuleHook):
             return hook
     """
 
-    def _register(self, hook_func: Callable[[Module, Tuple[Any], Any], Any]):
-        return self.target.register_forward_hook(hook_func)  # type: ignore
+    def _register(self, hook_func: Callable[[Module, Tuple[Any], Any], None]):
+        return self.target.register_forward_hook(hook_func)
 
 
 class BackwardHook(ModuleHook):
@@ -126,7 +129,7 @@ class BackwardHook(ModuleHook):
     """
 
     def _register(self, hook_func: Callable[[Module, Tuple[Tensor] | Tensor, Tuple[Tensor] | Tensor], Any]):
-        return self.target.register_backward_hook(hook_func)  # type: ignore
+        return self.target.register_backward_hook(hook_func)
 
 
 class Evaluator:
@@ -182,24 +185,16 @@ class Evaluator:
         """
         raise NotImplementedError
 
-    def rewrap_if_ddp_model(self, model):
-        errmsg = "model is None, no need to rewrap model to DistributedDatapallel model"
-        assert model is not None, errmsg
-        is_ddp_model, ddp_params = check_ddp_model(model)
-
-        return reset_ddp_model(model, ddp_params) if is_ddp_model else model
-
-    def patch_loss(self, patch: Callable[[Tensor], Tensor]):
+    def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         """
         The patch may add additional loss or replace the original loss. Here is an example::
 
-            def loss_patch(original_loss):
+            def loss_patch(original_loss, batch, *args, **kwargs):
                 params_norm = 0
                 for param in model.parameters():
                     params_norm += torch.norm(param)
                 return original_loss + params_norm
-
-        Something like ``loss = patch(criterion(result, target))`` will happen during each time loss computation.
+        Something like ``loss = loss_patch(training_step(batch, *args, **kwargs), batch)`` will happen during each time loss computation.
         """
         raise NotImplementedError
 
@@ -402,7 +397,7 @@ class LightningEvaluator(Evaluator):
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
 
-        self.model = self.rewrap_if_ddp_model(model)  # type: ignore
+        self.model = model
         self._ori_model_attr.update({
             'training_step': model.training_step,
             'configure_optimizers': model.configure_optimizers,
@@ -454,16 +449,17 @@ class LightningEvaluator(Evaluator):
         assert isinstance(self.model, pl.LightningModule)
         self.model.configure_optimizers = self._ori_model_attr['configure_optimizers']
 
-    def patch_loss(self, patch: Callable[[Tensor], Tensor]):
+    def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         assert isinstance(self.model, pl.LightningModule)
         old_training_step = self.model.training_step
 
         def patched_training_step(_, *args, **kwargs):
             output = old_training_step(*args, **kwargs)
+            batch = args[0] if len(args) > 0 else kwargs['batch']
             if isinstance(output, Tensor):
-                output = patch(output)
+                output = patch(output, batch)
             else:
-                output['loss'] = patch(output['loss'])
+                output['loss'] = patch(output['loss'], batch)
             return output
 
         self.model.training_step = types.MethodType(patched_training_step, self.model)
@@ -489,7 +485,8 @@ class LightningEvaluator(Evaluator):
 
         def patched_configure_callbacks(_):
             callbacks = old_configure_callbacks()
-            callbacks.append(OptimizerCallback())  # type: ignore
+            callbacks = list(callbacks) if isinstance(callbacks, Sequence) else [callbacks]
+            callbacks.append(OptimizerCallback())
             return callbacks
 
         self.model.configure_callbacks = types.MethodType(patched_configure_callbacks, self.model)
@@ -552,10 +549,10 @@ class LightningEvaluator(Evaluator):
 
 
 _OPTIMIZERS = Union[Optimizer, List[Optimizer]]
-_CRITERION = Callable[[Any, Any], Any]
+_TRAINING_STEP = Callable[[Any], Union[Tensor, Tuple[Tensor], Dict[str, Tensor]]]
 _SCHEDULERS = Union[None, _LRScheduler, List[_LRScheduler]]
 _EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
-_TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _CRITERION, _SCHEDULERS, Optional[int], Optional[int]], None]
+_TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, _SCHEDULERS, Optional[int], Optional[int]], None]
 
 
 class TorchEvaluator(Evaluator):
@@ -567,7 +564,7 @@ class TorchEvaluator(Evaluator):
     ----------
     training_func
         The training function is used to train the model, note that this a entire optimization training loop.
-        Training function has three required parameters, ``model``, ``optimizers`` and ``criterion``,
+        Training function has three required parameters, ``model``, ``optimizers`` and ``training_step``,
         and three optional parameters, ``lr_schedulers``, ``max_steps``, ``max_epochs``.
 
         Let's explain these six parameters NNI passed in, but in most cases, users don't need to care about these.
@@ -576,8 +573,8 @@ class TorchEvaluator(Evaluator):
         * The ``model`` is a wrapped model from the original model, it has a similar structure to the model to be pruned,
           so it can share training function with the original model.
         * ``optimizers`` are re-initialized from the ``optimizers`` passed to the evaluator and the wrapped model's parameters.
-        * ``criterion`` also based on the ``criterion`` passed to the evaluator,
-          it might be modified modified by the pruner during model pruning.
+        * ``training_step`` also based on the ``training_step`` passed to the evaluator,
+          it might be modified by the compressor during model compression.
         * If users use ``lr_schedulers`` in the ``training_func``, NNI will re-initialize the ``lr_schedulers`` with the re-initialized
           optimizers.
         * ``max_steps`` is the NNI training duration limitation. It is for pruner (or quantizer) to control the number of training steps.
@@ -594,7 +591,7 @@ class TorchEvaluator(Evaluator):
         .. code-block:: python
 
             def training_func(model: torch.nn.Module, optimizers: torch.optim.Optimizer,
-                              criterion: Callable[[Any, Any], torch.Tensor],
+                              training_step: Callable[[Any, Any], torch.Tensor],
                               lr_schedulers: _LRScheduler | None = None, max_steps: int | None = None,
                               max_epochs: int | None = None, *args, **kwargs):
 
@@ -625,10 +622,16 @@ class TorchEvaluator(Evaluator):
         of a function/class, which can then be used by NNI to re-initialize the optimizer for a new but structurally similar model.
 
         E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
-    criterion
-        The criterion function used in trainer. Take model output and target as input, and return the loss.
-
-        E.g. ``criterion = torch.nn.functional.nll_loss``.
+    training_step
+        A callable function, the first argument of inputs should be ``batch``, and the outputs should contain loss.
+        Three kinds of outputs are supported: single loss, tuple with the first element is loss, a dict contains a key ``loss``.
+        .. code-block:: python
+            def training_step(batch, model, ...):
+                inputs, labels = batch
+                output = model(inputs)
+                ...
+                loss = loss_func(output, labels)
+                return loss
     lr_schedulers
         Optional. A single traced lr_scheduler instance or a list of traced lr_schedulers by ``nni.trace``.
         For the same reason with ``optimizers``, NNI needs the traced lr_scheduler to re-initialize it.
@@ -655,12 +658,12 @@ class TorchEvaluator(Evaluator):
     But, it is fine to provide more arguments than the pruner's (or quantizer's) need.
     """
 
-    def __init__(self, training_func: _TRAINING_FUNC, optimizers: Optimizer | List[Optimizer], criterion: _CRITERION,
+    def __init__(self, training_func: _TRAINING_FUNC, optimizers: Optimizer | List[Optimizer], training_step: _TRAINING_STEP,
                  lr_schedulers: _LRScheduler | List[_LRScheduler] | None = None, dummy_input: Any | None = None,
                  evaluating_func: _EVALUATING_FUNC | None = None):
         self.training_func = training_func
-        self._ori_criterion = criterion
-        self._criterion = self._ori_criterion
+        self._ori_training_step = training_step
+        self._training_step = self._ori_training_step
         self.dummy_input = dummy_input
         self.evaluating_func = evaluating_func
 
@@ -694,6 +697,13 @@ class TorchEvaluator(Evaluator):
         delattr(self, '_tmp_lr_schedulers')
         self._initialization_complete = True
 
+    def _rewrap_if_ddp_model(self, model):
+        errmsg = "model is None, no need to rewrap model to DistributedDatapallel model"
+        assert model is not None, errmsg
+        is_ddp_model, ddp_params = check_ddp_model(model)
+
+        return reset_ddp_model(model, ddp_params) if is_ddp_model else model
+
     def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None):
         err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert self._initialization_complete is True, err_msg
@@ -702,7 +712,7 @@ class TorchEvaluator(Evaluator):
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
 
-        self.model = self.rewrap_if_ddp_model(model)
+        self.model = self._rewrap_if_ddp_model(model)
         self._param_names_map = param_names_map
         # initialize optimizers & lr_schedulers for the bound model here
         self._optimizers = [helper.call(model, param_names_map) for helper in self._optimizer_helpers]
@@ -723,17 +733,28 @@ class TorchEvaluator(Evaluator):
         else:
             _logger.warning('Did not bind any model, no need to unbind model.')
 
-    def patch_loss(self, patch: Callable[[Tensor], Tensor]):
-        old_criterion = self._criterion
+    def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
+        old_training_step = self._training_step
 
-        def patched_criterion(*args, **kwargs):
-            loss = old_criterion(*args, **kwargs)
-            return patch(loss)
+        def patched_training_step(*args, **kwargs):
+            out = old_training_step(*args, **kwargs)
+            # we assume in training_step, ``batch`` is the first argument
+            batch = args[0] if len(args) > 0 else kwargs['batch']
+            if isinstance(out, Tensor):
+                out = patch(out, batch)
+            elif isinstance(out, Sequence) and not isinstance(out, str):
+                assert isinstance(out[0], Tensor)
+                new_loss = patch(out[0], batch)
+                out = (new_loss,) + tuple(out[1:])
+            elif isinstance(out, MutableMapping):
+                assert 'loss' in out and isinstance(out['loss'], Tensor)
+                out['loss'] = patch(out['loss'], batch)
+            return out
 
-        self._criterion = patched_criterion
+        self._training_step: _TRAINING_STEP = patched_training_step
 
     def revert_loss(self):
-        self._criterion = self._ori_criterion
+        self._training_step = self._ori_training_step
 
     def patch_optimizer_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
         assert self._optimizers is not None
@@ -758,10 +779,11 @@ class TorchEvaluator(Evaluator):
     def train(self, max_steps: int | None = None, max_epochs: int | None = None):
         assert self.model is not None
         assert self._optimizers is not None
-        assert self._criterion is not None
+        assert self._training_step is not None
         optimizers = self._optimizers[0] if self._train_with_single_optimizer else self._optimizers
-        lr_schedulers = self._lr_schedulers[0] if self._train_with_single_scheduler else self._lr_schedulers  # type: ignore
-        self.training_func(self.model, optimizers, self._criterion, lr_schedulers, max_steps, max_epochs)
+        lr_schedulers = None if self._lr_schedulers is None else self._lr_schedulers[0] \
+            if self._train_with_single_scheduler else self._lr_schedulers
+        self.training_func(self.model, optimizers, self._training_step, lr_schedulers, max_steps, max_epochs)
 
     def finetune(self):
         self.train()
@@ -869,7 +891,7 @@ class TransformersEvaluator(Evaluator):
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
 
-        self.model = self.rewrap_if_ddp_model(model)
+        self.model = model
 
         # re-initialized Trainer
         args = list(self.traced_trainer.trace_args)  # type: ignore
@@ -901,15 +923,15 @@ class TransformersEvaluator(Evaluator):
         else:
             _logger.warning('Did not bind any model, no need to unbind model.')
 
-    def patch_loss(self, patch: Callable[[Tensor], Tensor]):
+    def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         old_compute_loss = self.trainer.compute_loss
 
         def patched_compute_loss(_, model: Any, inputs: Any, return_outputs: bool = False):
             result = old_compute_loss(model, inputs, return_outputs)
             if return_outputs:
-                return patch(result[0]), result[1]
+                return patch(result[0], inputs), result[1]
             else:
-                return patch(result)
+                return patch(result, inputs)
 
         self.trainer.compute_loss = types.MethodType(patched_compute_loss, self.trainer)
 
@@ -953,8 +975,14 @@ class TransformersEvaluator(Evaluator):
     def finetune(self):
         self.train()
 
-    def evaluate(self) -> float | None | Tuple[float, Dict[str, Any]] | Tuple[None, Dict[str, Any]]:
-        return self.trainer.evaluate()  # type: ignore
+    def evaluate(self) -> Tuple[float | None, Dict[str, Any]]:
+        metric =  self.trainer.evaluate()
+        nni_used_metric = metric.get('default', None)
+        if nni_used_metric is None:
+            warn_msg = f'Evaluation function returns a dict metric without key `default`,' + \
+                        'will return None as the model evaluation metric value.'
+            _logger.warning(warn_msg)
+        return nni_used_metric, metric
 
     def get_dummy_input(self) -> Any:
         return self.dummy_input
