@@ -13,6 +13,7 @@ pytest-cov
 rstcheck >= 6.0
 sphinx >= 4.5
 sphinx-argparse-nni >= 0.4.0
+sphinx-comments
 sphinx-copybutton
 sphinx-gallery
 sphinx-intl
