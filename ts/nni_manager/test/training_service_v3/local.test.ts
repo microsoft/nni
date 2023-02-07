@@ -141,8 +141,6 @@ nni.report_final_result(param['x'])
     await trialStopped.get(trial2!).promise;
     assert.ok(trialStarted.get(trial2!).settled);
 
-    await printLogFiles(path.join(globals.paths.experimentRoot, 'environments'));
-
     // exit code should be 0
     assert.equal(exitCodes[trial1!], 0, 'trial #1 exit code should be 0');
     assert.equal(exitCodes[trial2!], 0, 'trial #2 exit code should be 0');
@@ -287,21 +285,6 @@ async function writeTrialCode(dir: string, file: string, content: string): Promi
     await fs.mkdir(path.join(tmpDir!, dir), { recursive: true });
     await fs.writeFile(path.join(tmpDir!, dir, file), content);
     return path.join(tmpDir!, dir);
-}
-
-async function printLogFiles(dirOrFile: string) {
-    const stat = await fs.stat(dirOrFile);
-    if (stat.isDirectory()) {
-        const children = await fs.readdir(dirOrFile);
-        for (const child of children) {
-            await printLogFiles(path.join(dirOrFile, child));
-        }
-    } else {
-        console.log(`## ${dirOrFile} ##`);
-        const content = await fs.readFile(dirOrFile, { encoding: 'utf8' });
-        console.log(content);
-        console.log();
-    }
 }
 
 // FIXME: parameter / metric formatting should be more structural so it does not need helpers here
