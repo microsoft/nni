@@ -183,10 +183,10 @@ stages:
 
     - template: templates/install-nni.yml
 
-    #- script: |
-    #    cd test
-    #    python training_service/nnitest/run_tests.py --config training_service/config/pr_tests.yml
-    #  displayName: Simple integration test
+    - script: |
+        cd test
+        python training_service/nnitest/run_tests.py --config training_service/config/pr_tests.yml
+      displayName: Simple integration test
 
     - script: |
         cd test
