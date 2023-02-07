@@ -11,7 +11,7 @@ from typing_extensions import Literal
 
 import torch
 import torch.nn as nn
-from nni.mutable import Categorical, CategoricalMultiple, ensure_frozen, label_scope
+from nni.mutable import Categorical, CategoricalMultiple, Sample, SampleValidationError, ensure_frozen, label_scope
 
 from .base import MutableModule, recursive_freeze
 
@@ -104,7 +104,6 @@ class LayerChoice(MutableModule):
     def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,
                  weights: Optional[List[float]] = None, label: Union[str, label_scope, None] = None):
         super().__init__()
-        self.candidates = candidates
 
         _names, _modules = self._init_names(candidates)
         for name, module in zip(_names, _modules):
@@ -114,13 +113,24 @@ class LayerChoice(MutableModule):
         self.add_mutable(self.choice)
         self._dry_run_choice = ensure_frozen(self.choice)
 
-        # Names are converted to str before storing in self.names.
-        self.names: List[str] = [str(name) for name in _names]
+        # Names are kept as original types. They need to be converted to str for getattr.
+        self.names: Union[List[str], List[int]] = _names
 
     @torch.jit.unused
     @property
     def label(self) -> str:
         return self.choice.label
+
+    @torch.jit.unused
+    @property
+    def candidates(self) -> Union[Dict[str, nn.Module], List[nn.Module]]:
+        """Restore the ``candidates`` parameters passed to the constructor.
+        Useful when creating a new layer choices based on this one.
+        """
+        if all(isinstance(name, int) for name in self.names) and self.names == list(range(len(self))):
+            return list(self)
+        else:
+            return {name: self[name] for name in self.names}
 
     @staticmethod
     def _inner_choice(names: List[str], weights: Optional[List[float]], label: Union[str, label_scope, None]) -> Categorical:
@@ -146,10 +156,32 @@ class LayerChoice(MutableModule):
 
         return names, modules
 
-    def freeze(self, sample: Dict[str, Any]) -> nn.Module:
+    def check_contains(self, sample: Sample) -> Optional[SampleValidationError]:
+        exception = self.choice.check_contains(sample)
+        if exception is not None:
+            return exception
+
+        sample_val = self.choice.freeze(sample)
+        module = self[sample_val]
+        if isinstance(module, MutableModule):
+            exception = module.check_contains(sample)
+            if exception is not None:
+                exception.paths.append(sample_val)
+                return exception
+        else:
+            for name, submodule in MutableModule.named_mutable_descendants(module):
+                exception = submodule.check_contains(sample)
+                if exception is not None:
+                    exception.paths.append(name)
+                    exception.paths.append(sample_val)
+                    return exception
+
+        return None
+
+    def freeze(self, sample: Sample) -> nn.Module:
         self.validate(sample)
         sample_val = self.choice.freeze(sample)
-        return recursive_freeze(getattr(self, str(sample_val)), sample)[0]
+        return recursive_freeze(self[sample_val], sample)[0]
 
     @classmethod
     def create_fixed_module(cls, sample: dict, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,
@@ -163,31 +195,23 @@ class LayerChoice(MutableModule):
         return result
 
     def __getitem__(self, idx: Union[int, str]) -> nn.Module:
-        if isinstance(idx, str):
-            return cast(nn.Module, self._modules[idx])
-        return cast(nn.Module, list(self)[idx])
+        if idx not in self.names:
+            raise KeyError(f'{idx!r} is not found in {self.names!r}.')
+        return cast(nn.Module, self._modules[str(idx)])
 
     def __setitem__(self, idx, module):
-        key = idx if isinstance(idx, str) else self.names[idx]
-        return setattr(self, key, module)
+        if idx not in self.names:
+            raise KeyError(f'{idx!r} is not found in {self.names!r}. Note we disallow adding new choices to LayerChoice.')
+        return setattr(self, str(idx), module)
 
     def __delitem__(self, idx):
-        if isinstance(idx, slice):
-            for key in self.names[idx]:
-                delattr(self, key)
-        else:
-            if isinstance(idx, str):
-                key, idx = idx, self.names.index(idx)
-            else:
-                key = self.names[idx]
-            delattr(self, key)
-        del self.names[idx]
+        raise RuntimeError('Deleting choices from LayerChoice is not supported yet.')
 
     def __len__(self):
         return len(self.names)
 
     def __iter__(self):
-        return map(lambda name: self._modules[name], self.names)
+        return map(lambda name: self._modules[str(name)], self.names)
 
     def forward(self, x):
         # The input argument can be arbitrary positional / keyword arguments,

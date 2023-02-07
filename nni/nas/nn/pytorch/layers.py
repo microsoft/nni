@@ -10,6 +10,7 @@
 
 import hashlib
 import os
+import warnings
 from pathlib import Path
 
 # To make auto-completion happy, we generate a _layers.py that lists out all the classes.
@@ -41,7 +42,6 @@ def validate_cache() -> bool:
 
 def generate_stub_file() -> str:
     import inspect
-    import warnings
 
     import torch
     import torch.nn as nn
@@ -107,7 +107,9 @@ def generate_stub_file() -> str:
 
 
 def write_cache(code: str) -> bool:
-    if os.access(nn_cache_file_path.as_posix(), os.W_OK):
+    if os.access(nn_cache_file_path.as_posix(), os.W_OK) or (
+        not nn_cache_file_path.exists() and os.access(nn_cache_file_path.parent.as_posix(), os.W_OK)
+    ):
         with nn_cache_file_path.open('w') as fp:
             fp.write(code)
         return True
@@ -120,11 +122,14 @@ code = generate_stub_file()
 
 if not validate_cache():
     if not write_cache(code):
-        # Backup plan when the file is not writable.
-        exec(code, globals())
+        warnings.warn(f'Cannot write to {nn_cache_file_path}. Will try to execute the generated code on-the-fly.')
 
-# Layers can be either empty or successfully written.
-from ._layers import *  # pylint: disable=import-error, wildcard-import, unused-wildcard-import
+try:
+    # Layers can be either empty or successfully written.
+    from ._layers import *  # pylint: disable=import-error, wildcard-import, unused-wildcard-import
+except ModuleNotFoundError:
+    # Backup plan when the file is not writable.
+    exec(code, globals())
 
 def mutable_global_names():
     return [name for name, obj in globals().items() if isinstance(obj, type) and name.startswith('Mutable')]

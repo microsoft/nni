@@ -8,14 +8,13 @@ import pytest
 import nni
 import nni.nas.nn.pytorch.layers
 import nni.nas.evaluator.pytorch.lightning as pl
-import pytorch_lightning
 import torch
 import torch.nn.functional as F
 
-from nni.mutable import Categorical, ensure_frozen, label_scope
+from nni.mutable import Categorical, ensure_frozen, label_scope, SampleValidationError
 from nni.nas.evaluator import FunctionalEvaluator
 from nni.nas.space import (
-    KeepModelSpace, SimplifiedModelSpace,
+    RawFormatModelSpace, SimplifiedModelSpace,
     ExecutableModelSpace, GraphModelSpace,
     model_context
 )
@@ -27,10 +26,10 @@ from nni.nas.nn.pytorch import (
 )
 
 
-@pytest.fixture(params=['keep', 'simple', 'graph'])
+@pytest.fixture(params=['raw', 'simple', 'graph'])
 def space_format(request):
-    if request.param == 'keep':
-        return KeepModelSpace
+    if request.param == 'raw':
+        return RawFormatModelSpace
     elif request.param == 'simple':
         return SimplifiedModelSpace
     elif request.param == 'graph':
@@ -50,7 +49,7 @@ def nn(space_format: Type[ExecutableModelSpace]):
 def test_simplify_freeze():
     from torch import nn
 
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.module = LayerChoice([
@@ -62,7 +61,7 @@ def test_simplify_freeze():
             return self.module(x)
 
     model = Net()
-    assert model.module.names == ['0', '1']
+    assert model.module.names == [0, 1]
     assert model.module.label == 'model/1'
     assert len(model.module) == 2
     space = model.simplify()
@@ -80,11 +79,11 @@ def test_simplify_freeze():
 
 
 def test_layer_choice(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.module = LayerChoice([
-                nn.Conv2d(3, 3, kernel_size=1),
+                nn.Conv2d(3, 2, kernel_size=1),
                 nn.Conv2d(3, 5, kernel_size=1)
             ])
 
@@ -92,6 +91,13 @@ def test_layer_choice(space_format: Type[ExecutableModelSpace], nn: ModuleType):
             return self.module(x)
 
     model = Net()
+    with pytest.raises(KeyError, match='allow adding'):
+        model.module[2] = nn.Conv2d(3, 7, kernel_size=1)
+
+    model.module[0] = nn.Conv2d(3, 3, kernel_size=1)
+
+    assert model.module[1].out_channels == 5
+
     model = space_format.from_model(model)
 
     space = model.simplify()
@@ -104,12 +110,55 @@ def test_layer_choice(space_format: Type[ExecutableModelSpace], nn: ModuleType):
     model1 = model.freeze({layer_label: choices[0]}).executable_model()
     model2 = model.freeze({layer_label: choices[1]}).executable_model()
 
-    assert model1(torch.randn(1, 3, 3, 3)).size() == torch.Size([1, 3, 3, 3])
+    if space_format == SimplifiedModelSpace:
+        # replace doesn't work in simplified space
+        assert model1(torch.randn(1, 3, 3, 3)).size() == torch.Size([1, 2, 3, 3])
+    else:
+        assert model1(torch.randn(1, 3, 3, 3)).size() == torch.Size([1, 3, 3, 3])
+    assert model2(torch.randn(1, 3, 3, 3)).size() == torch.Size([1, 5, 3, 3])
+
+
+def test_layer_choice_dict(space_format: Type[ExecutableModelSpace], nn: ModuleType):
+    class Net(ModelSpace):
+        def __init__(self):
+            super().__init__()
+            self.module = LayerChoice({
+                'a': nn.Conv2d(3, 2, kernel_size=1),
+                'b': nn.Conv2d(3, 5, kernel_size=1)
+            }, label='x')
+
+        def forward(self, x):
+            return self.module(x)
+
+    model = Net()
+    with pytest.raises(KeyError, match='allow adding'):
+        model.module['c'] = nn.Conv2d(3, 7, kernel_size=1)
+    model.module['a'] = nn.Conv2d(3, 3, kernel_size=1)
+
+    assert model.module['b'].out_channels == 5
+
+    model = space_format.from_model(model)
+
+    space = model.simplify()
+    if issubclass(space_format, GraphModelSpace):
+        # The choice in GraphModelSpace can be quite unexpected.
+        choices = space['x'].values
+    else:
+        choices = ['a', 'b']
+        assert space['x'].values == choices
+
+    model1 = model.freeze({'x': choices[0]}).executable_model()
+    model2 = model.freeze({'x': choices[1]}).executable_model()
+
+    if space_format == SimplifiedModelSpace:
+        assert model1(torch.randn(1, 3, 3, 3)).size() == torch.Size([1, 2, 3, 3])
+    else:
+        assert model1(torch.randn(1, 3, 3, 3)).size() == torch.Size([1, 3, 3, 3])
     assert model2(torch.randn(1, 3, 3, 3)).size() == torch.Size([1, 5, 3, 3])
 
 
 def test_layer_choice_multiple(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.module = LayerChoice([nn.Conv2d(3, i, kernel_size=1) for i in range(1, 11)])
@@ -130,7 +179,7 @@ def test_layer_choice_multiple(space_format: Type[ExecutableModelSpace], nn: Mod
 
 
 def test_nested_layer_choice(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.module = LayerChoice([
@@ -156,7 +205,7 @@ def test_nested_layer_choice(space_format: Type[ExecutableModelSpace], nn: Modul
 
 
 def test_input_choice(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.conv1 = nn.Conv2d(3, 3, kernel_size=1)
@@ -187,7 +236,7 @@ def test_input_choice(space_format: Type[ExecutableModelSpace], nn: ModuleType):
 
 
 def test_chosen_inputs(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self, reduction):
             super().__init__()
             self.conv1 = nn.Conv2d(3, 3, kernel_size=1)
@@ -214,7 +263,7 @@ def test_chosen_inputs(space_format: Type[ExecutableModelSpace], nn: ModuleType)
 
 
 def test_discrete_as_parameter(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.conv = MutableConv2d(3, 5, kernel_size=Categorical([3, 5], label='kz'))
@@ -234,8 +283,24 @@ def test_discrete_as_parameter(space_format: Type[ExecutableModelSpace], nn: Mod
     assert model2(torch.randn(1, 3, 5, 5)).size() == torch.Size([1, 5, 1, 1])
 
 
+def test_discrete_tuple_warning(caplog):
+    from torch import nn
+
+    class Net(ModelSpace, label_prefix='model'):
+        def __init__(self):
+            super().__init__()
+            self.conv = MutableConv2d(3, 5, kernel_size=(Categorical([3, 5]), Categorical([3, 5])))
+
+        def forward(self, x):
+            return self.conv(x)
+
+    with pytest.raises(TypeError):
+        Net()
+    assert 'nested mutable' in caplog.text
+
+
 def test_value_choice_as_two_parameters(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.conv = MutableConv2d(
@@ -296,7 +361,7 @@ def test_value_choice_in_functional(space_format: Type[ExecutableModelSpace], nn
     # We no longer support this.
     # Testing it to make sure it raises an error.
 
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.dropout_rate = Categorical([0., 1.])
@@ -315,7 +380,7 @@ def test_value_choice_in_functional(space_format: Type[ExecutableModelSpace], nn
 
 
 def test_value_choice_in_layer_choice(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.linear = LayerChoice([
@@ -336,7 +401,7 @@ def test_value_choice_in_layer_choice(space_format: Type[ExecutableModelSpace], 
 
 
 def test_shared(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self, shared=True):
             super().__init__()
             labels = ['x', 'x'] if shared else [None, None]
@@ -389,7 +454,7 @@ def test_discrete_getitem(space_format: Type[ExecutableModelSpace], nn: ModuleTy
 
 
 def test_discrete_getitem_dict(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             choices = [
@@ -411,7 +476,7 @@ def test_discrete_getitem_dict(space_format: Type[ExecutableModelSpace], nn: Mod
 
 
 def test_discrete_multi(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             choice1 = Categorical([{"in": 1, "out": 3}, {"in": 2, "out": 6}, {"in": 3, "out": 9}])
@@ -433,7 +498,7 @@ def test_discrete_multi(space_format: Type[ExecutableModelSpace], nn: ModuleType
 
 
 def test_discrete_inconsistent_label():
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.conv1 = MutableConv2d(3, Categorical([3, 5], label='a'), 1)
@@ -472,7 +537,7 @@ def test_discrete_in_evaluator(space_format: Type[ExecutableModelSpace], nn: Mod
 
 
 def test_model_evaluator_conflict_label(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.conv = MutableConv2d(3, 5, kernel_size=Categorical([3, 5], label='abc'))
@@ -494,7 +559,7 @@ def test_model_evaluator_conflict_label(space_format: Type[ExecutableModelSpace]
 
 
 def test_add_mutable(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.aux = self.add_mutable(Categorical([True, False]))
@@ -539,7 +604,7 @@ def test_mutable_in_nn_parameter(space_format: Type[ExecutableModelSpace], nn: M
             with model_context(sample):
                 return self.__class__()
 
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.choice = self.add_mutable(Categorical([64, 128, 256], label='a'))
@@ -566,3 +631,65 @@ def test_mutable_in_nn_parameter(space_format: Type[ExecutableModelSpace], nn: M
         model2 = model.freeze({label: 256})
         assert model1.executable_model()().size(1) == 64
         assert model2.executable_model()().size(1) == 256
+
+
+def test_freeze_layerchoice():
+    import torch.nn as nn
+
+    class Net(ModelSpace):
+        def __init__(self):
+            super().__init__()
+            self.module = LayerChoice([nn.Conv2d(3, i, kernel_size=1) for i in range(1, 11)], label='layer')
+
+        def forward(self, x):
+            return self.module(x)
+
+    orig_model = Net()
+
+    for i in range(10):
+        model = orig_model.freeze({'layer': i})
+        inp = torch.randn(1, 3, 3, 3)
+        a = getattr(orig_model.module, str(i))(inp)
+        b = model(inp)
+        assert torch.allclose(a, b)
+
+
+def test_freeze_layerchoice_nested():
+    import torch.nn as nn
+
+    class Net(ModelSpace):
+        def __init__(self):
+            super().__init__()
+            self.module = LayerChoice([
+                LayerChoice([
+                    nn.Conv2d(3, 3, kernel_size=1),
+                    nn.Conv2d(3, 4, kernel_size=1),
+                    nn.Conv2d(3, 5, kernel_size=1)
+                ], label='b'),
+                nn.Conv2d(3, 1, kernel_size=1)
+            ], label='a')
+
+        def forward(self, x):
+            return self.module(x)
+
+    orig_model = Net()
+    input = torch.randn(1, 3, 5, 5)
+
+    a = getattr(getattr(orig_model.module, '0'), '0')(input)
+    b = orig_model.freeze({'a': 0, 'b': 0})(input)
+    assert torch.allclose(a, b)
+
+    a = getattr(getattr(orig_model.module, '0'), '1')(input)
+    b = orig_model.freeze({'a': 0, 'b': 1})(input)
+    assert torch.allclose(a, b)
+
+    a = getattr(orig_model.module, '1')(input)
+    b = orig_model.freeze({'a': 1})(input)
+    assert torch.allclose(a, b)
+
+    with pytest.raises(SampleValidationError):
+        orig_model.freeze({'a': 0, 'b': 3})
+    orig_model.freeze({'a': 1, 'b': 3})
+
+    assert isinstance(orig_model.freeze({'a': 0, 'b': 1}).module, nn.Conv2d)
+    assert isinstance(orig_model.freeze({'a': 1, 'b': 0}).module, nn.Conv2d)
