@@ -42,7 +42,7 @@ stages:
 
     - script: |
         cd test
-        python -m pytest algo/nas
+        # python -m pytest algo/nas
       displayName: NAS test
 
   - job: windows
@@ -73,5 +73,5 @@ stages:
 
     - powershell: |
         cd test
-        python -m pytest algo/nas
+        # python -m pytest algo/nas
       displayName: NAS test

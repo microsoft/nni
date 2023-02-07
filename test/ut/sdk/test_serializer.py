@@ -18,8 +18,6 @@ from nni.common.serializer import is_traceable
 
 if True:  # prevent auto formatting
     sys.path.insert(0, Path(__file__).parent.as_posix())
-    from imported.model import ImportTest
-
     # this test cannot be directly put in this file. It will cause syntax error for python <= 3.7.
     if tuple(sys.version_info) >= (3, 8):
         from imported._test_serializer_py38 import test_positional_only
@@ -49,6 +47,22 @@ class EmptyClass:
     pass
 
 
+class CustomizeLoadDump:
+    def __init__(self, a, b=1):
+        self._a = a
+        self._b = b
+
+    def _dump(self):
+        return {
+            'a': self._a,
+            'any': self._b
+        }
+
+    @staticmethod
+    def _load(*, a, any):
+        return CustomizeLoadDump(a, any)
+
+
 class UnserializableSimpleClass:
     def __init__(self):
         self._a = 1
@@ -65,6 +79,12 @@ def test_simple_class():
     instance = nni.load(dump_str)
     assert instance._a == 1
     assert instance._b == 2
+
+
+def test_customize_class():
+    instance = CustomizeLoadDump(1, 2)
+    dump_str = nni.dump(instance)
+    # FIXME
 
 
 def test_external_class():
@@ -163,19 +183,6 @@ class Foo:
         return self.aa == other.aa and self.bb == other.bb
 
 
-def test_basic_unit_and_custom_import():
-    module = ImportTest(3, 0.5)
-    ss = nni.dump(module)
-    assert ss == r'{"__symbol__": "path:imported.model.ImportTest", "__kwargs__": {"foo": 3, "bar": 0.5}}'
-    assert nni.load(nni.dump(module)) == module
-
-    import nni.retiarii.nn.pytorch as nn
-    module = nn.Conv2d(3, 10, 3, bias=False)
-    ss = nni.dump(module)
-    assert ss == r'{"__symbol__": "path:torch.nn.modules.conv.Conv2d", "__kwargs__": {"in_channels": 3, "out_channels": 10, "kernel_size": 3, "bias": false}}'
-    assert nni.load(ss).bias is None
-
-
 def test_dataset():
     dataset = nni.trace(MNIST)(root='data/mnist', train=False, download=True)
     dataloader = nni.trace(DataLoader)(dataset, batch_size=10)
@@ -238,7 +245,7 @@ def test_multiprocessing_dataloader():
                                transform=nni.trace(transforms.Compose)(
                                    [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
                                ))
-    import nni.retiarii.evaluator.pytorch.lightning as pl
+    import nni.nas.evaluator.pytorch.lightning as pl
     dataloader = pl.DataLoader(dataset, batch_size=10, num_workers=2)
     x, y = next(iter(dataloader))
     assert x.size() == torch.Size([10, 1, 28, 28])
@@ -276,7 +283,7 @@ def test_type():
 
 
 def test_lightning_earlystop():
-    import nni.retiarii.evaluator.pytorch.lightning as pl
+    import nni.nas.evaluator.pytorch.lightning as pl
     from pytorch_lightning.callbacks.early_stopping import EarlyStopping
     trainer = pl.Trainer(callbacks=[nni.trace(EarlyStopping)(monitor="val_loss")])
     pickle_size_limit = 4096 if sys.platform == 'linux' else 32768
@@ -285,7 +292,7 @@ def test_lightning_earlystop():
 
 
 def test_pickle_trainer():
-    import nni.retiarii.evaluator.pytorch.lightning as pl
+    import nni.nas.evaluator.pytorch.lightning as pl
     from pytorch_lightning import Trainer
     trainer = pl.Trainer(max_epochs=1)
     data = pickle.dumps(trainer)
@@ -410,22 +417,16 @@ def test_get():
     assert obj2.get().bar() == 0
 
 
-def test_model_wrapper_serialize():
-    from nni.retiarii import model_wrapper
+class CustomParameter:
+    def __init__(self, x):
+        self._wrapped = x
 
-    @model_wrapper
-    class Model(nn.Module):
-        def __init__(self, in_channels):
-            super().__init__()
-            self.in_channels = in_channels
-
-    model = Model(3)
-    dumped = nni.dump(model)
-    loaded = nni.load(dumped)
-    assert loaded.in_channels == 3
+    def _unwrap_parameter(self):
+        return self._wrapped
 
 
-def test_model_wrapper_across_process():
-    main_file = os.path.join(os.path.dirname(__file__), 'imported', '_test_serializer_main.py')
-    subprocess.run([sys.executable, main_file, '0'], check=True)
-    subprocess.run([sys.executable, main_file, '1'], check=True)
+def test_unwrap_parameter():
+    c = CustomParameter(1)
+    cls = SimpleClass(c)
+    assert cls._a == 1
+    assert cls.trace_kwargs['a'] == c

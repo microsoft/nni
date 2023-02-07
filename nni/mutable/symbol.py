@@ -285,7 +285,7 @@ class SymbolicExpression:
         return self.expr_cls(round, 'round({})', [self])
 
     def __trunc__(self) -> NoReturn:
-        raise RuntimeError("Try to use `SymbolicExpression.to_int()` instead of `math.trunc()` on value choices.")
+        raise RuntimeError("Try to use `SymbolicExpression.to_int()` instead of `math.trunc()` on symbols.")
 
     def __floor__(self) -> Any:
         return self.expr_cls(math.floor, 'math.floor({})', [self])
@@ -305,8 +305,10 @@ class SymbolicExpression:
                            'Please try methods like `SymbolicExpression.max(a, b)` to see whether that meets your needs.')
 
     def __eq__(self, other: Any) -> Any:
-        # Bypass some unnecessary expressions.
+        # FIXME: This override causes trouble for many cases which only cares about the values of the expression.
+        # Might need to rethink about this before first release.
         if self is other:
+            # Bypass some unnecessary expressions.
             return True
         return self.expr_cls(operator.eq, '{} == {}', [self, other])
 
