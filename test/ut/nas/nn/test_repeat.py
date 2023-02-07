@@ -17,7 +17,7 @@ class AddOne(torch.nn.Module):
 
 
 def test_repeat(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.block = Repeat(AddOne(), (3, 5))
@@ -37,7 +37,7 @@ def test_repeat(space_format: Type[ExecutableModelSpace], nn: ModuleType):
 
 
 def test_repeat_static(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.block = Repeat(lambda index: LayerChoice([AddOne(), nn.Identity()]), 4)
@@ -56,7 +56,7 @@ def test_repeat_static(space_format: Type[ExecutableModelSpace], nn: ModuleType)
 
 
 def test_repeat_complex(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.block = Repeat(LayerChoice([AddOne(), nn.Identity()], label='lc'), (3, 5), label='rep')
@@ -78,7 +78,7 @@ def test_repeat_complex(space_format: Type[ExecutableModelSpace], nn: ModuleType
 
 
 def test_repeat_complex_independent(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.block = Repeat(lambda index: LayerChoice([AddOne(), nn.Identity()]), (2, 3), label='rep')
@@ -97,7 +97,7 @@ def test_repeat_complex_independent(space_format: Type[ExecutableModelSpace], nn
 
 
 def test_repeat_discrete(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.block = Repeat(AddOne(), Categorical([1, 3, 5], label='ds'))
@@ -113,7 +113,7 @@ def test_repeat_discrete(space_format: Type[ExecutableModelSpace], nn: ModuleTyp
 
 
 def test_repeat_mutable_expr(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.block = Repeat(AddOne(), Categorical([0, 2, 4]) + 1)
@@ -128,7 +128,7 @@ def test_repeat_mutable_expr(space_format: Type[ExecutableModelSpace], nn: Modul
 
 
 def test_repeat_zero(space_format: Type[ExecutableModelSpace], nn: ModuleType):
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.block = Repeat(AddOne(), (0, 3))
@@ -146,3 +146,22 @@ def test_repeat_zero(space_format: Type[ExecutableModelSpace], nn: ModuleType):
         for target in [0, 1, 2, 3]:
             new_model = model.freeze({label: target}).executable_model()
             assert (new_model(torch.zeros(1, 16)) == target).all()
+
+
+def test_repeat_contains():
+    import torch.nn as nn
+
+    class Net(ModelSpace):
+        def __init__(self):
+            super().__init__()
+            self.repeat = Repeat(
+                lambda index: LayerChoice([nn.Identity(), nn.Identity()], label=f'layer{index}'),
+                (3, 5), label='rep')
+
+        def forward(self, x):
+            return self.module(x)
+
+    net = Net()
+    assert net.contains({'rep': 3, 'layer0': 0, 'layer1': 0, 'layer2': 0})
+    assert not net.contains({'rep': 4, 'layer0': 0, 'layer1': 0, 'layer2': 0})
+    assert net.contains({'rep': 3, 'layer0': 0, 'layer1': 0, 'layer2': 0, 'layer3': 0})

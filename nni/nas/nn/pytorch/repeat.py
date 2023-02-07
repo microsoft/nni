@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import copy
+import logging
 import warnings
 from contextlib import contextmanager
 from typing import Callable, List, Union, Tuple, Optional, cast
@@ -9,7 +10,7 @@ from typing import Callable, List, Union, Tuple, Optional, cast
 import torch
 import torch.nn as nn
 
-from nni.mutable import Mutable, Categorical, LabeledMutable, Sample, auto_label, ensure_frozen
+from nni.mutable import Mutable, Categorical, LabeledMutable, Sample, SampleValidationError, auto_label, ensure_frozen
 from nni.mutable.mutable import MutableExpression
 from nni.mutable.symbol import SymbolicExpression
 
@@ -17,6 +18,8 @@ from .base import MutableModule, recursive_freeze
 
 
 __all__ = ['Repeat']
+
+_logger = logging.getLogger(__name__)
 
 
 class Repeat(MutableModule):
@@ -135,6 +138,11 @@ class Repeat(MutableModule):
         else:
             self._dry_run_depth = self.depth_choice
 
+        if isinstance(blocks, nn.ModuleList):
+            _logger.warning('Using ModuleList as blocks will make the whole module list be treated as one block, '
+                            'and it will be deep-copied. This might be not intended in most cases. '
+                            'Consider using a pure python list of modules if you want to specify a sequence of blocks.')
+
         self.blocks = nn.ModuleList(self._replicate_and_instantiate(blocks, self.max_depth))
 
     @torch.jit.unused
@@ -153,7 +161,44 @@ class Repeat(MutableModule):
             #     break
         return x
 
+    def check_contains(self, sample: Sample) -> Optional[SampleValidationError]:
+        # Check depth choice
+        if isinstance(self.depth_choice, Mutable):
+            exception = self.depth_choice.check_contains(sample)
+            if exception is not None:
+                return exception
+            depth = self.depth_choice.freeze(sample)
+        else:
+            depth = self.depth_choice
+
+        # Check blocks
+        for i, block in enumerate(self.blocks):
+            if i < depth:
+                exception = self._check_any_module_contains(block, sample, str(i))
+                if exception is not None:
+                    return exception
+
+        return None
+
+    @staticmethod
+    def _check_any_module_contains(module: nn.Module, sample: Sample, path: str) -> Optional[SampleValidationError]:
+        if isinstance(module, MutableModule):
+            exception = module.check_contains(sample)
+            if exception is not None:
+                exception.paths.append(path)
+                return exception
+        else:
+            for name, module in MutableModule.named_mutable_descendants(module):
+                exception = module.check_contains(sample)
+                if exception is not None:
+                    exception.paths.append(name)
+                    exception.paths.append(path)
+                    return exception
+
+        return None
+
     def freeze(self, sample: Sample) -> nn.Sequential:
+        self.validate(sample)
         if isinstance(self.depth_choice, Mutable):
             depth = self.depth_choice.freeze(sample)
             assert isinstance(depth, int), 'Depth must be frozen to int.'
