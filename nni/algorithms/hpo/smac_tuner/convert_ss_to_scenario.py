@@ -189,7 +189,7 @@ def generate_scenario(ss_content):
         The scenario-object (smac.scenario.scenario.Scenario) is used to configure SMAC and can be constructed
         either by providing an actual scenario-object, or by specifing the options in a scenario file
     """
-    with open('scenario.txt', 'w') as sce_fd:
+    with open('/tmp/scenario.txt', 'w') as sce_fd:
         sce_fd.write('deterministic = 0\n')
         # sce_fd.write('output_dir = \n')
         sce_fd.write('paramfile = param_config_space.pcs\n')
