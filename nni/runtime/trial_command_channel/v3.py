@@ -4,7 +4,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Literal
+
+from typing_extensions import Literal
 
 import nni
 from nni.runtime.command_channel.http import HttpChannel
