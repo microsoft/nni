@@ -42,7 +42,7 @@ def choice(label: str, choices: list[T]) -> Categorical[T] | LayerChoice:
     --------
     >>> nni.choice('x', [1, 2, 3])
     Categorical([1, 2, 3], label='x')
-    >>> nni.choice([nn.Conv2d(3, 3, 3), nn.Conv2d(3, 3, 5)], label='conv')
+    >>> nni.choice('conv', [nn.Conv2d(3, 3, 3), nn.Conv2d(3, 3, 5)])
     LayerChoice(
         label='conv'
         (0): Conv2d(3, 3, kernel_size=(3, 3), stride=(1, 1))

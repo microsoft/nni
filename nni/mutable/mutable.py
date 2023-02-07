@@ -660,8 +660,8 @@ class Categorical(MutableSymbol, Generic[Choice]):
     ) -> None:
         values = list(values)
         assert values, 'Categorical values must not be empty.'
-        self.label = auto_label(label)
-        self.values = values
+        self.label: str = auto_label(label)
+        self.values: list[Choice] = values
         self.weights = weights if weights is not None else [1 / len(values)] * len(values)
 
         if default is not MISSING:
