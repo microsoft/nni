@@ -201,10 +201,11 @@ async function testStopTrial() {
     metrics.length = 0;
 
     const trialCode = `
+import sys
 import time
 import nni
 param = nni.get_next_parameter()
-nni.report_intermediate_result(param['x'] * 0.5)
+nni.report_intermediate_result(sys.version_info.minor)  # python 3.7 behaves differently
 time.sleep(60)
 nni.report_intermediate_result(param['x'])
 nni.report_final_result(param['x'])
@@ -226,13 +227,15 @@ nni.report_final_result(param['x'])
     assert.ok(trialStopped.get(trial).settled);
     assert.ok(trialStarted.get(trial).settled);
 
-    await printLogFiles(path.join(globals.paths.experimentRoot, 'environments'));
-    // killed trials' exit code should be null
-    assert.equal(exitCodes[trial], null);
-
     // it should consume 1 parameter and yields one metric
     assert.equal(parameters.length, origParamLen - 1);
-    assert.deepEqual(getMetrics(trial), [ 1.5 ]);
+    assert.equal(getMetrics(trial).length, 1);
+
+    // killed trials' exit code should be null for python 3.8+
+    // in 3.7 there is a bug (bpo-1054041)
+    if (getMetrics(trial)[0] !== 7) {
+        assert.equal(exitCodes[trial], null);
+    }
 }
 
 async function testStop() {
