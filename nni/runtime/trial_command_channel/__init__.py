@@ -43,7 +43,11 @@ def set_default_trial_command_channel(channel: Optional[TrialCommandChannel] = N
 
         assert dispatcher_env_vars.SDK_PROCESS != 'dispatcher'
 
-        if trial_env_vars.NNI_PLATFORM is None or trial_env_vars.NNI_PLATFORM == 'unittest':
+        channel_url = trial_env_vars.NNI_TRIAL_COMMAND_CHANNEL
+        if channel_url:
+            from .v3 import TrialCommandChannelV3
+            _channel = TrialCommandChannelV3(channel_url)
+        elif trial_env_vars.NNI_PLATFORM is None or trial_env_vars.NNI_PLATFORM == 'unittest':
             from .standalone import StandaloneTrialCommandChannel
             _channel = StandaloneTrialCommandChannel()
         else:
