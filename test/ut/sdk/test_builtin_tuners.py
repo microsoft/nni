@@ -407,7 +407,7 @@ class BuiltinTunersTestCase(TestCase):
         self.nas_search_space_test_all(tuner_fn)
 
     def tearDown(self):
-        file_list = glob.glob("smac3*") + ["param_config_space.pcs", "scenario.txt", "model_path"]
+        file_list = glob.glob("smac3*") + ["param_config_space.pcs", "/tmp/scenario.txt", "model_path"]
         for file in file_list:
             if os.path.exists(file):
                 if os.path.isdir(file):
