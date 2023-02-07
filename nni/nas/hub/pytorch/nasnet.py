@@ -24,6 +24,7 @@ from nni.nas.nn.pytorch import ModelSpace, Repeat, Cell, MutableConv2d, MutableB
 from nni.nas.oneshot.pytorch.supermodule.sampling import PathSamplingRepeat
 from nni.nas.oneshot.pytorch.supermodule.differentiable import DifferentiableMixedRepeat
 
+from .utils.nn import DropPath
 from .utils.pretrained import load_pretrained_weight
 
 MaybeIntChoice = Union[int, MutableExpression]
@@ -194,20 +195,6 @@ class FactorizedReduce(nn.Module):
         return out
 
 
-class DropPath_(nn.Module):
-    # https://github.com/khanrc/pt.darts/blob/0.1/models/ops.py
-    def __init__(self, drop_prob=0.):
-        super().__init__()
-        self.drop_prob = drop_prob
-
-    def forward(self, x):
-        if self.training and self.drop_prob > 0.:
-            keep_prob = 1. - self.drop_prob
-            mask = torch.zeros((x.size(0), 1, 1, 1), dtype=torch.float, device=x.device).bernoulli_(keep_prob)
-            return x.div(keep_prob).mul(mask)
-        return x
-
-
 class AuxiliaryHead(nn.Module):
     def __init__(self, C: int, num_labels: int, dataset: Literal['imagenet', 'cifar']):
         super().__init__()
@@ -314,7 +301,7 @@ class CellBuilder:
         if self.drop_path_prob > 0 and not isinstance(operation, nn.Identity):
             # Omit drop-path when operation is skip connect.
             # https://github.com/quark0/darts/blob/f276dd346a09ae3160f8e3aca5c7b193fda1da37/cnn/model.py#L54
-            return nn.Sequential(operation, DropPath_(self.drop_path_prob))
+            return nn.Sequential(operation, DropPath(self.drop_path_prob))
         return operation
 
     def __call__(self, repeat_idx: int):
@@ -390,7 +377,7 @@ class NDSStagePathSampling(PathSamplingRepeat):
         if isinstance(module, NDSStage) and isinstance(module.depth_choice, MutableExpression):
             return cls(
                 module.first_cell_transformation_factory(),
-                cast(List[nn.Module], module.blocks),
+                list(module.blocks),
                 module.depth_choice
             )
 
@@ -398,14 +385,14 @@ class NDSStagePathSampling(PathSamplingRepeat):
         super().__init__(*args, **kwargs)
         self.first_cell_transformation = first_cell_transformation
 
-    def reduction(self, items: List[Tuple[torch.Tensor, torch.Tensor]], sampled: List[int]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _reduction(self, items: List[Tuple[torch.Tensor, torch.Tensor]], sampled: List[int]) -> Tuple[torch.Tensor, torch.Tensor]:
         if 1 not in sampled or self.first_cell_transformation is None:
-            return super().reduction(items, sampled)
+            return super()._reduction(items, sampled)
         # items[0] must be the result of first cell
         assert len(items[0]) == 2
         # Only apply the transformation on "prev" output.
         items[0] = (self.first_cell_transformation(items[0][0]), items[0][1])
-        return super().reduction(items, sampled)
+        return super()._reduction(items, sampled)
 
 
 class NDSStageDifferentiable(DifferentiableMixedRepeat):
@@ -415,27 +402,30 @@ class NDSStageDifferentiable(DifferentiableMixedRepeat):
         if isinstance(module, NDSStage) and isinstance(module.depth_choice, MutableExpression):
             # Only interesting when depth is mutable
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
+            alphas = {}
+            for label in module.depth_choice.simplify():
+                alphas[label] = memo[label]
             return cls(
                 module.first_cell_transformation_factory(),
-                cast(List[nn.Module], module.blocks),
+                list(module.blocks),
                 module.depth_choice,
                 softmax,
-                memo
+                alphas
             )
 
     def __init__(self, first_cell_transformation: Optional[nn.Module], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.first_cell_transformation = first_cell_transformation
 
-    def reduction(
+    def _reduction(
         self, items: List[Tuple[torch.Tensor, torch.Tensor]], weights: List[float], depths: List[int]
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         if 1 not in depths or self.first_cell_transformation is None:
-            return super().reduction(items, weights, depths)
+            return super()._reduction(items, weights, depths)
         # Same as NDSStagePathSampling
         assert len(items[0]) == 2
         items[0] = (self.first_cell_transformation(items[0][0]), items[0][1])
-        return super().reduction(items, weights, depths)
+        return super()._reduction(items, weights, depths)
 
 
 _INIT_PARAMETER_DOCS = """
@@ -626,6 +616,15 @@ class NDS(ModelSpace):
         else:
             return logits
 
+    @classmethod
+    def extra_oneshot_hooks(cls, strategy):
+        from nni.nas.strategy import DARTS, RandomOneShot
+        if isinstance(strategy, DARTS):
+            return [NDSStageDifferentiable.mutate]
+        elif isinstance(strategy, RandomOneShot):
+            return [NDSStagePathSampling.mutate]
+        return []
+
     def freeze(self, sample: Sample) -> None:
         """Freeze the model according to the sample.
 
@@ -659,7 +658,7 @@ class NDS(ModelSpace):
         Reference: `FractalNet: Ultra-Deep Neural Networks without Residuals <https://arxiv.org/pdf/1605.07648v4.pdf>`__.
         """
         for module in self.modules():
-            if isinstance(module, DropPath_):
+            if isinstance(module, DropPath):
                 module.drop_prob = drop_prob
 
 
@@ -870,36 +869,36 @@ class DARTS(NDS):
             arch = {
                 'normal/op_2_0': 'sep_conv_3x3',
                 'normal/op_2_1': 'sep_conv_3x3',
-                'normal/input_2_0': 0,
-                'normal/input_2_1': 1,
+                'normal/input_2_0': [0],
+                'normal/input_2_1': [1],
                 'normal/op_3_0': 'sep_conv_3x3',
                 'normal/op_3_1': 'sep_conv_3x3',
-                'normal/input_3_0': 0,
-                'normal/input_3_1': 1,
+                'normal/input_3_0': [0],
+                'normal/input_3_1': [1],
                 'normal/op_4_0': 'sep_conv_3x3',
                 'normal/op_4_1': 'skip_connect',
-                'normal/input_4_0': 1,
-                'normal/input_4_1': 0,
+                'normal/input_4_0': [1],
+                'normal/input_4_1': [0],
                 'normal/op_5_0': 'skip_connect',
                 'normal/op_5_1': 'dil_conv_3x3',
-                'normal/input_5_0': 0,
-                'normal/input_5_1': 2,
+                'normal/input_5_0': [0],
+                'normal/input_5_1': [2],
                 'reduce/op_2_0': 'max_pool_3x3',
                 'reduce/op_2_1': 'max_pool_3x3',
-                'reduce/input_2_0': 0,
-                'reduce/input_2_1': 1,
+                'reduce/input_2_0': [0],
+                'reduce/input_2_1': [1],
                 'reduce/op_3_0': 'skip_connect',
                 'reduce/op_3_1': 'max_pool_3x3',
-                'reduce/input_3_0': 2,
-                'reduce/input_3_1': 1,
+                'reduce/input_3_0': [2],
+                'reduce/input_3_1': [1],
                 'reduce/op_4_0': 'max_pool_3x3',
                 'reduce/op_4_1': 'skip_connect',
-                'reduce/input_4_0': 0,
-                'reduce/input_4_1': 2,
+                'reduce/input_4_0': [0],
+                'reduce/input_4_1': [2],
                 'reduce/op_5_0': 'skip_connect',
                 'reduce/op_5_1': 'max_pool_3x3',
-                'reduce/input_5_0': 2,
-                'reduce/input_5_1': 1
+                'reduce/input_5_0': [2],
+                'reduce/input_5_1': [1]
             }
 
         else:

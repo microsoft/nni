@@ -8,7 +8,6 @@ import pytest
 import pytorch_lightning
 
 import nni
-import nni.runtime.platform.test
 import nni.nas.evaluator.pytorch.lightning as pl
 import nni.nas.hub.pytorch as searchspace
 from nni.mutable import ConstraintViolation
@@ -17,16 +16,7 @@ from nni.nas.nn.pytorch import ModelSpace
 pytestmark = pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
 
 
-def _reset():
-    # this is to not affect other tests in sdk
-    nni.trial._intermediate_seq = 0
-    nni.trial._params = {'foo': 'bar', 'parameter_id': 0, 'parameters': {}}
-    nni.runtime.platform.test._last_metric = None
-
-
 def _test_searchspace_on_dataset(searchspace: ModelSpace, dataset='cifar10', arch=None, retry=1):
-    _reset()
-
     if arch is not None:
         model = searchspace.freeze(arch)
     else:
@@ -59,10 +49,7 @@ def _test_searchspace_on_dataset(searchspace: ModelSpace, dataset='cifar10', arc
         limit_val_batches=3,
         num_classes=10 if dataset == 'cifar10' else 1000,
     )
-    evaluator.fit(model)
-
-    # cleanup to avoid affecting later test cases
-    _reset()
+    evaluator.evaluate(model)
 
 
 def test_nasbench101():
@@ -131,12 +118,12 @@ def test_nasnet_corner_case():
         "reduce/input_6_1": [3],
     }
 
-    _test_searchspace_on_dataset(searchspace.NASNet(), arch={'model/' + k: v for k, v in arch.items()})
+    _test_searchspace_on_dataset(searchspace.NASNet(), arch=arch)
 
 
 def test_nasnet_fixwd():
     # minimum
-    ss = searchspace.DARTS(width=16, num_cells=4)
+    ss = searchspace.DARTS(width=16, num_cells=4, drop_path_prob=0.2)
     _test_searchspace_on_dataset(ss)
 
     # medium
@@ -169,6 +156,7 @@ def test_shufflenet():
     ss = searchspace.ShuffleNetSpace(channel_search=True)
     _test_searchspace_on_dataset(ss, dataset='imagenet')
 
+
 def test_autoformer():
-    ss = searchspace.AutoformerSpace()
+    ss = searchspace.AutoFormer()
     _test_searchspace_on_dataset(ss, dataset='imagenet')

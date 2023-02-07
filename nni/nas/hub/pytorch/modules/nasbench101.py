@@ -16,6 +16,7 @@ from nni.mutable import (
     Mutable, LabeledMutable, Sample, SampleValidationError,
     auto_label, label_scope
 )
+from nni.mutable.mutable import _mutable_equal
 from nni.nas.nn.pytorch import InputChoice, LayerChoice, MutableModule
 
 _logger = logging.getLogger(__name__)
@@ -324,7 +325,7 @@ class NasBench101Cell(MutableModule):
             input_frozen = [inp.freeze(sample) for inp in input_choices]
 
             # Check constraint.
-            NasBench101CellConstraint(max_num_edges, num_nodes, op_choices, input_choices, scope).freeze(sample)
+            NasBench101CellConstraint(max_num_edges, num_nodes, op_choices, input_choices).freeze(sample)
 
             return _NasBench101CellFixed(op_frozen, input_frozen, in_features, out_features, num_nodes_frozen, projection)
 
@@ -390,7 +391,7 @@ class NasBench101Cell(MutableModule):
                 assert inp.choice.equals(input_inner[-1])  # Make sure the input choice is correct
                 self.inputs.append(inp)
 
-            self.constraint = NasBench101CellConstraint(self.max_num_edges, self.num_nodes, op_inner, input_inner, self._scope)
+            self.constraint = NasBench101CellConstraint(self.max_num_edges, self.num_nodes, op_inner, input_inner)
             self.add_mutable(self.constraint)
 
     @property
@@ -416,18 +417,20 @@ class NasBench101CellConstraint(Constraint):
         num_nodes: Categorical[int],
         operations: List[Categorical],
         inputs: List[CategoricalMultiple],
-        scope: label_scope,
     ):
-        self.scope = scope
-        assert self.scope.activated, 'Constraint must be created in an activated scope.'
         self.label = auto_label('final')
         self.max_num_edges = max_num_edges
         self.num_nodes = num_nodes
         self.operations = operations
         self.inputs = inputs
 
-        self._cur_matrix: Optional[np.ndarray] = None
-        self._cur_operations: Optional[List[str]] = None
+    def equals(self, other: Any) -> bool:
+        return isinstance(other, NasBench101CellConstraint) and \
+            self.label == other.label and \
+            self.max_num_edges == other.max_num_edges and \
+            self.num_nodes.equals(other.num_nodes) and \
+            _mutable_equal(self.operations, other.operations) and \
+            _mutable_equal(self.inputs, other.inputs)
 
     def leaf_mutables(self, is_leaf: Callable[[Mutable], bool]) -> Iterable[LabeledMutable]:
         yield from self.num_nodes.leaf_mutables(is_leaf)
@@ -435,6 +438,7 @@ class NasBench101CellConstraint(Constraint):
             yield from operator.leaf_mutables(is_leaf)
         for input in self.inputs:
             yield from input.leaf_mutables(is_leaf)
+        yield self
 
     def check_contains(self, sample: Sample) -> Optional[SampleValidationError]:
         # Check num_nodes
@@ -470,18 +474,21 @@ class NasBench101CellConstraint(Constraint):
             raise RuntimeError('The number of operations does not match the number of nodes')
 
         try:
-            self._cur_matrix, self._cur_operations = prune(matrix, operations)
+            cur_matrix, cur_operations = prune(matrix, operations)
         except ConstraintViolation as err:
             err.paths.append('prune')
             return err
 
+        # Maintain a clean copy of what nasbench101 cell looks like.
+        # Modifies sample in-place. A bit hacky here.
+        rv: Dict[str, Any] = {}
+        for i in range(1, len(cur_matrix)):
+            if i + 1 < len(cur_matrix):
+                rv[f'op{i}'] = cur_operations[i]
+            rv[f'input{i}'] = [k for k in range(i) if cur_matrix[k, i]]
+        sample[self.label] = rv
+
     def freeze(self, sample: Sample) -> Dict[str, Any]:
         self.validate(sample)
-
-        # Maintain a clean copy of what nasbench101 cell looks like
-        rv: Dict[str, Any] = {}
-        for i in range(1, len(self._cur_matrix)):
-            if i + 1 < len(self._cur_matrix):
-                rv[f'op{i}'] = self._cur_operations[i]
-            rv[f'input{i}'] = [k for k in range(i) if self._cur_matrix[k, i]]
-        return rv
+        assert self.label in sample
+        return sample[self.label]

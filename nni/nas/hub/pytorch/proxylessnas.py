@@ -7,6 +7,7 @@ from typing import Optional, Callable, List, Tuple, Iterator, Union, cast, overl
 import torch
 from torch import nn
 from nni.mutable import MutableExpression
+from nni.nas.space import current_model
 from nni.nas.nn.pytorch import ModelSpace, LayerChoice, Repeat, MutableConv2d, MutableLinear, MutableBatchNorm2d
 
 from .utils.pretrained import load_pretrained_weight

@@ -26,7 +26,7 @@ def test_nasbench201_cell(space_format: Type[ExecutableModelSpace], nn: ModuleTy
             return self.cell(x)
 
     net = Net()
-    assert net.cell.label == 'model/cell1'
+    assert net.cell.label == 'cell1'
     model = space_format.from_model(net)
     assert len(model.simplify()) == 6
     for _ in range(10):
@@ -39,7 +39,7 @@ def test_autoactivation(space_format: Type[ExecutableModelSpace]):
         def __init__(self):
             super().__init__()
             self.act = AutoActivation(unit_num=2, label='abc')
-            assert self.act.label == 'model/abc'
+            assert self.act.label == 'abc'
 
         def forward(self, x):
             return self.act(x)
@@ -47,7 +47,7 @@ def test_autoactivation(space_format: Type[ExecutableModelSpace]):
     model = space_format.from_model(Net())
     assert len(model.simplify()) == 5
     assert set(model.simplify().keys()) == set([
-        'model/abc/unary_0', 'model/abc/unary_1', 'model/abc/unary_2', 'model/abc/binary_0', 'model/abc/binary_1'
+        'abc/unary_0', 'abc/unary_1', 'abc/unary_2', 'abc/binary_0', 'abc/binary_1'
     ])
     for _ in range(10):
         selected_model = model.random().executable_model()
@@ -58,7 +58,7 @@ def test_nasbench101_cell(space_format: Type[ExecutableModelSpace], nn: ModuleTy
     if issubclass(space_format, GraphModelSpace):
         pytest.skip('GraphSpace does not support NasBench101Cell')
 
-    class Net(ModelSpace):
+    class Net(ModelSpace, label_prefix='model'):
         def __init__(self):
             super().__init__()
             self.cell = NasBench101Cell([lambda x: nn.Linear(x, x), lambda x: nn.Linear(x, x, bias=False)],
@@ -71,7 +71,7 @@ def test_nasbench101_cell(space_format: Type[ExecutableModelSpace], nn: ModuleTy
     assert net.cell.label == 'model/1'
     model = space_format.from_model(net)
     simplified = model.simplify()
-    expected_keys = ['model/1/num_nodes'] + [f'model/1/op{i}' for i in range(1, 4)] + [f'model/1/input{i}' for i in range(1, 5)]
+    expected_keys = ['model/1/num_nodes'] + [f'model/1/op{i}' for i in range(1, 4)] + [f'model/1/input{i}' for i in range(1, 5)] + ['model/1/final']
     assert set(simplified.keys()) == set(expected_keys)
 
     succeed_count = 0
