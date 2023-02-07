@@ -185,6 +185,7 @@ async function testFailedTrial() {
     await trialStopped.get(trial).promise;
     assert.ok(trialStarted.get(trial).settled);
 
+    await printLogFiles(path.join(globals.paths.experimentRoot, 'environments'));
     // exit code should be 1
     assert.equal(exitCodes[trial], 1);
 
