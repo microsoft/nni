@@ -249,6 +249,10 @@ class ChannelMaskConflict(MaskFix):
                         else:
                             channel_masks.append(
                                 (mask.abs().sum(1) != 0).int())
+                    elif type(m).__name__ == 'Embedding':
+                        if self.conv_prune_dim == 0:
+                            channel_masks.append(
+                                (mask.abs().sum(0) != 0).int())
                     elif type(m).__name__ == 'BatchNorm2d':
                         channel_masks.append(mask.int())
                     elif type(m).__name__ == 'ConvTranspose2d':
@@ -303,8 +307,11 @@ class ChannelMaskConflict(MaskFix):
                         new_mask[:, merged_index, :, :] = 1.
                 elif type(m).__name__ == 'Linear':
                     if self.conv_prune_dim == 0:
-                        new_mask[merged_index, :] = 1
+                        new_mask[merged_index, :] = 1.
                     elif self.conv_prune_dim == 1:
+                        new_mask[:, merged_index] = 1.
+                elif type(m).__name__ == 'Embedding':
+                    if self.conv_prune_dim == 0:
                         new_mask[:, merged_index] = 1.
                 elif type(m).__name__ == 'BatchNorm2d':
                     new_mask = merged_channel_mask.type_as(orig_mask)

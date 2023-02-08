@@ -126,7 +126,7 @@ class ChannelDependency(Dependency):
         self.prune_type = prune_type
         self.target_types = []
         if self.prune_type == 'Filter':
-            self.target_types.extend(['Conv2d', 'Linear', 'ConvTranspose2d'])
+            self.target_types.extend(['Conv2d', 'Linear', 'ConvTranspose2d', 'Embedding'])
         elif self.prune_type == 'Batchnorm':
             self.target_types.append('BatchNorm2d')
 
