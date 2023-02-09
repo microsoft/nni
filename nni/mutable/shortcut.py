@@ -6,8 +6,8 @@
 from __future__ import annotations
 
 __all__ = [
-    'choice', 'randint', 'uniform', 'quniform', 'loguniform', 'qloguniform',
-    'normal', 'qnormal', 'lognormal', 'qlognormal'
+    'choice', 'uniform', 'quniform', 'loguniform', 'qloguniform',
+    'normal', 'qnormal',
 ]
 
 import logging
@@ -66,24 +66,6 @@ def choice(label: str, choices: list[T]) -> Categorical[T] | LayerChoice:
     #     pass
 
     return Categorical(choices, label=label)
-
-
-def randint(label: str, lower: int, upper: int) -> Categorical[int]:
-    """Choosing a random integer between lower (inclusive) and upper (exclusive).
-
-    Currently it is translated to a :func:`choice`.
-    This behavior might change in future releases.
-
-    Examples
-    --------
-    >>> nni.randint('x', 1, 5)
-    Categorical([1, 2, 3, 4], label='x')
-    """
-    if not isinstance(lower, int) or not isinstance(upper, int):
-        raise TypeError('lower and upper must be integers.')
-    if lower >= upper:
-        raise ValueError('lower must be strictly smaller than upper.')
-    return Categorical(list(range(lower, upper)), label=label)
 
 
 def uniform(label: str, low: float, high: float) -> Numerical:
@@ -200,36 +182,3 @@ def qnormal(label: str, mu: float, sigma: float, quantize: float) -> Numerical:
     -0.1
     """
     return Numerical(mu=mu, sigma=sigma, quantize=quantize, label=label)
-
-
-def lognormal(label: str, mu: float, sigma: float) -> Numerical:
-    """Log-normal (in the context of NNI) is defined as the exponential transformation of a normal random variable,
-    with mean ``mu`` and deviation ``sigma``. That is::
-
-        exp(normal(mu, sigma))
-
-    In another word, the logarithm of the return value is normally distributed.
-
-    Examples
-    --------
-    >>> nni.lognormal('x', 4., 2.)
-    Numerical(-inf, inf, mu=4.0, sigma=2.0, log_distributed=True, label='x')
-    >>> nni.lognormal('x', 0., 1.).random()
-    2.3308575497749584
-    >>> np.log(x) for x in nni.lognormal('x', 4., 2.).grid(granularity=2)]
-    [2.6510204996078364, 4.0, 5.348979500392163]
-    """
-    return Numerical(mu=mu, sigma=sigma, log_distributed=True, label=label)
-
-
-def qlognormal(label: str, mu: float, sigma: float, quantize: float) -> Numerical:
-    """A combination of :func:`qnormal` and :func:`lognormal`.
-
-    Similar to :func:`qloguniform`, the quantize is done **after** the sample is drawn from the log-normal distribution.
-
-    Examples
-    --------
-    >>> nni.qlognormal('x', 4., 2., 1.)
-    Numerical(-inf, inf, mu=4.0, sigma=2.0, q=1.0, log_distributed=True, label='x')
-    """
-    return Numerical(mu=mu, sigma=sigma, log_distributed=True, quantize=quantize, label=label)

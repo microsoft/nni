@@ -1,14 +1,15 @@
 from collections import Counter
 
 import nni
+from nni.mutable._notimplemented import randint, lognormal, qlognormal
 
 def test_choice():
     t = nni.choice('t', ['a', 'b', 'c'])
     assert repr(t) == "Categorical(['a', 'b', 'c'], label='t')"
 
 def test_randint():
-    t = nni.randint('x', 1, 5)
-    assert repr(t) == "Categorical([1, 2, 3, 4], label='x')"
+    t = randint('x', 1, 5)
+    assert repr(t) == "RandomInteger([1, 2, 3, 4], label='x')"
 
 def test_uniform():
     t = nni.uniform('x', 0, 1)
@@ -48,10 +49,10 @@ def test_qnormal():
     assert repr(t) == "Numerical(-inf, inf, mu=0.0, sigma=1.0, q=0.1, label='x')"
 
 def test_lognormal():
-    t = nni.lognormal('x', 4., 2.)
+    t = lognormal('x', 4., 2.)
     assert repr(t) == "Numerical(-inf, inf, mu=4.0, sigma=2.0, log_distributed=True, label='x')"
     assert 54 < list(t.grid(granularity=1))[0] < 55
 
 def test_qlognormal():
-    t = nni.qlognormal('x', 4., 2., 1.)
+    t = qlognormal('x', 4., 2., 1.)
     assert repr(t) == "Numerical(-inf, inf, mu=4.0, sigma=2.0, q=1.0, log_distributed=True, label='x')"
