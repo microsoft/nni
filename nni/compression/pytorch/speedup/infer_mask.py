@@ -323,7 +323,6 @@ class AutoMaskInference:
         for para_name in self.weights:
             grad_zero = self.weights[para_name].grad.data == 0
             self.weight_mask[para_name][grad_zero] = 0
-        print('c')
 
     def update_direct_sparsity(self):
         # we don't need the gradient in the forward inference
