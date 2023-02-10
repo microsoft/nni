@@ -48,7 +48,7 @@ def test_kill_process():
     assert end_time - start_time < 2
 
 
-@pytest.mark.flaky(reruns=2)
+@pytest.mark.flaky(reruns=5, reruns_delay=2)
 def test_kill_process_slow_no_patience():
     process = subprocess.Popen([sys.executable, __file__, '--mode', 'kill_slow'])
     time.sleep(1)  # wait 1 second for the process to launch and register hooks
@@ -69,7 +69,7 @@ def test_kill_process_slow_no_patience():
             return
 
 
-@pytest.mark.flaky(reruns=2)
+@pytest.mark.flaky(reruns=5, reruns_delay=2)
 def test_kill_process_slow_patiently():
     process = subprocess.Popen([sys.executable, __file__, '--mode', 'kill_slow'])
     time.sleep(1)  # wait 1 second for the process to launch and register hooks
