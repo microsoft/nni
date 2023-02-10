@@ -102,7 +102,7 @@ def _generate_ratio_sparsity(metrics: _METRICS, target_spaces: _PRUNING_TARGET_S
             metric = metrics[module_name][target_name]
             min_sparse_ratio = target_space.min_sparse_ratio if target_space.min_sparse_ratio else 0.0
             max_sparse_ratio = target_space.max_sparse_ratio if target_space.max_sparse_ratio else 1.0
-            sparse_ratio = min(max_sparse_ratio, max(min_sparse_ratio, target_space.sparse_ratio))
+            sparse_ratio = min(max_sparse_ratio, max(min_sparse_ratio, target_space.sparse_ratio))  # type: ignore
             masks[module_name][target_name] = _ratio_mask(metric, sparse_ratio)
     return masks
 
@@ -114,7 +114,7 @@ def _generate_threshold_sparsity(metrics: _METRICS, target_spaces: _PRUNING_TARG
         for target_name, target_space in ts.items():
             metric = metrics[module_name][target_name]
             # metric < threshold will be 0, metric >= threshold will be 1
-            mask = _threshold_mask(metric, target_space.sparse_threshold)
+            mask = _threshold_mask(metric, target_space.sparse_threshold)  # type: ignore
 
             # if sparse_ratio does not meet `min_sparse_ratio`, `max_sparse_ratio`, re-generate mask
             sparse_ratio = 1.0 - mask.sum() / mask.numel()
@@ -133,8 +133,8 @@ def _generate_align_sparsity(masks: _MASKS, target_spaces: _PRUNING_TARGET_SPACE
     align_masks = defaultdict(dict)
     for module_name, ts in target_spaces.items():
         for target_name, target_space in ts.items():
-            src_mask = masks[module_name][target_space.align['target_name']]
-            align_dims: List[int] = target_space.align['dims']
+            src_mask = masks[module_name][target_space.align['target_name']]  # type: ignore
+            align_dims: List[int] = target_space.align['dims']  # type: ignore
             reduce_dims = [d for d in range(len(src_mask.shape)) if d not in align_dims and d - len(src_mask.shape) not in align_dims]
             align_masks[module_name][target_name] = src_mask.sum(reduce_dims).bool().float()
     return align_masks
@@ -144,17 +144,17 @@ def _generate_global_sparsity(metrics: _METRICS, target_spaces: _PRUNING_TARGET_
     groups: Dict[str, List[Tuple[str, str, PruningTargetSpace]]] = defaultdict(list)
     for module_name, ts in target_spaces.items():
         for target_name, target_space in ts.items():
-            groups[target_space.global_group_id].append((module_name, target_name, target_space))
+            groups[target_space.global_group_id].append((module_name, target_name, target_space))  # type: ignore
 
     masks = defaultdict(dict)
     for _, group in groups.items():
         group_sparse_ratio = None
         for _, _, target_space in group:
             if target_space.sparse_ratio is not None:
-                if group_sparsity_ratio is None:
-                    group_sparsity_ratio = target_space.sparse_ratio
+                if group_sparse_ratio is None:
+                    group_sparse_ratio = target_space.sparse_ratio
                 else:
-                    assert group_sparsity_ratio == target_space.sparse_ratio
+                    assert group_sparse_ratio == target_space.sparse_ratio
         assert group_sparse_ratio is not None
 
         # at least how many elements to mask
@@ -164,7 +164,7 @@ def _generate_global_sparsity(metrics: _METRICS, target_spaces: _PRUNING_TARGET_
         # how many elements in this group
         total_element_number = 0
         for _, _, target_space in group:
-            element_number = target_space.target.numel()
+            element_number = target_space.target.numel()  # type: ignore
             total_element_number += element_number
             sparse_number_low += int(element_number * target_space.min_sparse_ratio) if target_space.min_sparse_ratio else 0
             sparse_number_high += int(element_number * target_space.max_sparse_ratio) if target_space.max_sparse_ratio else element_number
@@ -196,7 +196,7 @@ def _generate_dependency_sparsity(metrics: _METRICS, target_spaces: _PRUNING_TAR
     groups: Dict[str, List[Tuple[str, str, PruningTargetSpace]]] = defaultdict(list)
     for module_name, ts in target_spaces.items():
         for target_name, target_space in ts.items():
-            groups[target_space.dependency_group_id].append((module_name, target_name, target_space))
+            groups[target_space.dependency_group_id].append((module_name, target_name, target_space))  # type: ignore
 
     masks = defaultdict(dict)
     for _, group in groups.items():
@@ -255,7 +255,7 @@ def _global_threshold_generate(metrics: _METRICS,
     buffer_elem = 0
     for module_name, target_name, target_space in group:
         metric = metrics[module_name][target_name]
-        grain_size = target_space.target.numel() // metric.numel()
+        grain_size = target_space.target.numel() // metric.numel()  # type: ignore
         for m in metric.cpu().detach().view(-1):
             if buffer_elem <= sparse_number:
                 heapq.heappush(buffer, (-m.item(), grain_size))
@@ -288,6 +288,7 @@ def _metric_fuse(metrics: _METRICS) -> torch.Tensor:
             else:
                 fused_metric = target_metric.clone()
             count += 1
+    assert fused_metric is not None
     return fused_metric / count
 
 
@@ -298,7 +299,7 @@ def _expand_masks(masks: _MASKS, target_spaces: _PRUNING_TARGET_SPACES) -> _MASK
         for target_name, target_mask in module_masks.items():
             target_space = target_spaces[module_name][target_name]
             if target_space._scaler:
-                new_masks[module_name][target_name] = target_space._scaler.expand(target_mask, target_space.target.shape)
+                new_masks[module_name][target_name] = target_space._scaler.expand(target_mask, target_space.shape)  # type: ignore
             else:
                 new_masks[module_name][target_name] = target_mask
     return new_masks

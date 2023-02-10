@@ -29,7 +29,7 @@ def norm_metrics(p: str | int, data: _DATA, target_spaces: _PRUNING_TARGET_SPACE
         {module_name: {target_name: pruning_target_space}}. Used to get the related scaler for each value in data.
     """
     def reduce_func(t: torch.Tensor) -> torch.Tensor:
-        return t.norm(p=p, dim=-1)
+        return t.norm(p=p, dim=-1)  # type: ignore
 
     metrics = defaultdict(dict)
     for module_name, module_data in data.items():

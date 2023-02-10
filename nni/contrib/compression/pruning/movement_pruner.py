@@ -11,7 +11,7 @@ import torch
 from torch.optim import Adam
 
 from .scheduled_pruner import ScheduledPruner
-from .tools import is_active_target, generate_sparsity, sum_sigmoid_metric
+from .tools import is_active_target, generate_sparsity
 from ..base.target_space import TargetType
 from ..base.wrapper import ModuleWrapper
 from ..utils import Evaluator
@@ -21,6 +21,47 @@ _logger = logging.getLogger(__name__)
 
 
 class MovementPruner(ScheduledPruner):
+    """
+    Movement pruner is an implementation of movement pruning.
+    This is a "fine-pruning" algorithm, which means the masks may change during each fine-tuning step.
+    Each weight element will be scored by the opposite of the sum of the product of weight and its gradient during each step.
+    This means the weight elements moving towards zero will accumulate negative scores,
+    the weight elements moving away from zero will accumulate positive scores.
+    The weight elements with low scores will be masked during inference.
+
+    The following figure from the paper shows the weight pruning by movement pruning.
+
+    .. image:: ../../../img/movement_pruning.png
+        :target: ../../../img/movement_pruning.png
+        :alt:
+
+    For more details, please refer to `Movement Pruning: Adaptive Sparsity by Fine-Tuning <https://arxiv.org/abs/2005.07683>`__.
+
+    Parameters
+    ----------
+    model
+        Model to be pruned.
+    config_list
+        A list of dict, each dict configure which module need to be pruned, and how to prune.
+    evaluator
+        TODO: {evaluator_docstring}
+    warmup_step
+        The total `optimizer.step()` number before start pruning for warm up.
+        Make sure ``warmup_step`` is smaller than ``cooldown_begin_step``.
+    cooldown_begin_step
+        The number of steps at which sparsity stops growing, note that the sparsity stop growing doesn't mean masks not changed.
+        The sparse ratio or sparse threshold after each `optimizer.step()` is::
+
+            final_sparse * (1 - (1 - (current_step - warm_up_step) / (cool_down_beginning_step - warm_up_step)) ** 3)
+    regular_scale
+        A scale factor used to control the movement score regular loss.
+        This factor only works on pruning target controlled by ``sparse_threshold``,
+        the pruning target controlled by ``sparse_ratio`` will not be regularized.
+
+    Examples
+    --------
+        TODO
+    """
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, warmup_step: int,
                  cooldown_begin_step: int, regular_scale: float = 1.):
@@ -34,6 +75,7 @@ class MovementPruner(ScheduledPruner):
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, warmup_step: int,
                  cooldown_begin_step: int, regular_scale: float = 1., existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         super().__init__(model, config_list, evaluator, existed_wrappers)
+        self.evaluator: Evaluator
         assert 0 <= warmup_step < cooldown_begin_step
         self.warmup_step = warmup_step
         self.cooldown_begin_step = cooldown_begin_step
@@ -61,7 +103,7 @@ class MovementPruner(ScheduledPruner):
                     # TODO: add input / output
                     if target_space.type is TargetType.PARAMETER:
                         # TODO: here using a shrinked score to save memory, but need to test the speed.
-                        score_val = torch.zeros_like(target_space.target)
+                        score_val = torch.zeros_like(target_space.target)  # type: ignore
                         if target_space._scaler is not None:
                             score_val = target_space._scaler.shrink(score_val)
                         target_space._wrapper.register_parameter(MOVEMENT_SCORE_PNAME.format(target_name),
@@ -97,7 +139,7 @@ class MovementPruner(ScheduledPruner):
                 for target_name, score in target_scores.items():
                     target_space = self._target_spaces[module_name][target_name]
                     if target_space.sparse_threshold is not None:
-                        reg_loss += torch.norm(score.sigmoid(), p=1) / score.numel()
+                        reg_loss += torch.norm(score.sigmoid(), p=1) / score.numel()  # type: ignore
                         count += 1
             ratio = max(0., min(1., 1 - (self._remaining_times / self.total_times) ** 3))
             if count > 0:
@@ -135,7 +177,7 @@ class MovementPruner(ScheduledPruner):
         data = defaultdict(dict)
         for module_name, ts in self._target_spaces.items():
             for target_name, target_space in ts.items():
-                score: torch.Tensor = getattr(target_space._wrapper, MOVEMENT_SCORE_PNAME.format(target_name), None)
+                score: torch.Tensor = getattr(target_space._wrapper, MOVEMENT_SCORE_PNAME.format(target_name), None)  # type: ignore
                 if score is not None:
                     data[module_name][target_name] = score.clone().detach()
         return data

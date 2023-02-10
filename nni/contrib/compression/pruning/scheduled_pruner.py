@@ -21,6 +21,7 @@ class ScheduledPruner(Pruner):
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None,
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         super().__init__(model, config_list, evaluator, existed_wrappers)
+        self.evaluator: Evaluator
 
         self.sparse_goals: Dict[str, Dict[str, Dict[str, float]]] = defaultdict(dict)
         self._goals_initialized = False
@@ -82,8 +83,8 @@ class ComboPruner(ScheduledPruner):
 
     def _initialize_state(self):
         self._update_sparse_goals_by_ratio(self._initial_ratio)
-        self.bound_pruner.interval_steps = self.interval_steps
-        self.bound_pruner.total_times = self.total_times
+        self.bound_pruner.interval_steps = self.interval_steps  # type: ignore
+        self.bound_pruner.total_times = self.total_times  # type: ignore
 
     def _register_trigger(self, evaluator: Evaluator):
         self._current_step = 0
@@ -116,12 +117,46 @@ class ComboPruner(ScheduledPruner):
 
 
 class LinearPruner(ComboPruner):
+    """
+    The sparse ratio or sparse threshold in the bound pruner will increase in a linear way from 0. to final::
+
+        current_sparse = (1 - initial_ratio) * current_times / total_times * final_sparse
+
+    If min/max sparse ratio is also set in target setting, they will also synchronous increase in a linear way.
+
+    Note that this pruner can not be initialized by ``LinearPruner.from_compressor(...)``.
+
+    Parameters
+    ----------
+    pruner
+        The bound pruner.
+    interval_steps
+        A integer number, for each ``interval_steps`` training, the sparse goal will be updated.
+    total_times
+        A integer number, how many times to update the sparse goal in total.
+    evaluator
+        TODO
+
+    Examples
+    --------
+        TODO
+    """
+
     def update_sparse_goals(self, current_times: int):
         ratio = (1 - self._initial_ratio) * current_times / self.total_times
         self._update_sparse_goals_by_ratio(ratio)
 
 
 class AGPPruner(ComboPruner):
+    """
+    The sparse ratio or sparse threshold in the bound pruner will increase in a AGP way from 0. to final::
+
+        current_sparse =  (1 - (1 - self._initial_ratio) * (1 - current_times / self.total_times) ** 3) * final_sparse
+
+    If min/max sparse ratio is also set in target setting, they will also synchronous increase in a AGP way.
+
+    Note that this pruner can not be initialized by ``AGPPruner.from_compressor(...)``.
+    """
     def update_sparse_goals(self, current_times: int):
         ratio = 1 - (1 - self._initial_ratio) * (1 - current_times / self.total_times) ** 3
         self._update_sparse_goals_by_ratio(ratio)

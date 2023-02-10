@@ -21,5 +21,6 @@ def active_sparse_targets_filter(target_spaces: _PRUNING_TARGET_SPACES) -> _DATA
     for module_name, ts in target_spaces.items():
         for target_name, target_space in ts.items():
             if is_active_target(target_space):
+                assert target_space.target is not None
                 active_targets[module_name][target_name] = target_space.target.clone().detach()
     return active_targets

@@ -66,7 +66,7 @@ class _NormPruner(Pruner):
                     self._remaining_times -= 1
                 debug_msg = f'{self.__class__.__name__} generate masks, remaining times {self._remaining_times}'
                 _logger.debug(debug_msg)
-            if self._current_step == self.interval_steps and (self._remaining_times == 'unlimited' or self._remaining_times > 0):
+            if self._current_step == self.interval_steps and (self._remaining_times == 'unlimited' or self._remaining_times > 0):  # type: ignore
                 self._current_step = 0
             if self._is_first_step:
                 self._is_first_step = False
@@ -78,6 +78,21 @@ class _NormPruner(Pruner):
 
 
 class LevelPruner(_NormPruner):
+    """
+    This is a basic pruner, and in some papers called it magnitude pruning or fine-grained pruning.
+    It will mask the smallest magnitude weights in each specified layer by a saprsity ratio configured in the config list.
+
+    Parameters
+    ----------
+    model
+        Model to be pruned.
+    config_list
+        A list of dict, each dict configure which module need to be pruned, and how to prune.
+
+    Examples
+    --------
+        TODO
+    """
     p = 1
 
     def _set_default_sparse_granularity(self, target_space: PruningTargetSpace):
@@ -85,22 +100,87 @@ class LevelPruner(_NormPruner):
 
 
 class L1NormPruner(_NormPruner):
+    """
+    L1 norm pruner computes the l1 norm of the layer weight on the first dimension,
+    then prune the weight blocks on this dimension with smaller l1 norm values.
+    i.e., compute the l1 norm of the filters in convolution layer as metric values,
+    compute the l1 norm of the weight by rows in linear layer as metric values.
+
+    For more details, please refer to `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__.
+
+    Parameters
+    ----------
+    model
+        Model to be pruned.
+    config_list
+        A list of dict, each dict configure which module need to be pruned, and how to prune.
+
+    Examples
+    --------
+        TODO
+    """
     p = 1
 
 
 class L2NormPruner(_NormPruner):
+    """
+    L2 norm pruner is a variant of L1 norm pruner.
+    The only different between L2 norm pruner and L1 norm pruner is
+    L2 norm pruner prunes the weight with the smallest L2 norm of the weights.
+
+    Parameters
+    ----------
+    model
+        Model to be pruned.
+    config_list
+        A list of dict, each dict configure which module need to be pruned, and how to prune.
+
+    Examples
+    --------
+        TODO
+    """
     p = 2
 
 
 class TaylorFOWeightPruner(Pruner):
+    """
+    Taylor FO weight pruner is a pruner which prunes on the first weight dimension by default,
+    based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity.
+    The estimated importance is defined as the paper
+    `Importance Estimation for Neural Network Pruning <http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf>`__.
+
+    :math:`\widehat{\mathcal{I}}_{\mathcal{S}}^{(1)}(\mathbf{W}) \triangleq \sum_{s \in \mathcal{S}} \mathcal{I}_{s}^{(1)}(\mathbf{W})=\sum_{s \in \mathcal{S}}\left(g_{s} w_{s}\right)^{2}`
+
+    Parameters
+    ----------
+    model
+        Model to be pruned.
+    config_list
+        A list of dict, each dict configure which module need to be pruned, and how to prune.
+    evaluator
+        TODO: {evaluator_docstring}
+    training_steps
+        The step number used to collect gradients, the masks will be generated after training_steps training.
+
+    Examples
+    --------
+        TODO
+    """
+
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, training_steps: int):
+        ...
+
+    @overload
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, training_steps: int,
+                 existed_wrappers: Dict[str, ModuleWrapper]):
         ...
 
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, training_steps: int,
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         super().__init__(model=model, config_list=config_list, evaluator=evaluator,
                          existed_wrappers=existed_wrappers)
+        self.evaluator: Evaluator
         self.training_steps = training_steps
 
         # trigger masks generation when self._current_step == self.training_steps
@@ -150,7 +230,7 @@ class TaylorFOWeightPruner(Pruner):
                 if is_active_target(target_space):
                     # TODO: add input/output
                     if target_space.type is TargetType.PARAMETER:
-                        hook = TensorHook(target_space.target, target_name, functools.partial(collector, target=target_space.target))
+                        hook = TensorHook(target_space.target, target_name, functools.partial(collector, target=target_space.target))  # type: ignore
                         hook_list.append(hook)
                         self.hooks[module_name][target_name] = hook
                     else:
@@ -170,7 +250,7 @@ class TaylorFOWeightPruner(Pruner):
                     self._remaining_times -= 1
                 debug_msg = f'{self.__class__.__name__} generate masks, remaining times {self._remaining_times}'
                 _logger.debug(debug_msg)
-            if self._current_step == self.interval_steps and (self._remaining_times == 'unlimited' or self._remaining_times > 0):
+            if self._current_step == self.interval_steps and (self._remaining_times == 'unlimited' or self._remaining_times > 0):  # type: ignore
                 self._current_step = 0
                 for _, hooks in self.hooks.items():
                     for _, hook in hooks.items():
