@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Literal, Tuple
 import torch
 from torch import Tensor
 
-from nni.compression.pytorch.utils.scaling import Scaling
+from ..utils.scaling import Scaling
 
 
 class TargetType(Enum):
