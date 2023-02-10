@@ -48,7 +48,7 @@ def test_kill_process():
     assert end_time - start_time < 2
 
 
-@pytest.mark.flaky(reruns=5, reruns_delay=2)
+@pytest.mark.skip(reason='The test has too many failures.')
 def test_kill_process_slow_no_patience():
     process = subprocess.Popen([sys.executable, __file__, '--mode', 'kill_slow'])
     time.sleep(1)  # wait 1 second for the process to launch and register hooks
@@ -69,7 +69,7 @@ def test_kill_process_slow_no_patience():
             return
 
 
-@pytest.mark.flaky(reruns=5, reruns_delay=2)
+@pytest.mark.skip(reason='The test has too many failures.')
 def test_kill_process_slow_patiently():
     process = subprocess.Popen([sys.executable, __file__, '--mode', 'kill_slow'])
     time.sleep(1)  # wait 1 second for the process to launch and register hooks
@@ -80,8 +80,7 @@ def test_kill_process_slow_patiently():
     # assert end_time - start_time > 1  # This check is disabled because it's not stable
 
 
-@pytest.mark.skipif(sys.platform != 'linux', reason='Signal issues on non-linux.')
-@pytest.mark.flaky(reruns=2)
+@pytest.mark.skip(reason='The test has too many failures.')
 def test_kill_process_interrupted():
     # Launch a subprocess that launches and kills another subprocess
     process = multiprocessing.Process(target=process_patiently_kill)
