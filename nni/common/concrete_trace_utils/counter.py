@@ -236,34 +236,3 @@ def counter_pass(module: torch.fx.GraphModule, *args, verbose=False) -> torch.fx
     if verbose:
         print(interp.summarize())
     return module
-
-
-if __name__ == '__main__':
-    from torch.fx import symbolic_trace
-    import torchvision.models as tm
-
-    zoo = [
-        tm.alexnet,
-        tm.convnext_base,   # stochastic depth
-        tm.densenet121,
-        tm.efficientnet_v2_s,   # stochastic depth
-        tm.googlenet,   # output bad case
-        # tm.inception_v3,  # bad case
-        tm.mobilenet_v2,
-        tm.mobilenet_v3_small,
-        tm.mnasnet0_5,
-        tm.resnet18,
-        tm.regnet_x_16gf,
-        tm.resnext50_32x4d,
-        tm.shufflenet_v2_x0_5,
-        tm.squeezenet1_0,
-        # tm.swin_s,  # fx bad case
-        tm.vgg11,
-        tm.vit_b_16,
-        tm.wide_resnet50_2,
-    ]
-
-    for m in zoo:
-        model = m()
-        model = symbolic_trace(model)
-        model = counter_pass(model, torch.randn(8, 3, 224, 224), verbose=True)
