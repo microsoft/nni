@@ -15,7 +15,41 @@ from ..utils.evaluator import Evaluator
 
 class QATQuantizer(Quantizer):
     """
-    TODO
+    Quantizer defined in:
+    `Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
+    <http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf>`__
+
+    Authors Benoit Jacob and Skirmantas Kligys provide an algorithm to quantize the model with training.
+
+    ..
+
+        We propose an approach that simulates quantization effects in the forward pass of training.
+        Backpropagation still happens as usual, and all weights and biases are stored in floating point
+        so that they can be easily nudged by small amounts.
+        The forward propagation pass however simulates quantized inference as it will happen in the inference engine,
+        by implementing in floating-point arithmetic the rounding behavior of the quantization scheme:
+
+        * Weights are quantized before they are convolved with the input. If batch normalization (see [17]) is used for the layer,
+          the batch normalization parameters are “folded into” the weights before quantization.
+
+        * Activations are quantized at points where they would be during inference,
+          e.g. after the activation function is applied to a convolutional or fully connected layer's output,
+          or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
+
+    Parameters
+    ----------
+    model
+        Model to be quantized.
+    config_list
+        A list of dict, each dict configure which module need to be quantized, and how to quantize.
+    evaluator
+        TODO: {evaluator_docstring}
+    quant_start_step
+        The steps for warmup training before QAT begin.
+
+    Examples
+    --------
+        TODO
     """
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
@@ -117,6 +151,24 @@ class QATQuantizer(Quantizer):
         evaluator.patch_optimizer_step(before_step_tasks=[], after_step_tasks=[optimizer_task])
 
     def compress(self, max_steps: int | None = None, max_epochs: int | None = None):
+        """
+        Start quantization aware training.
+
+        Parameters
+        ----------
+        max_steps
+            The max training step.
+        max_epochs
+            The max training epochs.
+
+        Return
+        ------
+        torch.nn.Module
+            A simulated quantized model.
+        Dict[str, Dict[str, Tensor | Any]]
+            The calibration config, the format is {module_name: {target_name: {key: val}}},
+            contains keys ['scale', 'zero_point', 'quant_dtype', 'quant_scheme'].
+        """
         self.evaluator.bind_model(self.bound_model, self._get_param_names_map())
         self.register_trigger(self.evaluator)
         self.evaluator.train(max_steps, max_epochs)
