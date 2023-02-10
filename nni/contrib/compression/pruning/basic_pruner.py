@@ -43,6 +43,10 @@ class _NormPruner(Pruner):
         self.interval_steps = -1
         self.total_times: int | Literal['unlimited'] = 1
 
+    @classmethod
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], evaluator: Evaluator | None = None):
+        return super().from_compressor(compressor, new_config_list, evaluator=evaluator)
+
     def _collect_data(self) -> _DATA:
         return active_sparse_targets_filter(self._target_spaces)
 
@@ -195,8 +199,8 @@ class TaylorFOWeightPruner(Pruner):
         self.total_times: int | Literal['unlimited'] = 1
 
     @classmethod
-    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], training_steps: int):
-        return super().from_compressor(compressor, new_config_list, training_steps=training_steps)
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], training_steps: int, evaluator: Evaluator | None = None):
+        return super().from_compressor(compressor, new_config_list, training_steps=training_steps, evaluator=evaluator)
 
     def _collect_data(self) -> Dict[str, Dict[str, torch.Tensor]]:
         data = defaultdict(dict)
@@ -260,8 +264,7 @@ class TaylorFOWeightPruner(Pruner):
 
     def compress(self):
         self.evaluator.bind_model(self.bound_model, self._get_param_names_map())
-        self._register_hooks(self.evaluator)
-        self._register_trigger(self.evaluator)
+        self.compress_fuse(self.evaluator)
         self.evaluator.train(self.training_steps)
         self.evaluator.unbind_model()
         return self.bound_model, self.get_masks()

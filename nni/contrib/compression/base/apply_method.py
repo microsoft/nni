@@ -94,12 +94,24 @@ def movement_add_mask(target: torch.Tensor, target_space: PruningTargetSpace):
         return torch.add(target, _StraightThrough.apply(score, trans_mask))
 
 
+def slim_mul_mask(target: torch.Tensor, target_space: PruningTargetSpace):
+    scaling_factor = getattr(target_space._wrapper, f'{target_space._target_name}_slim_factor', None)
+    if scaling_factor is None:
+        return mul_mask(target, target_space)
+    else:
+        assert target_space.shape is not None
+        if target_space._scaler is not None:
+            scaling_factor = target_space._scaler.expand(scaling_factor, target_space.shape)
+        return mul_mask(torch.mul(target, scaling_factor), target_space)
+
+
 pruning_apply_methods = {
     'bypass': bypass,
     'mul': mul_mask,
     'add': add_mask,
     'movement_mul': movement_mul_mask,
     'movement_add': movement_add_mask,
+    'slim_mul': slim_mul_mask
 }
 
 

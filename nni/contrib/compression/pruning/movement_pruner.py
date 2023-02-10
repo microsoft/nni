@@ -12,6 +12,7 @@ from torch.optim import Adam
 
 from .scheduled_pruner import ScheduledPruner
 from .tools import is_active_target, generate_sparsity
+from ..base.compressor import Compressor
 from ..base.target_space import TargetType
 from ..base.wrapper import ModuleWrapper
 from ..utils import Evaluator
@@ -87,6 +88,12 @@ class MovementPruner(ScheduledPruner):
         self.total_times = (self.cooldown_begin_step - self.warmup_step) // self.interval_steps
         self._remaining_times: int
         self.scores: Dict[str, Dict[str, torch.Tensor]] = defaultdict(dict)
+
+    @classmethod
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], warmup_step: int,
+                        cooldown_begin_step: int, regular_scale: float = 1., evaluator: Evaluator | None = None):
+        return super().from_compressor(compressor, new_config_list, warmup_step=warmup_step, cooldown_begin_step=cooldown_begin_step,
+                                       regular_scale=regular_scale, evaluator=evaluator)
 
     def _set_apply_method(self):
         for _, ts in self._target_spaces.items():
