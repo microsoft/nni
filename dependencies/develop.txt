@@ -10,9 +10,11 @@ pylint < 2.15
 pyright == 1.1.250
 pytest
 pytest-cov
+pytest-rerunfailures
 rstcheck >= 6.0
 sphinx >= 4.5
 sphinx-argparse-nni >= 0.4.0
+sphinx-comments
 sphinx-copybutton
 sphinx-gallery
 sphinx-intl

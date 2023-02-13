@@ -50,7 +50,7 @@ def get_query_type(key):
     '''get update query type'''
     if key == 'trialConcurrency':
         return '?update_type=TRIAL_CONCURRENCY'
-    if key == 'maxExecDuration':
+    if key == 'maxExperimentDuration':
         return '?update_type=MAX_EXEC_DURATION'
     if key == 'searchSpace':
         return '?update_type=SEARCH_SPACE'
@@ -100,7 +100,7 @@ def update_duration(args):
     args.value = parse_time(args.value)
     args.port = get_experiment_port(args)
     if args.port is not None:
-        if update_experiment_profile(args, 'maxExecDuration', int(args.value)):
+        if update_experiment_profile(args, 'maxExperimentDuration', int(args.value)):
             print_normal('Update %s success!' % 'duration')
         else:
             print_error('Update %s failed!' % 'duration')
