@@ -166,7 +166,7 @@ class QuantizationSetting(ModuleSetting):
         }
     }
 
-    avtivation_setting = {
+    activation_setting = {
         '_input_': {
             'quant_dtype': None,
             'quant_scheme': None,
@@ -185,11 +185,11 @@ class QuantizationSetting(ModuleSetting):
     registry = {
         'Linear': default_setting,
         'Conv2d': default_setting,
-        'ReLU': avtivation_setting,
-        'ReLU6': avtivation_setting,
+        'ReLU': activation_setting,
+        'ReLU6': activation_setting,
         'BatchNorm1d': default_setting,
-        'Hardtanh': avtivation_setting,
-        'MaxPool2d': avtivation_setting,
+        'Hardtanh': activation_setting,
+        'MaxPool2d': activation_setting,
     }
 
 

@@ -84,7 +84,7 @@ class Compressor:
         evaluator = compressor.evaluator if compressor.evaluator else evaluator
 
         # note that here don't have `mode` because subclass should know what its mode is.
-        return cls(model=model, config_list=new_config_list, evaluator=evaluator, existed_wrappers=existed_wrappers, *args, **kwargs)
+        return cls(model=model, config_list=new_config_list, evaluator=evaluator, existed_wrappers=existed_wrappers, **kwargs)
 
     def _validate_config(self):
         pass
@@ -159,7 +159,7 @@ class Pruner(Compressor):
 
     def _register_scalers(self):
         # scalers are used to support different sparse/quant granularity
-        register_scalers(self._target_spaces, self._set_default_sparse_granularity)  # type: ignore
+        register_scalers(self._target_spaces, self._set_default_sparse_granularity)  # type: ignore  # type: ignore
 
     def _set_default_sparse_granularity(self, target_space: PruningTargetSpace) -> List[int] | str | None:
         if target_space.type is TargetType.PARAMETER:
@@ -309,4 +309,4 @@ def register_scalers(target_spaces: _PRUNING_TARGET_SPACES | _QUANTIZATION_TARGE
                     kernel_padding_val = target_space.granularity[2]
                 kernel_padding_mode = kernel_padding_mode if kernel_padding_mode else 'front'
                 kernel_padding_val = kernel_padding_val if kernel_padding_val else 1
-                target_space._scaler = Scaling(kernel_size, kernel_padding_mode, kernel_padding_val)  # type: ignore
+                target_space._scaler = Scaling(kernel_size, kernel_padding_mode, kernel_padding_val)

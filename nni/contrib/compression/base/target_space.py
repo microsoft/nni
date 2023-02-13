@@ -21,6 +21,27 @@ class TargetType(Enum):
 
 
 class TargetSpace:
+    """
+    TargetSpace is a container to handle all compression information related to a specific compression target,
+    note that it has the ability to register information in the wrapper,
+    this because in most compression cases need to register tensor (mask, scale, zero point) as buffer/parameter in the model.
+
+    Parameters
+    ----------
+    wrapper
+        The wrapper of a module.
+    target_name
+        If the target is a parameter, the name is the attr name in the module, i.e., 'weight', 'bias'.
+        If the target is the module input/output, the name should have prefix '_input_'/'_output_',
+        then follow a number or name, i.e., '_input_0', '_output_hidden_state',
+        number is the position of this input/output in all inputs/outputs,
+        name is the input argument name or outputs dict key.
+    target_type
+        'input' or 'output' or 'parameter'.
+    setting
+        The compression setting, i.e., {'sparse_ratio': 0.1}.
+    """
+
     def __init__(self, wrapper: torch.nn.Module, target_name: str, target_type: TargetType, setting: Dict[str, Any] | None = None):
         assert target_type in TargetType
         self._wrapper = wrapper
