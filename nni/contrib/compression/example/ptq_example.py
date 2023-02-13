@@ -19,6 +19,7 @@ from nni.contrib.compression.utils import TorchEvaluator
 torch.manual_seed(0)
 device = 'cuda'
 
+
 class NaiveModel(torch.nn.Module):
     def __init__(self):
         super().__init__()

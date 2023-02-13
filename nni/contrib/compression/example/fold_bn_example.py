@@ -49,12 +49,6 @@ config_list_1 = [{
     'quant_dtype': 'int8',
     'quant_scheme': 'affine',
     'granularity': 'default',
-},{
-    'op_names': ['relu2'],
-    'target_names': ['_output_'],
-    'quant_dtype': 'int8',
-    'quant_scheme': 'affine',
-    'granularity': 'default',
 }]
 
 config_list_2 = [
