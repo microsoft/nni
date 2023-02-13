@@ -216,9 +216,15 @@ nni.report_final_result(param['x'])
 
     // wait for it to request parameter
     await paramSent.get(trial).promise;
+
     // wait a while for it to report first intermediate result
-    // might be longer on macOS
-    await setTimeout(process.platform == 'darwin' ? 1000 : 100);  // TODO: use an env var to distinguish pipeline so we can reduce the delay
+    for (let i = 0; metrics.length === 0; i++) {
+        await setTimeout(10);
+        if (i === 1000) {
+            console.error('[WARNING] test stop trial: no metric in 1 second');
+        }
+    }
+
     await ts.stopTrial(trial);
 
     // the callbacks should be invoked
