@@ -227,6 +227,7 @@ class QuantizationTargetSpace(TargetSpace):
             raise TypeError(f'Unsupported quant_dtype: {quant_dtype}')
         return qmin, qmax
 
+
     @property
     def _scale_name(self) -> str:
         return f'{self._target_name}_scale'
@@ -252,6 +253,17 @@ class QuantizationTargetSpace(TargetSpace):
         return f'{self._target_name}_tracked_max'
 
     @property
+    def quant_bits(self) -> int:
+        quant_dtype = self.quant_dtype if self.quant_dtype else 'int8'
+        if quant_dtype.startswith('int'):
+            quant_bit = int(quant_dtype.split('int', 1)[1])
+        elif quant_dtype.startswith('uint'):
+            quant_bit = int(quant_dtype.split('uint', 1)[1])
+        else:
+            raise TypeError(f'Unsupported quant_dtype: {quant_dtype}')
+        return quant_bit
+
+    @property
     def scale(self) -> Tensor | None:
         return self._get_wrapper_attr(self._scale_name)
 
@@ -266,6 +278,7 @@ class QuantizationTargetSpace(TargetSpace):
     @zero_point.setter
     def zero_point(self, val: Tensor | None) -> Tensor | None:
         self._tensor_setter_helper(self._zero_point_name, val)
+
 
     @property
     def qmax(self) -> int:

@@ -576,6 +576,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 result,
                 QuantType.OUTPUT,
                 self)
+
         return result
 
 

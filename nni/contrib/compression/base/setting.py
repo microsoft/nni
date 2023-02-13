@@ -187,6 +187,9 @@ class QuantizationSetting(ModuleSetting):
         'Conv2d': default_setting,
         'ReLU': avtivation_setting,
         'ReLU6': avtivation_setting,
+        'BatchNorm1d': default_setting,
+        'Hardtanh': avtivation_setting,
+        'MaxPool2d': avtivation_setting,
     }
 
 

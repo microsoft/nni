@@ -5,10 +5,13 @@ from __future__ import annotations
 
 import logging
 import inspect
+from collections import defaultdict
 from typing import Any, Callable, Dict, List, Tuple, Type, Union, Literal
 
 import torch
 from torch import Tensor
+import torch.nn as nn
+import torch.nn.functional as F
 
 from .apply_method import pruning_apply_methods, quant_apply_methods
 from .config import select_modules_by_config
@@ -19,6 +22,15 @@ from .target_space import (
     PruningTargetSpace,
     QuantizationTargetSpace,
     DistillationTargetSpace
+)
+from .fuse_modules import fuse_modules
+from ..utils.fused_config import (
+    get_module,
+    validate_fused_modules_config,
+    find_fused_module_list,
+    get_identity_module_set,
+    update_config,
+    check_bias,
 )
 
 _logger = logging.getLogger(__name__)
@@ -147,7 +159,6 @@ class ModuleWrapper(torch.nn.Module):
             settings.pop(name)
         new_target_spaces = self._create_target_spaces(settings, target_space_cls)
         target_spaces.update(new_target_spaces)  # type: ignore
-
         # return the new registered target spaces
         return new_target_spaces
 
@@ -315,7 +326,6 @@ class ModuleWrapper(torch.nn.Module):
 
     def forward(self, *args, **kwargs):
         args, kwargs = self.patch_inputs(*args, **kwargs)
-
         params_dict = {}
         params_dict.update({k: v.target for k, v in self.pruning_target_spaces.items() if v.type is TargetType.PARAMETER})
         params_dict.update({k: v.target for k, v in self.quantization_target_spaces.items() if v.type is TargetType.PARAMETER})
@@ -335,33 +345,66 @@ class ModuleWrapper(torch.nn.Module):
         return outputs
 
 
-def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
-                      mode: Literal['pruning', 'quantization', 'distillation'],
-                      existed_wrappers: Dict[str, ModuleWrapper] | None = None,
-                      ) -> Tuple[Dict[str, ModuleWrapper], Dict[str, Dict[str, TargetSpace]]]:
-    assert mode in ['pruning', 'quantization', 'distillation']
-    configured_target_spaces = {}
-    existed_wrappers = existed_wrappers if existed_wrappers else {}
-    module_wrappers = {k: v for k, v in existed_wrappers.items()}
-    for config in config_list:
-        modules, public_config = select_modules_by_config(model, config)
-        for module_name, module in modules.items():
-            if module_name in module_wrappers:
-                wrapper = module_wrappers[module_name]
-                wrapper.unfreeze()
-                target_spaces = wrapper.extend_target_spaces(public_config, mode)
-            else:
-                wrapper = ModuleWrapper(module, module_name, {mode: public_config})
-                module_wrappers[module_name] = wrapper
-                if mode == 'pruning':
-                    target_spaces = {k: v for k, v in wrapper.pruning_target_spaces.items()}
-                elif mode == 'quantization':
-                    target_spaces = {k: v for k, v in wrapper.quantization_target_spaces.items()}
-                else:
-                    target_spaces = {k: v for k, v in wrapper.distillation_target_spaces.items()}
-            configured_target_spaces[module_name] = target_spaces
+class FusionModuleWrapper(ModuleWrapper):
+    def __init__(self, module: torch.nn.Module, module_name: str, config: Dict[str, Dict[str, Any]] | None = None,
+                 fused_modules: List[nn.Module] | None = None):
+        super().__init__(module, module_name, config)
+        self.fused_modules = fused_modules
+        self.is_bias = check_bias(self.module) # used for fold_bn
+        self.register_bias()
 
-    return module_wrappers, configured_target_spaces
+    def register_bias(self):
+        if isinstance(self.module, (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)):
+            return
+        types = {type(module) for module in self.fused_modules[1:]}
+        intersec_types = types.intersection({nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d})
+        if self.is_bias and 'bias' not in self.quantization_target_spaces and len(intersec_types) > 0:
+            self.module.register_parameter('original_bias', torch.nn.Parameter(self.module.bias.detach().clone()))
+            delattr(self.module, 'bias')
+            self.module.register_buffer('bias', self.module.original_bias.data)
+
+    def unwrap(self):
+        super().unwrap()
+        if getattr(self.module, "original_bias", None) is not None:
+            delattr(self.module, 'bias')
+            self.module.register_parameter('bias', torch.nn.Parameter(self.module.original_bias.detach().clone()))
+            delattr(self.module, 'original_bias')
+        if not self.is_bias and check_bias(self.module):
+            delattr(self.module, 'bias')
+            self.module.register_parameter('bias', None)
+
+    def forward(self, *args, **kwargs):
+        args, kwargs = self.patch_inputs(*args, **kwargs)
+        params_dict = {}
+        params_dict.update({k: v.target for k, v in self.pruning_target_spaces.items() if v.type is TargetType.PARAMETER})
+        params_dict.update({k: v.target for k, v in self.distillation_target_spaces.items() if v.type is TargetType.PARAMETER})
+
+        if self.fused_modules is None or len(self.fused_modules) == 0:
+            params_dict.update({k: v.target for k, v in self.quantization_target_spaces.items() if v.type is TargetType.PARAMETER})
+            activation_func_lis = []
+        else:
+            quant_params_dict, activation_func_lis = fuse_modules(self, *args, **kwargs)
+            params_dict.update(quant_params_dict)
+
+        params_dict = self.patch_params(params_dict)
+        for target_name, patched_param in params_dict.items():
+            setattr(self.module, target_name, patched_param)
+
+        outputs = self.module_forward(*args, **kwargs)
+        #fuse activation func
+        for activation_module in activation_func_lis:
+            outputs = activation_module._nni_wrapper.module_forward(outputs)
+
+        outputs = self.patch_outputs(outputs)
+        return outputs
+
+
+class IdentityModuleWrapper(ModuleWrapper): # only aviable for batchnorm
+    '''
+    used to replace fused modules
+    '''
+    def forward(self, inputs):
+        return inputs
 
 
 def track_target_shape(wrapper: ModuleWrapper, target_name: str, target: Tensor):
@@ -379,3 +422,96 @@ def track_target_shape(wrapper: ModuleWrapper, target_name: str, target: Tensor)
     if target_name in wrapper.distillation_target_spaces:
         if wrapper.distillation_target_spaces[target_name].type is not TargetType.PARAMETER:
             wrapper.distillation_target_spaces[target_name].shape = [_ for _ in target.shape]
+
+
+def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
+                      mode: Literal['pruning', 'quantization', 'distillation'],
+                      existed_wrappers: Dict[str, ModuleWrapper] | None = None,
+                      fused_modules_names_lis: List[List[str]] | None = None,
+                      ) -> Tuple[Dict[str, ModuleWrapper], Dict[str, Dict[str, TargetSpace]]]:
+    assert mode in ['pruning', 'quantization', 'distillation']
+    # check the validation of fused_modules_names_lis
+    fused_modules_names_lis = fused_modules_names_lis.copy() if fused_modules_names_lis else []
+    validate_fused_modules_config(model, config_list, fused_modules_names_lis)
+    identity_modules_set = get_identity_module_set(fused_modules_names_lis)
+    # create target_spaces and wrappers
+    configured_target_spaces = {}
+    existed_wrappers = existed_wrappers if existed_wrappers else {}
+    module_wrappers = {k: v for k, v in existed_wrappers.items()}
+    for config in config_list:
+        modules, public_config = select_modules_by_config(model, config)
+        for module_name, module in modules.items():
+            fused_modules_names = find_fused_module_list(model, fused_modules_names_lis, module_name, mode)
+            old_wrapper = module_wrappers.get(module_name, None)
+            if len(fused_modules_names) > 0: #fusion model
+                # use the settings of relu to update fuse_modules's configuration
+                wrapper, target_spaces = create_fusion_wrapper(model, module, module_name, fused_modules_names, \
+                            mode, public_config, old_wrapper)
+                fused_modules_names_lis.remove(fused_modules_names)
+            elif module_name in identity_modules_set:
+                raise ValueError(f"don't provide quantization configuration for identity module:{module_name}")
+            else:  # create a normal module wrapper
+                wrapper, target_spaces = create_module_wrapper(module, module_name, mode, public_config, old_wrapper)
+
+            module_wrappers[module_name] = wrapper
+            configured_target_spaces[module_name] = target_spaces
+
+    # non-config
+    assert len(fused_modules_names_lis) == 0, f"all fused modules{[item[0] for item in fused_modules_names_lis]} should be defined in the config list"
+
+    for module_name, module in model.named_modules():
+        if module_name in identity_modules_set:
+            module_wrappers[module_name] = IdentityModuleWrapper(module, module_name, None)
+            identity_modules_set.remove(module_name)
+
+    assert len(identity_modules_set) == 0, f"the identity modules:{identity_modules_set} are not in the model"
+
+    return module_wrappers, configured_target_spaces
+
+
+def create_fusion_wrapper(model: nn.Module, module: nn.Module, module_name: str, fused_modules_names: List[str], \
+        mode: Literal['quantization'], config: Dict[str, Any], wrapper: ModuleWrapper=None):
+    assert mode == 'quantization', "Modules fusion only happens in the quantization process"
+
+    if isinstance(wrapper, IdentityModuleWrapper):
+        raise ValueError(f"identity module: {module_name} can not be regarded as fusion module")
+
+    fused_modules = [get_module(model, f_module_name) for f_module_name in fused_modules_names]
+    if isinstance(wrapper, FusionModuleWrapper):
+        raise ValueError(f'can\'t use two quantization wrappers to process the module:{module_name}')
+
+    # create a FusionModuleWrapper
+    new_wrapper = FusionModuleWrapper(module=module, module_name=module_name, config={mode: config}, \
+        fused_modules=fused_modules)
+    target_space = new_wrapper.quantization_target_spaces.copy()
+
+    if wrapper is not None:
+        new_wrapper.pruning_target_spaces = wrapper.pruning_target_spaces
+        new_wrapper.distillation_target_spaces = wrapper.distillation_target_spaces
+        new_wrapper.quantization_target_spaces.update(wrapper.quantization_target_spaces)
+        new_wrapper.config = update_config(new_wrapper.config, wrapper.config)
+
+    return new_wrapper, target_space
+
+
+def create_module_wrapper(module: nn.Module, module_name: str, mode: Literal['pruning', 'quantization', 'distillation'], \
+        config: Dict[str, Any], wrapper: ModuleWrapper=None):
+
+    if isinstance(wrapper, IdentityModuleWrapper):
+        raise ValueError('can\'t use other compression methods in the IdentityWrapper')
+
+    if wrapper is not None:
+        new_wrapper = wrapper
+        new_wrapper.unfreeze()
+        target_spaces = new_wrapper.extend_target_spaces(config, mode)
+        new_wrapper.config = update_config(new_wrapper.config, {mode: config})
+    else:
+        new_wrapper = ModuleWrapper(module, module_name, {mode: config})
+        if mode == 'pruning':
+            target_spaces = dict(new_wrapper.pruning_target_spaces.items())
+        elif mode == 'quantization':
+            target_spaces = dict(new_wrapper.quantization_target_spaces.items())
+        else:
+            target_spaces = dict(new_wrapper.distillation_target_spaces.items())
+
+    return new_wrapper, target_spaces

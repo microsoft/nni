@@ -88,7 +88,8 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
                 quant_bit = quant_bits if isinstance(quant_bits, int) else quant_bits['input']
                 target_settings[INPUT_PREFIX] = {'quant_dtype': f'int{quant_bit}'}
             if 'weight' in quant_types:
-                target_names.extend(['weight', 'bias'])
+                # target_names.extend(['weight', 'bias'])
+                target_names.extend(['weight'])
                 quant_bit = quant_bits if isinstance(quant_bits, int) else quant_bits['weight']
                 target_settings['weight'] = {'quant_dtype': f'int{quant_bit}'}
                 target_settings['bias'] = {'quant_dtype': f'int{quant_bit}'}

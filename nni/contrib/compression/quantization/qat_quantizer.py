@@ -114,7 +114,7 @@ class QATQuantizer(Quantizer):
         evaluator.patch_optimizer_step(before_step_tasks=[], after_step_tasks=[optimizer_task])
 
     def compress(self, max_steps: int | None = None, max_epochs: int | None = None):
-        self.evaluator.bind_model(self.bound_model, self._get_param_names_map())
+        self.evaluator.bind_model(self.bound_model, self._get_param_names_map(), self.patch_optimizer_param_group())
         self.register_trigger(self.evaluator)
         self.evaluator.train(max_steps, max_epochs)
         self.evaluator.unbind_model()

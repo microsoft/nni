@@ -1,11 +1,36 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
+from typing import Callable, Union, List
+import time
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import _LRScheduler
 from torchvision import datasets, transforms
-from nni.compression.pytorch.quantization import BNNQuantizer
+
+import nni
+from nni.contrib.compression.quantization import BNNQuantizer
+from nni.contrib.compression.utils import TorchEvaluator
+
+
+torch.manual_seed(0)
+device = 'cuda'
+
+train_loader = torch.utils.data.DataLoader(
+        datasets.CIFAR10('./data.cifar10', train=True, download=True,
+                        transform=transforms.Compose([
+                            transforms.ToTensor(),
+                            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+                        ])),
+        batch_size=64, shuffle=True)
+test_loader = torch.utils.data.DataLoader(
+        datasets.CIFAR10('./data.cifar10', train=False, transform=transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    ])),
+    batch_size=200, shuffle=False)
 
 
 class VGG_Cifar10(nn.Module):
@@ -53,7 +78,6 @@ class VGG_Cifar10(nn.Module):
             nn.BatchNorm1d(num_classes, affine=False)
         )
 
-
     def forward(self, x):
         x = self.features(x)
         x = x.view(-1, 512 * 4 * 4)
@@ -61,23 +85,13 @@ class VGG_Cifar10(nn.Module):
         return x
 
 
-def train(model, device, train_loader, optimizer):
-    model.train()
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = F.cross_entropy(output, target)
-        loss.backward()
-        optimizer.step()
-        for name, param in model.named_parameters():
-            if name.endswith('old_weight'):
-                param = param.clamp(-1, 1)
-        if batch_idx % 100 == 0:
-            print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
+def training_step(batch, model):
+    data, target = batch[0].to(device), batch[1].to(device)
+    output = model(data)
+    return F.cross_entropy(output, target)
 
 
-def test(model, device, test_loader):
+def test(model: nn.Module):
     model.eval()
     test_loss = 0
     correct = 0
@@ -95,6 +109,31 @@ def test(model, device, test_loader):
         test_loss, acc))
     return acc
 
+
+def train(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: Union[_LRScheduler, None] = None,
+          max_steps: Union[int, None] = None, max_epochs: Union[int, None] = 400):
+    best_top1 = 0
+    max_epochs = max_epochs or (40 if max_steps is None else 400)
+    for epoch in range(max_epochs):
+        print('# Epoch {} #'.format(epoch))
+        model.train()
+        for batch_idx, batch in enumerate(train_loader):
+            optimizer.zero_grad()
+            loss = training_step(batch, model)
+            loss.backward()
+            optimizer.step()
+            if isinstance(scheduler, _LRScheduler) or (isinstance(scheduler, List) and len(scheduler) > 0):
+                scheduler.step()
+            if batch_idx % 100 == 0:
+                print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
+
+        adjust_learning_rate(optimizer, epoch)
+        top1 = test(model)
+        if top1 > best_top1:
+            best_top1 = top1
+        print(f"epoch={epoch}\tcurrent_acc={top1}\tbest_acc={best_top1}")
+
+
 def adjust_learning_rate(optimizer, epoch):
     update_list = [55, 100, 150, 200, 400, 600]
     if epoch in update_list:
@@ -105,22 +144,8 @@ def adjust_learning_rate(optimizer, epoch):
 def main():
     torch.manual_seed(0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    train_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('./data.cifar10', train=True, download=True,
-                         transform=transforms.Compose([
-                             transforms.ToTensor(),
-                             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-                         ])),
-        batch_size=64, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('./data.cifar10', train=False, transform=transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-        ])),
-        batch_size=200, shuffle=False)
 
-    model = VGG_Cifar10(num_classes=10)
-    model.to(device)
+    model = VGG_Cifar10(num_classes=10).to(device)
 
     configure_list = [{
         'quant_types': ['weight'],
@@ -134,20 +159,18 @@ def main():
         'op_names': ['features.6', 'features.9', 'features.13', 'features.16', 'features.20', 'classifier.2', 'classifier.5']
     }]
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
-    quantizer = BNNQuantizer(model, configure_list, optimizer)
-    model = quantizer.compress()
+    optimizer = nni.trace(torch.optim.Adam)(model.parameters(), lr=1e-2)
+    evaluator = TorchEvaluator(train, optimizer, training_step)  # type: ignore
+    quantizer = BNNQuantizer(model, configure_list, evaluator)
 
-    print('=' * 10 + 'train' + '=' * 10)
-    best_top1 = 0
-    for epoch in range(400):
-        print('# Epoch {} #'.format(epoch))
-        train(model, device, train_loader, optimizer)
-        adjust_learning_rate(optimizer, epoch)
-        top1 = test(model, device, test_loader)
-        if top1 > best_top1:
-            best_top1 = top1
-    print(best_top1)
+    start = time.time()
+    model, _ = quantizer.compress(max_epochs=400)
+    end = time.time()
+    print(f"time={end - start}")
+
+    acc = test(model)
+    print(f"inference: acc:{acc}")
+    print("===== after inference ====")
 
 
 if __name__ == '__main__':

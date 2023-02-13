@@ -41,7 +41,6 @@ _logger = logging.getLogger(__name__)
 class Hook:
     """
     The base class used to generate, register and remove torch hook.
-
     Parameters
     ----------
     target
@@ -81,7 +80,6 @@ class Hook:
 class TensorHook(Hook):
     """
     Here is an example for hook_factory, in this example, the gradient on this tensor will be saved in the buffer::
-
         def hook_factory(buffer):
             def hook(grad):
                 buffer.append(grad.clone())
@@ -107,7 +105,6 @@ class ModuleHook(Hook):
 class ForwardHook(ModuleHook):
     """
     Here is an example for hook_factory, in this example, the output of this module will be saved in the buffer::
-
         def hook_factory(buffer):
             def hook(module, input, output):
                 buffer.append(output.clone())
@@ -121,7 +118,6 @@ class ForwardHook(ModuleHook):
 class BackwardHook(ModuleHook):
     """
     Here is an example for hook_factory, in this example, the gradient of this module input will be saved in the buffer::
-
         def hook_factory(buffer):
             def hook(module, grad_input, grad_output):
                 buffer.append(grad_input.clone())
@@ -138,7 +134,6 @@ class Evaluator:
     NNI have the need to intervene in the training process to collect intermediate information,
     and even modify part of the training loop. Evaluator provides a series of member functions that are convenient to modify these,
     and the pruner (or quantizer) can easily intervene in training by calling these functions.
-
     Notes
     -----
     Users are not recommended to use any member functions of this class.
@@ -153,10 +148,8 @@ class Evaluator:
         This is an internal API, ``pure_model`` means the model is the original model passed in by the user,
         it should not be the modified model (wrapped, hooked, or patched by NNI).
         That is, the optimizers & lr_schedulers obtained by ``Evaluator`` match the ``pure_model``.
-
         This function is used to record the status of the optimizers & lr_schedulers,
         and ensure NNI can reinitialize the optimizers & lr_schedulers with a similar but modified model.
-
         Notes
         -----
         This is a part of Evaluator initialization, please make sure this function has been called before using other evaluator functions.
@@ -167,7 +160,6 @@ class Evaluator:
         """
         Bind the model suitable for this ``Evaluator`` to use the evaluator's abilities of model modification,
         model training, and model evaluation.
-
         Parameter
         ---------
         model
@@ -188,7 +180,6 @@ class Evaluator:
     def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         """
         The patch may add additional loss or replace the original loss. Here is an example::
-
             def loss_patch(original_loss, batch, *args, **kwargs):
                 params_norm = 0
                 for param in model.parameters():
@@ -208,7 +199,6 @@ class Evaluator:
         """
         Run tasks in `before_step_tasks` before `optimizer.step()` each time.
         Run tasks in `after_step_tasks` after `optimizer.step()` each time.
-
         Notes
         -----
         If the model has multiple optimizers, this function only patches tasks to the first optimizer right now.
@@ -286,12 +276,9 @@ class LightningEvaluator(Evaluator):
     It is very friendly to the users who are familiar to PyTorchLightning
     or already have training/validation/testing code written in PyTorchLightning.
     The only need is to use ``nni.trace`` to trace the Trainer & LightningDataModule.
-
     Additionally, please make sure the ``Optimizer`` class and ``LR_Scheduler`` class used in ``LightningModule.configure_optimizers()``
     are also be traced by ``nni.trace``.
-
     Please refer to the :doc:`/compression/compression_evaluator` for the evaluator initialization example.
-
     Parameters
     ----------
     trainer
@@ -300,7 +287,6 @@ class LightningEvaluator(Evaluator):
         Pytorch-Lightning LightningDataModule. It should be traced by nni, e.g., ``data_module = nni.trace(pl.LightningDataModule)(...)``.
     dummy_input
         The dummy_input is used to trace the graph. If dummy_input is not given, will use the data in data_module.train_dataloader().
-
     Notes
     -----
     If the the test metric is needed by nni, please make sure log metric with key ``default`` in ``LightningModule.test_step()``.
@@ -389,7 +375,7 @@ class LightningEvaluator(Evaluator):
 
         self._initialization_complete = True
 
-    def bind_model(self, model: pl.LightningModule, param_names_map: Dict[str, str] | None = None):
+    def bind_model(self, model: pl.LightningModule, param_names_map: Dict[str, str] | None = None, module_name_param_dict: Dict[str, List[Tensor]] = None):
         err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert self._initialization_complete is True, err_msg
         assert isinstance(model, pl.LightningModule)
@@ -404,7 +390,7 @@ class LightningEvaluator(Evaluator):
             'configure_callbacks': model.configure_callbacks
         })
         self._param_names_map = param_names_map
-        self._patch_configure_optimizers()
+        self._patch_configure_optimizers(module_name_param_dict)
 
     def unbind_model(self):
         if self.model:
@@ -418,8 +404,54 @@ class LightningEvaluator(Evaluator):
         else:
             _logger.warning('Did not bind any model, no need to unbind model.')
 
-    def _patch_configure_optimizers(self):
+    def optimizer_add_param_group(self, module_name_param_dict: Dict[str, List[Tensor]], optimizers: Union[List[Optimizer], Optimizer]):
+        def find_param_group(param_groups: List[Dict], module_name: str):
+            for param_group in param_groups:
+                params = param_group["params"]
+                if isinstance(params, Tensor):
+                    params = [params]
+                elif isinstance(params, set):
+                    raise TypeError('optimizer parameters need to be organized in ordered collections, but '
+                                    'the ordering of tensors in sets will change between runs. Please use a list instead.')
+                else:
+                    params = list(params)
+                name_lis = [param2name_dict[id(p)] for p in params]
+
+                for name in name_lis:
+                    # if module_name  == name.strip().split("._nni_wrapper")[0]:
+                    if module_name in name:
+                        return param_group
+
+            return None
+
+        def add_param(param_lis: List[Tensor], target_param_group: Dict, optimizer: Optimizer):
+            for param in param_lis:
+                new_param_group = target_param_group.copy()
+                new_param_group["params"] = param
+                optimizer.add_param_group(new_param_group)
+
+        assert self.model is not None
+        param2name_dict = {id(p): name for name, p in self.model.named_parameters()}
+        optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
+
+        for module_name, param_lis in module_name_param_dict.items():
+            is_find_param_group = False
+            for optimizer in optimizers:
+                param_groups = optimizer.param_groups
+                target_param_group = find_param_group(param_groups, module_name)
+                if target_param_group is None:
+                    continue
+                is_find_param_group = True
+                add_param(param_lis, target_param_group, optimizer)
+            if not is_find_param_group:
+                # TODO: use dependency model's config to init it
+                # raise ValueError(f"can't find param_group configuration for {module_name}")
+                target_param_group = optimizers[0].param_groups[0]
+                add_param(param_lis, target_param_group, optimizers[0])
+
+    def _patch_configure_optimizers(self, module_name_param_dict: Dict[str, List[Tensor]] = None):
         assert isinstance(self.model, pl.LightningModule)
+        print("===== patch optimizer =====")
 
         if self._opt_returned_dicts:
             def new_configure_optimizers(_):  # type: ignore
@@ -431,16 +463,31 @@ class LightningEvaluator(Evaluator):
                     opt_lrs_dict['optimizer'] = optimizers[opt_lrs_dict['optimizer']]
                     if 'lr_scheduler' in opt_lrs_dict:
                         opt_lrs_dict['lr_scheduler']['scheduler'] = lr_schedulers[opt_lrs_dict['lr_scheduler']['scheduler']]
+                # add param_group
+                if module_name_param_dict is not None:
+                    self.optimizer_add_param_group(module_name_param_dict, [opt_lrs_dict['optimizer'] for opt_lrs_dict in opt_lrs_dicts])
+
                 return opt_lrs_dicts
+
         elif self._lr_scheduler_helpers:
             def new_configure_optimizers(_):  # type: ignore
                 optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
                 lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]])
                                  for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
+
+                # add param_group
+                if module_name_param_dict is not None:
+                    self.optimizer_add_param_group(module_name_param_dict, optimizers)
+
                 return optimizers, lr_schedulers
+
         else:
             def new_configure_optimizers(_):
                 optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
+                # add param_group
+                if module_name_param_dict is not None:
+                    self.optimizer_add_param_group(module_name_param_dict, optimizers)
+
                 return optimizers
 
         self.model.configure_optimizers = types.MethodType(new_configure_optimizers, self.model)
@@ -552,24 +599,21 @@ _OPTIMIZERS = Union[Optimizer, List[Optimizer]]
 _TRAINING_STEP = Callable[[Any], Union[Tensor, Tuple[Tensor], Dict[str, Tensor]]]
 _SCHEDULERS = Union[None, _LRScheduler, List[_LRScheduler]]
 _EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
-_TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, Optional[_SCHEDULERS], Optional[int], Optional[int]], None]
+_TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, _SCHEDULERS, Optional[int], Optional[int]], None]
 
 
 class TorchEvaluator(Evaluator):
     """
     TorchEvaluator is the Evaluator for native PyTorch users.
     Please refer to the :doc:`/compression/compression_evaluator` for the evaluator initialization example.
-
     Parameters
     ----------
     training_func
         The training function is used to train the model, note that this a entire optimization training loop.
         Training function has three required parameters, ``model``, ``optimizers`` and ``training_step``,
         and three optional parameters, ``lr_schedulers``, ``max_steps``, ``max_epochs``.
-
         Let's explain these six parameters NNI passed in, but in most cases, users don't need to care about these.
         Users only need to treat these six parameters as the original parameters during the training process.
-
         * The ``model`` is a wrapped model from the original model, it has a similar structure to the model to be pruned,
           so it can share training function with the original model.
         * ``optimizers`` are re-initialized from the ``optimizers`` passed to the evaluator and the wrapped model's parameters.
@@ -583,44 +627,31 @@ class TorchEvaluator(Evaluator):
         * ``max_epochs`` is similar to the ``max_steps``, the only different is that it controls the number of training epochs.
           The user implemented ``training_func`` should respect ``max_epochs`` by stopping the training loop
           after ``max_epochs`` is reached. Pruner may pass ``None`` to ``max_epochs`` when it only controls ``max_steps``.
-
         Note that when the pruner passes ``None`` to both ``max_steps`` and ``max_epochs``,
         it treats ``training_func`` as a function of model fine-tuning.
         Users should assign proper values to ``max_steps`` and ``max_epochs``.
-
         .. code-block:: python
-
             def training_func(model: torch.nn.Module, optimizers: torch.optim.Optimizer,
                               training_step: Callable[[Any, Any], torch.Tensor],
                               lr_schedulers: _LRScheduler | None = None, max_steps: int | None = None,
                               max_epochs: int | None = None, *args, **kwargs):
-
                 ...
-
                 total_epochs = max_epochs if max_epochs else 20
                 total_steps = max_steps if max_steps else 1000000
                 current_steps = 0
-
                 ...
-
                 for epoch in range(total_epochs):
-
                     ...
-
                     if current_steps >= total_steps:
                         return
-
         Note that ``optimizers`` and ``lr_schedulers`` passed to the ``training_func`` have the same type as the ``optimizers``
         and ``lr_schedulers`` passed to evaluator, a single ``torch.optim.Optimzier``/ ``torch.optim._LRScheduler`` instance or
         a list of them.
-
     optimziers
         A single traced optimizer instance or a list of traced optimizers by ``nni.trace``.
-
         NNI may modify the ``torch.optim.Optimizer`` member function ``step`` and/or optimize compressed models,
         so NNI needs to have the ability to re-initialize the optimizer. ``nni.trace`` can record the initialization parameters
         of a function/class, which can then be used by NNI to re-initialize the optimizer for a new but structurally similar model.
-
         E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
     training_step
         A callable function, the first argument of inputs should be ``batch``, and the outputs should contain loss.
@@ -635,7 +666,6 @@ class TorchEvaluator(Evaluator):
     lr_schedulers
         Optional. A single traced lr_scheduler instance or a list of traced lr_schedulers by ``nni.trace``.
         For the same reason with ``optimizers``, NNI needs the traced lr_scheduler to re-initialize it.
-
         E.g. ``traced_lr_scheduler = nni.trace(ExponentialLR)(optimizer, 0.1)``.
     dummy_input
         Optional. The dummy_input is used to trace the graph, it's same with ``example_inputs`` in
@@ -648,7 +678,6 @@ class TorchEvaluator(Evaluator):
         NNI will take the float number as the model score, and assume the higher score means the better performance.
         If you want to provide additional information, please put it into a dict
         and NNI will take the value of key ``default`` as evaluation metric.
-
     Notes
     -----
     It is also worth to note that not all the arguments of ``TorchEvaluator`` must be provided.
@@ -704,14 +733,13 @@ class TorchEvaluator(Evaluator):
 
         return reset_ddp_model(model, ddp_params) if is_ddp_model else model
 
-    def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None):
+    def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None, module_name_param_dict: Dict[str, List[Tensor]] = None):
         err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert self._initialization_complete is True, err_msg
         assert isinstance(model, Module)
         if self.model is not None:
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
-
         self.model = self._rewrap_if_ddp_model(model)
         self._param_names_map = param_names_map
         # initialize optimizers & lr_schedulers for the bound model here
@@ -719,6 +747,53 @@ class TorchEvaluator(Evaluator):
         self._lr_schedulers = [lrs_helper.call(self._optimizers[self._lrs_opt_map[i]]) \
                                for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
         self._first_optimizer_step = self._optimizers[0].step
+
+        if module_name_param_dict is not None:
+            self.optimizer_add_param_group(module_name_param_dict)
+            print("successfully add param group in the optimizer")
+
+    def optimizer_add_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
+        assert self.model is not None
+        param2name_dict = {id(p): name for name, p in self.model.named_parameters()}
+        def find_param_group(param_groups: List[Dict], module_name: str):
+            for param_group in param_groups:
+                params = param_group["params"]
+                if isinstance(params, Tensor):
+                    params = [params]
+                elif isinstance(params, set):
+                    raise TypeError('optimizer parameters need to be organized in ordered collections, but '
+                                    'the ordering of tensors in sets will change between runs. Please use a list instead.')
+                else:
+                    params = list(params)
+                name_lis = [param2name_dict[id(p)] for p in params]
+
+                for name in name_lis:
+                    # if module_name  == name.strip().split("._nni_wrapper")[0]:
+                    if module_name in name:
+                        return param_group
+
+            return None
+
+        def add_param(param_lis: List[Tensor], target_param_group: Dict, optimizer: Optimizer):
+            for param in param_lis:
+                new_param_group = target_param_group.copy()
+                new_param_group["params"] = param
+                optimizer.add_param_group(new_param_group)
+
+        for module_name, param_lis in module_name_param_dict.items():
+            is_find_param_group = False
+            for optimizer in self._optimizers:
+                param_groups = optimizer.param_groups
+                target_param_group = find_param_group(param_groups, module_name)
+                if target_param_group is None:
+                    continue
+                is_find_param_group = True
+                add_param(param_lis, target_param_group, optimizer)
+            if not is_find_param_group:
+                # TODO: use dependency model's config to init it
+                # raise ValueError(f"can't find param_group configuration for {module_name}")
+                target_param_group = self._optimizers[0].param_groups[0]
+                add_param(param_lis, target_param_group, self._optimizers[0])
 
     def unbind_model(self):
         if self.model:
@@ -812,23 +887,17 @@ class TorchEvaluator(Evaluator):
 class TransformersEvaluator(Evaluator):
     """
     TransformersEvaluator is for the users who using Huggingface ``transformers.trainer.Trainer``.
-
     Here is an example for using ``transformers.trainer.Trainer`` to initialize an evaluator:
-
     .. code-block:: python
-
         from transformers.trainer import Trainer
-
         # wrap Trainer class with nni.trace
         trainer = nni.trace(Trainer)(model=model)
         evaluator = TransformersEvaluator(trainer)
-
         # if you want to using customized optimizer & lr_scheduler, please also wrap Optimzier & _LRScheduler class
         optimizer = nni.trace(Adam)(...)
         lr_scheduler = nni.trace(LambdaLR)(...)
         trainer = nni.trace(Trainer)(model=model, ..., optimizers=(optimizer, lr_scheduler))
         evaluator = TransformersEvaluator(trainer)
-
     Parameters
     ----------
     trainer
@@ -883,7 +952,8 @@ class TransformersEvaluator(Evaluator):
 
         self._initialization_complete = True
 
-    def bind_model(self, model: Module | pl.LightningModule, param_names_map: Dict[str, str] | None = None):
+    def bind_model(self, model: Module | pl.LightningModule, param_names_map: Dict[str, str] | None = None, \
+                   module_name_param_dict: Dict[str, List[Tensor]] = None):
         err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert self._initialization_complete is True, err_msg
         assert isinstance(model, Module)
@@ -908,6 +978,51 @@ class TransformersEvaluator(Evaluator):
         self._param_names_map = param_names_map
         self.trainer.optimizer = self._optimizer_helper.call(self.model, self._param_names_map)
         self._ori_trainer_attr['optimizer.step'] = self.trainer.optimizer.step
+
+        if module_name_param_dict is not None:
+            self.optimizer_add_param_group(module_name_param_dict)
+            print("successfully add param group in the optimizer")
+
+    def optimizer_add_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
+        assert self.model is not None
+        param2name_dict = {id(p): name for name, p in self.model.named_parameters()}
+
+        def find_param_group(param_groups: List[Dict], module_name: str):
+            for param_group in param_groups:
+                params = param_group["params"]
+                if isinstance(params, Tensor):
+                    params = [params]
+                elif isinstance(params, set):
+                    raise TypeError('optimizer parameters need to be organized in ordered collections, but '
+                                    'the ordering of tensors in sets will change between runs. Please use a list instead.')
+                else:
+                    params = list(params)
+                name_lis = [param2name_dict[id(p)] for p in params]
+
+                for name in name_lis:
+                    # if module_name  == name.strip().split("._nni_wrapper")[0]:
+                    if module_name in name:
+                        return param_group
+
+            return None
+
+        def add_param(param_lis: List[Tensor], target_param_group: Dict, optimizer: Optimizer):
+            for param in param_lis:
+                new_param_group = target_param_group.copy()
+                new_param_group["params"] = param
+                optimizer.add_param_group(new_param_group)
+
+        for module_name, param_lis in module_name_param_dict.items():
+            param_groups = self.trainer.optimizer.param_groups
+            target_param_group = find_param_group(param_groups, module_name)
+
+            if not target_param_group:
+                # TODO: use dependency model's config to init it
+                target_param_group = self.trainer.optimizer.param_groups[0]
+                add_param(param_lis, target_param_group, self.trainer.optimizer)
+            else:
+                add_param(param_lis, target_param_group, self.trainer.optimizer)
+
 
     def unbind_model(self):
         if self.model:

@@ -25,7 +25,7 @@ _DISTILLATION_TARGET_SPACES = Dict[str, Dict[str, DistillationTargetSpace]]
 
 class Compressor:
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], mode: Literal['pruning', 'quantization', 'distillation'],
-                 evaluator: Evaluator | None = None, existed_wrappers: Dict[str, ModuleWrapper] | None = None):
+                 evaluator: Evaluator | None = None, existed_wrappers: Dict[str, ModuleWrapper] | None = None, fused_module_lis: List[List[str]] = None):
         """
         Compressor base class.
 
@@ -53,7 +53,7 @@ class Compressor:
                 evaluator._init_optimizer_helpers(self.bound_model)
 
         self._is_wrapped = False
-        self._module_wrappers, self._target_spaces = register_wrappers(self.bound_model, self.config_list, mode, existed_wrappers)
+        self._module_wrappers, self._target_spaces = register_wrappers(self.bound_model, self.config_list, mode, existed_wrappers, fused_module_lis)
         self.wrap_model()
 
     @classmethod
@@ -222,9 +222,9 @@ class Pruner(Compressor):
 
 class Quantizer(Compressor):
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None,
-                 existed_wrappers: Dict[str, ModuleWrapper] | None = None):
+                 existed_wrappers: Dict[str, ModuleWrapper] | None = None, fused_module_lis: List[List[str]] = None):
         super().__init__(model=model, config_list=config_list, mode='quantization', evaluator=evaluator,
-                         existed_wrappers=existed_wrappers)
+                         existed_wrappers=existed_wrappers, fused_module_lis=fused_module_lis)
         self._target_spaces: _QUANTIZATION_TARGET_SPACES
         self._register_scalers()
 
@@ -252,6 +252,18 @@ class Quantizer(Compressor):
                 if target_space.tracked_min is not None:
                     calibration_config[module_name][target_name]['tracked_min'] = target_space.tracked_min.cpu()
         return calibration_config
+
+    def patch_optimizer_param_group(self):
+        module_name_param_dict = {}
+        for module_name, _ in self._target_spaces.items():
+            wrapper = self._module_wrappers[module_name]
+            if getattr(wrapper.module, "original_bias", None) is not None:
+                module_name_param_dict[module_name] = [wrapper.module.original_bias]
+
+        return module_name_param_dict if len(module_name_param_dict) > 0 else None
+
+    def compress(self):
+        return self.bound_model
 
 
 class Distiller(Compressor):
