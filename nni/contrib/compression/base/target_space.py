@@ -302,11 +302,11 @@ class QuantizationTargetSpace(TargetSpace):
 
 
     @property
-    def qmax(self) -> int:
+    def qmax(self) -> int | None:
         return self._get_wrapper_attr(self._qmax_name)
 
     @property
-    def qmin(self) -> int:
+    def qmin(self) -> int | None:
         return self._get_wrapper_attr(self._qmin_name)
 
     @property

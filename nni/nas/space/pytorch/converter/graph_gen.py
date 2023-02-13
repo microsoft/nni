@@ -5,8 +5,8 @@ import re
 
 import torch
 
-from nni.nas.execution.common import Graph, Model, Node, Cell, Operation
-from nni.nas.nn.pytorch import InputChoice, Placeholder, LayerChoice
+from nni.nas.space.graph import Graph, GraphModelSpace, Node, Cell, Operation
+from nni.nas.nn.pytorch import InputChoice, MutationAnchor, LayerChoice, MutableModule, Repeat
 from nni.nas.utils import get_init_parameters_or_fail, get_importable_name
 from .op_types import MODULE_EXCEPT_LIST, OpTypeName
 from .utils import (
@@ -375,7 +375,7 @@ class GraphConverter:
                         # if we do not parse this module's graph, we create Node for this module
                         subcell = ir_graph.add_node(submodule_full_name, submodule_type_str, sub_m_attrs)
                         subcell.python_name = submodule_python_name
-                        if isinstance(submodule_obj, Placeholder):
+                        if isinstance(submodule_obj, MutationAnchor):
                             subcell.update_label(submodule_obj.label)
                         elif isinstance(submodule_obj, InputChoice):
                             subcell.update_label(sub_m_attrs['label'])
@@ -610,9 +610,10 @@ class GraphConverter:
             candidate_name_list = []
             for cand_name in module.names:
                 cand = module[cand_name]
-                script_cand = script_module._modules[cand_name]
-                cand_full_name = build_cand_name(cand_name, module.label)
-                cand_python_name = build_python_name(module_python_name, cand_name)
+                script_cand = script_module._modules[str(cand_name)]
+                # FIXME: should use cand_name instead of cand_full_name
+                cand_full_name = build_cand_name(str(cand_name), module.label)
+                cand_python_name = build_python_name(module_python_name, str(cand_name))
                 candidate_name_list.append(cand_full_name)
                 subgraph, attrs = self._convert_module(script_cand, cand, cand_full_name, cand_python_name, ir_model)
                 if subgraph is not None:
@@ -628,7 +629,7 @@ class GraphConverter:
             m_attrs = self._handle_inputchoice(module)
         elif original_type_name == OpTypeName.ValueChoice:
             m_attrs = self._handle_valuechoice(module)
-        elif original_type_name == OpTypeName.Placeholder:
+        elif original_type_name == OpTypeName.MutationAnchor:
             m_attrs = get_init_parameters_or_fail(module)
         elif module.__class__.__module__.startswith('torch.nn') and \
             original_type_name in torch.nn.__dict__ and \
@@ -638,6 +639,8 @@ class GraphConverter:
         elif getattr(module, '_nni_basic_unit', False):
             # this module is marked as serialize, won't continue to parse
             m_attrs = get_init_parameters_or_fail(module)
+        elif isinstance(module, MutableModule) and not isinstance(module, Repeat) and module.mutables:
+            raise RuntimeError(f'Arbitrary add_mutable() is not supported in graph-based model space, but found in {module}')
         if m_attrs is not None:
             return None, m_attrs
 
@@ -716,14 +719,14 @@ class GraphConverterWithShape(GraphConverter):
         self._trace_module(module, module_name, ir_model, dummy_input)
         return ir_graph, attrs
 
-    def _initialize_parameters(self, ir_model: 'Model'):
+    def _initialize_parameters(self, ir_model: GraphModelSpace):
         for ir_node in ir_model.get_nodes():
             if ir_node.operation.parameters is None:
                 ir_node.operation.parameters = {}
             ir_node.operation.attributes.setdefault('input_shape', [])
             ir_node.operation.attributes.setdefault('output_shape', [])
 
-    def _trace_module(self, module, module_name, ir_model: 'Model', dummy_input):
+    def _trace_module(self, module, module_name, ir_model: GraphModelSpace, dummy_input):
         # First, trace the whole graph
         tm_graph = self._trace(module, dummy_input)
 
@@ -748,13 +751,13 @@ class GraphConverterWithShape(GraphConverter):
 
                 for cand_name in submodule.names:
                     cand = submodule[cand_name]
-                    cand_name = build_cand_name(cand_name, submodule.label)
+                    cand_name = build_cand_name(str(cand_name), submodule.label)
                     # TODO: Feed the exact input tensor if user provides input,
                     # in case the path changes according to input data.
                     lc_inputs = [torch.randn(shape) for shape in lc_node.operation.attributes['input_shape']]
-                    self._trace_module(cand, cand_name, ir_model, lc_inputs)
+                    self._trace_module(cand, str(cand_name), ir_model, lc_inputs)
 
-    def propagate_shape(self, ir_model: 'Model'):
+    def propagate_shape(self, ir_model: GraphModelSpace):
 
         def propagate_shape_for_graph(graph: 'Graph'):
             if graph == ir_model.root_graph:
@@ -804,7 +807,7 @@ class GraphConverterWithShape(GraphConverter):
         torch._C._jit_pass_inline(traced_module.graph)
         return traced_module.graph
 
-    def remove_dummy_nodes(self, ir_model: 'Model'):
+    def remove_dummy_nodes(self, ir_model: GraphModelSpace):
         # remove identity nodes
         for node in ir_model.get_nodes_by_type('noop_identity'):
             graph = node.graph
@@ -816,33 +819,3 @@ class GraphConverterWithShape(GraphConverter):
                         graph.del_edge(out_edge)
                     break
             node.remove()
-
-
-def convert_to_graph(script_module, module, converter=None, **kwargs):
-    """
-    Convert module to our graph ir, i.e., build a :class:`Model` type
-
-    Parameters
-    ----------
-    script_module : torch.jit.RecursiveScriptModule
-        the script module obtained with torch.jit.script
-    module : nn.Module
-        the targeted module instance
-    converter : `TorchConverter`
-        default `GraphConverter` is used
-    kwargs:
-        will be passed to `converter.convert_module()`
-
-    Returns
-    -------
-    Model
-        the constructed IR model
-    """
-
-    model = Model(_internal=True)
-    module_name = '_model'
-    if converter is None:
-        converter = GraphConverter()
-    converter.convert_module(script_module, module, module_name, model, **kwargs)
-
-    return model

@@ -40,6 +40,7 @@ def test_keep_model_space():
     model_space = MyModelSpace()
     evaluator = FunctionalEvaluator(foo, a=Categorical([0, 1], label='c'))
     exec_model = RawFormatModelSpace.from_model(model_space, evaluator)
+    assert repr(exec_model) == str(exec_model)
     assert exec_model.sample is None
     assert exec_model.status == ModelStatus.Initialized
     assert exec_model.metric is None
@@ -65,6 +66,7 @@ def test_keep_model_space():
     frozen_model.metrics.add_intermediate(1)
     frozen_model.metrics.final = 2
     assert repr(frozen_model).endswith(', metrics=Metrics(intermediates=<array of length 1>, final=2.0), status=ModelStatus.Frozen)')
+    assert str(frozen_model) == "RawFormatModelSpace({'a': 2, 'b': 6, 'c': 1}, Metrics(intermediates=<array of length 1>, final=2.0), 'frozen')"
 
     with pytest.raises(RuntimeError, match='not initialized'):
         frozen_model.freeze({'a': 1, 'b': 5, 'c': 0})
@@ -74,6 +76,7 @@ def test_simplified_model_space():
     model_space = MyModelSpace()
     evaluator = FunctionalEvaluator(foo, a=Categorical([0, 1], label='c'))
     exec_model = SimplifiedModelSpace.from_model(model_space, evaluator)
+    assert repr(exec_model) == str(exec_model)
     assert exec_model.status == ModelStatus.Initialized
     assert exec_model.metric is None
     expected_dump_result = {
@@ -108,6 +111,7 @@ def test_simplified_model_space():
     assert frozen_model.evaluator.evaluate(frozen_model.executable_model()) == 9
     frozen_model.metrics.add_intermediate(1)
     frozen_model.metrics.final = 2
+    assert str(frozen_model) == "SimplifiedModelSpace({'a': 2, 'b': 6, 'c': 1}, Metrics(intermediates=<array of length 1>, final=2.0), 'frozen')"
 
     expected_dump_result = {
         'status': ModelStatus.Frozen,
