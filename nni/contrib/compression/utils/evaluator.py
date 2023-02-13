@@ -451,8 +451,6 @@ class LightningEvaluator(Evaluator):
 
     def _patch_configure_optimizers(self, module_name_param_dict: Dict[str, List[Tensor]] = None):
         assert isinstance(self.model, pl.LightningModule)
-        print("===== patch optimizer =====")
-
         if self._opt_returned_dicts:
             def new_configure_optimizers(_):  # type: ignore
                 optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
@@ -750,7 +748,6 @@ class TorchEvaluator(Evaluator):
 
         if module_name_param_dict is not None:
             self.optimizer_add_param_group(module_name_param_dict)
-            print("successfully add param group in the optimizer")
 
     def optimizer_add_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
         assert self.model is not None
@@ -981,7 +978,6 @@ class TransformersEvaluator(Evaluator):
 
         if module_name_param_dict is not None:
             self.optimizer_add_param_group(module_name_param_dict)
-            print("successfully add param group in the optimizer")
 
     def optimizer_add_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
         assert self.model is not None
