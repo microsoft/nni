@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Dialog, DialogType, DialogFooter, Checkbox, PrimaryButton, DefaultButton } from '@fluentui/react';
 import { EXPERIMENT } from '@static/datamodel';
 import { Storage } from '@model/localStorage';
@@ -22,13 +22,11 @@ interface SimpleColumn {
     name: string; // name to display
 }
 
-//interface CheckBoxItems {
-//    label: string;
-//    checked: boolean;
-//    onChange: () => void;
-//}
 const ChangeColumnComponent = (props: ChangeColumnProps): any => {
     const { selectedColumns, allColumns, minSelected, onHideDialog } = props;
+    const [isSelectAllChecked, setSelectAllChecked] = useState(
+        selectedColumns.length === allColumns.length ? true : false
+    );
     const [currentSelected, setCurrentSelected] = useState(selectedColumns as string[]);
     const onCheckboxChange = (
         ev: React.FormEvent<HTMLElement | HTMLInputElement> | undefined,
@@ -45,6 +43,7 @@ const ChangeColumnComponent = (props: ChangeColumnProps): any => {
             // remove from source
             const result = source.filter(item => item !== label);
             setCurrentSelected(result);
+            setSelectAllChecked(false);
         }
     };
     const makeChangeHandler = (label: string): any => {
@@ -59,14 +58,16 @@ const ChangeColumnComponent = (props: ChangeColumnProps): any => {
             const storage = new Storage(
                 `${EXPERIMENT.profile.id}_columns`,
                 JSON.stringify(selectedColumns),
-                30 * 24 * 60 * 60 * 1000
+                30 * 24 * 60 * 60 * 1000,
+                isSelectAllChecked
             );
             storage.setValue();
         } else {
             const storage = new Storage(
                 `${EXPERIMENT.profile.id}_paraColumns`,
                 JSON.stringify(selectedColumns),
-                30 * 24 * 60 * 60 * 1000
+                30 * 24 * 60 * 60 * 1000,
+                isSelectAllChecked
             );
             storage.setValue();
         }
@@ -76,12 +77,26 @@ const ChangeColumnComponent = (props: ChangeColumnProps): any => {
     // user exit dialog
     const cancelOption = (): void => {
         // reset select column
-        setCurrentSelected(selectedColumns); // todo: useeffect 里写回调; 或者延时函数里关闭窗口
-        onHideDialog(); // todo 测试这里写入数据是否正常
-        // this.setState({ currentSelected: this.props.selectedColumns }, () => {
-        //     this.hideDialog();
-        // });
+        setCurrentSelected(selectedColumns);
+        onHideDialog();
     };
+
+    const selectAllCheckboxOnChange = useCallback(
+        (ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean): void => {
+            if (checked === false) {
+                // select none
+                setCurrentSelected([]);
+            } else {
+                setCurrentSelected(
+                    allColumns.map(item => {
+                        return item.key;
+                    })
+                );
+            }
+            setSelectAllChecked(!!checked);
+        },
+        []
+    );
 
     return (
         <div>
@@ -98,6 +113,14 @@ const ChangeColumnComponent = (props: ChangeColumnProps): any => {
                 }}
             >
                 <div className='columns-height'>
+                    {/* checkbox for select all or select none */}
+                    <Checkbox
+                        key='selectAll'
+                        label='Select all'
+                        checked={isSelectAllChecked}
+                        onChange={selectAllCheckboxOnChange.bind('selectAll')}
+                        styles={{ root: { marginBottom: 8 } }}
+                    />
                     {allColumns.map(item => (
                         <Checkbox
                             key={item.key}

@@ -54,14 +54,16 @@ const Intermediate = (props: IntermediateProps): any => {
                         }
                         return `
                             <div class="tooldetailAccuracy">
-                                <div>Trial No.: ${trialNo}</div> 
-                                <div>Trial ID: ${trialId}</div>
-                                <div>Intermediate: ${data.data}</div>
-                                <div>Parameters: <pre>${JSON.stringify(
+                                <div class='trial-No'>Trial No.: ${trialNo}</div> 
+                                <div class='main'>
+                                <div><span>Trial ID: </span>${trialId}</div>
+                                <div><span>Intermediate: </span>${data.data}</div>
+                                <div><span>Parameters: </span><pre>${JSON.stringify(
                                     reformatRetiariiParameter(parameter),
                                     null,
                                     4
                                 )}</pre>
+                                </div>
                                 </div>
                             </div>
                         `;
@@ -117,7 +119,7 @@ const Intermediate = (props: IntermediateProps): any => {
     // confirm btn function [filter data]
     const filterLines = (): void => {
         const filterSource: AllTrialsIntermediateChart[] = [];
-        setIsLoadconfirmBtn(true); // 引起useeffect执行操作
+        setIsLoadconfirmBtn(true);
         const pointVal = pointInput !== null ? pointInput.value : '';
         const minVal = minValInput !== null ? minValInput.value : '';
         const maxVal = maxValInput !== null ? maxValInput.value : '';
@@ -147,20 +149,17 @@ const Intermediate = (props: IntermediateProps): any => {
             setFilterSource(filterSource);
             drawIntermediate(filterSource);
         }
-        setIsLoadconfirmBtn(false); // 这样写会不会陷入死循环
+        setIsLoadconfirmBtn(false);
     };
     const switchTurn = (ev: React.MouseEvent<HTMLElement>, checked?: boolean): void => {
         setIsFilter(checked ?? true);
-        if (checked === false) {
-            drawIntermediate(props.source);
-        }
     };
 
     useEffect(() => {
         if (isFilter === true) {
-            const pointVal = pointInput !== null ? pointInput.value : '';
-            const minVal = minValInput !== null ? minValInput.value : '';
-            if (pointVal === '' && minVal === '') {
+            const pointVal = pointInput !== undefined ? pointInput!.value : '';
+            const minVal = minValInput !== undefined ? minValInput!.value : '';
+            if (pointVal === '' || minVal === '') {
                 drawIntermediate(source);
             } else {
                 drawIntermediate(filterSource);
@@ -168,8 +167,20 @@ const Intermediate = (props: IntermediateProps): any => {
         } else {
             drawIntermediate(source);
         }
-    }, [isFilter, source]); // TODO: filter变化，source变化，测试
+    }, [isFilter, source]);
 
+    const intermediateChart = React.useMemo(() => {
+        return (
+            <div className='intermediate-graph graph'>
+                <ReactEcharts
+                    option={interSource}
+                    style={{ width: '100%', height: 400, margin: '0 auto' }}
+                    notMerge={true} // update now
+                />
+                <div className='fontColor333 xAxis'># Intermediate result</div>
+            </div>
+        );
+    }, [interSource]);
     return (
         <div>
             {/* style in para.scss */}
@@ -203,14 +214,7 @@ const Intermediate = (props: IntermediateProps): any => {
                 {/* filter message */}
                 <Toggle label='Filter' inlineLabel onChange={switchTurn} />
             </Stack>
-            <div className='intermediate-graph graph'>
-                <ReactEcharts
-                    option={interSource}
-                    style={{ width: '100%', height: 400, margin: '0 auto' }}
-                    notMerge={true} // update now
-                />
-                <div className='fontColor333 xAxis'># Intermediate result</div>
-            </div>
+            {intermediateChart}
         </div>
     );
 };

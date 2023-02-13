@@ -91,7 +91,6 @@ const Overview = (): any => {
                                 Top trials<span className='font-untheme'>{bestTrialEntries}</span>
                             </h3>
                         </div>
-                        {/* <div className='topTrialTitle'> */}
                         <Stack horizontal horizontalAlign='end'>
                             <DefaultButton
                                 onClick={clickMaxTop}

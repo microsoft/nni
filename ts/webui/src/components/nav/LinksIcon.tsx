@@ -1,11 +1,12 @@
-/**
- *
- * for nav bar: document, github, nni-version tips
- */
 import React, { useState, useEffect } from 'react';
 import { getPrefix } from '@static/function';
 import { TOOLTIPSTYLE } from '@static/const';
 import { DirectionalHint, TooltipHost } from '@fluentui/react';
+
+/**
+ *
+ * for nav bar: document, github, nni-version tips
+ */
 
 interface TooltipHostIndexProps {
     iconName: string;

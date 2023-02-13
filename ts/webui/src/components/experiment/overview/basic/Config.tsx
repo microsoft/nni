@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Stack } from '@fluentui/react';
 import { EXPERIMENT } from '@static/datamodel';
 import { getPrefix } from '@static/function';
-// import { leftProgress, rightEditParam } from './count/commonStyle';
 import TooltipHostIndex from '@components/common/TooltipHostIndex';
 
 // This file is for showing the experiment some important params,
