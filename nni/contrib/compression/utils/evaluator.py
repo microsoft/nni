@@ -177,6 +177,50 @@ class Evaluator:
         """
         raise NotImplementedError
 
+    def optimizer_add_param_group(self, module_name_param_dict: Dict[str, List[Tensor]], optimizers: Optimizer | List[Optimizer]):
+        # used in the bind_model process
+        def find_param_group(param_groups: List[Dict], module_name: str):
+            for param_group in param_groups:
+                params = param_group["params"]
+                if isinstance(params, Tensor):
+                    params = [params]
+                elif isinstance(params, set):
+                    raise TypeError('optimizer parameters need to be organized in ordered collections, but '
+                                    'the ordering of tensors in sets will change between runs. Please use a list instead.')
+                else:
+                    params = list(params)
+                name_lis = [param2name_dict[id(p)] for p in params]
+
+                for name in name_lis:
+                    if module_name in name:
+                        return param_group
+
+            return None
+
+        def add_param(param_lis: List[Tensor], target_param_group: Dict, optimizer: Optimizer):
+            for param in param_lis:
+                new_param_group = target_param_group.copy()
+                new_param_group["params"] = param
+                optimizer.add_param_group(new_param_group)
+
+        assert self.model is not None
+        param2name_dict = {id(p): name for name, p in self.model.named_parameters()}
+        optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
+
+        for module_name, param_lis in module_name_param_dict.items():
+            is_find_param_group = False
+            for optimizer in optimizers:
+                param_groups = optimizer.param_groups
+                target_param_group = find_param_group(param_groups, module_name)
+                if target_param_group is None:
+                    continue
+                is_find_param_group = True
+                add_param(param_lis, target_param_group, optimizer)
+            if not is_find_param_group:
+                # TODO: use dependency model's config to init it
+                target_param_group = optimizers[0].param_groups[0]
+                add_param(param_lis, target_param_group, optimizers[0])
+
     def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         """
         The patch may add additional loss or replace the original loss. Here is an example::
@@ -375,7 +419,8 @@ class LightningEvaluator(Evaluator):
 
         self._initialization_complete = True
 
-    def bind_model(self, model: pl.LightningModule, param_names_map: Dict[str, str] | None = None, module_name_param_dict: Dict[str, List[Tensor]] = None):
+    def bind_model(self, model: pl.LightningModule, param_names_map: Dict[str, str] | None = None, \
+                   module_name_param_dict: Dict[str, List[Tensor]] = None):
         err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert self._initialization_complete is True, err_msg
         assert isinstance(model, pl.LightningModule)
@@ -403,51 +448,6 @@ class LightningEvaluator(Evaluator):
             self.model = None
         else:
             _logger.warning('Did not bind any model, no need to unbind model.')
-
-    def optimizer_add_param_group(self, module_name_param_dict: Dict[str, List[Tensor]], optimizers: Union[List[Optimizer], Optimizer]):
-        def find_param_group(param_groups: List[Dict], module_name: str):
-            for param_group in param_groups:
-                params = param_group["params"]
-                if isinstance(params, Tensor):
-                    params = [params]
-                elif isinstance(params, set):
-                    raise TypeError('optimizer parameters need to be organized in ordered collections, but '
-                                    'the ordering of tensors in sets will change between runs. Please use a list instead.')
-                else:
-                    params = list(params)
-                name_lis = [param2name_dict[id(p)] for p in params]
-
-                for name in name_lis:
-                    # if module_name  == name.strip().split("._nni_wrapper")[0]:
-                    if module_name in name:
-                        return param_group
-
-            return None
-
-        def add_param(param_lis: List[Tensor], target_param_group: Dict, optimizer: Optimizer):
-            for param in param_lis:
-                new_param_group = target_param_group.copy()
-                new_param_group["params"] = param
-                optimizer.add_param_group(new_param_group)
-
-        assert self.model is not None
-        param2name_dict = {id(p): name for name, p in self.model.named_parameters()}
-        optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
-
-        for module_name, param_lis in module_name_param_dict.items():
-            is_find_param_group = False
-            for optimizer in optimizers:
-                param_groups = optimizer.param_groups
-                target_param_group = find_param_group(param_groups, module_name)
-                if target_param_group is None:
-                    continue
-                is_find_param_group = True
-                add_param(param_lis, target_param_group, optimizer)
-            if not is_find_param_group:
-                # TODO: use dependency model's config to init it
-                # raise ValueError(f"can't find param_group configuration for {module_name}")
-                target_param_group = optimizers[0].param_groups[0]
-                add_param(param_lis, target_param_group, optimizers[0])
 
     def _patch_configure_optimizers(self, module_name_param_dict: Dict[str, List[Tensor]] = None):
         assert isinstance(self.model, pl.LightningModule)
@@ -731,7 +731,8 @@ class TorchEvaluator(Evaluator):
 
         return reset_ddp_model(model, ddp_params) if is_ddp_model else model
 
-    def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None, module_name_param_dict: Dict[str, List[Tensor]] = None):
+    def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None, \
+                   module_name_param_dict:Dict[str, List[Tensor]] = None):
         err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert self._initialization_complete is True, err_msg
         assert isinstance(model, Module)
@@ -742,55 +743,12 @@ class TorchEvaluator(Evaluator):
         self._param_names_map = param_names_map
         # initialize optimizers & lr_schedulers for the bound model here
         self._optimizers = [helper.call(model, param_names_map) for helper in self._optimizer_helpers]
-        self._lr_schedulers = [lrs_helper.call(self._optimizers[self._lrs_opt_map[i]]) \
+        self._lr_schedulers = [lrs_helper.call(self._optimizers[self._lrs_opt_map[i]])
                                for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
         self._first_optimizer_step = self._optimizers[0].step
 
         if module_name_param_dict is not None:
-            self.optimizer_add_param_group(module_name_param_dict)
-
-    def optimizer_add_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
-        assert self.model is not None
-        param2name_dict = {id(p): name for name, p in self.model.named_parameters()}
-        def find_param_group(param_groups: List[Dict], module_name: str):
-            for param_group in param_groups:
-                params = param_group["params"]
-                if isinstance(params, Tensor):
-                    params = [params]
-                elif isinstance(params, set):
-                    raise TypeError('optimizer parameters need to be organized in ordered collections, but '
-                                    'the ordering of tensors in sets will change between runs. Please use a list instead.')
-                else:
-                    params = list(params)
-                name_lis = [param2name_dict[id(p)] for p in params]
-
-                for name in name_lis:
-                    # if module_name  == name.strip().split("._nni_wrapper")[0]:
-                    if module_name in name:
-                        return param_group
-
-            return None
-
-        def add_param(param_lis: List[Tensor], target_param_group: Dict, optimizer: Optimizer):
-            for param in param_lis:
-                new_param_group = target_param_group.copy()
-                new_param_group["params"] = param
-                optimizer.add_param_group(new_param_group)
-
-        for module_name, param_lis in module_name_param_dict.items():
-            is_find_param_group = False
-            for optimizer in self._optimizers:
-                param_groups = optimizer.param_groups
-                target_param_group = find_param_group(param_groups, module_name)
-                if target_param_group is None:
-                    continue
-                is_find_param_group = True
-                add_param(param_lis, target_param_group, optimizer)
-            if not is_find_param_group:
-                # TODO: use dependency model's config to init it
-                # raise ValueError(f"can't find param_group configuration for {module_name}")
-                target_param_group = self._optimizers[0].param_groups[0]
-                add_param(param_lis, target_param_group, self._optimizers[0])
+            self.optimizer_add_param_group(module_name_param_dict, self._optimizers)
 
     def unbind_model(self):
         if self.model:
@@ -949,7 +907,7 @@ class TransformersEvaluator(Evaluator):
 
         self._initialization_complete = True
 
-    def bind_model(self, model: Module | pl.LightningModule, param_names_map: Dict[str, str] | None = None, \
+    def bind_model(self, model: Module | pl.LightningModule, param_names_map: Dict[str, str] | None = None,
                    module_name_param_dict: Dict[str, List[Tensor]] = None):
         err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert self._initialization_complete is True, err_msg
@@ -977,48 +935,7 @@ class TransformersEvaluator(Evaluator):
         self._ori_trainer_attr['optimizer.step'] = self.trainer.optimizer.step
 
         if module_name_param_dict is not None:
-            self.optimizer_add_param_group(module_name_param_dict)
-
-    def optimizer_add_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
-        assert self.model is not None
-        param2name_dict = {id(p): name for name, p in self.model.named_parameters()}
-
-        def find_param_group(param_groups: List[Dict], module_name: str):
-            for param_group in param_groups:
-                params = param_group["params"]
-                if isinstance(params, Tensor):
-                    params = [params]
-                elif isinstance(params, set):
-                    raise TypeError('optimizer parameters need to be organized in ordered collections, but '
-                                    'the ordering of tensors in sets will change between runs. Please use a list instead.')
-                else:
-                    params = list(params)
-                name_lis = [param2name_dict[id(p)] for p in params]
-
-                for name in name_lis:
-                    # if module_name  == name.strip().split("._nni_wrapper")[0]:
-                    if module_name in name:
-                        return param_group
-
-            return None
-
-        def add_param(param_lis: List[Tensor], target_param_group: Dict, optimizer: Optimizer):
-            for param in param_lis:
-                new_param_group = target_param_group.copy()
-                new_param_group["params"] = param
-                optimizer.add_param_group(new_param_group)
-
-        for module_name, param_lis in module_name_param_dict.items():
-            param_groups = self.trainer.optimizer.param_groups
-            target_param_group = find_param_group(param_groups, module_name)
-
-            if not target_param_group:
-                # TODO: use dependency model's config to init it
-                target_param_group = self.trainer.optimizer.param_groups[0]
-                add_param(param_lis, target_param_group, self.trainer.optimizer)
-            else:
-                add_param(param_lis, target_param_group, self.trainer.optimizer)
-
+            self.optimizer_add_param_group(module_name_param_dict, self.trainer.optimizer)
 
     def unbind_model(self):
         if self.model:
@@ -1087,7 +1004,7 @@ class TransformersEvaluator(Evaluator):
         self.train()
 
     def evaluate(self) -> Tuple[float | None, Dict[str, Any]]:
-        metric =  self.trainer.evaluate()
+        metric = self.trainer.evaluate()
         nni_used_metric = metric.get('default', None)
         if nni_used_metric is None:
             warn_msg = f'Evaluation function returns a dict metric without key `default`,' + \

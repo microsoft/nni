@@ -52,7 +52,8 @@ def training_step(batch, model):
     return loss
 
 
-def training_model(train_dataloader: DataLoader, test_dataloader: DataLoader, model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: Union[_LRScheduler, None] = None,
+def training_model(train_dataloader: DataLoader, test_dataloader: DataLoader, model: torch.nn.Module, optimizer: Optimizer, \
+                   training_step: Callable, scheduler: Union[_LRScheduler, None] = None,
                    max_steps: Union[int, None] = None, max_epochs: Union[int, None] = None):
     model.train()
     max_epochs = max_epochs or (40 if max_steps is None else 100)

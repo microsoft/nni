@@ -25,7 +25,8 @@ _DISTILLATION_TARGET_SPACES = Dict[str, Dict[str, DistillationTargetSpace]]
 
 class Compressor:
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], mode: Literal['pruning', 'quantization', 'distillation'],
-                 evaluator: Evaluator | None = None, existed_wrappers: Dict[str, ModuleWrapper] | None = None, fused_module_lis: List[List[str]] = None):
+                 evaluator: Evaluator | None = None, existed_wrappers: Dict[str, ModuleWrapper] | None = None, \
+                 fused_module_lis: List[List[str]] = None):
         """
         Compressor base class.
 
@@ -53,7 +54,8 @@ class Compressor:
                 evaluator._init_optimizer_helpers(self.bound_model)
 
         self._is_wrapped = False
-        self._module_wrappers, self._target_spaces = register_wrappers(self.bound_model, self.config_list, mode, existed_wrappers, fused_module_lis)
+        self._module_wrappers, self._target_spaces = register_wrappers(self.bound_model, self.config_list, mode, \
+                                                                       existed_wrappers, fused_module_lis)
         self.wrap_model()
 
     @classmethod

@@ -30,7 +30,7 @@ class DoReFaQuantizer(Quantizer):
     def _validate_config(self):
         '''
         1. only support quant-deqaunt weight and input
-        2. quant-dequant output means quant the gradient of output 
+        2. quant-dequant output means quant the gradient of output
         '''
         pass
 

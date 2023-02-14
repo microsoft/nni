@@ -30,7 +30,7 @@ class LsqQuantizer(Quantizer):
 
     def _validate_config(self):
         '''
-        1. for activation, only supports for uint, for weight, only supports for int 
+        1. for activation, only supports for uint, for weight, only supports for int
         2. no zero_point
         '''
         pass

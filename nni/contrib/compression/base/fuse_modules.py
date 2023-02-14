@@ -50,17 +50,17 @@ def reversed_padding_repeated_twice(conv_module: nn.Module):
 
     return _reversed_padding_repeated_twice
 
-def conv_forward(input: torch.Tensor, conv_module: nn.Module, weight: torch.Tensor, bias: Optional[torch.Tensor]):
+def conv_forward(inputs: torch.Tensor, conv_module: nn.Module, weight: torch.Tensor, bias: Optional[torch.Tensor]):
     assert isinstance(conv_module, (nn.Conv1d, nn.Conv2d, nn.Conv3d)), \
         f"expected module type in [Conv1d, Conv2d, Conv3d], but got {type(conv_module)}"
 
     def conv_forward_func(conv_func, padding_func):
         # copied from torch
         if conv_module.padding_mode != 'zeros':
-            return conv_func(F.pad(input, reversed_padding_repeated_twice(conv_module), mode=conv_module.padding_mode),
+            return conv_func(F.pad(inputs, reversed_padding_repeated_twice(conv_module), mode=conv_module.padding_mode),
                             weight, bias, conv_module.stride,
                             padding_func(0), conv_module.dilation, conv_module.groups)
-        return conv_func(input, weight, bias, conv_module.stride,
+        return conv_func(inputs, weight, bias, conv_module.stride,
                         conv_module.padding, conv_module.dilation, conv_module.groups)
 
     if type(conv_module) == torch.nn.Conv1d:
@@ -75,7 +75,7 @@ def get_bias(wrapper, param_dict):
         return param_dict['bias']
     elif wrapper.is_bias:
         return wrapper.module.original_bias
-    else: #无需quantize且该变量不存在
+    else:
         return None
 
 def set_bias(wrapper, fused_bias):

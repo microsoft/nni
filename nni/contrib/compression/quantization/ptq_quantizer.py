@@ -25,7 +25,7 @@ class PtqQuantizer(Quantizer):
         self.is_compressed = False
         self.register_ptq_apply_method()
         self.register_track_func()
-            
+
     def _validate_config(self):
         pass
 

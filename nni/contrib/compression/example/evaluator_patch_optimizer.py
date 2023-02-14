@@ -207,7 +207,7 @@ configure_list = [{
         'quant_types': ['output'],
         'quant_bits': 8,
         'op_types': ['ReLU'],
-        'op_names': ['model.feature.2', 'model.feature.5']#, 'features.13', 'features.16', 'features.20', 'classifier.2', 'classifier.5'],
+        'op_names': ['model.feature.2', 'model.feature.5']
     }]
 
 metric = pl_trainer.test(model, pl_data)

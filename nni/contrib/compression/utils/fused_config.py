@@ -42,7 +42,8 @@ def validate_fused_modules_config(model: nn.Module, config_list: List[Dict[str, 
         for i, module_name in enumerate(fused_modules_names):
             if i == 0:
                 module = get_module(model, module_name) # check whtether the module is in the model
-                assert module_name in modulename2config, f"The quantization configuration of {module_name} should be defined in the config_list"
+                assert module_name in modulename2config, \
+                    f"The quantization configuration of {module_name} should be defined in the config_list"
                 continue
             module = get_module(model, module_name)
             if module_name in modulename2config:

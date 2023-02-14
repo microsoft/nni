@@ -5,13 +5,11 @@ from __future__ import annotations
 
 import logging
 import inspect
-from collections import defaultdict
 from typing import Any, Callable, Dict, List, Tuple, Type, Union, Literal
 
 import torch
 from torch import Tensor
 import torch.nn as nn
-import torch.nn.functional as F
 
 from .apply_method import pruning_apply_methods, quant_apply_methods
 from .config import select_modules_by_config
@@ -457,7 +455,8 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
             configured_target_spaces[module_name] = target_spaces
 
     # non-config
-    assert len(fused_modules_names_lis) == 0, f"all fused modules{[item[0] for item in fused_modules_names_lis]} should be defined in the config list"
+    assert len(fused_modules_names_lis) == 0, \
+        f"all fused modules{[item[0] for item in fused_modules_names_lis]} should be defined in the config list"
 
     for module_name, module in model.named_modules():
         if module_name in identity_modules_set:
