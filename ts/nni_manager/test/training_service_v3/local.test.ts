@@ -220,8 +220,9 @@ nni.report_final_result(param['x'])
     // wait a while for it to report first intermediate result
     for (let i = 0; metrics.length === 0; i++) {
         await setTimeout(10);
-        if (i === 1000) {
+        if (i === 100) {
             console.error('[WARNING] test stop trial: no metric in 1 second');
+            await printLogFiles(path.join(globals.paths.experimentRoot, 'environments'));
         }
     }
 
@@ -305,4 +306,20 @@ function formatParameter(param: any) {
 
 function getMetrics(trialId: string): number[] {
     return metrics.filter(metric => (metric.trialId === trialId)).map(metric => JSON.parse(metric.metric.value)) as any;
+}
+
+
+async function printLogFiles(dirOrFile: string) {
+    const stat = await fs.stat(dirOrFile);
+    if (stat.isDirectory()) {
+        const children = await fs.readdir(dirOrFile);
+        for (const child of children) {
+            await printLogFiles(path.join(dirOrFile, child));
+        }
+    } else {
+        console.log(`## ${dirOrFile} ##`);
+        const content = await fs.readFile(dirOrFile, { encoding: 'utf8' });
+        console.log(content);
+        console.log();
+    }
 }
