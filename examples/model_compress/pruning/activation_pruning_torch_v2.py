@@ -15,7 +15,6 @@ from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import MultiStepLR
 
 import nni
-from nni.common.concrete_trace_utils import concrete_trace, ConcreteTracer
 from nni.compression.pytorch.speedup.v2 import ModelSpeedup
 from nni.compression.pytorch.utils import count_flops_params
 from nni.compression.pytorch.pruning import ActivationAPoZRankPruner, ActivationMeanRankPruner
@@ -124,21 +123,20 @@ if __name__ == '__main__':
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
     pruner._unwrap_model()
-    traced_model = concrete_trace(model, {'x': torch.rand([10, 3, 32, 32]).to(device)})
-    ModelSpeedup(traced_model).run(args=[torch.rand([10, 3, 32, 32]).to(device)], masks_file=masks)
+    ModelSpeedup(model, torch.rand([10, 3, 32, 32]), masks).speedup_model()
     print('\n' + '=' * 50 + ' EVALUATE THE MODEL AFTER SPEEDUP ' + '=' * 50)
-    evaluate(traced_model)
+    evaluate(model)
 
     # Optimizer used in the pruner might be patched, so recommend to new an optimizer for fine-tuning stage.
     print('\n' + '=' * 50 + ' START TO FINE TUNE THE MODEL ' + '=' * 50)
-    optimizer, scheduler = optimizer_scheduler_generator(traced_model, _lr=0.01, total_epoch=args.fine_tune_epochs)
+    optimizer, scheduler = optimizer_scheduler_generator(model, _lr=0.01, total_epoch=args.fine_tune_epochs)
 
     best_acc = 0.0
     g_epoch = 0
     for i in range(args.fine_tune_epochs):
-        train(traced_model, optimizer, criterion)
+        train(model, optimizer, criterion)
         scheduler.step()
-        best_acc = max(evaluate(traced_model), best_acc)
-    flops, params, results = count_flops_params(traced_model, torch.randn([128, 3, 32, 32]).to(device))
+        best_acc = max(evaluate(model), best_acc)
+    flops, params, results = count_flops_params(model, torch.randn([128, 3, 32, 32]).to(device))
     print(f'Pretrained model FLOPs {pre_flops/1e6:.2f} M, #Params: {pre_params/1e6:.2f}M, Accuracy: {pre_best_acc: .2f}%')
     print(f'Finetuned model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M, Accuracy: {best_acc: .2f}%')

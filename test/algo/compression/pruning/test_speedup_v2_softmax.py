@@ -11,7 +11,6 @@ import torch
 import torch.nn.functional as F
 
 from nni.compression.pytorch.utils import count_flops_params
-from nni.common.concrete_trace_utils import concrete_trace
 from nni.compression.pytorch.speedup.v2 import ModelSpeedup
 
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import L1NormPruner
@@ -60,18 +59,17 @@ class SpeedupSoftmaxTestCase(unittest.TestCase):
         pruner.show_pruned_weights()
         pruner._unwrap_model()  # unwrap all modules to normal state
 
-        traced_model = concrete_trace(model, {'x': dummy_input})
         # torch.manual_seed(100)
-        ModelSpeedup(traced_model).run(args=[dummy_input], masks_file=masks)
-        traced_model(dummy_input)
+        ModelSpeedup(model, dummy_input, masks).speedup_model()
+        model(dummy_input)
 
         print('model before speedup', repr(model))
         # 125.49 M, 0.85M, 93.29, 1.1012
         flops, params, _ = count_flops_params(model, (1, 1, 28, 28), verbose=False)
         print(f'Pretrained model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M')
 
-        print('model after speedup', repr(traced_model))
-        flops, params, _ = count_flops_params(traced_model, dummy_input, verbose=False)
+        print('model after speedup', repr(model))
+        flops, params, _ = count_flops_params(model, dummy_input, verbose=False)
         print(f'Pruned model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M')
 
     def test_function(self):

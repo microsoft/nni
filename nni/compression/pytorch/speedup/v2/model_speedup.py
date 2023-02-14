@@ -1,33 +1,34 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import copy
+from __future__ import annotations
+
+from copy import deepcopy
 import logging
 from pathlib import Path
-from typing import Any, Dict, Optional
+import tempfile
+from typing import Any, Dict, List
 
-import inspect
 import torch
 import torch.fx
-import torch.nn as nn
 from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
 from torch.fx.node import Node, Target
 
-from nni.common.concrete_trace_utils.utils import (map_recursive,
-                                                   run_onlyif_instance)
+from nni.common.concrete_trace_utils import concrete_trace
+from nni.compression.pytorch.utils import set_nested_attr
 from nni.compression.pytorch.speedup.compress_modules import replace_module
-from nni.compression.pytorch.speedup.v2.container import NodeInfo, Slot
-from nni.compression.pytorch.speedup.v2.mask_updater import (MaskUpdater,
-                                                             DefaultMaskUpdater,
-                                                             LeafModuleMaskUpdater,
-                                                             NoMaskUpdater,
-                                                             NoChangeMaskUpdater)
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
-from nni.compression.pytorch.utils.utils import (rand_like_with_shape,
-                                                 randomize_tensor,
-                                                 torch_float_dtype,
-                                                 torch_integer_dtype)
+from nni.compression.pytorch.utils.utils import rand_like_with_shape, torch_integer_dtype
+
+from .container import NodeInfo
+from .mask_updater import (MaskUpdater,
+                           DefaultMaskUpdater,
+                           LeafModuleMaskUpdater,
+                           NoMaskUpdater,
+                           NoChangeMaskUpdater)
+from .replacer import Replacer, DefaultReplacer
+from .utils import tree_map_zip
 
 
 @compatibility(is_backward_compatible=True)
@@ -37,288 +38,189 @@ class ModelSpeedup(torch.fx.Interpreter):
 
     Parameters
     ----------
-    model : pytorch model
-        The model user wants to speedup
-    masks_file : str/dict
-        The path of user provided mask file, or the mask object
-    map_location : str
-        the device on which masks are placed, same to map_location in ```torch.load```
-    batch_dim : int
-        the index of batch dimension in the dummy_input
-    batch_size: the batch_size coefficient of the sparsity inference. This value is
-        actually used as the batchsize of the dummy_input.
-    customized_replace_func: None/Dict
-        If `customized_replace_func` is not None, then we will use the given function to replace the
-        corresponding modules. The `key` of the dict is the opertor types and the `value`
-        is the replace function of corresponding opertor. The replace function should take
-        two input parameters, one is the original module, the second input parameter is tuple
-        of the input mask, output mask and weight mask. This replace function should prune the module
-        accordingly. Here is an example of the replace function(more examples can refer to compress_modules.py)::
-
-            def example_replace(ori_module, masks):
-                in_mask, out_mask, weight_mask = masks
-                # prune the ori_module to a new smaller module according to the mask
-                return new_small_module
+    model
+        The model user wants to speedup.
+    dummy_input
+        The dummy_input to execute the model.
+    masks_file
+        The path of user provided masks file, or the masks object.
+    map_location
+        The device on which masks are placed, same to map_location in ```torch.load```.
+    batch_dim
+        The index of batch dimension in the dummy_input.
+    batch_size
+        The batch_size coefficient of the sparsity inference.
+        This value is actually used as the batchsize of the dummy_input.
+    customized_mask_updaters
+        ...
+    customized_replacers
+        ``customized_replacers`` is a list of ``Replacer``.
+        Call a ``Module`` that does not contain a ``Module`` as a leaf-module,
+        a ``Module`` that contains a ``Module`` as a hyper-module, then replacer is used to replace the hyper-module.
+        The difference between the replacer and replace function is that replacer can perform more efficient replacements
+        to hyper-module, and replace function is used to replace leaf-module.
+        In ``ModelSpeedup.compress``, replacers are first to be called to replace the hyper-modules before
+        replacing all leaf-modules by replace functions.
     garbage_collect_values: bool
         if the garbage_collect_values is True, we will delete cache information after the cache has none usage.
     logger: Optional[logging.Logger]
         to set logger. if the value is None we will use the default logger
     """
     STD_DELTA = 1e-6
-    randomize_range_float = (0.1, 8.0)
 
     def __init__(self,
-                module: GraphModule,
-                batch_dim=0,
-                batch_size=8,
-                customized_replace_func=dict(),
-                customized_mask_updaters: list[MaskUpdater]=[],
-                garbage_collect_values: bool=True,
-                logger:Optional[logging.Logger]=None):
+                 model: torch.nn.Module,
+                 dummy_input: Any,
+                 masks_file: Any,
+                 map_location: Any = None,
+                 batch_dim: int = 0,
+                 batch_size: int = 8,
+                 customized_mask_updaters: List[MaskUpdater] | None = None,
+                 customized_replacers: List[Replacer] | None = None,
+                 garbage_collect_values: bool = True,
+                 logger: logging.Logger | None = None):
+        dummy_input = (dummy_input,) if isinstance(dummy_input, torch.Tensor) else dummy_input
+        module = concrete_trace(model, dummy_input)
         super().__init__(module, garbage_collect_values)
+
+        self.bound_model = model
+        self.dummy_input = dummy_input
+        if isinstance(masks_file, (str, Path)) and Path(masks_file).exists():
+            self.masks_file = torch.load(masks_file, map_location)
+        elif isinstance(masks_file, dict):
+            self.masks_file = masks_file
+        else:
+            raise Exception('Please provide the mask or the path of the mask file.')
 
         self.module: GraphModule
         self.batch_dim = batch_dim
         self.batch_size = batch_size
-        self.customized_replace_func = customized_replace_func
-        self.mask_updaters:list[MaskUpdater] = [
-            *customized_mask_updaters,
+
+        self.mask_updaters: List[MaskUpdater] = [
+            *(customized_mask_updaters if customized_replacers else []),
             NoChangeMaskUpdater(),
             NoMaskUpdater(),
             LeafModuleMaskUpdater(),
             DefaultMaskUpdater()
         ]
+
+        assert customized_replacers is None or all(isinstance(replacer, Replacer) for replacer in customized_replacers)
+        self.replacers = customized_replacers if customized_replacers is not None else []
+        self.replacers.append(DefaultReplacer(replace_module_func_dict=replace_module))
+
         if logger == None:
             self.logger = logging.getLogger(__name__)
             self.logger.setLevel(logging.INFO)
         else:
             self.logger = logger
 
-    @compatibility(is_backward_compatible=True)
-    def store_attr(self, path: str, obj):
-        """
-        an util for interprete and edit the module.
+        self.node_infos: Dict[Node, NodeInfo] = {}
+        for node in self.module.graph.nodes:
+            self.node_infos[node] = NodeInfo(node)
 
-        Parameters
-        ---------
-        path: str
-            the path for the attr. the hierarchy is split by `.`.
-        obj:
-            The target node to store.
-        """
-        target_atoms = path.split('.')
-        attr_itr = self.module
-        for i in range(len(target_atoms))[:-1]:
-            atom = target_atoms[i]
-            if not hasattr(attr_itr, atom):
-                raise RuntimeError(f"Node referenced nonexistent target {'.'.join(target_atoms[:i])}")
-            attr_itr = getattr(attr_itr, atom)
-        setattr(attr_itr, target_atoms[-1], obj)
+    @compatibility(is_backward_compatible=True)
+    def store_attr(self, path: str, obj: Any):
+        set_nested_attr(self.module, path, obj)
 
     @compatibility(is_backward_compatible=True)
     def placeholder(self, target: Target, args, kwargs) -> Any:
         """
-        override the execution for 'placeholder' ops.
+        Override the execution for 'placeholder' ops.
         """
         return self.arg_dict[target]
 
     def tensor_propagate_check(self, obj: torch.Tensor):
         """
-        detect the tensor should be seen as an intermediate tensor.
-        sometimes
-        # TODO: an api to specify dim
-        # now the dim is 0 and cannot be edited
-        # and the check function should also be edited
+        Detect the tensor should be seen as an intermediate tensor.
         """
         return obj.numel() > self.batch_size and obj.numel() % self.batch_size == 0
 
-    @run_onlyif_instance(torch.Tensor, False)
-    def tensor_deleter(self, _obj: torch.Tensor):
-        return None
-
-    @run_onlyif_instance(torch.Tensor)
-    def tensor_cloner(self, obj: torch.Tensor):
-        return obj.clone()
-
-    @run_onlyif_instance(torch.Tensor)
-    def tensor_detacher(self, obj: torch.Tensor):
-        return obj.detach()
-
-    def tensor_clone_detacher(self, obj):
-        if isinstance(obj, torch.Tensor):
-            new_obj = obj.clone().detach()
-            return new_obj
-        else:
-            try:
-                return copy.deepcopy(obj)
-            except Exception:
-                return obj
-
-    def tensor_randomizer(self, obj):
-        if isinstance(obj, torch.Tensor):
-            if obj.numel() != 1 and obj.dim() > self.batch_dim and obj.size(self.batch_dim) == self.batch_size:
-                new_obj = obj.clone().detach()
-                if not new_obj.is_contiguous():
-                    new_obj = new_obj.contiguous()
-                randomize_tensor(new_obj, self.randomize_range_float[0], self.randomize_range_float[1])
-                return new_obj
-            else:
-                new_obj = obj.clone().detach()
-                return new_obj
-        else:
-            try:
-                return copy.deepcopy(obj)
-            except Exception:
-                return obj
-
-    def mask_applier(self, value, mask):
-        if isinstance(value, torch.Tensor) and self.tensor_propagate_check(value):
-            assert isinstance(mask, torch.Tensor) and value.shape == mask.shape
-            return value * mask
-        else:
-            assert mask is None
-            return value
-
-    def tensor_requires_grad(self, obj):
-        if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj) and obj.dtype in torch_float_dtype:
-            # only float type can require the gradient
-            # enable the auto gradient
-            obj.requires_grad_(True)
-
-    @run_onlyif_instance(Node)
-    def slot_getter_value_0(self, node: Node):
-        assert self.slots[node].status['value_0'] == 1, 'slot error: bad value_0(%d)' % self.slots[node].status['value_0']
-        return self.slots[node].value_0
-
-    @run_onlyif_instance(Node)
-    def slot_getter_value_1(self, node: Node):
-        assert self.slots[node].status['value_1'] == 1, 'slot error: bad value_1(%d)' % self.slots[node].status['value_1']
-        return self.slots[node].value_1
-
-    @run_onlyif_instance(Node)
-    def slot_getter_value_2(self, node: Node):
-        assert self.slots[node].status['value_2'] == 1, 'slot error: bad value_2(%d)' % self.slots[node].status['value_2']
-        return self.slots[node].value_2
-
-    @run_onlyif_instance(Node)
-    def slot_getter_value_3(self, node: Node):
-        assert self.slots[node].status['value_3'] == 1, 'slot error: bad value_3(%d)' % self.slots[node].status['value_3']
-        return self.slots[node].value_3
-
-    @run_onlyif_instance(Node, False)
-    def slot_getter_mask_1(self, node: Node):
-        assert self.slots[node].status['mask_1'] == 1, 'slot error: bad mask_1(%d)' % self.slots[node].status['mask_1']
-        return self.slots[node].mask_1
-
-    @run_onlyif_instance(Node, False)
-    def slot_getter_mask_2(self, node: Node):
-        if self.slots[node].mask_2 is None:
-            return None
-        else:
-            assert self.slots[node].status['mask_2'] >= 1, 'slot error: bad mask_2(%d)' % self.slots[node].status['mask_2']
-            return self.slots[node].mask_2
-
-    @run_onlyif_instance(Node, False)
-    def slot_getter_mask_2_or_1(self, node: Node):
-        if self.slots[node].mask_2 is None:
-            assert self.slots[node].status['mask_1'] == 1, 'slot error: bad mask_1(%d)' % self.slots[node].status['mask_1']
-            return self.slots[node].mask_1
-        else:
-            assert self.slots[node].status['mask_2'] >= 1, 'slot error: bad mask_2(%d)' % self.slots[node].status['mask_2']
-            return self.slots[node].mask_2
-
-    # utils for direct update tand indirect update
-    def direct_calc_mask(self, obj):
-        # TODO: an api to specify dim
-        # now the dim is 0 and cannot be edited
-        if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj):
-            obj: torch.Tensor
-
-            out_mask = torch.ones_like(obj)
-            if obj.dtype in torch_integer_dtype:
-                same = obj[:] == obj[0]
-                reduced = torch.sum(same, dim=0)
-                is_constant = reduced == obj.size(0)
-                out_mask[:, is_constant] = 0
-            else:
-                std = torch.std(obj, dim=0)
-                mask_pos = std < self.STD_DELTA
-                out_mask[:, mask_pos] = 0
-            return out_mask
-        else:
-            return None
-
-    def mask_merger(self, a, b):
-        if isinstance(a, torch.Tensor) and self.tensor_propagate_check(a):
-            assert isinstance(b, torch.Tensor) and a.shape == b.shape
-            # equals to: torch.maximum(a + b, torch.ones_like(a)) - 1
-            return torch.relu(a + b - 1)
-        else:
-            assert a is None and b is None
-            return None
-
-    def indirect_calc_mask(self, mask, obj):
-        if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj):
-            assert isinstance(mask, torch.Tensor) and obj.shape == mask.shape
-            if obj.grad is not None:
-                gradient_sum = torch.sum(torch.abs(obj.grad), dim=0)
-                _grad_zero = gradient_sum == 0
-                new_mask = mask.clone()
-                for batchid in range(obj.size(0)):
-                    # set the same mask value for the whole batche
-                    new_mask[batchid][_grad_zero] = 0
-                return new_mask
-        return mask
-
-    def indirect_calc_mask2(self, mask, obj):
-        if isinstance(obj, torch.Tensor) and self.tensor_propagate_check(obj):
-            assert isinstance(mask, torch.Tensor) and obj.shape == mask.shape
-            gradient_sum = torch.sum(torch.abs(obj), dim=0)
-            _grad_zero = gradient_sum == 0
-            new_mask = mask.clone()
-            for batchid in range(obj.size(0)):
-                # set the same mask value for the whole batche
-                new_mask[batchid][_grad_zero] = 0
-            return new_mask
-        return mask
-
-    def indirect_update_backward(self, output, mask):
-        # Note: output maybe tensor or list/tuple of tensors
+    def direct_calc_mask(self, output: Any, output_mask: torch.Tensor | None = None, batch_dim: int | None = None):
+        batch_dim = self.batch_dim if batch_dim is None else batch_dim
         if isinstance(output, torch.Tensor) and self.tensor_propagate_check(output):
-            assert isinstance(mask, torch.Tensor)
-            if output.grad_fn is not None:
-                output.backward(mask)
+            mask_size = list(output.size())
+            mask_size[batch_dim] = 1
+            output_mask = torch.ones(mask_size).type_as(output).float() if output_mask is None else output_mask.clone()
+            output: torch.Tensor = output.transpose(0, batch_dim)
+            output_mask = output_mask.transpose(0, batch_dim)
+            if output.dtype in torch_integer_dtype:
+                same = output[:] == output[0]
+                reduced = torch.sum(same, dim=0)
+                is_constant = reduced == output.size(0)
+                output_mask[:, is_constant] = 0.
+            else:
+                std = torch.std(output, dim=0)
+                mask_pos = std < self.STD_DELTA
+                output_mask[:, mask_pos] = 0.
+            return output_mask.transpose(0, batch_dim)
         else:
-            assert not isinstance(mask, torch.Tensor)
+            return None
 
-    # # pass the gradient to the predecessor nodes
-    def indirect_pass_grad(self, slot_val, out):
-        if isinstance(out, torch.Tensor):
-            if self.tensor_propagate_check(out):
-                if slot_val is not None and out.grad is not None:
-                    slot_val += out.grad
-                elif slot_val is None:
-                    slot_val = out.grad
-                elif slot_val is not None and out.grad is None:
-                    # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
-                    # the size operation of tin will have no gradient
-                    pass
+    def indirect_calc_mask(self, output_grad: torch.Tensor, output_mask: torch.Tensor, batch_dim: int | None = None):
+        batch_dim = self.batch_dim if batch_dim is None else batch_dim
+        if isinstance(output_grad, torch.Tensor) and self.tensor_propagate_check(output_grad):
+            output_grad = output_grad.transpose(0, batch_dim)
+            output_mask = output_mask.clone().transpose(0, batch_dim)
+            assert output_grad.shape[1:] == output_mask.shape[1:]
+            gradient_sum = torch.sum(torch.abs(output_grad), dim=0)
+            _grad_zero = gradient_sum == 0.
+            output_mask[:, _grad_zero] = 0.
+            return output_mask.transpose(0, batch_dim)
+        return output_mask
+
+    # backward the output grad_fn with output_mask as grad
+    def indirect_backward(self, output: Any, output_mask: torch.Tensor | None):
+        if isinstance(output, torch.Tensor) and self.tensor_propagate_check(output):
+            assert isinstance(output_mask, torch.Tensor)
+            if output.grad_fn is not None:
+                output.backward(output_mask.expand_as(output))
         else:
-            assert not isinstance(out, torch.Tensor)
+            assert output_mask is None
+
+    # pass the gradient to the predecessor nodes
+    def indirect_pass_grad(self, node_info: NodeInfo, outputs: Any):
+        def add_grad(grad, output):
+            if isinstance(output, torch.Tensor):
+                if grad is not None and output.grad is not None:
+                    return grad + output.grad
+                elif grad is None:
+                    return output.grad
+                else:
+                    return grad
+            else:
+                return grad
+
+        node_info.output_grad = tree_map_zip(add_grad, node_info.output_grad, outputs)
 
     def propagate_originally(self):
-
-        self.logger.info("propagate original variables")
-
+        """
+        Propagate normally to get informations of intermediate variables such as shape, dtype of tensors.
+        Default action:
+            execute and store values to slot.value_0(intermediate variables when assigned),
+                and slot.value_1(intermediate variables after in-place ops)
+        """
+        self.logger.info("Propagate original variables")
         for node in self.module.graph.nodes:
             node: Node
             self.logger.info('Propagate variables for %s: %s', node.op, node.name)
-            MaskUpdater.propagate_originally(self, node)
+
+            args, kwargs = node.args, node.kwargs
+            args = tree_map_zip(lambda nd: self.node_infos[nd].output_inplace if isinstance(nd, Node) else nd, args)
+            kwargs = tree_map_zip(lambda nd: self.node_infos[nd].output_inplace if isinstance(nd, Node) else nd, kwargs)
+            output = getattr(self, node.op)(node.target, args, kwargs)
+
+            self.node_infos[node].output_origin = output
+            self.node_infos[node].output_inplace = \
+                tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else deepcopy(t), output)
+
+            if self.garbage_collect_values:
+                # do memory collect to reduce memory usage
+                for to_delete in self.user_to_last_uses.get(node, []):
+                    del self.node_infos[to_delete]._output_inplace
 
     def update_direct_sparsity(self):
-        # update indirect out mask
-
-        self.logger.info("update direct sparsity")
+        # update direct out mask
+        self.logger.info("Update direct sparsity...")
 
         for node in self.module.graph.nodes:
             node: Node
@@ -335,8 +237,7 @@ class ModelSpeedup(torch.fx.Interpreter):
 
     def update_indirect_sparsity(self):
         # update indirect out mask
-
-        self.logger.info("update indirect sparsity")
+        self.logger.info("Update indirect sparsity...")
 
         for node in reversed(self.module.graph.nodes):
             node: Node
@@ -360,66 +261,24 @@ class ModelSpeedup(torch.fx.Interpreter):
         NOTE: ```func``` type cannot be replaced as it is not a module, thus, one limitation
         is that ```func``` should be not required to be replaced.
         """
-        # load the original stat dict before replace the model
-        self.module.load_state_dict(self.ori_state_dict)
-        self.logger.info("replace compressed modules...")
+        self.logger.info("Replace compressed modules...")
         # the mask conflict should be already resolved
         with torch.no_grad():
-            for node in self.module.graph.nodes:
-                self.replace_submodule(node)
-
-    def replace_submodule(self, node: Node):
-        """
-        Replace the submodule according to the inferred sparsity.
-
-        Parameters
-        ----------
-        unique_name: str
-            The unique_name of the submodule to replace.
-        reindex_dim: int
-            The dimension of the re-index operation.
-        reindex: Reindex
-            The index tensor. Normally this variable is None. If we want to reindex the
-            output of this submodule, we can pass the index by this parameter.
-        """
-        def tensors_flattener(masks):
-            flattened = []
-            def helper(obj):
-                if isinstance(obj, torch.Tensor) and obj.numel() > 1:
-                    flattened.append(obj)
-            map_recursive(helper, masks)
-            return flattened
-
-        self.logger.debug("replace %s, with op_type %s", node.name, node.op)
-        if node.op == 'call_module':
-            node_info: NodeInfo = self.node_infos[node]
-            sub_module: nn.Module = self.fetch_attr(node.target)
-            sub_module_name = sub_module._get_name()
-
-            if (not sub_module_name in replace_module) and (sub_module_name not in self.customized_replace_func):
-                err_msg = f"Has not supported replacing module with type: {sub_module_name}, "
+            for replacer in self.replacers:
+                replacer.replace_modules(self)
+        for node in self.node_infos:
+            if node.op == 'call_module':
+                module = self.fetch_attr(node.target)
+                module_type = module._get_name()
+                err_msg = f"Has not supported replacing module with type: {module_type}, "
                 err_msg += f"you could report an issue at https://github.com/microsoft/nni. "
-                err_msg += f"If you know how to replace {sub_module_name}, "
+                err_msg += f"If you know how to replace {module_type}, "
                 err_msg += f"you could implement module replacement by passing in"
-                err_msg += f"`customized_replace_func` to `{self.__class__.__name__}`. "
-                err_msg += f"You are welcome to contribute back to nni as native support if you have implemented the replacement function, "
+                err_msg += f"`customized_replacers` to `{self.__class__.__name__}`. "
+                err_msg += f"You are welcome to contribute back to nni as native support "
+                err_msg += f"if you have implemented the replacement function, "
                 err_msg += f"so that more users can benefit from your contributions."
-                raise RuntimeError(err_msg)
-            self.logger.info("replace module (name: %s, op_type: %s)", node.name, sub_module_name)
-            replace_function = self.customized_replace_func.get(sub_module_name, replace_module.get(sub_module_name, None))
-
-            assert len(node.kwargs) == 0
-            in_masks = tensors_flattener(map_recursive(self.slot_getter_mask_2_or_1, node.args))
-            out_masks = map_recursive(self.slot_getter_mask_2_or_1, node)
-            param_masks = node_info.param_masks_1
-
-            compressed_module = replace_function(sub_module, (in_masks, out_masks, param_masks))
-
-            new_submodule = compressed_module
-            self.store_attr(node.target, compressed_module)
-            return new_submodule
-        else:
-            return None
+                self.logger.error(err_msg)
 
     def initialize_propagate(self, args):
         def model_tensor_randomizer(obj):
@@ -431,154 +290,135 @@ class ModelSpeedup(torch.fx.Interpreter):
             else:
                 return obj
 
-        self.logger.info('infer module masks...')
-
-        self.ori_state_dict = copy.deepcopy(self.module.state_dict())
-
         # input of the whole model
-        placeholders = [node for node in self.module.graph.nodes if node.op == 'placeholder']
+        placeholders: List[Node] = [node for node in self.module.graph.nodes if node.op == 'placeholder']
         assert len(args) <= len(placeholders)
-        args = map_recursive(model_tensor_randomizer, args)
+        args = tree_map_zip(model_tensor_randomizer, args)
         self.arg_dict = {}
         for i, placeholder in enumerate(placeholders):
             if i < len(args):
                 self.arg_dict[placeholder.target] = args[i]
             else:
-                assert len(placeholder.args) == 1, f'parameter \'{placeholder.target}\' has no default value!'
+                assert len(placeholder.args) == 1, f'Parameter \'{placeholder.target}\' has no default value!'
                 self.arg_dict[placeholder.target] = placeholder.args[0]
-
-        # to store intermediate infomations
-        self.slots: Dict[Node, Slot] = {node: Slot() for node in self.module.graph.nodes}
 
     def initialize_update_sparsity(self):
         # for mask_updater to store extended infos
-        self.node_infos: Dict[Node, NodeInfo] = {node: NodeInfo() for node in self.module.graph.nodes}
-        for node in self.module.graph.nodes:
-            node: Node
+        for node in self.node_infos:
             for mask_updater in self.mask_updaters:
                 if mask_updater.detect(self, node):
                     self.node_infos[node].mask_updater = mask_updater
                     break
 
-        # mask init
-        node_to_masks = {k: [] for k in self.module.graph.nodes}
-        for node in (node for node in self.module.graph.nodes if self.node_infos[node].module is not None):
-            # some 'call_module's has no 'module' such as 'log_softmax'
-            param_masks = self.masks_file.get(node.target, {})
-            if '_output_' in param_masks:
-                node_to_masks[node].append(param_masks['_output_'])
-            if '_input_' in param_masks:
-                func = self.fetch_attr(node.target).forward
-                while hasattr(func, '__wrapped__'):
-                    func = func.__wrapped__
-                arg_list = inspect.getfullargspec(func).args
-                kw_to_posi = dict(zip(arg_list[1:], range(len(arg_list))[1:]))
-                node_kw = {
-                    **dict(zip(range(len(arg_list))[1:], node.args)),
-                    **dict(zip(arg_list[1:], node.args)),
-                    **{kw_to_posi[k]: v for k, v in node.kwargs.items()},
-                    **node.kwargs,
-                }
-                for key, mask in param_masks['_input_'].items():
-                    node_to_masks[node_kw[key]].append(mask)
-        def check_equal(a, b):
-            if type(a) != type(b):
-                return False
-            if isinstance(a, (list, tuple)):
-                if len(a) != len(b):
-                    return False
-                for sub_a, sub_b in zip(a, b):
-                    if not check_equal(sub_a, sub_b):
-                        return False
-                return True
-            elif isinstance(a, dict):
-                if len(set(a.keys()).symmetric_difference(b.keys())) != 0:
-                    return False
-                for key in a.keys():
-                    if not check_equal(a[key], b[key]):
-                        return False
-                return True
-            else:
-                assert isinstance(a, torch.Tensor), f'contents in masks can only be (list, tuple, dict, Tensor), not ({type(a)})'
-                return torch.equal(a, b) # totally equal, no bias
-        def check_valid(a, b):
-            if isinstance(a, (list, tuple)):
-                if not isinstance(b, (list, tuple)):
-                    return False
-                if len(a) != len(b):
-                    return False
-                for sub_a, sub_b in zip(a, b):
-                    if not check_equal(sub_a, sub_b):
-                        return False
-                return True
-            elif isinstance(a, dict):
-                if not isinstance(b, dict):
-                    return False
-                if len(set(a.keys()).symmetric_difference(b.keys())) != 0:
-                    return False
-                for key in a.keys():
-                    if not check_equal(a[key], b[key]):
-                        return False
-                return True
-            elif isinstance(a, torch.Tensor):
-                if not isinstance(b, torch.Tensor):
-                    return False
-                return a.shape == b.shape
-            else:
-                return b is None
-        for node, masks in node_to_masks.items():
-            if len(masks) >= 1:
-                mask = masks[0]
-                for mask_next in masks[1:]:
-                    assert check_equal(mask, mask_next), f'preset-masks of slot "{node}" are not euqal!'
-                assert check_valid(self.slots[node].value_0, mask),\
-                    f'structure of preset-mask and value of slot "{node}" are not euqal!'
-                self.slots[node].mask_0 = masks[0]
+        # The following code is related to preset input/output mask...
 
-    def run(self, *, args, masks_file, map_location=None) -> Any:
-        """
-        This class is to speedup the model with provided weight mask.
+        # node_to_masks = defaultdict(list)
+        # for node in (node for node in self.node_infos if self.node_infos[node].module is not None):
+        #     # some 'call_module's has no 'module' such as 'log_softmax'
+        #     param_masks = self.masks_file.get(node.target, {})
+        #     if '_output_' in param_masks:
+        #         node_to_masks[node].append(param_masks['_output_'])
+        #     if '_input_' in param_masks:
+        #         func = self.fetch_attr(node.target).forward
+        #         while hasattr(func, '__wrapped__'):
+        #             func = func.__wrapped__
+        #         arg_list = inspect.getfullargspec(func).args
+        #         kw_to_posi = dict(zip(arg_list[1:], range(len(arg_list))[1:]))
+        #         node_kw = {
+        #             **dict(zip(range(len(arg_list))[1:], node.args)),
+        #             **dict(zip(arg_list[1:], node.args)),
+        #             **{kw_to_posi[k]: v for k, v in node.kwargs.items()},
+        #             **node.kwargs,
+        #         }
+        #         for key, mask in param_masks['_input_'].items():
+        #             node_to_masks[node_kw[key]].append(mask)
 
-        Parameters
-        ----------
-        args : tuple/list
-            the dummy_input to execute the model
-        masks_file : str/dict
-            The path of user provided mask file, or the mask object.
-        map_location : str
-            the device on which masks are placed, same to map_location in ```torch.load```
-        """
+        # def check_equal(a, b):
+        #     if type(a) != type(b):
+        #         return False
+        #     if isinstance(a, (list, tuple)):
+        #         if len(a) != len(b):
+        #             return False
+        #         for sub_a, sub_b in zip(a, b):
+        #             if not check_equal(sub_a, sub_b):
+        #                 return False
+        #         return True
+        #     elif isinstance(a, dict):
+        #         if len(set(a.keys()).symmetric_difference(b.keys())) != 0:
+        #             return False
+        #         for key in a.keys():
+        #             if not check_equal(a[key], b[key]):
+        #                 return False
+        #         return True
+        #     else:
+        #         assert isinstance(a, torch.Tensor), f'contents in masks can only be (list, tuple, dict, Tensor), not ({type(a)})'
+        #         return torch.equal(a, b) # totally equal, no bias
 
-        if map_location is None:
-            map_location = 'cuda' if torch.cuda.is_available() else 'cpu'
-        if isinstance(masks_file, (str, Path)) and Path(masks_file).exists():
-            self.masks_file = torch.load(masks_file, map_location)
-        elif isinstance(masks_file, dict):
-            self.masks_file = copy.deepcopy(masks_file)
-        else:
-            raise Exception('Please provide the mask or the path of the mask file')
+        # def check_valid(a, b):
+        #     if isinstance(a, (list, tuple)):
+        #         if not isinstance(b, (list, tuple)):
+        #             return False
+        #         if len(a) != len(b):
+        #             return False
+        #         for sub_a, sub_b in zip(a, b):
+        #             if not check_equal(sub_a, sub_b):
+        #                 return False
+        #         return True
+        #     elif isinstance(a, dict):
+        #         if not isinstance(b, dict):
+        #             return False
+        #         if len(set(a.keys()).symmetric_difference(b.keys())) != 0:
+        #             return False
+        #         for key in a.keys():
+        #             if not check_equal(a[key], b[key]):
+        #                 return False
+        #         return True
+        #     elif isinstance(a, torch.Tensor):
+        #         if not isinstance(b, torch.Tensor):
+        #             return False
+        #         return a.shape == b.shape
+        #     else:
+        #         return b is None
 
-        self.logger.info("start to speedup the model")
-        training = self.module.training
-        # set to the evaluation mode
-        self.module.train(False)
-        # TODO suppose to fix the conflict after the sparsity propagation
-        # which is more elegent
-        fix_mask_conflict(self.masks_file, self.module, args)
+        # for node, masks in node_to_masks.items():
+        #     if len(masks) >= 1:
+        #         mask = masks[0]
+        #         for mask_next in masks[1:]:
+        #             assert check_equal(mask, mask_next), f'preset-masks of "{node}" are not euqal!'
+        #         assert check_valid(self.node_infos[node].output_origin, mask),\
+        #             f'structure of preset-mask and value of slot "{node}" are not euqal!'
+        #         self.node_infos[node].output_masks = mask
 
-        self.initialize_propagate(args)
+    def speedup_model(self):
+        try:
+            ori_state_dict_file = tempfile.NamedTemporaryFile(delete=False)
+            torch.save(self.module.state_dict(), ori_state_dict_file)
+            ori_state_dict_file.close()
 
-        self.propagate_originally()
+            self.logger.info("Start to speedup the model...")
+            training = self.module.training
+            self.module.train(False)
 
-        self.initialize_update_sparsity()
+            # TODO: suppose to fix the conflict after the sparsity propagation, which is more elegent
+            self.logger.info('Resolve the mask conflict before mask propagate...')
+            fix_mask_conflict(self.masks_file, self.module, self.dummy_input)
+            self.logger.info('Infer module masks...')
+            self.initialize_propagate(self.dummy_input)
+            self.propagate_originally()
+            self.initialize_update_sparsity()
+            self.update_direct_sparsity()
+            self.update_indirect_sparsity()
+            self.logger.info('Resolve the mask conflict after mask propagate...')
+            fix_mask_conflict(self.masks_file, self.module, self.dummy_input)
 
-        self.update_direct_sparsity()
-
-        self.update_indirect_sparsity()
-
-        self.logger.info('resolve the mask conflict')
+            self.module.load_state_dict(torch.load(ori_state_dict_file.name))
+        finally:
+            import os
+            os.unlink(ori_state_dict_file.name)
 
         self.replace_compressed_modules()
-
         self.module.train(training)
-        self.logger.info("speedup done")
+        self.logger.info("Speedup done.")
+
+    def run(self):
+        self.speedup_model()
