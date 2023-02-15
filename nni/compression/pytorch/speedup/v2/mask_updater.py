@@ -3,6 +3,7 @@
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
+    from .container import NodeInfo
     from .model_speedup import ModelSpeedup
 
 import operator
