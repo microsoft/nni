@@ -18,7 +18,6 @@ from .utils import ClassArgsValidator
 
 if dispatcher_env_vars.SDK_PROCESS != 'dispatcher':
     from .trial import *
-    from .smartparam import *
     from .common.nas_utils import training_update
 
 class NoMoreTrialError(Exception):

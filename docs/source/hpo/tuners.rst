@@ -77,6 +77,8 @@ Built-in Tuners
       - Heuristic
       - This simple annealing algorithm begins by sampling from the prior, but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on the random search that leverages smoothness in the response surface. The annealing rate is not adaptive.
 
+        Notice, Anneal needs to be installed by ``pip install nni[Anneal]`` command.
+
     * - :class:`Evolution <nni.algorithms.hpo.evolution_tuner.EvolutionTuner>`
       - Heuristic
       - Naive Evolution comes from Large-Scale Evolution of Image Classifiers. It randomly initializes a population-based on search space. For each generation, it chooses better ones and does some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naïve Evolution requires many trials to work, but it's very simple and easy to expand new features. `Reference paper <https://arxiv.org/pdf/1703.01041.pdf>`__

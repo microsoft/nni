@@ -12,7 +12,6 @@ from functools import cmp_to_key
 import traceback
 from datetime import datetime, timezone
 from subprocess import Popen
-from nni.tools.annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url, metric_data_url
 from .config_utils import Config, Experiments
@@ -310,17 +309,6 @@ def trial_kill(args):
     else:
         print_error('Restful server is not running...')
     return False
-
-def trial_codegen(args):
-    '''Generate code for a specific trial'''
-    print_warning('Currently, this command is only for nni nas programming interface.')
-    exp_id = get_config_filename(args)
-    experiment_config = Config(exp_id, Experiments().get_all_experiments()[exp_id]['logDir']).get_config()
-    if not experiment_config.get('useAnnotation'):
-        print_error('The experiment is not using annotation')
-        exit(1)
-    code_dir = experiment_config['trial']['codeDir']
-    expand_annotations(code_dir, './exp_%s_trial_%s_code'%(exp_id, args.trial_id), exp_id, args.trial_id)
 
 def list_experiment(args):
     '''Get experiment information'''
