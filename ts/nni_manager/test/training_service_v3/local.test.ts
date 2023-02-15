@@ -217,7 +217,8 @@ nni.report_final_result(param['x'])
     // wait for it to request parameter
     await paramSent.get(trial).promise;
     // wait a while for it to report first intermediate result
-    await setTimeout(100);  // TODO: use an env var to distinguish pipeline so we can reduce the delay
+    // might be longer on macOS
+    await setTimeout(process.platform == 'darwin' ? 1000 : 100);  // TODO: use an env var to distinguish pipeline so we can reduce the delay
     await ts.stopTrial(trial);
 
     // the callbacks should be invoked
