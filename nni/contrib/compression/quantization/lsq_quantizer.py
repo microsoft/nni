@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import torch
 from torch import Tensor
@@ -16,12 +16,12 @@ class LsqQuantizer(Quantizer):
     '''
     LsqQuantizer: https://arxiv.org/pdf/1902.08153.pdf
     '''
-    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None, \
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, \
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None, \
-                 fused_module_lis: List[List[str]] = None):
+                 fused_module_lis: Union[List[List[str]], None] = None):
         super().__init__(model, config_list, evaluator, existed_wrappers=existed_wrappers, \
                          fused_module_lis=fused_module_lis)
-
+        self.evaluator: Evaluator
         self.is_init = False
 
         self.register_scale()
@@ -47,7 +47,7 @@ class LsqQuantizer(Quantizer):
             return
         target_space = wrapper.quantization_target_spaces[target_name]
         init_target = target.data.detach().abs().mean() * 2 / (target_space.qmax ** 0.5)
-        target_space.scale.data = init_target
+        target_space.scale.data = init_target # type: ignore
         target_space.zero_point = torch.tensor(0.0).to(target.device)
 
     def register_lsq_apply_method(self):
@@ -69,9 +69,8 @@ class LsqQuantizer(Quantizer):
                     except StopIteration:
                         # NOTE: this will have risk in model parallel
                         device = next(self.bound_model.parameters()).device
-                param = torch.nn.Parameter(torch.Tensor([1.0]))
+                param = torch.nn.Parameter(torch.Tensor([1.0]).to(device))
                 wrapper.register_parameter(f"{target_name}_scale", param)
-                target_space.scale.data = target_space.scale.data.to(device)
 
     def patch_optimizer_param_group(self):
         module_name_param_dict = {}

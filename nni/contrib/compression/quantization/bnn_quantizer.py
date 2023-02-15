@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import torch
 from torch import Tensor
@@ -17,12 +17,12 @@ class BNNQuantizer(Quantizer):
     '''
     BinaryNet Quantization: https://arxiv.org/pdf/1602.02830.pdf
     '''
-    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None, \
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, \
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None, \
-                 fused_module_lis: List[List[str]] = None):
+                 fused_module_lis: Union[List[List[str]], None] = None):
         super().__init__(model, config_list, evaluator, existed_wrappers=existed_wrappers, \
                          fused_module_lis=fused_module_lis)
-
+        self.evaluator: Evaluator
         self.is_init = False
         self.register_bnn_apply_method()
         self.register_track_func()
@@ -58,7 +58,8 @@ class BNNQuantizer(Quantizer):
             # clip params to (-1,1)
             for _, ts in self._target_spaces.items():
                 for target_name, target_space in ts.items():
-                    if target_space.type is TargetType.PARAMETER and 'weight' in target_name:
+                    if target_space.type is TargetType.PARAMETER and 'weight' in target_name and \
+                        isinstance(target_space.target, torch.nn.parameter.Parameter):
                         target_space.target.data = target_space.target.data.clamp(-1,1)
 
         evaluator.patch_optimizer_step(before_step_tasks=[], after_step_tasks=[optimizer_task])

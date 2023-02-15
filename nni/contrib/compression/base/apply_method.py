@@ -24,7 +24,8 @@ def lsq_clamp_round(target: torch.Tensor, target_space: QuantizationTargetSpace)
         y_grad = x
         return (y_out - y_grad).detach() + y_grad
 
-    qmax, qmin = target_space.qmax, target_space.qmin
+    qmax: int = target_space.qmax
+    qmin: int = target_space.qmin
     #Quantize
     grad_scale_factor = 1.0 / ((qmax * target.numel()) ** 0.5) if (qmax * target.numel()) ** 0.5 != 0 else 1.0
     scale = grad_scale(target_space.scale, grad_scale_factor)

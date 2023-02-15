@@ -16,12 +16,12 @@ class PtqQuantizer(Quantizer):
     '''
     Post Training Quantization
     '''
-    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None, \
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, \
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None, \
-                 fused_module_lis: List[List[str]] = None):
+                 fused_module_lis: Union[List[List[str]], None] = None):
         super().__init__(model, config_list, evaluator, existed_wrappers=existed_wrappers, \
                          fused_module_lis=fused_module_lis)
-
+        self.evaluator: Evaluator
         self.is_compressed = False
         self.register_ptq_apply_method()
         self.register_track_func()

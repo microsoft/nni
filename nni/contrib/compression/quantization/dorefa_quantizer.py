@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import torch
 from torch import Tensor
@@ -17,12 +17,12 @@ class DoReFaQuantizer(Quantizer):
     '''
     Dorefa-Quantizer: https://arxiv.org/pdf/1606.06160.pdf
     '''
-    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None, \
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, \
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None, \
-                 fused_module_lis: List[List[str]] = None):
+                 fused_module_lis: Union[List[List[str]], None] = None):
         super().__init__(model, config_list, evaluator, existed_wrappers=existed_wrappers, \
                          fused_module_lis=fused_module_lis)
-
+        self.evaluator: Evaluator
         self.register_dorefa_apply_method()
         self.register_track_func()
 
@@ -54,7 +54,6 @@ class DoReFaQuantizer(Quantizer):
         if target_name not in wrapper.quantization_target_spaces:
             return
         target_space = wrapper.quantization_target_spaces[target_name]
-
         if INPUT_PREFIX in target_name or "weight" in target_name: #zero_point and scale don't change anymore
             tracked_max = torch.tensor(1.0).to(target.device)
             tracked_min = torch.tensor(0.0).to(target.device)
@@ -65,6 +64,8 @@ class DoReFaQuantizer(Quantizer):
             tracked_min = torch.tensor(0 - 0.5 / (2**target_space.quant_bits - 1)).to(target.device)
             scale, zero_point = update_scale_zp(tracked_max, tracked_min, target_space.qmax, \
                                 target_space.qmin, 'affine')
+        else:
+            raise RuntimeError(f'Unknown target_name {target_name}')
 
         target_space.scale, target_space.zero_point = scale, zero_point
 
@@ -78,7 +79,7 @@ class DoReFaQuantizer(Quantizer):
         pass
 
 
-def update_scale_zp(tracked_max: Tensor, tracked_min: Tensor, qmax: int, qmin: int, quant_scheme: str = None):
+def update_scale_zp(tracked_max: Tensor, tracked_min: Tensor, qmax: int, qmin: int, quant_scheme: Union[str, None] = None):
     tracked_min = torch.min(tracked_min, torch.zeros_like(tracked_min))
     tracked_max = torch.max(tracked_max, torch.zeros_like(tracked_max))
     zero_point = torch.zeros_like(tracked_min)

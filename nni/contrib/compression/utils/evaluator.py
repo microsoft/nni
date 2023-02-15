@@ -9,6 +9,7 @@ import logging
 import types
 from typing import Dict, List, Tuple, Union, Any, Callable, Optional
 
+import torch
 from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
@@ -156,7 +157,8 @@ class Evaluator:
         """
         raise NotImplementedError
 
-    def bind_model(self, model: Module | pl.LightningModule, param_names_map: Dict[str, str] | None = None):
+    def bind_model(self, model: Module | pl.LightningModule, param_names_map: Dict[str, str] | None = None, \
+                   module_name_param_dict: Union[Dict[str, List[Tensor]], None] = None):
         """
         Bind the model suitable for this ``Evaluator`` to use the evaluator's abilities of model modification,
         model training, and model evaluation.
@@ -177,7 +179,7 @@ class Evaluator:
         """
         raise NotImplementedError
 
-    def optimizer_add_param_group(self, module_name_param_dict: Dict[str, List[Tensor]], optimizers: Optimizer | List[Optimizer]):
+    def optimizer_add_param_group(self, model: Union[torch.nn.Module, pl.LightningModule], module_name_param_dict: Dict[str, List[Tensor]], optimizers: Optimizer | List[Optimizer]):
         # used in the bind_model process
         def find_param_group(param_groups: List[Dict], module_name: str):
             for param_group in param_groups:
@@ -203,8 +205,8 @@ class Evaluator:
                 new_param_group["params"] = param
                 optimizer.add_param_group(new_param_group)
 
-        assert self.model is not None
-        param2name_dict = {id(p): name for name, p in self.model.named_parameters()}
+        assert isinstance(model, (Module, pl.LightningModule))
+        param2name_dict = {id(p): name for name, p in model.named_parameters()}
         optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
 
         for module_name, param_lis in module_name_param_dict.items():
@@ -420,7 +422,7 @@ class LightningEvaluator(Evaluator):
         self._initialization_complete = True
 
     def bind_model(self, model: pl.LightningModule, param_names_map: Dict[str, str] | None = None, \
-                   module_name_param_dict: Dict[str, List[Tensor]] = None):
+                   module_name_param_dict: Union[Dict[str, List[Tensor]], None] = None):
         err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert self._initialization_complete is True, err_msg
         assert isinstance(model, pl.LightningModule)
@@ -449,7 +451,7 @@ class LightningEvaluator(Evaluator):
         else:
             _logger.warning('Did not bind any model, no need to unbind model.')
 
-    def _patch_configure_optimizers(self, module_name_param_dict: Dict[str, List[Tensor]] = None):
+    def _patch_configure_optimizers(self, module_name_param_dict: Union[Dict[str, List[Tensor]], None] = None):
         assert isinstance(self.model, pl.LightningModule)
         if self._opt_returned_dicts:
             def new_configure_optimizers(_):  # type: ignore
@@ -463,7 +465,7 @@ class LightningEvaluator(Evaluator):
                         opt_lrs_dict['lr_scheduler']['scheduler'] = lr_schedulers[opt_lrs_dict['lr_scheduler']['scheduler']]
                 # add param_group
                 if module_name_param_dict is not None:
-                    self.optimizer_add_param_group(module_name_param_dict, [opt_lrs_dict['optimizer'] for opt_lrs_dict in opt_lrs_dicts])
+                    self.optimizer_add_param_group(self.model, module_name_param_dict, [opt_lrs_dict['optimizer'] for opt_lrs_dict in opt_lrs_dicts]) # type: ignore
 
                 return opt_lrs_dicts
 
@@ -475,7 +477,7 @@ class LightningEvaluator(Evaluator):
 
                 # add param_group
                 if module_name_param_dict is not None:
-                    self.optimizer_add_param_group(module_name_param_dict, optimizers)
+                    self.optimizer_add_param_group(self.model, module_name_param_dict, optimizers) # type: ignore
 
                 return optimizers, lr_schedulers
 
@@ -484,7 +486,7 @@ class LightningEvaluator(Evaluator):
                 optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
                 # add param_group
                 if module_name_param_dict is not None:
-                    self.optimizer_add_param_group(module_name_param_dict, optimizers)
+                    self.optimizer_add_param_group(self.model, module_name_param_dict, optimizers) # type: ignore
 
                 return optimizers
 
@@ -594,7 +596,7 @@ class LightningEvaluator(Evaluator):
 
 
 _OPTIMIZERS = Union[Optimizer, List[Optimizer]]
-_TRAINING_STEP = Callable[[Any], Union[Tensor, Tuple[Tensor], Dict[str, Tensor]]]
+_TRAINING_STEP = Callable[..., Union[Tensor, Tuple[Tensor], Dict[str, Tensor]]]
 _SCHEDULERS = Union[None, _LRScheduler, List[_LRScheduler]]
 _EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
 _TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, Optional[_SCHEDULERS], Optional[int], Optional[int]], None]
@@ -732,7 +734,7 @@ class TorchEvaluator(Evaluator):
         return reset_ddp_model(model, ddp_params) if is_ddp_model else model
 
     def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None, \
-                   module_name_param_dict:Dict[str, List[Tensor]] = None):
+                   module_name_param_dict: Union[Dict[str, List[Tensor]], None] = None):
         err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert self._initialization_complete is True, err_msg
         assert isinstance(model, Module)
@@ -748,7 +750,7 @@ class TorchEvaluator(Evaluator):
         self._first_optimizer_step = self._optimizers[0].step
 
         if module_name_param_dict is not None:
-            self.optimizer_add_param_group(module_name_param_dict, self._optimizers)
+            self.optimizer_add_param_group(self.model, module_name_param_dict, self._optimizers)
 
     def unbind_model(self):
         if self.model:
@@ -908,7 +910,7 @@ class TransformersEvaluator(Evaluator):
         self._initialization_complete = True
 
     def bind_model(self, model: Module | pl.LightningModule, param_names_map: Dict[str, str] | None = None,
-                   module_name_param_dict: Dict[str, List[Tensor]] = None):
+                   module_name_param_dict: Union[Dict[str, List[Tensor]], None] = None):
         err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
         assert self._initialization_complete is True, err_msg
         assert isinstance(model, Module)
@@ -935,7 +937,7 @@ class TransformersEvaluator(Evaluator):
         self._ori_trainer_attr['optimizer.step'] = self.trainer.optimizer.step
 
         if module_name_param_dict is not None:
-            self.optimizer_add_param_group(module_name_param_dict, self.trainer.optimizer)
+            self.optimizer_add_param_group(self.model, module_name_param_dict, self.trainer.optimizer)
 
     def unbind_model(self):
         if self.model:

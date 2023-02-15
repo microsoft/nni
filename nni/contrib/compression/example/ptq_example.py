@@ -2,13 +2,14 @@
 # Licensed under the MIT license.
 
 import functools
-from typing import Callable, Union, List
+from typing import Callable, Union, List, Tuple, Any, Dict
 
 import torch
 import torch.nn.functional as F
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
+from torch import Tensor
 from torchvision import datasets, transforms
 
 import nni
@@ -18,6 +19,15 @@ from nni.contrib.compression.utils import TorchEvaluator
 
 torch.manual_seed(0)
 device = 'cuda'
+_TRAINING_STEP = Callable[..., Union[Tensor, Tuple[Tensor], Dict[str, Tensor]]]
+
+datasets.MNIST(root='data/mnist', train=True, download=True)
+datasets.MNIST(root='data/mnist', train=False, download=True)
+transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+mnist_train = datasets.MNIST(root='data/mnist', train=True, transform=transform)
+train_dataloader = DataLoader(mnist_train, batch_size=64)
+mnist_test = datasets.MNIST(root='data/mnist', train=False, transform=transform)
+test_dataloader = DataLoader(mnist_test, batch_size=1000)
 
 
 class NaiveModel(torch.nn.Module):
@@ -45,15 +55,15 @@ class NaiveModel(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-def training_step(batch, model):
+def training_step(batch, model) -> Tensor:
     x, y = batch[0].to(device), batch[1].to(device)
     logits = model(x)
     loss: torch.Tensor = F.nll_loss(logits, y)
     return loss
 
 
-def training_model(train_dataloader: DataLoader, test_dataloader: DataLoader, model: torch.nn.Module, optimizer: Optimizer, \
-                   training_step: Callable, scheduler: Union[_LRScheduler, None] = None,
+def training_model(model: torch.nn.Module, optimizer: Union[Optimizer, List[Optimizer]], \
+                   training_step: _TRAINING_STEP, scheduler: Union[None, _LRScheduler, List[_LRScheduler]] = None,
                    max_steps: Union[int, None] = None, max_epochs: Union[int, None] = None):
     model.train()
     max_epochs = max_epochs if max_epochs else 10 if max_steps is None else 100
@@ -64,22 +74,34 @@ def training_model(train_dataloader: DataLoader, test_dataloader: DataLoader, mo
     for epoch in range(max_epochs):
         print(f'Epoch {epoch} start!')
         for batch in train_dataloader:
-            optimizer.zero_grad()
+            if isinstance(optimizer, Optimizer):
+                optimizer.zero_grad() 
+            elif isinstance(optimizer, List) and all(isinstance(_, Optimizer) for _ in optimizer):
+                for opt in optimizer:
+                    opt.zero_grad()
             loss = training_step(batch, model)
+            assert isinstance(loss, torch.Tensor)
             loss.backward()
-            optimizer.step()
-            if isinstance(scheduler, _LRScheduler) or (isinstance(scheduler, List) and len(scheduler) > 0):
+            if isinstance(optimizer, Optimizer):
+                optimizer.step() 
+            elif isinstance(optimizer, List) and all(isinstance(_, Optimizer) for _ in optimizer):
+                for opt in optimizer:
+                    opt.step()
+            if isinstance(scheduler, _LRScheduler):
                 scheduler.step()
+            if isinstance(scheduler, List) and all(isinstance(_, _LRScheduler) for _ in scheduler):
+                for sch in scheduler:
+                    sch.step()
             current_steps += 1
             if max_steps and current_steps == max_steps:
                 return
 
-        acc = evaluating_model(test_dataloader, model)
+        acc = evaluating_model(model)
         best_acc = max(acc, best_acc)
         print(f"epoch={epoch}\tacc={acc}\tbest_acc={best_acc}")
 
 
-def evaluating_model(test_dataloader: DataLoader, model: torch.nn.Module):
+def evaluating_model(model: torch.nn.Module):
     model.eval()
     # testing
     correct = 0
@@ -89,20 +111,12 @@ def evaluating_model(test_dataloader: DataLoader, model: torch.nn.Module):
             logits = model(x)
             preds = torch.argmax(logits, dim=1)
             correct += preds.eq(y.view_as(preds)).sum().item()
-    print(f'Accuracy: {100 * correct / len(test_dataloader.dataset)}%)\n')
+    print(f'Accuracy: {100 * correct / len(mnist_test)}%)\n')
 
-    return correct / len(test_dataloader.dataset)
+    return correct / len(mnist_test)
 
 
 def main():
-    trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('data', train=True, download=True, transform=trans),
-        batch_size=64, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('data', train=False, transform=trans),
-        batch_size=1000, shuffle=True)
-
     model = NaiveModel().to(device)
     configure_list = [{
         'target_names':['_input_', 'weight'],
@@ -134,22 +148,20 @@ def main():
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
 
     # Train the model to get a baseline performance
-    training_model(train_loader, test_loader, model, optimizer, training_step, max_epochs=5)
+    training_model(model, optimizer, training_step, max_epochs=5)
     # inference
-    acc = evaluating_model(test_loader, model)
+    acc = evaluating_model(model)
     print(f"inference acc={acc}")
 
     # Construct the ObserverQuantizer. Note that currently ObserverQuantizer only works
     # in evaluation mode.
     fused_modules_lis = [["conv1", "batchnorm1"]]
-    training_func = functools.partial(training_model, train_loader, test_loader)
     optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.5)
-    evaluator = TorchEvaluator(training_func, optimizer, training_step, evaluating_func=functools.partial(evaluating_model, test_loader))
-
+    evaluator = TorchEvaluator(training_model, optimizer, training_step, evaluating_func=evaluating_model)
     quantizer = PtqQuantizer(model.eval(), configure_list, evaluator,fused_module_lis=fused_modules_lis)
     quantizer.compress()
     # measure the accuracy of the quantized model.
-    after_acc = evaluating_model(test_loader, model)
+    after_acc = evaluating_model(model)
     print(f"after: inference acc={after_acc}")
 
 

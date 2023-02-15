@@ -90,12 +90,7 @@ def update_config(wrapper_config: Dict[str, Dict[str, Any]], configs: Dict[str, 
         if name not in wrapper_config:
             wrapper_config[name] = config
         else:
-            if not isinstance(config, (set, dict, list)):
-                wrapper_config[name] = config
-            elif isinstance(config, list):
-                wrapper_config[name] = list(set(wrapper_config[name] + config))
-            else:
-                wrapper_config[name].update(config)
+            raise RuntimeError(f"Can't use {name} method to compress the same module twice")
 
     return wrapper_config
 

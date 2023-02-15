@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import Optimizer
+from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import _LRScheduler
 from torchvision import datasets, transforms
 
@@ -17,20 +18,17 @@ from nni.contrib.compression.utils import TorchEvaluator
 
 torch.manual_seed(0)
 device = 'cuda'
-
-train_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('./data.cifar10', train=True, download=True,
-                        transform=transforms.Compose([
-                            transforms.ToTensor(),
-                            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-                        ])),
-        batch_size=64, shuffle=True)
-test_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('./data.cifar10', train=False, transform=transforms.Compose([
+cifar10_train = datasets.CIFAR10('./data.cifar10', train=True, download=True,
+    transform=transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-    ])),
-    batch_size=200, shuffle=False)
+    ]))
+train_loader = DataLoader(cifar10_train, batch_size=64, shuffle=True)
+cifar10_test = datasets.CIFAR10('./data.cifar10', train=False, transform=transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+    ]))
+test_loader = DataLoader(cifar10_test, batch_size=200, shuffle=False)
 
 
 class VGG_Cifar10(nn.Module):
@@ -102,8 +100,8 @@ def test(model: nn.Module):
             test_loss += F.nll_loss(output, target, reduction='sum').item()
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
-    test_loss /= len(test_loader.dataset)
-    acc = 100 * correct / len(test_loader.dataset)
+    test_loss /= len(cifar10_test)
+    acc = 100 * correct / len(cifar10_test)
 
     print('Loss: {}  Accuracy: {}%)\n'.format(
         test_loss, acc))
@@ -122,7 +120,7 @@ def train(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable,
             loss = training_step(batch, model)
             loss.backward()
             optimizer.step()
-            if isinstance(scheduler, _LRScheduler) or (isinstance(scheduler, List) and len(scheduler) > 0):
+            if isinstance(scheduler, _LRScheduler):
                 scheduler.step()
             if batch_idx % 100 == 0:
                 print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
@@ -162,7 +160,6 @@ def main():
     optimizer = nni.trace(torch.optim.Adam)(model.parameters(), lr=1e-2)
     evaluator = TorchEvaluator(train, optimizer, training_step)  # type: ignore
     quantizer = BNNQuantizer(model, configure_list, evaluator)
-
     start = time.time()
     model, _ = quantizer.compress(max_epochs=400)
     end = time.time()
@@ -170,7 +167,6 @@ def main():
 
     acc = test(model)
     print(f"inference: acc:{acc}")
-    print("===== after inference ====")
 
 
 if __name__ == '__main__':

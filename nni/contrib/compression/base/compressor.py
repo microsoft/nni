@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections import defaultdict
 from copy import deepcopy
 import logging
-from typing import Any, Dict, List, Literal, Callable
+from typing import Any, Dict, List, Literal, Callable, Tuple, Union
 
 import torch
 
@@ -26,7 +26,7 @@ _DISTILLATION_TARGET_SPACES = Dict[str, Dict[str, DistillationTargetSpace]]
 class Compressor:
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], mode: Literal['pruning', 'quantization', 'distillation'],
                  evaluator: Evaluator | None = None, existed_wrappers: Dict[str, ModuleWrapper] | None = None, \
-                 fused_module_lis: List[List[str]] = None):
+                 fused_module_lis: List[List[str]] | None = None):
         """
         Compressor base class.
 
@@ -223,8 +223,8 @@ class Pruner(Compressor):
 
 
 class Quantizer(Compressor):
-    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator | None = None,
-                 existed_wrappers: Dict[str, ModuleWrapper] | None = None, fused_module_lis: List[List[str]] = None):
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
+                 existed_wrappers: Dict[str, ModuleWrapper] | None = None, fused_module_lis: List[List[str]] | None = None):
         super().__init__(model=model, config_list=config_list, mode='quantization', evaluator=evaluator,
                          existed_wrappers=existed_wrappers, fused_module_lis=fused_module_lis)
         self._target_spaces: _QUANTIZATION_TARGET_SPACES
@@ -311,4 +311,4 @@ def register_scalers(target_spaces: _PRUNING_TARGET_SPACES | _QUANTIZATION_TARGE
                     kernel_padding_val = target_space.granularity[2]
                 kernel_padding_mode = kernel_padding_mode if kernel_padding_mode else 'front'
                 kernel_padding_val = kernel_padding_val if kernel_padding_val else 1
-                target_space._scaler = Scaling(kernel_size, kernel_padding_mode, kernel_padding_val)
+                target_space._scaler = Scaling(kernel_size, kernel_padding_mode, kernel_padding_val) # type: ignore

@@ -43,15 +43,8 @@ class NaiveModel(torch.nn.Module):
 
 model = NaiveModel().to(device)
 print(model)
-config_list_1 = [{
-    'op_names': ['conv1', 'conv2'],
-    'target_names': ['_input_', '_output_'],
-    'quant_dtype': 'int8',
-    'quant_scheme': 'affine',
-    'granularity': 'default',
-}]
 
-config_list_2 = [
+config_list = [
     {
     'op_names': ['fc1', 'fc2'],
     'target_names': ['_input_', 'weight', '_output_'],
@@ -60,7 +53,7 @@ config_list_2 = [
     'granularity': 'default',
 },
 {
-    'op_names': ['conv1'],
+    'op_names': ['conv1', 'conv2'],
     'target_names': ['_output_','weight', '_input_'],
     'quant_dtype': 'int2',
     'quant_scheme': 'affine',
@@ -74,17 +67,14 @@ config_list_2 = [
     'granularity': 'default',
 }]
 
-fused_modules_1 = [["conv1", "relu1"]]
-fused_modules_2 = [["fc1","relu3"]]
 
-config_list_1 = trans_legacy_config_list(deepcopy(config_list_1))
-print(config_list_1)
+fused_modules = [["fc1","relu3"], ["conv1", "relu1"]]
 
-config_list_2 = trans_legacy_config_list(deepcopy(config_list_2))
-module_wrappers_1, target_spaces = register_wrappers(model, config_list_1, "quantization", fused_modules_names_lis=fused_modules_1)
+config_list = trans_legacy_config_list(deepcopy(config_list))
+print(config_list)
+
+module_wrappers, target_spaces = register_wrappers(model, config_list, "quantization", fused_modules_names_lis=fused_modules)
 print(f"target_space_1={target_spaces}\n")
-module_wrappers_2, target_spaces = register_wrappers(model, config_list_2, "quantization", module_wrappers_1, fused_modules_names_lis=fused_modules_2)
-print("module_wrappers={}\n".format(module_wrappers_2["conv1"].fused_modules[1]))
-for key, value in module_wrappers_2.items():
-    print(f"module_name={key}\tconfig={value}\n")
+for module_name, wrapper in module_wrappers.items():
+    print(f"module_name={module_name}\tconfig={wrapper}\n")
 print("target_spaces={}".format(target_spaces))

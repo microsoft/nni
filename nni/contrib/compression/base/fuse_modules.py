@@ -3,11 +3,13 @@
 
 from typing import Dict, Union, Tuple, Callable, Optional
 import collections
+from collections.abc import Iterable
 from itertools import repeat
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 
 from .target_space import TargetType
 
@@ -15,7 +17,7 @@ from .target_space import TargetType
 ## ======= some process funcs for conv copied from torch ======
 def _ntuple(n, name="parse"):
     def parse(x):
-        if isinstance(x, collections.abc.Iterable):
+        if isinstance(x, Iterable):
             return tuple(x)
         return tuple(repeat(x, n))
 
@@ -35,7 +37,7 @@ def _reverse_repeat_tuple(t, n):
     """
     return tuple(x for x in reversed(t) for _ in range(n))
 
-def reversed_padding_repeated_twice(conv_module: nn.Module):
+def reversed_padding_repeated_twice(conv_module: Union[nn.Conv1d, nn.Conv2d, nn.Conv3d]):
     if isinstance(conv_module.padding, str):
         _reversed_padding_repeated_twice = [0, 0] * len(conv_module.kernel_size)
         if conv_module.padding == 'same':
@@ -50,7 +52,8 @@ def reversed_padding_repeated_twice(conv_module: nn.Module):
 
     return _reversed_padding_repeated_twice
 
-def conv_forward(inputs: torch.Tensor, conv_module: nn.Module, weight: torch.Tensor, bias: Optional[torch.Tensor]):
+def conv_forward(inputs: torch.Tensor, conv_module: Union[nn.Conv1d, nn.Conv2d, nn.Conv3d], \
+                 weight: torch.Tensor, bias: Optional[torch.Tensor]) -> Tensor:
     assert isinstance(conv_module, (nn.Conv1d, nn.Conv2d, nn.Conv3d)), \
         f"expected module type in [Conv1d, Conv2d, Conv3d], but got {type(conv_module)}"
 
@@ -69,6 +72,10 @@ def conv_forward(inputs: torch.Tensor, conv_module: nn.Module, weight: torch.Ten
         return conv_forward_func(F.conv2d, _pair)
     elif type(conv_module) == torch.nn.Conv3d:
         return conv_forward_func(F.conv3d, _triple)
+    else:
+        raise TypeError(f"Only support to use conv1d, conv2d, conv3d to compute, but got {type(conv_module)}")
+
+
 
 def get_bias(wrapper, param_dict):
     if 'bias' in param_dict:
@@ -107,7 +114,7 @@ def fuse_conv_bn(wrapper, fused_modules, *args, **kwargs):
 
     with torch.no_grad():
         #compute bias
-        bias = get_bias(wrapper, q_param_dict)
+        bias: Union[torch.Tensor, None] = get_bias(wrapper, q_param_dict)
         output = conv_forward(*args, **kwargs, conv_module=conv_module, \
             weight=q_param_dict['weight'], bias=bias)
         #statistics mean and var when track_running_stats = False
@@ -117,14 +124,15 @@ def fuse_conv_bn(wrapper, fused_modules, *args, **kwargs):
             sta_output = sta_output.contiguous().view(conv_module.out_channels, -1)
             mean = sta_output.mean(1).detach()
             var = sta_output.var(1).detach()
+            bn_rm = mean
+            bn_var = var
         # if track == True
         else:
             _ = bn_module._nni_wrapper.module_forward(output)
+            bn_rm = bn_module.running_mean
+            bn_var = bn_module.running_var
 
     bn_eps = bn_module.eps
-    # case: track_running_stats
-    bn_rm = bn_module.running_mean if bn_module.track_running_stats else mean
-    bn_var = bn_module.running_var if bn_module.track_running_stats else var
     # case: affine
     bn_w = bn_module.weight if bn_module.affine else torch.ones_like(bn_rm)
     bn_b = bn_module.bias if bn_module.affine else torch.zeros_like(bn_rm)
@@ -164,13 +172,14 @@ def fuse_linear_bn(wrapper, fused_modules, *args, **kwargs):
             sta_output = sta_output.contiguous().view(-1, linear_module.out_features)
             mean = sta_output.mean(0).detach()
             var = sta_output.var(0).detach()
+            bn_rm = mean
+            bn_var = var
         else:
             _ = bn_module._nni_wrapper.module_forward(output)
+            bn_rm = bn_module.running_mean
+            bn_var = bn_module.running_var
 
     bn_eps = bn_module.eps
-    # case: track_running_stats
-    bn_rm = bn_module.running_mean if bn_module.track_running_stats else mean
-    bn_var = bn_module.running_var if bn_module.track_running_stats else var
     # case: affine
     bn_w = bn_module.weight if bn_module.affine else torch.ones_like(bn_rm)
     bn_b = bn_module.bias if bn_module.affine else torch.zeros_like(bn_rm)

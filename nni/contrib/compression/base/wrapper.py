@@ -347,7 +347,7 @@ class FusionModuleWrapper(ModuleWrapper):
     def __init__(self, module: torch.nn.Module, module_name: str, config: Dict[str, Dict[str, Any]] | None = None,
                  fused_modules: List[nn.Module] | None = None):
         super().__init__(module, module_name, config)
-        self.fused_modules = fused_modules
+        self.fused_modules = fused_modules if fused_modules is not None else []
         self.is_bias = check_bias(self.module) # used for fold_bn
         self.register_bias()
 
@@ -357,15 +357,28 @@ class FusionModuleWrapper(ModuleWrapper):
         types = {type(module) for module in self.fused_modules[1:]}
         intersec_types = types.intersection({nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d})
         if self.is_bias and 'bias' not in self.quantization_target_spaces and len(intersec_types) > 0:
-            self.module.register_parameter('original_bias', torch.nn.Parameter(self.module.bias.detach().clone()))
-            delattr(self.module, 'bias')
-            self.module.register_buffer('bias', self.module.original_bias.data)
+            bias = self.module.bias
+            if isinstance(bias, nn.parameter.Parameter):
+                self.module.register_parameter('original_bias', torch.nn.Parameter(bias.detach().clone()))
+                delattr(self.module, 'bias')
+                self.module.register_buffer('bias', bias.data)
+            elif isinstance(bias, torch.Tensor):
+                self.module.register_buffer('original_bias', bias.detach().clone())
+                delattr(self.module, 'bias')
+                self.module.register_buffer('bias', bias.detach().clone())
+            else:
+                raise ValueError(f"module:{self.name}\'bias is None, no need to register it.")
+
 
     def unwrap(self):
         super().unwrap()
         if getattr(self.module, "original_bias", None) is not None:
             delattr(self.module, 'bias')
-            self.module.register_parameter('bias', torch.nn.Parameter(self.module.original_bias.detach().clone()))
+            original_bias = self.module.original_bias
+            if isinstance(original_bias, nn.parameter.Parameter):
+                self.module.register_parameter('bias', torch.nn.Parameter(original_bias.detach().clone()))
+            elif isinstance(original_bias, torch.Tensor):
+                self.module.register_buffer('bias', original_bias.detach().clone())
             delattr(self.module, 'original_bias')
         if not self.is_bias and check_bias(self.module):
             delattr(self.module, 'bias')
@@ -377,7 +390,7 @@ class FusionModuleWrapper(ModuleWrapper):
         params_dict.update({k: v.target for k, v in self.pruning_target_spaces.items() if v.type is TargetType.PARAMETER})
         params_dict.update({k: v.target for k, v in self.distillation_target_spaces.items() if v.type is TargetType.PARAMETER})
 
-        if self.fused_modules is None or len(self.fused_modules) == 0:
+        if len(self.fused_modules) == 0:
             params_dict.update({k: v.target for k, v in self.quantization_target_spaces.items() if v.type is TargetType.PARAMETER})
             activation_func_lis = []
         else:
@@ -469,7 +482,7 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
 
 
 def create_fusion_wrapper(model: nn.Module, module: nn.Module, module_name: str, fused_modules_names: List[str], \
-        mode: Literal['quantization'], config: Dict[str, Any], wrapper: ModuleWrapper=None):
+        mode: Literal['quantization', 'pruning', 'distillation'], config: Dict[str, Any], wrapper: Union[ModuleWrapper, None] = None):
     assert mode == 'quantization', "Modules fusion only happens in the quantization process"
 
     if isinstance(wrapper, IdentityModuleWrapper):
@@ -494,7 +507,7 @@ def create_fusion_wrapper(model: nn.Module, module: nn.Module, module_name: str,
 
 
 def create_module_wrapper(module: nn.Module, module_name: str, mode: Literal['pruning', 'quantization', 'distillation'], \
-        config: Dict[str, Any], wrapper: ModuleWrapper=None):
+        config: Dict[str, Any], wrapper: Union[ModuleWrapper, None] = None):
 
     if isinstance(wrapper, IdentityModuleWrapper):
         raise ValueError('can\'t use other compression methods in the IdentityWrapper')
