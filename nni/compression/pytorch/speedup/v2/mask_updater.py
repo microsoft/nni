@@ -11,7 +11,6 @@ from torch import nn
 from torch.nn import functional as F
 from torch.fx.node import Node
 
-from .container import NodeInfo
 from .utils import randomize_tensor_inplace, randomize_if_tensor, tree_map_zip, torch_float_dtype
 
 
@@ -102,10 +101,10 @@ class DefaultMaskUpdater(MaskUpdater):
         with torch.no_grad():
             args = tree_map_zip(lambda nd: model_speedup.node_infos[nd].output_randomize if isinstance(nd, Node) else nd, node.args)
             args_masks = tree_map_zip(lambda nd: model_speedup.node_infos[nd].output_masks if isinstance(nd, Node) else None, node.args)
-            args = tree_map_zip(lambda t, m: t * m if m is not None else t, args, args_masks)
+            args = tree_map_zip(lambda t, m: (t * m).type_as(t) if m is not None else t, args, args_masks)
             kwargs = tree_map_zip(lambda nd: model_speedup.node_infos[nd].output_randomize if isinstance(nd, Node) else nd, node.kwargs)
             kwargs_masks = tree_map_zip(lambda nd: model_speedup.node_infos[nd].output_masks if isinstance(nd, Node) else None, node.kwargs)
-            kwargs = tree_map_zip(lambda t, m: t * m if m is not None else t, kwargs, kwargs_masks)
+            kwargs = tree_map_zip(lambda t, m: (t * m).type_as(t) if m is not None else t, kwargs, kwargs_masks)
 
             output = getattr(model_speedup, node.op)(node.target, args, kwargs)
             if node_info.output_masks is not None:
@@ -137,7 +136,7 @@ class DefaultMaskUpdater(MaskUpdater):
             args = tree_map_zip(lambda nd: model_speedup.node_infos[nd].output_origin if isinstance(nd, Node) else nd, node_args)
             args = tree_map_zip(lambda t: randomize_if_tensor(t, batch_dim, batch_size), args)
             args_masks = tree_map_zip(lambda nd: model_speedup.node_infos[nd].output_masks if isinstance(nd, Node) else None, node_args)
-            args = tree_map_zip(lambda t, m: t * m if m is not None else t, args, args_masks)
+            args = tree_map_zip(lambda t, m: (t * m).type_as(t) if m is not None else t, args, args_masks)
 
             def require_grad_(obj):
                 if isinstance(obj, torch.Tensor) and model_speedup.tensor_propagate_check(obj) and obj.dtype in torch_float_dtype:
@@ -158,27 +157,25 @@ class DefaultMaskUpdater(MaskUpdater):
         output = getattr(model_speedup, node.op)(node.target, args_cloned, kwargs_cloned)
 
         tree_map_zip(model_speedup.indirect_backward, output, node_info.output_masks)
-        args_node_infos = tree_map_zip(lambda nd: model_speedup.node_infos[nd] if isinstance(nd, Node) else None, node.args)
-        kwargs_node_infos = tree_map_zip(lambda nd: model_speedup.node_infos[nd] if isinstance(nd, Node) else None, node.kwargs)
 
-        def indirect_pass_grad(node_args, args):
-            if node_args is None:
+        def indirect_pass_grad(nodes, args):
+            if nodes is None:
                 return
-            elif isinstance(node_args, (list, tuple)):
+            elif isinstance(nodes, (list, tuple)):
                 assert isinstance(args, (list, tuple))
-                for x, y in zip(node_args, args):
+                for x, y in zip(nodes, args):
                     indirect_pass_grad(x, y)
-            elif isinstance(node_args, dict):
+            elif isinstance(nodes, dict):
                 assert isinstance(args, dict)
-                for x, y in zip(node_args.values(), args.values()):
+                for x, y in zip(nodes.values(), args.values()):
                     indirect_pass_grad(x, y)
-            elif isinstance(node_args, NodeInfo):
-                model_speedup.indirect_pass_grad(node_args, args)
+            elif isinstance(nodes, Node):
+                model_speedup.indirect_pass_grad(nodes, args)
             else:
-                raise RuntimeError(f'Type {type(node_args)} is not supported during indirect pass grad.')
+                assert not isinstance(args, torch.Tensor)
 
-        indirect_pass_grad(args_node_infos, args)
-        indirect_pass_grad(kwargs_node_infos, kwargs)
+        indirect_pass_grad(node.args, args)
+        indirect_pass_grad(node.kwargs, kwargs)
 
     def indirect_update_postprocess(self, model_speedup: 'ModelSpeedup', node: Node):
         pass
@@ -282,14 +279,14 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
         else:
             input_node = node.kwargs['input']
 
-        input_grad = tree_map_zip(lambda t, m: t * m if isinstance(m, torch.Tensor) else t, \
+        input_grad = tree_map_zip(lambda t, m: (t * m).type_as(t) if isinstance(m, torch.Tensor) else t, \
             model_speedup.node_infos[node].output_grad, model_speedup.node_infos[node].output_masks)
         model_speedup.indirect_pass_grad(input_node, input_grad)
 
     def direct_getitem(self, model_speedup: 'ModelSpeedup', node: Node):
         assert len(node.args) == 2
         arg_0_masks = model_speedup.node_infos[node.args[0]].output_masks
-        arg_1_val = model_speedup.node_infos[node.args[1]].output_randomize
+        arg_1_val = model_speedup.node_infos[node.args[1]].output_randomize if isinstance(node.args[1], Node) else node.args[1]
         sub_mask = operator.getitem(arg_0_masks, arg_1_val)
 
         model_speedup.node_infos[node].output_masks = \
@@ -297,7 +294,7 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
 
     def indirect_getitem(self, model_speedup: 'ModelSpeedup', node: Node):
         assert len(node.args) == 2
-        input_grad = tree_map_zip(lambda t, m: t * m if isinstance(m, torch.Tensor) else t, \
+        input_grad = tree_map_zip(lambda t, m: (t * m).type_as(t) if isinstance(m, torch.Tensor) else t, \
             model_speedup.node_infos[node].output_grad, model_speedup.node_infos[node].output_masks)
         model_speedup.indirect_pass_grad(node.args[0], input_grad)
 

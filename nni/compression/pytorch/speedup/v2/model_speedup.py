@@ -41,7 +41,7 @@ class ModelSpeedup(torch.fx.Interpreter):
     model
         The model user wants to speedup.
     dummy_input
-        The dummy_input to execute the model.
+        A tensor or a tuple, the dummy input to execute the model.
     masks_file
         The path of user provided masks file, or the masks object.
     map_location
@@ -69,7 +69,7 @@ class ModelSpeedup(torch.fx.Interpreter):
     STD_DELTA = 1e-6
 
     def __init__(self,
-                 model: torch.nn.Module,
+                 model: torch.nn.Module | GraphModule,
                  dummy_input: Any,
                  masks_file: Any,
                  map_location: Any = None,
@@ -79,12 +79,11 @@ class ModelSpeedup(torch.fx.Interpreter):
                  customized_replacers: List[Replacer] | None = None,
                  garbage_collect_values: bool = True,
                  logger: logging.Logger | None = None):
-        dummy_input = (dummy_input,) if isinstance(dummy_input, torch.Tensor) else dummy_input
-        module = concrete_trace(model, dummy_input)
-        super().__init__(module, garbage_collect_values)
+        self.dummy_input = (dummy_input,) if isinstance(dummy_input, torch.Tensor) else tuple(dummy_input)
+        self.module = model if isinstance(model, GraphModule) else concrete_trace(model, self.dummy_input)
 
-        self.bound_model = model
-        self.dummy_input = dummy_input
+        super().__init__(self.module, garbage_collect_values)
+
         if isinstance(masks_file, (str, Path)) and Path(masks_file).exists():
             self.masks_file = torch.load(masks_file, map_location)
         elif isinstance(masks_file, dict):
@@ -92,7 +91,6 @@ class ModelSpeedup(torch.fx.Interpreter):
         else:
             raise Exception('Please provide the mask or the path of the mask file.')
 
-        self.module: GraphModule
         self.batch_dim = batch_dim
         self.batch_size = batch_size
 
@@ -178,7 +176,7 @@ class ModelSpeedup(torch.fx.Interpreter):
             assert output_mask is None
 
     # pass the gradient to the predecessor nodes
-    def indirect_pass_grad(self, node_info: NodeInfo, outputs: Any):
+    def indirect_pass_grad(self, node: Node, outputs: Any):
         def add_grad(grad, output):
             if isinstance(output, torch.Tensor):
                 if grad is not None and output.grad is not None:
@@ -190,7 +188,7 @@ class ModelSpeedup(torch.fx.Interpreter):
             else:
                 return grad
 
-        node_info.output_grad = tree_map_zip(add_grad, node_info.output_grad, outputs)
+        self.node_infos[node].output_grad = tree_map_zip(add_grad, self.node_infos[node].output_grad, outputs)
 
     def propagate_originally(self):
         """
@@ -389,7 +387,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         #             f'structure of preset-mask and value of slot "{node}" are not euqal!'
         #         self.node_infos[node].output_masks = mask
 
-    def speedup_model(self):
+    def speedup_model(self) -> GraphModule:
         try:
             ori_state_dict_file = tempfile.NamedTemporaryFile(delete=False)
             torch.save(self.module.state_dict(), ori_state_dict_file)
@@ -419,6 +417,8 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.replace_compressed_modules()
         self.module.train(training)
         self.logger.info("Speedup done.")
+
+        return self.module
 
     def run(self):
         self.speedup_model()
