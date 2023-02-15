@@ -43,7 +43,8 @@ class NodeInfo:
 
     @property
     def output_inplace(self):
-        # assert self.assignment_status['output_inplace'] == 1, f"Slot error: bad output_inplace({self.assignment_status['output_inplace']})"
+        # assert self.assignment_status['output_inplace'] == 1, \
+        #     f"Slot error: bad output_inplace({self.assignment_status['output_inplace']})"
         return self._output_inplace
 
     @property
