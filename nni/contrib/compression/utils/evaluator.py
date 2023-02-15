@@ -179,7 +179,8 @@ class Evaluator:
         """
         raise NotImplementedError
 
-    def optimizer_add_param_group(self, model: Union[torch.nn.Module, pl.LightningModule], module_name_param_dict: Dict[str, List[Tensor]], optimizers: Optimizer | List[Optimizer]):
+    def optimizer_add_param_group(self, model: Union[torch.nn.Module, pl.LightningModule],
+                                  module_name_param_dict: Dict[str, List[Tensor]], optimizers: Optimizer | List[Optimizer]):
         # used in the bind_model process
         def find_param_group(param_groups: List[Dict], module_name: str):
             for param_group in param_groups:
@@ -465,7 +466,8 @@ class LightningEvaluator(Evaluator):
                         opt_lrs_dict['lr_scheduler']['scheduler'] = lr_schedulers[opt_lrs_dict['lr_scheduler']['scheduler']]
                 # add param_group
                 if module_name_param_dict is not None:
-                    self.optimizer_add_param_group(self.model, module_name_param_dict, [opt_lrs_dict['optimizer'] for opt_lrs_dict in opt_lrs_dicts]) # type: ignore
+                    self.optimizer_add_param_group(self.model, module_name_param_dict, \
+                                                   [opt_lrs_dict['optimizer'] for opt_lrs_dict in opt_lrs_dicts]) # type: ignore
 
                 return opt_lrs_dicts
 

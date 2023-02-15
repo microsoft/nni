@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 from typing import Dict, Union, Tuple, Callable, Optional
-import collections
 from collections.abc import Iterable
 from itertools import repeat
 

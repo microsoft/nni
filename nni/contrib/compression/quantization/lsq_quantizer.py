@@ -58,7 +58,7 @@ class LsqQuantizer(Quantizer):
     def register_scale(self):
         for module_name, ts in self._target_spaces.items():
             wrapper = self._module_wrappers[module_name]
-            for target_name, target_space in ts.items():
+            for target_name, _ in ts.items():
                 if hasattr(wrapper, f"{target_name}_scale"):
                     delattr(wrapper, f"{target_name}_scale")
                 try:
