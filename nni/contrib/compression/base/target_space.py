@@ -289,11 +289,11 @@ class QuantizationTargetSpace(TargetSpace):
         self._tensor_setter_helper(self._zero_point_name, val)
 
     @property
-    def qmax(self) -> Tensor | None:
+    def qmax(self) -> int | None:
         return self._get_wrapper_attr(self._qmax_name)
 
     @property
-    def qmin(self) -> Tensor | None:
+    def qmin(self) -> int | None:
         return self._get_wrapper_attr(self._qmin_name)
 
     @property
