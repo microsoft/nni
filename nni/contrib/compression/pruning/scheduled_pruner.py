@@ -12,7 +12,7 @@ import torch
 from ..base.compressor import Pruner
 from ..base.wrapper import ModuleWrapper
 from ..utils import Evaluator
-from .basic_pruner import LevelPruner, L1NormPruner, L2NormPruner, TaylorFOWeightPruner
+from . import LevelPruner, L1NormPruner, L2NormPruner, SlimPruner, TaylorPruner
 
 _logger = logging.getLogger(__name__)
 
@@ -49,11 +49,11 @@ class ScheduledPruner(Pruner):
                     setattr(self._target_spaces[module_name][target_name], scheduled_key, goal * ratio)
 
 
-class ComboPruner(ScheduledPruner):
+class _ComboPruner(ScheduledPruner):
     def __init__(self, pruner: Pruner, interval_steps: int, total_times: int, evaluator: Evaluator | None = None):
         assert isinstance(pruner, Pruner)
         assert hasattr(pruner, 'interval_steps') and hasattr(pruner, 'total_times')
-        if not isinstance(pruner, (LevelPruner, L1NormPruner, L2NormPruner, TaylorFOWeightPruner)):
+        if not isinstance(pruner, (LevelPruner, L1NormPruner, L2NormPruner, SlimPruner, TaylorPruner)):
             warning_msg = f'Compatibility not tested with pruner type {pruner.__class__.__name__}.'
             _logger.warning(warning_msg)
         if pruner._is_wrapped:
@@ -116,7 +116,7 @@ class ComboPruner(ScheduledPruner):
         self.bound_pruner.compress_fuse(evaluator)
 
 
-class LinearPruner(ComboPruner):
+class LinearPruner(_ComboPruner):
     """
     The sparse ratio or sparse threshold in the bound pruner will increase in a linear way from 0. to final::
 
@@ -147,7 +147,7 @@ class LinearPruner(ComboPruner):
         self._update_sparse_goals_by_ratio(ratio)
 
 
-class AGPPruner(ComboPruner):
+class AGPPruner(_ComboPruner):
     """
     The sparse ratio or sparse threshold in the bound pruner will increase in a AGP way from 0. to final::
 
