@@ -194,8 +194,8 @@ class ModelSpeedup(torch.fx.Interpreter):
         """
         Propagate normally to get informations of intermediate variables such as shape, dtype of tensors.
         Default action:
-            execute and store values to slot.value_0(intermediate variables when assigned),
-                and slot.value_1(intermediate variables after in-place ops)
+            execute and store output to node_info.output_origin(intermediate variables when assigned),
+                and node_info.output_inplace(intermediate variables after in-place ops)
         """
         self.logger.info("Propagate original variables")
         for node in self.module.graph.nodes:

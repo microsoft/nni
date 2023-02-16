@@ -178,20 +178,20 @@ class AutoConvTestCase(unittest.TestCase):
         pruner._unwrap_model()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         # torch.manual_seed(100)
-        ModelSpeedup(model, dummy_input, masks).speedup_model()
+        speedup_model = ModelSpeedup(model, dummy_input, masks).speedup_model()
 
         print('before:\n', model)
-        print('after:\n', repr(model))
+        print('after:\n', repr(speedup_model))
 
-        real_sparsity_list = compute_sparsity_compact2origin(TorchModel1(), model, config_list)
+        real_sparsity_list = compute_sparsity_compact2origin(TorchModel1(), speedup_model, config_list)
         print('sparsity_list:', sparsity_list)
         assert 0.45 < sparsity_list[0]['total_sparsity'] < 0.55
 
         print('real_sparsity_list:', real_sparsity_list)
         assert 0.45 < real_sparsity_list[0]['total_sparsity'] < 0.75
 
-        print('the shape of output of the infer:', model(dummy_input).shape)
-        assert model(dummy_input).shape == torch.Size((5, 5))
+        print('the shape of output of the infer:', speedup_model(dummy_input).shape)
+        assert speedup_model(dummy_input).shape == torch.Size((5, 5))
 
 if __name__ == '__main__':
     unittest.main()

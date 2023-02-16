@@ -9,7 +9,7 @@ import torch
 from torch.fx.node import Node
 
 if TYPE_CHECKING:
-    from ..v2.mask_updater import MaskUpdater
+    from .mask_updater import MaskUpdater
 
 class NodeInfo:
     """
@@ -38,23 +38,35 @@ class NodeInfo:
 
     @property
     def output_origin(self):
+        """
+        The original output of a node.
+        """
         # assert self.assignment_status['output_origin'] == 1, f"Slot error: bad output_origin({self.assignment_status['output_origin']})"
         return self._output_origin
 
     @property
     def output_inplace(self):
+        """
+        A clone of the original output, used as the input of successor node to get the orginal output of successor node.
+        """
         # assert self.assignment_status['output_inplace'] == 1, \
         #     f"Slot error: bad output_inplace({self.assignment_status['output_inplace']})"
         return self._output_inplace
 
     @property
     def output_randomize(self):
+        """
+        A randomize output of the original output, used to direct propagate masks.
+        """
         # assert self.assignment_status['output_randomize'] == 1, \
         #     f"Slot error: bad output_randomize({self.assignment_status['output_randomize']})"
         return self._output_randomize
 
     @property
     def output_grad(self):
+        """
+        The sum of the gradient given by successor during indirect propagation.
+        """
         # assert self.assignment_status['output_grad'] == 1, f"Slot error: bad output_grad({self.assignment_status['output_grad']})"
         return self._output_grad
 
