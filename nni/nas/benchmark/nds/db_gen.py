@@ -8,8 +8,8 @@ import os
 import numpy as np
 import tqdm
 
-from nni.nas.benchmarks.utils import load_benchmark
-from .model import NdsTrialConfig, NdsTrialStats, NdsIntermediateStats
+from nni.nas.benchmark.utils import load_benchmark
+from .schema import NdsTrialConfig, NdsTrialStats, NdsIntermediateStats
 
 
 def inject_item(db, item, proposer, dataset, generator):
