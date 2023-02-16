@@ -78,6 +78,34 @@ const convertDuration = (seconds: number): string => {
     return str ? str : '0s';
 };
 
+const formatTimeStyle = (seconds: number): string => {
+    // 1d2h3m4s
+    let str = '';
+
+    const d = Math.floor(seconds / (24 * 3600));
+    if (d > 0) {
+        str += `<b>${d}</b><span>d</span>`;
+    }
+    seconds -= d * 24 * 3600;
+
+    const h = Math.floor(seconds / 3600);
+    if (h > 0) {
+        str += `<b>${h}</b><span>h</span>`;
+    }
+    seconds -= h * 3600;
+
+    const m = Math.floor(seconds / 60);
+    if (m > 0) {
+        str += `<b>${m}</b><span>m</span>`;
+    }
+    seconds -= m * 60;
+
+    // don't show `0s`
+    if (Math.floor(seconds) > 0) {
+        str += `<b>${Math.floor(seconds)}</b><span>s</span>`;
+    }
+    return str;
+};
 // according the unit(d,h,m) to convert duration
 function convertTimeAsUnit(unit: string, value: number): number {
     let divisor = 1;
@@ -405,6 +433,7 @@ export {
     intermediateGraphOption,
     formatAccuracy,
     formatTimestamp,
+    formatTimeStyle,
     expformatTimestamp,
     metricAccuracy,
     parseMetrics,

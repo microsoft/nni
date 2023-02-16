@@ -194,6 +194,7 @@ def launch_test(config_file, training_service, test_case_config):
 
     bg_time = time.time()
     print(str(datetime.datetime.now()), ' waiting ...', flush=True)
+    experiment_id = '_latest'
     try:
         # wait restful server to be ready
         time.sleep(3)

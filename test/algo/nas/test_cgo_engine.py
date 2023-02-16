@@ -10,7 +10,6 @@ from pathlib import Path
 
 import nni
 from nni.experiment.config import RemoteConfig, RemoteMachineConfig
-import nni.runtime.platform.test
 from nni.runtime.tuner_command_channel import legacy as protocol
 import json
 

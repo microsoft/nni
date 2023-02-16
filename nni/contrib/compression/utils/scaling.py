@@ -196,14 +196,6 @@ class Scaling:
             raise ValueError(f'Unsupported kernel padding mode: {self.kernel_padding_mode}.')
         return self._expand(target, kernel_size, expand_size, keepdim)
 
-    @overload
-    def validate(self, target: List[int]):
-        ...
-
-    @overload
-    def validate(self, target: Tensor):
-        ...
-
     def validate(self, target: List[int] | Tensor):
         """
         Validate the target tensor can be shape-lossless scaling.

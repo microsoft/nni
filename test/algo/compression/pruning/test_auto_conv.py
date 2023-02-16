@@ -70,19 +70,20 @@ class TorchModel1(torch.nn.Module):
         self.asub = ASubModel()
 
     def forward(self, x: torch.Tensor):
+        x = torch.ops.aten.to(x, dtype=6, layout=0)
         y1 = torch.ones_like(x)
         y2 = torch.zeros_like(x)
         x = x - y1 + y2
 
-        y1 = torch.rand(8, 1, 28, 28)
+        y1 = torch.rand([8, 1, 28, 28], device=x.device)
         y2 = torch.rand_like(x)
         x = x + y1 + y2
 
-        y1 = torch.randn(8, 1, 28, 28)
+        y1 = torch.randn([8, 1, 28, 28], device=x.device)
         y2 = torch.randn_like(x)
         x = x + y1 + y2
 
-        y1 = torch.randint(0, 100, [8, 1, 28, 28])
+        y1 = torch.randint(0, 100, [8, 1, 28, 28], device=x.device)
         y2 = torch.randint_like(x, 0, 100)
         y = y1 + y2
         y = y.to(torch.float32) / 100
@@ -170,9 +171,9 @@ class TorchModel1(torch.nn.Module):
         return x
 
 class AutoConvTestCase(unittest.TestCase):
-    def test_l1norm_pruner(self):
-        model = TorchModel1()
-        dummy_input = torch.rand(8, 1, 28, 28)
+    def l1norm_pruner(self, device):
+        model = TorchModel1().to(device)
+        dummy_input = torch.rand(8, 1, 28, 28).to(device)
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.5}]
         pruner = L1NormPruner(model=model, config_list=config_list)
         pruned_model, masks = pruner.compress()
@@ -180,7 +181,7 @@ class AutoConvTestCase(unittest.TestCase):
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         print('dummy_input.shape:', dummy_input.shape)
         ModelSpeedup(model, dummy_input, masks).speedup_model()
-        real_sparsity_list = compute_sparsity_compact2origin(TorchModel1(), model, config_list)
+        real_sparsity_list = compute_sparsity_compact2origin(TorchModel1().to(device), model, config_list)
 
         print('sparsity_list:', sparsity_list)
         assert 0.45 < sparsity_list[0]['total_sparsity'] < 0.55
@@ -190,6 +191,12 @@ class AutoConvTestCase(unittest.TestCase):
 
         print('the shape of output of the infer:', model(dummy_input).shape)
         assert model(dummy_input).shape == torch.Size((10, 10))
+
+    def test_l1norm_pruner_cpu(self):
+        return self.l1norm_pruner(torch.device('cpu'))
+
+    def test_l1norm_pruner_cuda(self):
+        return self.l1norm_pruner(torch.device('cuda'))
 
 if __name__ == '__main__':
     unittest.main()
