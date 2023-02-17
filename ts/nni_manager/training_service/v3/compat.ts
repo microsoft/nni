@@ -4,10 +4,12 @@
 import { EventEmitter } from 'events';
 import { readFile } from 'fs/promises';
 import path from 'path';
+import { setTimeout } from 'timers/promises';
 
 import { Deferred } from 'common/deferred';
 import type { TrainingServiceConfig } from 'common/experimentConfig';
 import globals from 'common/globals';
+import { getLogger } from 'common/log';
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from 'common/trainingService';
@@ -16,6 +18,20 @@ import { trainingServiceFactoryV3 } from './factory';
 
 type MutableTrialJobDetail = {
     -readonly [Property in keyof TrialJobDetail]: TrialJobDetail[Property];
+};
+
+const placeholderDetail: TrialJobDetail = {
+    id: '',
+    status: 'UNKNOWN',
+    submitTime: 0,
+    workingDirectory: '_unset_',
+    form: {
+        sequenceId: -1,
+        hyperParameters: {
+            value: 'null',
+            index: -1,
+        }
+    }
 };
 
 export class V3asV1 implements TrainingService {
@@ -27,7 +43,7 @@ export class V3asV1 implements TrainingService {
     private startDeferred: Deferred<void> = new Deferred();
 
     private trialJobs: Record<string, MutableTrialJobDetail> = {};
-    private parameters: Record<string, Parameter> = {};
+    private parameters: Parameter[] = [];
 
     private environments: EnvironmentInfo[] = [];
     private lastEnvId: string = '';
@@ -56,21 +72,31 @@ export class V3asV1 implements TrainingService {
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         await this.startDeferred.promise;
         let trialId: string | null = null;
+        let submitTime: number = 0;
+        this.parameters.push(form.hyperParameters.value);
         while (trialId === null) {
             const envId = this.schedule();
-            trialId = await this.v3.createTrial(envId, this.config.trialCommand, 'trial_code');
+            if (envId === null) {
+                await setTimeout(1000);
+                continue;
+            }
+            submitTime = Date.now();
+            trialId = await this.v3.createTrial(envId, this.config.trialCommand, 'trial_code', form.sequenceId);
         }
 
-        // In new interface, hyper parameters will be sent on demand.
-        this.parameters[trialId] = form.hyperParameters.value;
-
-        this.trialJobs[trialId] = {
-            id: trialId,
-            status: 'WAITING',
-            submitTime: Date.now(),
-            workingDirectory: '_unset_',  // never set in current remote training service, so it's optional
-            form: form,
-        };
+        if (this.trialJobs[trialId] === undefined) {
+            this.trialJobs[trialId] = {
+                id: trialId,
+                status: 'WAITING',
+                submitTime,
+                workingDirectory: '_unset_',  // never set in current remote training service, so it's optional
+                form: form,
+            };
+        } else {
+            // `await createTrial()` is not atomic, so onTrialStart callback might be invoked before this
+            this.trialJobs[trialId].submitTime = submitTime;
+            this.trialJobs[trialId].form = form;
+        }
         return this.trialJobs[trialId];
     }
 
@@ -136,12 +162,20 @@ export class V3asV1 implements TrainingService {
         await this.v3.init();
 
         this.v3.onRequestParameter(async (trialId) => {
-            await this.v3.sendParameter(trialId, this.parameters[trialId]);
+            if (this.parameters.length > 0) {
+                await this.v3.sendParameter(trialId, this.parameters.shift()!);
+            } else {
+                getLogger('TrainingServiceCompat').error('No parameters available');
+            }
         });
         this.v3.onMetric(async (trialId, metric) => {
             this.emitter.emit('metric', { id: trialId, data: metric });
         });
         this.v3.onTrialStart(async (trialId, timestamp) => {
+            if (this.trialJobs[trialId] === undefined) {
+                this.trialJobs[trialId] = structuredClone(placeholderDetail);
+                this.trialJobs[trialId].id = trialId;
+            }
             this.trialJobs[trialId].status = 'RUNNING';
             this.trialJobs[trialId].startTime = timestamp;
         });
@@ -168,10 +202,13 @@ export class V3asV1 implements TrainingService {
         this.startDeferred.resolve();
     }
 
-    private schedule(): string {
+    private schedule(): string | null {
         // Simple round-robin schedule.
         // Find the last used environment and select next one.
         // If the last used environment is not found (destroyed), use first environment.
+        if (this.environments.length === 0) {
+            return null;
+        }
         const prevIndex = this.environments.findIndex((env) => env.id === this.lastEnvId);
         const index = (prevIndex + 1) % this.environments.length;
         this.lastEnvId = this.environments[index].id;

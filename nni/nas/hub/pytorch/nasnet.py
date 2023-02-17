@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# type: ignore
+
 """File containing NASNet-series search space.
 
 The implementation is based on NDS.

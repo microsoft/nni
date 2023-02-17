@@ -377,7 +377,7 @@ def parse_aten_schema(schema: str):
 
     positional_num = 0
     keyword_list = list()
-    special_treat = dict() # for dtype and memory_format trans now
+    special_treat = dict()
 
     for arg in torch._C.parse_schema(schema).arguments:
         if not arg.kwarg_only:
@@ -403,14 +403,16 @@ def parse_aten_schema_version_1_8_x(schema: str):
     Using a lexer-parser like method to parse it.
     Re-write from torch/csrc/jit/frontend/function_schema_parser.cpp
     """
+
+    # token types
     single_solid_tokens = [
+        # no '>=', '<=', '&', '/'
+        # '|' only occurs in 'Tensor(a|b)'
         '(', ')', '[', ']',
         '+', '-', '!', '>',
         '|', '=', ':', '.', ',',
         '?', '*',
     ]
-    # no '>=', '<=', '&', '/'
-    # '|' only occurs in 'Tensor(a|b)'
     spec_tokens = [
         'numdigits', 'string', 'quoted', 'unknown',
     ]
@@ -419,9 +421,9 @@ def parse_aten_schema_version_1_8_x(schema: str):
     num_chars_first = (*string.digits,)
     num_chars_16 = (*string.digits, *string.ascii_lowercase[:6], *string.ascii_uppercase[:6])
 
+    # parse schema from str to token list
     tokens = list()
-    # 1: in ('\'', '"'); 2: in num; 3: in str;
-    status = 0
+    status = 0 # 1: in ('\'', '"'); 2: in num; 3: in str;
     status_esc_char = False
 
     for char in schema:
@@ -464,6 +466,7 @@ def parse_aten_schema_version_1_8_x(schema: str):
                 tokens.append(['unknown', char])
     assert status == 0
 
+    # parse schema from token list to ast
     index = 0
     def next_pass(index_diff = 1) -> str:
         nonlocal index
@@ -632,9 +635,10 @@ def parse_aten_schema_version_1_8_x(schema: str):
         parse_list(',', ')', parse_inner)
         return name, overload_name, arguments, is_vararg
 
+    # parse schema from ast to get needed information
     positional_num = 0
     keyword_list = list()
-    special_treat = dict() # for dtype and memory_format trans now
+    special_treat = dict()
 
     for name, kwarg_only in parse_declaration()[2]:
         if not kwarg_only:
@@ -763,7 +767,8 @@ def hook_to_dtype_layout(positional, keyword, undetermined, undetermined_special
 
     def ret_func(*args):
         the_self = args[0]
-        the_self = layout_names_to_trans_dict[to_layout](the_self)
+        if the_self.layout != to_layout:
+            the_self = layout_names_to_trans_dict[to_layout](the_self)
         return real_to(the_self, *args[1:])
 
     return ret_func

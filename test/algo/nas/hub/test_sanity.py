@@ -8,12 +8,23 @@ import pytest
 import pytorch_lightning
 
 import nni
+<<<<<<< HEAD:test/algo/nas/hub/test_sanity.py
 import nni.nas.evaluator.pytorch.lightning as pl
 import nni.nas.hub.pytorch as searchspace
 from nni.mutable import ConstraintViolation
 from nni.nas.nn.pytorch import ModelSpace
+=======
+import nni.retiarii.evaluator.pytorch.lightning as pl
+import nni.retiarii.hub.pytorch as searchspace
+from nni.retiarii import fixed_arch
+from nni.retiarii.execution.utils import unpack_if_only_one
+from nni.retiarii.mutator import InvalidMutation, Sampler
+from nni.retiarii.nn.pytorch.mutator import extract_mutation_from_pt_module
 
-pytestmark = pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
+pytestmark = pytest.mark.skip(reason='Will be rewritten.')
+>>>>>>> c4564ab5baefc10d4f83d234dcf9878e0e4d9f8e:test/algo/nas/test_space_hub.py
+
+# pytestmark = pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
 
 
 def _test_searchspace_on_dataset(searchspace: ModelSpace, dataset='cifar10', arch=None, retry=1):

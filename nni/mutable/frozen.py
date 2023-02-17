@@ -18,38 +18,42 @@ from typing import Any, Callable
 from .mutable import Mutable, Sample
 from .utils import NoContextError, ContextStack
 
-
+_ENSURE_FROZEN_STRICT = True
 _FROZEN_CONTEXT_KEY = '_frozen'
 
 _logger = logging.getLogger(__name__)
 
 
-def ensure_frozen(mutable: Mutable | Any, sample: Sample | None = None, retries: int = 1000) -> Any:
+def ensure_frozen(mutable: Mutable | Any, *, strict: bool = True, sample: Sample | None = None, retries: int = 1000) -> Any:
     """Ensure a mutable is frozen. Used when passing the mutable to a function which doesn't accept a mutable.
 
     If the argument is not a mutable, nothing happens.
-    Otherwise, :meth:`Mutable.freeze` will be called if sample is given.
+    Otherwise, :meth:`~nni.mutable.Mutable.freeze` will be called if sample is given.
     If sample is None, :func:`ensure_frozen` will also try to fill the sample
     with the content in :class:`frozen_context`.
-    Or else :meth:`Mutable.robust_default` will be called on the mutable.
+    Or else :meth:`~nni.mutable.Mutable.robust_default` will be called on the mutable.
 
     Parameters
     ----------
-    mutable
+    mutable : nni.mutable.Mutable or any
         The mutable to freeze.
+    strict
+        Whether to raise an error if sample context is not provided and not found.
     sample
         The context to freeze the mutable with.
     retries
-        Control the number of retries in case :meth:`Mutable.robust_default` is called.
+        Control the number of retries in case :meth:`~nni.mutable.Mutable.robust_default` is called.
 
     Examples
     --------
-    >>> from nni.mutable import Mutable, ensure_frozen
-    >>> ensure_frozen(Categorical([1, 2, 3]))
-    1
-    >>> ensure_frozen(Categorical([1, 2, 3], label='a'), sample={'a': 2})
+    >>> with frozen_context({'a': 2}):
+    ...     ensure_frozen(Categorical([1, 2, 3], label='a'))
     2
-    >>> ensure_frozen('anything')
+    >>> ensure_frozen(Categorical([1, 2, 3]), strict=False)
+    1
+    >>> ensure_frozen(Categorical([1, 2, 3], label='a'), sample={'a': 2}, strict=False)
+    2
+    >>> ensure_frozen('anything', strict=False)
     'anything'
     """
     if not isinstance(mutable, Mutable):
@@ -74,10 +78,16 @@ def ensure_frozen(mutable: Mutable | Any, sample: Sample | None = None, retries:
                 mutable, sample)
             raise
     else:
-        if retries < 0:
-            raise RuntimeError('Cannot freeze mutable. Please provide a context.')
+        if retries < 0 or (_ENSURE_FROZEN_STRICT and strict):
+            raise RuntimeError(
+                f'No frozen context is found for {mutable!r}. Assuming no context. '
+                'If you are using NAS, you are probably using `ensure_frozen` in forward, or outside the init of ModelSpace. '
+                'Please avoid doing this as they will lead to erroneous results.'
+            )
 
-        _logger.warning('No frozen context is found for %s. Assuming no context.', repr(mutable))
+        # TODO: Currently only mutable parameters in NAS evaluator end up here.
+        # It might cause consistency issues between multiple parameters without context.
+        # I don't want to throw a warning here, but there should be a smarter way to do this.
         return mutable.robust_default(retries=retries)
 
 
@@ -102,8 +112,7 @@ class frozen_context(ContextStack):
 
     Returns
     -------
-    ContextStack
-        Context manager that provides a frozen context.
+    Context manager that provides a frozen context.
 
     Examples
     --------
@@ -198,7 +207,7 @@ class frozen_factory:
 
     Parameters
     ----------
-    function
+    callable
         The function to be invoked.
     sample
         The sample to be used as the frozen context.
@@ -211,8 +220,8 @@ class frozen_factory:
 
     # NOTE: mutations on ``init_args`` and ``init_kwargs`` themselves are not supported.
 
-    def __init__(self, function: Callable[..., Any], sample: Sample | frozen_context):
-        self.function = function
+    def __init__(self, callable: Callable[..., Any], sample: Sample | frozen_context):  # pylint: disable=redefined-builtin
+        self.callable = callable
         if not isinstance(sample, frozen_context):
             self.sample = frozen_context(sample)
         else:
@@ -220,7 +229,7 @@ class frozen_factory:
 
     def __call__(self, *init_args, **init_kwargs):
         with self.sample:
-            return self.function(*init_args, **init_kwargs)
+            return self.callable(*init_args, **init_kwargs)
 
     def __repr__(self):
-        return f'frozen_factory(function={self.function}, sample={self.sample.value})'
+        return f'frozen_factory(callable={self.callable}, arch={self.sample.value})'
