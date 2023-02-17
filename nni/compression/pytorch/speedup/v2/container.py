@@ -41,7 +41,8 @@ class NodeInfo:
         """
         The original output of a node.
         """
-        # assert self.assignment_status['output_origin'] == 1, f"NodeInfo error: bad output_origin({self.assignment_status['output_origin']})"
+        # assert self.assignment_status['output_origin'] == 1, \
+        #     f"NodeInfo error: bad output_origin({self.assignment_status['output_origin']})"
         return self._output_origin
 
     @property
