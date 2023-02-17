@@ -102,18 +102,25 @@ class _ComboPruner(ScheduledPruner):
 
         evaluator.patch_optimizer_step(before_step_tasks=[], after_step_tasks=[optimizer_task])
 
-    def compress(self, max_steps: int):
-        assert max_steps >= self.total_times * self.interval_steps
-        self.evaluator.bind_model(self.bound_model, self._get_param_names_map())
-        self.compress_fuse(self.evaluator)
-        self.evaluator.train(max_steps)
-        self.evaluator.unbind_model()
-        return self.bound_model, self.get_masks()
+    def _single_compress(self, max_steps: int | None, max_epochs: int | None):
+        self._fusion_compress(max_steps, max_epochs)
 
-    def compress_fuse(self, evaluator: Evaluator):
+    def _fuse_preprocess(self, evaluator: Evaluator) -> None:
         self._initialize_state()
         self._register_trigger(evaluator)
-        self.bound_pruner.compress_fuse(evaluator)
+        self.bound_pruner._fuse_postprocess(evaluator)
+
+    def _fuse_postprocess(self, evaluator: Evaluator) -> None:
+        self.bound_pruner._fuse_postprocess(evaluator)
+
+    def compress(self, max_steps: int | None, max_epochs: int | None):
+        if max_steps is not None:
+            assert max_steps >= self.total_times * self.interval_steps
+        else:
+            warn_msg = f'Using epochs number as training duration, ' + \
+                'please make sure the total training steps larger than total_times * interval_steps.'
+            _logger.warning(warn_msg)
+        return super().compress(max_steps, max_epochs)
 
 
 class LinearPruner(_ComboPruner):

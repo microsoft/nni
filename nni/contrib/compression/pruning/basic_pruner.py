@@ -76,8 +76,28 @@ class _NormPruner(Pruner):
 
         evaluator.patch_optimizer_step(before_step_tasks=[], after_step_tasks=[optimizer_task])
 
-    def compress_fuse(self, evaluator: Evaluator):
+    def _single_compress(self, max_steps: None, max_epochs: None):
+        assert max_steps is None and max_epochs is None, \
+            f'{self.__class__.__name__} do not support training aware pruning under single compress mode.'
+        masks = self.generate_masks()
+        self.update_masks(masks)
+
+    def _fuse_preprocess(self, evaluator: Evaluator):
         self._register_trigger(evaluator)
+
+    def _fuse_postprocess(self, evaluator: Evaluator):
+        pass
+
+    @overload
+    def compress(self):
+        ...
+
+    @overload
+    def compress(self, max_steps: int | None, max_epochs: int | None):
+        ...
+
+    def compress(self, max_steps: int | None = None, max_epochs: int | None = None):
+        return super().compress(max_steps, max_epochs)
 
 
 class LevelPruner(_NormPruner):

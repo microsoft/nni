@@ -157,15 +157,14 @@ class QATQuantizer(Quantizer):
 
         evaluator.patch_optimizer_step(before_step_tasks=[], after_step_tasks=[optimizer_task])
 
-    def compress(self, max_steps: int | None = None, max_epochs: int | None = None):
-        self.evaluator.bind_model(self.bound_model, self._get_param_names_map())
-        self.register_trigger(self.evaluator)
-        self.evaluator.train(max_steps, max_epochs)
-        self.evaluator.unbind_model()
-        return self.bound_model, self.get_calibration_config()
+    def _single_compress(self, max_steps: int | None, max_epochs: int | None):
+        self._fusion_compress(max_steps, max_epochs)
 
-    def compress_fuse(self, evaluator: Evaluator):
+    def _fuse_preprocess(self, evaluator: Evaluator) -> None:
         self.register_trigger(evaluator)
+
+    def _fuse_postprocess(self, evaluator: Evaluator) -> None:
+        pass
 
 
 def track_min_max_val(wrapper: ModuleWrapper, target_name: str, target: Tensor):

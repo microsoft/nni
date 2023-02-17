@@ -168,15 +168,26 @@ class SlimPruner(Pruner):
 
         evaluator.patch_optimizer_step(before_step_tasks=[], after_step_tasks=[optimizer_task])
 
-    def compress(self):
-        self.evaluator.bind_model(self.bound_model, self._get_param_names_map())
-        self.compress_fuse(self.evaluator)
-        self.evaluator.train(self.training_steps)
-        self.evaluator.unbind_model()
-        return self.bound_model, self.get_masks()
+    def _single_compress(self, max_steps: int | None, max_epochs: int | None):
+        assert max_steps is None and max_epochs is None
+        self._fusion_compress(self.training_steps, None)
 
-    def compress_fuse(self, evaluator: Evaluator):
+    def _fuse_preprocess(self, evaluator: Evaluator) -> None:
         self._register_scaling_facotrs()
         self._register_factors_optimization(evaluator)
         self._patch_loss(evaluator)
         self._register_trigger(evaluator)
+
+    def _fuse_postprocess(self, evaluator: Evaluator) -> None:
+        pass
+
+    @overload
+    def compress(self):
+        ...
+
+    @overload
+    def compress(self, max_steps: int | None, max_epochs: int | None):
+        ...
+
+    def compress(self, max_steps: int | None = None, max_epochs: int | None = None):
+        return super().compress(max_steps, max_epochs)

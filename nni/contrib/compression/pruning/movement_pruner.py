@@ -202,17 +202,24 @@ class MovementPruner(ScheduledPruner):
     def _generate_sparsity(self, metrics: Dict[str, Dict[str, torch.Tensor]]) -> Dict[str, Dict[str, torch.Tensor]]:
         return generate_sparsity(metrics=metrics, target_spaces=self._target_spaces)
 
-    def compress(self, max_steps: int):
-        assert max_steps >= self.cooldown_begin_step
-        self.evaluator.bind_model(self.bound_model, self._get_param_names_map())
-        self.compress_fuse(self.evaluator)
-        self.evaluator.train(max_steps)
-        self.evaluator.unbind_model()
-        return self.bound_model, self.get_masks()
+    def _single_compress(self, max_steps: int | None, max_epochs: int | None):
+        self._fusion_compress(max_steps, max_epochs)
 
-    def compress_fuse(self, evaluator: Evaluator):
+    def _fuse_preprocess(self, evaluator: Evaluator):
         self._update_sparse_goals_by_ratio(0.)
         self._register_movement_scores()
         self._patch_loss(evaluator)
         self._register_scores_optimization(evaluator)
         self._register_trigger(evaluator)
+
+    def _fuse_postprocess(self, evaluator: Evaluator):
+        pass
+
+    def compress(self, max_steps: int | None, max_epochs: int | None):
+        if max_steps is not None:
+            assert max_steps >= self.cooldown_begin_step
+        else:
+            warn_msg = \
+                f'Using epochs number as training duration, please make sure the total training steps larger than `cooldown_begin_step`.'
+            _logger.warning(warn_msg)
+        return super().compress(max_steps, max_epochs)

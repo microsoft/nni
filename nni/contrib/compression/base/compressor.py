@@ -151,16 +151,41 @@ class Compressor:
             raise RuntimeError('Only can get param_names_map when the model is wrapped.')
         return param_names_map
 
-    def compress(self):
+    def _single_compress(self, max_steps: int | None, max_epochs: int | None) -> None:
         raise NotImplementedError()
 
-    def compress_fuse(self, evaluator: Evaluator):
+    def _fuse_preprocess(self, evaluator: Evaluator) -> None:
         """
-        (Experimental) This api is not stable.
-        Compressor can register compress logic into training/predict loop by this api.
-        It is recommended to decide whether to execute compress according to the current optimize step.
+        (Experimental) Compressor can register compress logic into training/predict loop by this api before evaluator training.
+        It is recommended to decide whether to execute compress according to the current optimization step.
         """
         raise NotImplementedError()
+
+    def _fuse_postprocess(self, evaluator: Evaluator) -> None:
+        """
+        (Experimental) Do some postprocess after evaluator training.
+        """
+        raise NotImplementedError()
+
+    def _fusion_compress(self, max_steps: int | None, max_epochs: int | None) -> None:
+        """
+        (Experimental) Simultaneous execution of multiple compression logics.
+        """
+        assert self.evaluator is not None
+        assert max_steps is not None or max_epochs is not None
+        self.evaluator.bind_model(self.bound_model, self._get_param_names_map())
+        for compressor in self.fused_compressors:
+            compressor._fuse_preprocess(self.evaluator)
+        self.evaluator.train(max_steps, max_epochs)
+        for compressor in self.fused_compressors:
+            compressor._fuse_postprocess(self.evaluator)
+        self.evaluator.unbind_model()
+
+    def compress(self, max_steps: int | None, max_epochs: int | None):
+        if len(self.fused_compressors) <= 1:
+            self._single_compress(max_steps, max_epochs)
+        else:
+            self._fusion_compress(max_steps, max_epochs)
 
 
 class Pruner(Compressor):
@@ -251,10 +276,9 @@ class Pruner(Compressor):
         metrics = self._calculate_metrics(data)
         return self._generate_sparsity(metrics)
 
-    def compress(self):
-        masks = self.generate_masks()
-        self.update_masks(masks)
-        return self.bound_model, masks
+    def compress(self, max_steps: int | None, max_epochs: int | None):
+        super().compress(max_steps, max_epochs)
+        return self.bound_model, self.get_masks()
 
 
 class Quantizer(Compressor):
@@ -303,6 +327,10 @@ class Quantizer(Compressor):
                 if target_space.tracked_min is not None:
                     calibration_config[module_name][target_name]['tracked_min'] = target_space.tracked_min.cpu()
         return calibration_config
+
+    def compress(self, max_steps: int | None, max_epochs: int | None):
+        super().compress(max_steps, max_epochs)
+        return self.bound_model, self.get_calibration_config()
 
 
 class Distiller(Compressor):
