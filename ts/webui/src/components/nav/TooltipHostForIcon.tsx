@@ -13,7 +13,6 @@ interface TooltipHostIndexProps {
 }
 
 const TooltipHostForIcon = (props: TooltipHostIndexProps): any => {
-    // const { updateOverviewPage } = useContext(AppContext);
     const { iconName, tooltip, pageURL } = props;
     const [isActivePage, setIsActivePage] = useState(window.location.pathname === pageURL);
     const [overview, setOverview] = useState(
@@ -21,7 +20,6 @@ const TooltipHostForIcon = (props: TooltipHostIndexProps): any => {
     );
     const [mouHover, setMouhover] = useState(false);
     useEffect(() => {
-        // 方法简写 false && 不等，普通，其他高亮
         if (mouHover === true) {
             setOverview(`${getPrefix() || ''}/icons/${iconName}-1.png`);
         } else {
@@ -32,11 +30,7 @@ const TooltipHostForIcon = (props: TooltipHostIndexProps): any => {
             }
         }
     }, [mouHover, isActivePage]);
-    /***
-     * 1. mouHover 进去高亮，离开变灰 done
-     * 2. 这个组件可以扩展为多tab
-     * 3. 目前没打破的瓶颈：选中其他页面时，要赋值之前选中页面为普通模式。找不到之前的元素。。。
-     */
+
     return (
         <div>
             <TooltipHost
@@ -53,7 +47,6 @@ const TooltipHostForIcon = (props: TooltipHostIndexProps): any => {
                         onClick={() => {
                             setIsActivePage(window.location.pathname === pageURL);
                             setOverview(`${getPrefix() || ''}/icons/${iconName}-1.png`);
-                            // updateOverviewPage();
                         }}
                     >
                         <img src={overview} alt={iconName.toString()} />

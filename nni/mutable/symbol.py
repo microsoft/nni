@@ -30,6 +30,7 @@ from __future__ import annotations
 
 __all__ = ['Symbol', 'SymbolicExpression']
 
+import itertools
 import math
 import operator
 from typing import Any, Iterable, Type, NoReturn, Callable, Iterator, overload
@@ -227,6 +228,76 @@ class SymbolicExpression:
         if symbol_obj is not None:
             return symbol_obj.expr_cls(lambda t, c, f: t if c else f, '{} if {} else {}', [true, pred, false])
         return true if pred else false
+
+    @symbolic_staticmethod
+    def case(pred_expr_pairs: list[tuple[Any, Any]]) -> SymbolicExpression | Any:  # type: ignore
+        """Return the first expression with predicate that is true.
+
+        For example::
+
+            if (x < y) return 17;
+            else if (x > z) return 23;
+            else (y > z) return 31;
+
+        Equivalent to::
+
+            SymbolicExpression.case([(x < y, 17), (x > z, 23), (y > z, 31)])
+        """
+
+        def _case_fn(*pred_expr_pairs):
+            assert len(pred_expr_pairs) % 2 == 0
+            for pred, expr in zip(pred_expr_pairs[::2], pred_expr_pairs[1::2]):
+                if pred:
+                    return expr
+            raise RuntimeError('No matching case')
+
+        chained_pairs = list(itertools.chain(*pred_expr_pairs))
+        symbol_obj = first_symbolic_object(*chained_pairs)
+        if symbol_obj is not None:
+            return symbol_obj.expr_cls(
+                _case_fn,
+                'case([' + ', '.join(['({}, {})'] * len(pred_expr_pairs)) + '])',
+                chained_pairs
+            )
+        return _case_fn(*chained_pairs)
+
+    @symbolic_staticmethod
+    def switch_case(branch: Any, expressions: dict[Any, Any]) -> SymbolicExpression | Any:
+        """Select the expression that matches the branch.
+
+        C-style switch:
+
+        .. code-block:: cpp
+
+            switch (branch) {  // c-style switch
+                case 0: return 17;
+                case 1: return 31;
+            }
+
+        Equivalent to::
+
+            SymbolicExpression.switch_case(branch, {0: 17, 1: 31})
+        """
+
+        def _switch_fn(branch, *expressions):
+            # TODO: support lazy evaluation.
+            assert len(expressions) % 2 == 0
+            keys = expressions[::2]
+            values = expressions[1::2]
+            for key, value in zip(keys, values):
+                if key == branch:
+                    return value
+            raise RuntimeError(f'No matching case for {branch}')
+
+        expanded_expression = list(itertools.chain(*expressions.items()))
+        symbol_obj = first_symbolic_object(branch, *expanded_expression)
+        if symbol_obj is not None:
+            return symbol_obj.expr_cls(
+                _switch_fn,
+                'switch_case({}, {{' + ', '.join(['{}: {}'] * len(expressions)) + '}})',
+                [branch, *expanded_expression]
+            )
+        return expressions[branch]
 
     @symbolic_staticmethod
     def max(arg0: Iterable[Any] | Any, *args: Any) -> Any:

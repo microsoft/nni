@@ -5,18 +5,22 @@ import { TOOLTIPSTYLE } from '@static/const';
 import { DirectionalHint, TooltipHost } from '@fluentui/react';
 
 // feedback, document, version btns
+type pagesType = 'Overview' | 'Trials detail';
 interface WebRoutersInterface {
-    changeCurrentPage: (value: string) => void;
+    currentPage: pagesType;
+    changeCurrentPage: (value: pagesType) => void;
 }
 const WebRouters = (props: WebRoutersInterface): any => {
-    const { changeCurrentPage } = props;
+    const { currentPage, changeCurrentPage } = props; // Overview or Trials detail
     const [overviewImgsrc, setOverviewImgsrc] = useState(
-        window.location.pathname === '/oview'
+        // window.location.pathname === '/oview'
+        currentPage === 'Overview'
             ? `${getPrefix() || ''}/icons/overview-1.png`
             : `${getPrefix() || ''}/icons/overivew.png`
     );
     const [detailImgsrc, setdetailImgsrc] = useState(
-        window.location.pathname === '/detail'
+        // window.location.pathname === '/detail'
+        currentPage === 'Trials detail'
             ? `${getPrefix() || ''}/icons/detail-1.png`
             : `${getPrefix() || ''}/icons/detail.png`
     );

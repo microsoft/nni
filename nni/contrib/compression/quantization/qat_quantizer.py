@@ -14,7 +14,7 @@ from ..utils.evaluator import Evaluator
 
 
 class QATQuantizer(Quantizer):
-    r"""
+    """
     Quantizer defined in:
     `Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
     <http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf>`__
@@ -33,7 +33,7 @@ class QATQuantizer(Quantizer):
           the batch normalization parameters are “folded into” the weights before quantization.
 
         * Activations are quantized at points where they would be during inference,
-          e.g. after the activation function is applied to a convolutional or fully connected layer’s output,
+          e.g. after the activation function is applied to a convolutional or fully connected layer's output,
           or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
 
     Parameters
@@ -41,24 +41,16 @@ class QATQuantizer(Quantizer):
     model
         Model to be quantized.
     config_list
-        List of configurations for quantization. Supported keys for dict:
-            - quant_types : List[str]
-                Type of quantization you want to apply, currently support '_input_', 'weight', '_output_'.
-                Note that 
-            - quant_bits : Union[int, Dict[str, int]]
-                Bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
-                When the type is int, all quantization types share same bits length.
-            - quant_start_step : int
-                Disable quantization until model are run by certain number of steps, this allows the network to enter a more stable.
-                State where output quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0.
-            - op_types : List[str]
-                Types of nn.module you want to apply quantization, eg. 'Conv2d'.
-            - op_names : List[str]
-                Names of nn.module you want to apply quantization, eg. 'conv1'.
-            - exclude : bool
-                Set True then the layers setting by op_types and op_names will be excluded from quantization.
-    """
+        A list of dict, each dict configure which module need to be quantized, and how to quantize.
+    evaluator
+        TODO: {evaluator_docstring}
+    quant_start_step
+        The steps for warmup training before QAT begin.
 
+    Examples
+    --------
+        TODO
+    """
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
                  quant_start_step: int = 0):
@@ -101,7 +93,8 @@ class QATQuantizer(Quantizer):
             wrapper.register_track_func(self.update_scale_zp)
 
     def track_min_max_val(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
-        if not wrapper.training:
+        # in a fused compression pipeline, the target name may be another compressor's target name
+        if not wrapper.training or target_name not in self._target_spaces:
             return
         return track_min_max_val(wrapper, target_name, target)
 
@@ -121,20 +114,22 @@ class QATQuantizer(Quantizer):
             tracked_min = torch.min(target_space.tracked_min, torch.zeros_like(target_space.tracked_min))
             tracked_max = torch.max(target_space.tracked_max, torch.zeros_like(target_space.tracked_max))
             zero_point = torch.zeros_like(tracked_min)
+            qmin, qmax = target_space.qmin, target_space.qmax
+            assert isinstance(qmin, int) and isinstance(qmax, int)
             if target_space.quant_scheme in ['symmetric', None]:
                 abs_max = torch.max(torch.abs(tracked_min), torch.abs(tracked_max))
-                scale = abs_max / (float(target_space.qmax - target_space.qmin) / 2)
+                scale = abs_max / (float(qmax - qmin) / 2)
                 scale = torch.max(scale, torch.full_like(scale, torch.finfo(torch.float32).eps))
                 # NOTE: here need to check, +1 because in pytorch, symmetric qint8 zp is 0, quint8 zp is 128.
-                zero_point_val = (target_space.qmax + target_space.qmin + 1) // 2
+                zero_point_val = (qmax + qmin + 1) // 2
                 zero_point = torch.full_like(zero_point, zero_point_val)
             elif target_space.quant_scheme == 'affine':
-                scale = (tracked_max - tracked_min) / float(target_space.qmax - target_space.qmin)
+                scale = (tracked_max - tracked_min) / float(qmax - qmin)
                 scale = torch.max(scale, torch.full_like(scale, torch.finfo(torch.float32).eps))
-                zero_point = target_space.qmin - torch.round(tracked_min / scale)
+                zero_point = qmin - torch.round(tracked_min / scale)
             else:
                 raise RuntimeError(f'Unknown quant_scheme {target_space.quant_scheme}')
-            zero_point = torch.clamp(zero_point, target_space.qmin, target_space.qmax)
+            zero_point = torch.clamp(zero_point, qmin, qmax)
             target_space.scale, target_space.zero_point = scale, zero_point
 
     def track_forward(self, *args, **kwargs):

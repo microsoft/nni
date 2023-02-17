@@ -241,13 +241,13 @@ stages:
     - template: templates/install-nni.yml
 
     - script: |
-        CI=true npm --prefix ts/nni_manager run test --exclude test/core/nnimanager.test.ts
-      displayName: TypeScript unit test
-
-    - script: |
         cd test
         python -m pytest ut
       displayName: Python unit test
+
+    - script: |
+        CI=true npm --prefix ts/nni_manager run test --exclude test/core/nnimanager.test.ts
+      displayName: TypeScript unit test
 
     - script: |
         cd test
