@@ -24,7 +24,7 @@ class MaskUpdater:
         """
         preprocesses before direct update sparsity
         default action:
-            do randomize to slot.value_0 and store to slot.value_2
+            do randomize to node_info.output_origin and store to node_info.output_randomize
             for submodules, randomize and apply masks to module.named_parameters
         """
         raise RuntimeError('direct_update_preprocess method should be overrided!')
@@ -33,9 +33,9 @@ class MaskUpdater:
         """
         main processes to direct update sparsity
         default action:
-            get all input from slot.value_2 and apply the slot.mask_1;
+            get all input from node_info.output_randomize and apply the node_info.output_masks;
             execute the node and get the output;
-            calc the out_mask from the output and store to slot.mask_1.
+            calc the out_mask from the output and store to node_info.output_masks.
         """
         raise RuntimeError('direct_update_process method should be overrided!')
 
@@ -51,7 +51,7 @@ class MaskUpdater:
         """
         preprocesses before indirect update sparsity
         default action:
-            remove all units but maintain struct of slot.value_0 and store to slot.value_3
+            remove all units but maintain struct of node_info.output_origin and store to node_info.output_grad
             for submodules, do tensor_requires_grad to module.named_parameters
         """
         raise RuntimeError('indirect_update_preprocess method should be overrided!')
@@ -60,10 +60,10 @@ class MaskUpdater:
         """
         main processes to direct update sparsity
         default action:
-            calc the out_mask from the slot.value_3 and store to slot.mask_2.
-            get all input from slot.value_0, randomize it, apply the slot.mask_1, and do tensor_requires_grad;
+            calc the out_mask from the node_info.output_grad and store to node_info.output_masks.
+            get all input from node_info.output_origin, randomize it, apply the node_info.output_masks, and do tensor_requires_grad;
             execute the node and get the output;
-            do backward to output, and for each input, store the grad to slot.value_3;
+            do backward to output, and for each input, store the grad to node_info.output_grad;
             for each named_parameters in submodules, update param_masks_1 from grad.
         """
         raise RuntimeError('indirect_update_process method should be overrided!')
@@ -246,8 +246,8 @@ class NoMaskUpdater(DefaultMaskUpdater):
 
     def direct_update_process(self, model_speedup: 'ModelSpeedup', node: Node):
         """
-        get all input from slot.value_2 and execute the node
-        calc the out_mask and store to slot.mask_1
+        get all input from node_info.output_randomize and execute the node
+        calc the out_mask and store to node_info.output_masks
         """
         with torch.no_grad():
             model_speedup.node_infos[node].output_masks = tree_map_zip(lambda t: None, model_speedup.node_infos[node].output_origin)
@@ -317,8 +317,8 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
 
     def direct_update_process(self, model_speedup: 'ModelSpeedup', node: Node):
         """
-        get all input from slot.value_2 and execute the node
-        calc the out_mask and store to slot.mask_1
+        get all input from node_info.output_randomize and execute the node
+        calc the out_mask and store to node_info.output_masks
         """
         direct_fn, _ = self.detect_helper(model_speedup, node)
         with torch.no_grad():

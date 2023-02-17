@@ -41,7 +41,7 @@ class NodeInfo:
         """
         The original output of a node.
         """
-        # assert self.assignment_status['output_origin'] == 1, f"Slot error: bad output_origin({self.assignment_status['output_origin']})"
+        # assert self.assignment_status['output_origin'] == 1, f"NodeInfo error: bad output_origin({self.assignment_status['output_origin']})"
         return self._output_origin
 
     @property
@@ -50,7 +50,7 @@ class NodeInfo:
         A clone of the original output, used as the input of successor node to get the orginal output of successor node.
         """
         # assert self.assignment_status['output_inplace'] == 1, \
-        #     f"Slot error: bad output_inplace({self.assignment_status['output_inplace']})"
+        #     f"NodeInfo error: bad output_inplace({self.assignment_status['output_inplace']})"
         return self._output_inplace
 
     @property
@@ -59,7 +59,7 @@ class NodeInfo:
         A randomize output of the original output, used to direct propagate masks.
         """
         # assert self.assignment_status['output_randomize'] == 1, \
-        #     f"Slot error: bad output_randomize({self.assignment_status['output_randomize']})"
+        #     f"NodeInfo error: bad output_randomize({self.assignment_status['output_randomize']})"
         return self._output_randomize
 
     @property
@@ -67,17 +67,17 @@ class NodeInfo:
         """
         The sum of the gradient given by successor during indirect propagation.
         """
-        # assert self.assignment_status['output_grad'] == 1, f"Slot error: bad output_grad({self.assignment_status['output_grad']})"
+        # assert self.assignment_status['output_grad'] == 1, f"NodeInfo error: bad output_grad({self.assignment_status['output_grad']})"
         return self._output_grad
 
     @property
     def output_masks(self):
-        # assert self.assignment_status['output_masks'] <= 3, f"Slot error: bad output_masks({self.assignment_status['output_masks']})"
+        # assert self.assignment_status['output_masks'] <= 3, f"NodeInfo error: bad output_masks({self.assignment_status['output_masks']})"
         return self._output_masks
 
     @property
     def param_masks(self):
-        # assert self.assignment_status['param_masks'] <= 2, f"Slot error: bad param_masks({self.assignment_status['param_masks']})"
+        # assert self.assignment_status['param_masks'] <= 2, f"NodeInfo error: bad param_masks({self.assignment_status['param_masks']})"
         return self._param_masks
 
     @output_origin.setter
