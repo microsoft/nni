@@ -44,7 +44,7 @@ export const BasicInfo = (): any => {
                         backgroundRepeat: 'no-repeat'
                     }}
                 >
-                    <span className={`${EXPERIMENT.status} status-text focus-text ellipsis`}>{EXPERIMENT.status}</span>
+                    <span className={`${EXPERIMENT.status} status-text focus-text`}>{EXPERIMENT.status}</span>
                     {EXPERIMENT.status === 'ERROR' ? (
                         <div>
                             <div className={`${styles.buttonArea} error-info-icon`} ref={ref}>

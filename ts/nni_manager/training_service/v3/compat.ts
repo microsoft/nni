@@ -81,7 +81,7 @@ export class V3asV1 implements TrainingService {
                 continue;
             }
             submitTime = Date.now();
-            trialId = await this.v3.createTrial(envId, this.config.trialCommand, 'trial_code');
+            trialId = await this.v3.createTrial(envId, this.config.trialCommand, 'trial_code', form.sequenceId);
         }
 
         if (this.trialJobs[trialId] === undefined) {

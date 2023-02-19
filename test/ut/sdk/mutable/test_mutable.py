@@ -239,6 +239,11 @@ def test_numerical():
     assert len(list(a.grid(granularity=10))) == 51
     assert a.random() % 2 == 0
 
+    a = Numerical(low=1, high=3, quantize=0.75)
+    assert len(list(a.grid(granularity=10))) == 4
+    for x in a.grid(granularity=10):
+        assert a.contains({a.label: x})
+
     a = Numerical(low=2, high=6, log_distributed=True, label='x')
     for _ in range(10):
         assert 2 < a.random() < 6
@@ -559,6 +564,9 @@ def test_grid():
         {'c': None, 'a': 3, 'b': 4}
     ]
 
+    lst = MutableList([1, 2, 3])
+    assert list(lst.grid()) == [[1, 2, 3]]
+
 
 def test_equals():
     assert _mutable_equal(Categorical([1, 2, 3], label='x'), Categorical([1, 2, 3], label='x'))
@@ -657,3 +665,6 @@ def test_equals():
         MutableDict({'a': Categorical([1, 2], label='a'), 'x': Categorical([3, 4], label='b')}),
         MutableDict({'a': Categorical([1, 2], label='a'), 'x': Categorical([3, 4], label='x')}),
     )
+
+    assert _mutable_equal(np.zeros_like((2, 2)), np.zeros_like((2, 2)))
+    assert not _mutable_equal(np.zeros_like((2, 2)), np.ones_like((2, 2)))
