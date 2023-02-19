@@ -182,18 +182,6 @@ abstract class KubernetesCRDClient {
     }
 
     public async createKubernetesJob(jobManifest: any): Promise<void> {
-        // await this.operator.post({body: jobManifest})
-        //     .then((response: any) => {
-        //         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
-        //             return Promise.resolve();
-        //         } else {
-        //             return Promise.reject(`KubernetesApiClient createKubernetesJob failed, statusCode is ${response.statusCode}`);
-        //         }
-        //     })
-        //     .catch((error: Error) => {
-        //         return Promise.reject(`Failed in creating Kubernetes job: KubernetesApiClient post error ${error}`);
-        //     });
-
         try {
             const response: any = await this.operator.post({body: jobManifest});
             if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {

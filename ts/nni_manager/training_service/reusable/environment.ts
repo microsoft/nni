@@ -192,7 +192,7 @@ export class RunnerSettings {
     public nniManagerPort: number = 8081;
     public nniManagerVersion: string = "";
     public logCollection: string = "none";
-    public command: string[] = [];
+    public command: string = "";
     public enableGpuCollector: boolean = true;
 
     // specify which communication channel is used by runner.
