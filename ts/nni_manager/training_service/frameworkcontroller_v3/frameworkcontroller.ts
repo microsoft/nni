@@ -392,7 +392,8 @@ export class FrameworkControllerTSV3 implements TrainingServiceV3 {
      *  Return trial ID on success.
      *  Return null if the environment is not available.
      **/
-    public async createTrial(environmentId: string, _trialCommand: string, _directoryName: string): Promise<string | null> {
+    public async createTrial(environmentId: string, _trialCommand: string,
+                             _directoryName: string, _sequenceId?: number): Promise<string | null> {
         if (this.commandChannel === undefined) {
             throw new Error('Command channel is not initialized.');
         }
