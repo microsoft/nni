@@ -476,17 +476,22 @@ class NNIManager implements Manager {
         const reuseMode = Array.isArray(config.trainingService) || (config.trainingService as any).reuseMode;
 
         if (reuseMode) {
-            const module_ = await import('../training_service/reusable/routerTrainingService');
-            return await module_.RouterTrainingService.construct(config);
+            // const module_ = await import('../training_service/reusable/routerTrainingService');
+            // return await module_.RouterTrainingService.construct(config);
+            const module_ = await import ('../training_service/v3/compat');
+            return new module_.V3asV1(config.trainingService as TrainingServiceConfig);
         } else if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
             return new module_.LocalTrainingService(<LocalConfig>config.trainingService);
         } else if (platform === 'kubeflow') {
             const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
             return new module_.KubeflowTrainingService();
+        // } else if (platform === 'frameworkcontroller') {
+        //     const module_ = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
+        //     return new module_.FrameworkControllerTrainingService();
         } else if (platform === 'frameworkcontroller') {
-            const module_ = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
-            return new module_.FrameworkControllerTrainingService();
+            const module_ = await import ('../training_service/v3/compat');
+            return new module_.V3asV1(config.trainingService as TrainingServiceConfig);
         } else if (platform === 'adl') {
             const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
             return new module_.AdlTrainingService();

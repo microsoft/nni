@@ -11,6 +11,7 @@ import type { LocalConfig, RemoteConfig, TrainingServiceConfig } from 'common/ex
 import type { TrainingServiceV3 } from 'common/training_service_v3';
 //import { LocalTrainingServiceV3 } from './local';
 //import { RemoteTrainingServiceV3 } from './remote';
+import { FrameworkControllerTSV3 } from '../frameworkcontroller_v3';
 
 export function trainingServiceFactoryV3(config: TrainingServiceConfig): TrainingServiceV3 {
     //if (config.platform === 'local_v3') {
@@ -18,6 +19,9 @@ export function trainingServiceFactoryV3(config: TrainingServiceConfig): Trainin
     //} else if (config.platform === 'remote_v3') {
     //    return new RemoteTrainingServiceV3(config);
     //} else {
-    throw new Error(`Bad training service platform: ${config.platform}`);
-    //}
+    if (config.platform === 'frameworkcontroller') {
+        return new FrameworkControllerTSV3('frameworkcontroller', config);
+    } else {
+        throw new Error(`Bad training service platform: ${config.platform}`);
+    }
 }

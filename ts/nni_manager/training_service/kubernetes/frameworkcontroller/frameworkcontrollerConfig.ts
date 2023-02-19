@@ -133,6 +133,7 @@ export class FrameworkControllerClusterConfigFactory {
 }
 
 export type FrameworkControllerJobStatus =
-    'AttemptRunning' | 'Completed' | 'AttemptCreationPending' | 'AttemptCreationRequested' | 'AttemptPreparing' | 'AttemptCompleted';
+    'AttemptRunning' | 'Completed' | 'AttemptCreationPending' | 'AttemptCreationRequested' | 'AttemptPreparing' | 'AttemptCompleted'
+    | 'AttemptDeletionPending' | 'AttemptDeletionRequested' | 'AttemptDeleting';
 
 export type FrameworkControllerJobCompleteStatus = 'Succeeded' | 'Failed';

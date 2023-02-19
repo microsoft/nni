@@ -39,6 +39,7 @@ class K8sNfsConfig(K8sStorageConfig):
     storage: Literal['nfs'] = 'nfs'
     server: str
     path: str
+    local_mount_path: str
 
 @dataclass(init=False)
 class K8sAzureStorageConfig(K8sStorageConfig):

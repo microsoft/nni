@@ -37,6 +37,7 @@ def main_loop(args):
         while True:
             command_type, command_data = command_channel.receive()
             if command_type == CommandType.NewTrialJob:
+                nni_log(LogType.Info, 'New trial job with {0}'.format(command_data))
                 trial_id = command_data["trialId"]
                 if trial_id in trials.keys():
                     trial = trials[trial_id]
@@ -48,11 +49,13 @@ def main_loop(args):
                 trial.run()
                 trials[trial_id] = trial
             elif command_type == CommandType.KillTrialJob:
+                nni_log(LogType.Info, 'Kill trial job with {0}'.format(command_data))
                 trial_id = command_data
                 if trial_id in trials.keys():
                     trial = trials[trial_id]
                     trial.kill(command_data)
             elif command_type == CommandType.SendTrialJobParameter:
+                nni_log(LogType.Info, 'Receive trial job parameter: {0}'.format(command_data))
                 trial_id = command_data["trialId"]
                 if trial_id in trials.keys():
                     trial = trials[trial_id]
@@ -167,7 +170,8 @@ if __name__ == '__main__':
     args.command_channel = settings["commandChannel"]
 
     if args.trial_command is None:
-        args.trial_command = settings["command"]
+        # FIXME: deal with distributed trial which has more than one trial command
+        args.trial_command = settings["command"][0]
     if args.nnimanager_ip is None:
         args.nnimanager_ip = settings["nniManagerIP"]
     if args.nnimanager_port is None:
@@ -180,16 +184,20 @@ if __name__ == '__main__':
         # default has only one node.
         args.node_count = 1
 
+    # FIXME: in reuse mode, multiple trials would have the same output dir
+    # NOTE: NNI_OUTPUT_DIR is updated in trial.py
     os.environ['NNI_OUTPUT_DIR'] = os.curdir + "/nnioutput"
     os.environ['NNI_PLATFORM'] = args.platform
     os.environ['NNI_SYS_DIR'] = os.curdir
     os.environ['NNI_EXP_ID'] = args.exp_id
+    # FIXME: multi-phase is true?
     os.environ['MULTI_PHASE'] = "true"
+    # FIXME: trial job id is runner?
     os.environ['NNI_TRIAL_JOB_ID'] = "runner"
     os.environ['REUSE_MODE'] = "true"
 
     from .log_utils import LogType, RemoteLogger, StdOutputType, nni_log
-    from .trial import Trial
+    from .trialv3 import Trial
     from .file_channel import FileChannel
     from .web_channel import WebChannel
     from .commands import CommandType
@@ -197,6 +205,7 @@ if __name__ == '__main__':
     is_multi_node = args.node_count > 1
 
     if (is_multi_node):
+        # FIXME: not supported yet!!!
         # for multiple nodes, create a file to get a unique id.
         while True:
             node_id = random.randint(0, 10000)

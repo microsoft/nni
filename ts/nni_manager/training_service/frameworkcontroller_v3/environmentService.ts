@@ -3,21 +3,27 @@
 
 'use strict';
 
-import cpp from 'child-process-promise';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as component from '../../../../common/component';
-import { FrameworkControllerConfig, FrameworkControllerTaskRoleConfig, toMegaBytes } from '../../../../common/experimentConfig';
-import { ExperimentStartupInfo } from '../../../../common/experimentStartupInfo';
-import { EnvironmentInformation } from '../../environment';
-import { KubernetesEnvironmentService } from './kubernetesEnvironmentService';
-import { FrameworkControllerClientFactory } from '../../../kubernetes/frameworkcontroller/frameworkcontrollerApiClient';
-import { FrameworkControllerClusterConfigAzure, FrameworkControllerJobStatus, FrameworkControllerTrialConfigTemplate,
-     FrameworkControllerJobCompleteStatus } from '../../../kubernetes/frameworkcontroller/frameworkcontrollerConfig';
-import { KeyVaultConfig, AzureStorage } from '../../../kubernetes/kubernetesConfig';
+import fs from 'fs';
+import path from 'path';
+import * as component from 'common/component';
+import { Logger, getLogger } from 'common/log';
+import { uniqueString } from 'common/utils';
+import { FrameworkControllerConfig, FrameworkControllerTaskRoleConfig, toMegaBytes } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { GeneralK8sClient, KubernetesCRDClient } from 'training_service/kubernetes/kubernetesApiClient';
+import { EnvironmentInformation, EnvironmentService } from './environment';
+import { FrameworkControllerClientFactory } from '../kubernetes/frameworkcontroller/frameworkcontrollerApiClient';
+import type { FrameworkControllerTrialConfigTemplate } from '../kubernetes/frameworkcontroller/frameworkcontrollerConfig';
 
-@component.Singleton
-export class FrameworkControllerEnvironmentService extends KubernetesEnvironmentService {
+
+export class FrameworkControllerEnvironmentService extends EnvironmentService {
+    private containerMountPath: string;
+    private NNI_KUBERNETES_TRIAL_LABEL: string;
+    private log: Logger;
+    private genericK8sClient: GeneralK8sClient;
+    private experimentId: string;
+    private environmentWorkingFolder: string;
+    private kubernetesCRDClient?: KubernetesCRDClient;
 
     private config: FrameworkControllerConfig;
     private createStoragePromise?: Promise<void>;
@@ -25,30 +31,19 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
     
 
     constructor(config: FrameworkControllerConfig, info: ExperimentStartupInfo) {
-        super(config, info);
+        super();
+        this.log = getLogger('FrameworkControllerEnvironmentService');
+        this.containerMountPath = '/tmp/mount';
+        this.NNI_KUBERNETES_TRIAL_LABEL = 'nni-kubernetes-trial';
+        this.genericK8sClient = new GeneralK8sClient();
         this.experimentId = info.experimentId;
+        this.environmentWorkingFolder = path.join(this.containerMountPath, 'nni', this.experimentId);
+
         this.config = config;
         // Create kubernetesCRDClient
         this.kubernetesCRDClient = FrameworkControllerClientFactory.createClient(this.config.namespace);
         this.genericK8sClient.setNamespace = this.config.namespace ?? "default"
-        // Create storage
-        if (this.config.storage.storageType === 'azureStorage') {
-            if (this.config.storage.azureShare === undefined ||
-                this.config.storage.azureAccount === undefined ||
-                this.config.storage.keyVaultName === undefined ||
-                this.config.storage.keyVaultKey === undefined) {
-                throw new Error("Azure storage configuration error!");
-            }
-            this.azureStorageAccountName = this.config.storage.azureAccount;
-            this.azureStorageShare = this.config.storage.azureShare;
-            this.createStoragePromise = this.createAzureStorage(this.config.storage.keyVaultName, this.config.storage.keyVaultKey);
-        } else if (this.config.storage.storageType === 'nfs') {
-            if (this.config.storage.server === undefined ||
-                this.config.storage.path === undefined) {
-                    throw new Error("NFS storage configuration error!");
-                }
-            this.createStoragePromise = this.createNFSStorage(this.config.storage.server, this.config.storage.path);
-        }
+        // Storage is mounted by user
     }
 
     public get environmentMaintenceLoopInterval(): number {
@@ -63,59 +58,71 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         return 'frameworkcontroller';
     }
 
-    public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
+    public get getContainerMountPath(): string {
+        return this.containerMountPath;
+    }
+
+    public generatePortAndCommand(command: string): string {
+        this.generateContainerPort(this.config.taskRoles as any);
+        const patchedCommand: string = this.generateCommandScript(this.config.taskRoles, command);
+        return patchedCommand;
+    }
+
+    public async startEnvironment(environment: EnvironmentInformation): Promise<any> {
         if (this.kubernetesCRDClient === undefined) {
             throw new Error("kubernetesCRDClient not initialized!");
         }
         if (this.createStoragePromise) {
             await this.createStoragePromise;
         }
-        let configTaskRoles: any = undefined;
-        configTaskRoles = this.config.taskRoles;
-        //Generate the port used for taskRole
-        this.generateContainerPort(configTaskRoles);
-
-        const expFolder = `${this.CONTAINER_MOUNT_PATH}/nni/${this.experimentId}`;
-        environment.command = `cd ${expFolder} && ${environment.command} \
-1>${expFolder}/envs/${environment.id}/trialrunner_stdout 2>${expFolder}/envs/${environment.id}/trialrunner_stderr`;
-        environment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
         const frameworkcontrollerJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
-        const command = this.generateCommandScript(this.config.taskRoles, environment.command);
-        await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, `${environment.id}_run.sh`), command, { encoding: 'utf8' });
-
-        //upload script files to sotrage
-        const trialJobOutputUrl: string = await this.uploadFolder(this.environmentLocalTempFolder, `nni/${this.experimentId}`);
-        environment.trackingUrl = trialJobOutputUrl;
+        environment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
+        // FIXME: create trial log and show it on webui
+        environment.trackingUrl = `${this.config.storage.localMountPath}/nni/${this.experimentId}/envs/${environment.id}/`;
         // Generate kubeflow job resource config object
         const frameworkcontrollerJobConfig: any = await this.prepareFrameworkControllerConfig(
             environment.id,
-            this.environmentWorkingFolder,
+            path.join(this.environmentWorkingFolder, 'envs', environment.id),
             frameworkcontrollerJobName
         );
-        // Create kubeflow job based on generated kubeflow job resource config
+        // Create frameworkcontroller job based on generated kubeflow job resource config
         await this.kubernetesCRDClient.createKubernetesJob(frameworkcontrollerJobConfig);
+
+        return Promise.resolve(frameworkcontrollerJobConfig);
     }
 
-    /**
-     * upload local folder to nfs or azureStroage
-     */
-    private async uploadFolder(srcDirectory: string, destDirectory: string): Promise<string> {
-        if (this.config.storage.storageType === 'azureStorage') {
-            if (this.azureStorageClient === undefined) {
-                throw new Error('azureStorageClient is not initialized');
-            }
-            return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, 2);
-        } else {
-            try {
-                // copy envs and run.sh from environments-temp to nfs-root(mounted)
-                await cpp.exec(`mkdir -p ${this.nfsRootDir}/${destDirectory}`);
-                await cpp.exec(`cp -r ${srcDirectory}/* ${this.nfsRootDir}/${destDirectory}`);
-            } catch (uploadError) {
-                return Promise.reject(uploadError);
-            }
-            return `nfs://${this.config.storage.server}:${destDirectory}`;
+    public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
+        if (this.kubernetesCRDClient === undefined) {
+            throw new Error('kubernetesCRDClient not initialized!');
         }
+        try {
+            await this.kubernetesCRDClient.deleteKubernetesJob(new Map(
+                [
+                    ['app', this.NNI_KUBERNETES_TRIAL_LABEL],
+                    ['expId', this.experimentId],
+                    ['envId', environment.id]
+                ]
+            ));
+        } catch (err) {
+            const errorMessage: string = `Delete env ${environment.id} failed: ${err}`;
+            this.log.error(errorMessage);
+
+            return Promise.reject(errorMessage);
+        }
+    }
+
+    public generatePodResource(memory: number, cpuNum: number, gpuNum: number): any {
+        const resources: any = {
+            memory: `${memory}Mi`,
+            cpu: `${cpuNum}`
+        };
+
+        if (gpuNum !== 0) {
+            resources['nvidia.com/gpu'] = `${gpuNum}`;
+        }
+
+        return resources;
     }
 
     /**
@@ -159,6 +166,34 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             this.fcContainerPortMap.set(taskRoles[index].name, port);
             port += 1;
         }
+    }
+
+    private async createRegistrySecret(filePath: string | undefined): Promise<string | undefined> {
+        if (filePath === undefined || filePath === '') {
+            return undefined;
+        }
+        const body = fs.readFileSync(filePath).toString('base64');
+        const registrySecretName = `nni-secret-${uniqueString(8).toLowerCase()}`;
+        const namespace = this.genericK8sClient.getNamespace ?? "default";
+        await this.genericK8sClient.createSecret(
+            {
+                apiVersion: 'v1',
+                kind: 'Secret',
+                metadata: {
+                    name: registrySecretName,
+                    namespace: namespace,
+                    labels: {
+                        app: this.NNI_KUBERNETES_TRIAL_LABEL,
+                        expId: this.experimentId
+                    }
+                },
+                type: 'kubernetes.io/dockerconfigjson',
+                data: {
+                    '.dockerconfigjson': body
+                }
+            }
+        );
+        return registrySecretName;
     }
 
     /**
@@ -220,42 +255,35 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         podResources: any, containerPort: number, privateRegistrySecretName: string | undefined): any {
 
         const volumeSpecMap: Map<string, object> = new Map<string, object>();
-        if (this.config.storage.storageType === 'azureStorage') {
-            volumeSpecMap.set('nniVolumes', [
-                {
-                    name: 'nni-vol',
-                    azureFile: {
-                        secretName: `${this.azureStorageSecretName}`,
-                        shareName: `${this.azureStorageShare}`,
-                        readonly: false
-                    }
-                }, {
-                    name: 'frameworkbarrier-volume',
-                    emptyDir: {}
-                }]);
-        } else {
-            volumeSpecMap.set('nniVolumes', [
-                {
-                    name: 'nni-vol',
-                    nfs: {
-                        server: `${this.config.storage.server}`,
-                        path: `${this.config.storage.path}`
-                    }
-                }, {
-                    name: 'frameworkbarrier-volume',
-                    emptyDir: {}
-                }]);
-        }
+        // Only support nfs for now
+        volumeSpecMap.set('nniVolumes', [
+            {
+                name: 'nni-vol',
+                nfs: {
+                    server: `${this.config.storage.server}`,
+                    path: `${this.config.storage.path}`
+                }
+            }, {
+                name: 'frameworkbarrier-volume',
+                emptyDir: {}
+            }]);
+
+        // const securityContext: any = {
+        //     fsGroup: xxxx,
+        //     runAsUser: xxxx,
+        //     runAsGroup: xxxx
+        // };
 
         const containers: any = [
             {
                 name: 'framework',
                 image: replicaImage,
+                // securityContext: securityContext,
                 command: ['sh', `${path.join(trialWorkingFolder, runScriptFile)}`],
                 volumeMounts: [
                     {
                         name: 'nni-vol',
-                        mountPath: this.CONTAINER_MOUNT_PATH
+                        mountPath: this.containerMountPath
                     }, {
                         name: 'frameworkbarrier-volume',
                         mountPath: '/mnt/frameworkbarrier'
@@ -303,44 +331,13 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         };
     }
 
-    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
-        environments.forEach(async (environment) => {
-            if (this.kubernetesCRDClient === undefined) {
-                throw new Error("kubernetesCRDClient undefined")
-            }
-            const kubeflowJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
-            const kubernetesJobInfo = await this.kubernetesCRDClient.getKubernetesJob(kubeflowJobName);
-
-            if (kubernetesJobInfo.status && kubernetesJobInfo.status.state) {
-                const frameworkJobType: FrameworkControllerJobStatus = <FrameworkControllerJobStatus>kubernetesJobInfo.status.state;
-                /* eslint-disable require-atomic-updates */
-                switch (frameworkJobType) {
-                    case 'AttemptCreationPending':
-                    case 'AttemptCreationRequested':
-                    case 'AttemptPreparing':
-                        environment.setStatus('WAITING');
-                        break;
-                    case 'AttemptRunning':
-                        environment.setStatus('RUNNING');
-                        break;
-                    case  'Completed': {
-                        const completedJobType: FrameworkControllerJobCompleteStatus =
-                          <FrameworkControllerJobCompleteStatus>kubernetesJobInfo.status.attemptStatus.completionStatus.type.name;
-                        switch (completedJobType) {
-                            case 'Succeeded':
-                                environment.setStatus('SUCCEEDED');
-                                break;
-                            case 'Failed':
-                                environment.setStatus('FAILED');
-                                break;
-                            default:
-                        }
-                        break;
-                    }
-                    default:
-                }
-                /* eslint-enable require-atomic-updates */
-            }
-        });
+    public async getK8sJobInfo(environment: EnvironmentInformation): Promise<any> {
+        if (this.kubernetesCRDClient === undefined) {
+            throw new Error("kubernetesCRDClient undefined");
+        }
+        const kubeflowJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
+        const kubernetesJobInfo = await this.kubernetesCRDClient.getKubernetesJob(kubeflowJobName);
+        return Promise.resolve(kubernetesJobInfo);
     }
+
 }
