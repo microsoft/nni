@@ -52,19 +52,20 @@ class ModelSpeedup(torch.fx.Interpreter):
         The batch_size coefficient of the sparsity inference.
         This value is actually used as the batchsize of the dummy_input.
     customized_mask_updaters
-        ...
+        A list of ``MaskUpdater``.
+        NNI will automatically infer sparsity based on the data distribution in the forward and backward process,
+        but if some special operations lead to automatic sparsity inference errors,
+        users can manually set the mask inference rules for the special operations to make the mask inference correct.
     customized_replacers
-        ``customized_replacers`` is a list of ``Replacer``.
-        Call a ``Module`` that does not contain a ``Module`` as a leaf-module,
-        a ``Module`` that contains a ``Module`` as a hyper-module, then replacer is used to replace the hyper-module.
-        The difference between the replacer and replace function is that replacer can perform more efficient replacements
-        to hyper-module, and replace function is used to replace leaf-module.
-        In ``ModelSpeedup.compress``, replacers are first to be called to replace the hyper-modules before
-        replacing all leaf-modules by replace functions.
-    garbage_collect_values: bool
-        if the garbage_collect_values is True, we will delete cache information after the cache has none usage.
-    logger: Optional[logging.Logger]
-        to set logger. if the value is None we will use the default logger
+        A list of ``Replacer``.
+        The replacer is used to replace the origin module with a compressed module.
+        Users can costomized the replacement logic by customized a replacer.
+        Before the built-in replacement logic in nni is executed,
+        the replacement logic in the customized replacer list will be executed sequentially first.
+    garbage_collect_values
+        If the garbage_collect_values is True, nni will delete cache information after the cache has none usage.
+    logger
+        Set a logger. If the value is None, nni will use the default logger.
     """
     STD_DELTA = 1e-6
 
