@@ -42,6 +42,7 @@ class QATQuantizer(Quantizer):
         Model to be quantized.
     config_list
         A list of dict, each dict configure which module need to be quantized, and how to quantize.
+        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
         TODO: {evaluator_docstring}
     quant_start_step

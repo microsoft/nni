@@ -163,6 +163,21 @@ class AGPPruner(_ComboPruner):
     If min/max sparse ratio is also set in target setting, they will also synchronous increase in a AGP way.
 
     Note that this pruner can not be initialized by ``AGPPruner.from_compressor(...)``.
+
+    Parameters
+    ----------
+    pruner
+        The bound pruner.
+    interval_steps
+        A integer number, for each ``interval_steps`` training, the sparse goal will be updated.
+    total_times
+        A integer number, how many times to update the sparse goal in total.
+    evaluator
+        TODO
+
+    Examples
+    --------
+        TODO
     """
     def update_sparse_goals(self, current_times: int):
         ratio = 1 - (1 - self._initial_ratio) * (1 - current_times / self.total_times) ** 3

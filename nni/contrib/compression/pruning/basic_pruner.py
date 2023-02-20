@@ -111,6 +111,7 @@ class LevelPruner(_NormPruner):
         Model to be pruned.
     config_list
         A list of dict, each dict configure which module need to be pruned, and how to prune.
+        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
 
     Examples
     --------
@@ -137,6 +138,7 @@ class L1NormPruner(_NormPruner):
         Model to be pruned.
     config_list
         A list of dict, each dict configure which module need to be pruned, and how to prune.
+        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
 
     Examples
     --------
@@ -157,6 +159,7 @@ class L2NormPruner(_NormPruner):
         Model to be pruned.
     config_list
         A list of dict, each dict configure which module need to be pruned, and how to prune.
+        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
 
     Examples
     --------
@@ -179,6 +182,7 @@ class FPGMPruner(_NormPruner):
         Model to be pruned.
     config_list
         A list of dict, each dict configure which module need to be pruned, and how to prune.
+        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
 
     Examples
     --------

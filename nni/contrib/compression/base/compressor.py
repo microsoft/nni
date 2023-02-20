@@ -36,7 +36,7 @@ class Compressor:
         model
             Model to be compressed.
         config_list
-            Config list. TODO: please refer.
+            Config list. Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
         evaluator
             TODO: please refer.
         existed_wrappers
