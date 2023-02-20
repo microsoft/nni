@@ -1,10 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Dict, List
+from typing import Dict
 import torch
 import torch.nn as nn
-import torch.distributed as dist
 
 def check_ddp_model(model: nn.Module):
     is_ddp_model = False
