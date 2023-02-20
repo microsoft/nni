@@ -162,7 +162,10 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
         selected_by_op_types = set()
         for op_type in op_types:
             selected_by_op_types.update(type2names.get(op_type, set()))
-        op_names.intersection_update(selected_by_op_types)
+        if op_names:
+            op_names.intersection_update(selected_by_op_types)
+        else:
+            op_names.update(selected_by_op_types)
 
     op_names.difference_update(exclude_op_names)
 
