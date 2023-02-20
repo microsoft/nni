@@ -36,6 +36,6 @@ def test_compressor():
         'op_names': ['conv2', 'fc1'],
         'target_names': ['_input_', 'weight', '_output_'],
         'quant_dtype': 'int8',
-        'quant_schema': 'affine'
+        'quant_scheme': 'affine'
     }]
     quantizer = Quantizer.from_compressor(pruner, quantization_config_list)
