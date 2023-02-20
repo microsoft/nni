@@ -164,7 +164,7 @@ def test_wrapper_register():
         'op_names': ['conv2', 'fc1'],
         'target_names': ['_input_', 'weight', '_output_'],
         'quant_dtype': 'int8',
-        'quant_schema': 'affine'
+        'quant_scheme': 'affine'
     }]
     wrappers, _ = register_wrappers(model, quantization_config_list, mode='quantization', existed_wrappers=wrappers)
     assert set(wrappers.keys()) == set(['conv1', 'conv2', 'fc1'])
