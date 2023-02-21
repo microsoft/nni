@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections import defaultdict
 import functools
 import logging
-from typing import Callable, Dict, List, Literal, overload
+from typing import Callable, Dict, List, Literal, Tuple, overload
 
 import torch
 
@@ -109,9 +109,10 @@ class TaylorPruner(Pruner):
                 if is_active_target(target_space):
                     # TODO: add input/output
                     if target_space.type is TargetType.PARAMETER:
+                        assert target_space.target is not None
                         hook = TensorHook(target_space.target,
                                           target_name,
-                                          functools.partial(collector, target=target_space.target))  # type: ignore
+                                          functools.partial(collector, target=target_space.target))
                         hook_list.append(hook)
                         self.hooks[module_name][target_name] = hook
                     else:
@@ -152,11 +153,11 @@ class TaylorPruner(Pruner):
         pass
 
     @overload
-    def compress(self):
+    def compress(self) -> Tuple[torch.nn.Module, _MASKS]:
         ...
 
     @overload
-    def compress(self, max_steps: int | None, max_epochs: int | None):
+    def compress(self, max_steps: int | None, max_epochs: int | None) -> Tuple[torch.nn.Module, _MASKS]:
         ...
 
     def compress(self, max_steps: int | None = None, max_epochs: int | None = None):

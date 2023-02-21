@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, List, Literal, overload
+from typing import Dict, List, Literal, Tuple, overload
 
 import torch
 
@@ -89,11 +89,11 @@ class _NormPruner(Pruner):
         pass
 
     @overload
-    def compress(self):
+    def compress(self) -> Tuple[torch.nn.Module, _MASKS]:
         ...
 
     @overload
-    def compress(self, max_steps: int | None, max_epochs: int | None):
+    def compress(self, max_steps: int | None, max_epochs: int | None) -> Tuple[torch.nn.Module, _MASKS]:
         ...
 
     def compress(self, max_steps: int | None = None, max_epochs: int | None = None):
