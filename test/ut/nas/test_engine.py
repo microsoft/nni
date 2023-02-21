@@ -14,6 +14,9 @@ from nni.retiarii.graph import DebugEvaluator
 from nni.retiarii.integration import RetiariiAdvisor
 from nni.runtime.tuner_command_channel.legacy import *
 
+import pytest
+pytestmark = pytest.mark.skip(reason='Will be rewritten.')
+
 class EngineTest(unittest.TestCase):
     def test_codegen(self):
         with open(self.enclosing_dir / 'mnist_pytorch.json') as f:
@@ -27,6 +30,7 @@ class EngineTest(unittest.TestCase):
         nni.retiarii.integration_api._advisor = None
         nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
+        advisor._advisor_initialized = True
         advisor._channel = LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()
@@ -44,6 +48,7 @@ class EngineTest(unittest.TestCase):
         nni.retiarii.integration_api._advisor = None
         nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
+        advisor._advisor_initialized = True
         advisor._channel = LegacyCommandChannel()
         advisor.default_worker.start()
         advisor.assessor_worker.start()

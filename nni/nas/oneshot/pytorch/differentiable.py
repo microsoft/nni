@@ -275,6 +275,8 @@ class GumbelDartsLightningModule(DartsLightningModule):
 
     def on_train_epoch_start(self):
         if self.use_temp_anneal:
+            if self.trainer.max_epochs is None:
+                raise ValueError('Please set max_epochs for trainer when using temperature annealing.')
             self.temp = (1 - self.trainer.current_epoch / self.trainer.max_epochs) * (self.init_temp - self.min_temp) + self.min_temp
             self.temp = max(self.temp, self.min_temp)
 

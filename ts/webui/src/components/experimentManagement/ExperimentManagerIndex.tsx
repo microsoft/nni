@@ -9,8 +9,8 @@ import { MAXSCREENCOLUMNWIDHT, MINSCREENCOLUMNWIDHT } from './experimentConst';
 import { Hearder } from './Header';
 import TrialIdColumn from './TrialIdColumn';
 import FilterBtns from './FilterBtns';
-import { TitleContext } from '../experiment/overview/TitleContext';
-import { Title } from '../experiment/overview/Title';
+import { TitleContext } from '../title/TitleContext';
+import { Title } from '../title/Title';
 import '@style/App.scss';
 import '@style/nav/nav.scss';
 import '@style/common/common.scss';
@@ -81,9 +81,9 @@ class Experiment extends React.Component<{}, ExpListState> {
             errorMessage
         } = this.state;
         return (
-            <Stack className='nni' style={{ minHeight: window.innerHeight }}>
+            <Stack className='nni experiments-info' style={{ minHeight: window.innerHeight }}>
                 <Hearder />
-                {errorMessage !== undefined ? (
+                {errorMessage !== '' ? (
                     <div className='warning'>
                         <MessageInfo info={errorMessage} typeInfo='error' />
                     </div>

@@ -86,11 +86,15 @@ class AutoMaskInference:
             self.output_mask = self.in_masks[0]
         else:
             if isinstance(self.output, torch.Tensor):
+                if self.output.requires_grad:
+                    self.output.retain_grad()   # issue #5299
                 self.output_mask = torch.ones_like(self.output)
             elif isinstance(self.output, list) or isinstance(self.output, tuple):
                 self.output_mask = []
                 for o_tensor in self.output:
                     if isinstance(o_tensor, torch.Tensor):
+                        if o_tensor.requires_grad:
+                            o_tensor.retain_grad()  # issue #5299
                         self.output_mask.append(torch.ones_like(o_tensor))
                     else:
                         # if one of the outputs is not tensor, set the corresponding
@@ -127,7 +131,7 @@ class AutoMaskInference:
         # when the confidence is low. In the future, we will add the mask inference
         # rules for ReLU6 to break this range constraint.
         with torch.no_grad():
-            for tensor in self.dummy_input:
+            for index, tensor in enumerate(self.dummy_input):
                 if isinstance(tensor, torch.Tensor) and len(tensor.size()) > self.batch_dim\
                     and tensor.size(self.batch_dim) == self.batch_size:
                     # if the input tensor only has one dimension, which means
@@ -135,6 +139,9 @@ class AutoMaskInference:
                     # this tensor, because our tensor scrambling is on the batch
                     # dimention. For example, if the tensor is a scalar(returned
                     # by the size operator), then we will skip this tensor
+                    if not tensor.is_contiguous():
+                        tensor = tensor.contiguous()
+                        self.dummy_input[index] = tensor
                     randomize_tensor(tensor, start, end)
             for para in self.weights:
                 randomize_tensor(self.weights[para].data, start, end)
