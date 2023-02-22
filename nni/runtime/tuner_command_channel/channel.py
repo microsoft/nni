@@ -57,7 +57,7 @@ class TunerCommandChannel:
         self._channel = WebSocket(url)
         self._retry_intervals = [0, 1, 10]
 
-        self._callbacks: dict[CommandType, list[Callable[[TunerIncomingCommand], None]]] = defaultdict(list)
+        self._callbacks: dict[CommandType, list[Callable[..., None]]] = defaultdict(list)
 
     def connect(self) -> None:
         self._channel.connect()
@@ -174,16 +174,26 @@ class TunerCommandChannel:
         elif command_type == CommandType.Terminate:
             return Terminate()
         elif command_type == CommandType.Initialize:
+            if not isinstance(data, dict):
+                raise TypeError(f'Initialize command data must be a dict, but got {type(data)}')
             return Initialize(data)
         elif command_type == CommandType.RequestTrialJobs:
+            if not isinstance(data, int):
+                raise TypeError(f'RequestTrialJobs command data must be an integer, but got {type(data)}')
             return RequestTrialJobs(data)
         elif command_type == CommandType.UpdateSearchSpace:
+            if not isinstance(data, dict):
+                raise TypeError(f'UpdateSearchSpace command data must be a dict, but got {type(data)}')
             return UpdateSearchSpace(data)
         elif command_type == CommandType.ReportMetricData:
+            if not isinstance(data, dict):
+                raise TypeError(f'ReportMetricData command data must be a dict, but got {type(data)}')
             if 'value' in data:
                 data['value'] = load(data['value'])
             return ReportMetricData(**data)
         elif command_type == CommandType.TrialEnd:
+            if not isinstance(data, dict):
+                raise TypeError(f'TrialEnd command data must be a dict, but got {type(data)}')
             # For some reason, only one parameter (I guess the first one) shows up in the data.
             # But a trial technically is associated with multiple parameters.
             parameter_id = load(data['hyper_params'])['parameter_id']
