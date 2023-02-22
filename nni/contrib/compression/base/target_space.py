@@ -353,6 +353,8 @@ class DistillationTargetSpace(TargetSpace):
         assert target_type is TargetType.INPUT or target_type is TargetType.OUTPUT
         super().__init__(wrapper, target_name, target_type, setting)
         self._buffer = []
+        # 'append' will record each observed tensor and cost a lot memory, 'refresh' only record the latest tensor.
+        self._buffer_mode = 'refresh'
 
     def clean(self):
         self._buffer.clear()
@@ -372,7 +374,13 @@ class DistillationTargetSpace(TargetSpace):
     def hidden_state(self, val: torch.Tensor):
         if not isinstance(val, torch.Tensor):
             raise TypeError('Only support saving tensor as distillation hidden_state.')
-        self._buffer.append(val)
+        if self._buffer_mode == 'append':
+            self._buffer.append(val)
+        elif self._buffer_mode == 'refresh':
+            self._buffer.clear()
+            self._buffer.append(val)
+        else:
+            raise RuntimeError(f'Unsupported buffer mode: {self._buffer_mode}')
 
     @property
     def lambda_(self) -> float | None:
