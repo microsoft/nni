@@ -162,7 +162,7 @@ class ConcreteTracer(TracerBase):
         _orig_set:                  ([], True),
         _orig_frozenset:            ([], True),
         _orig_dict:                 ([], True),
-        
+
         # extra
         reversed:   ((), False),
     }
@@ -550,7 +550,7 @@ class ConcreteTracer(TracerBase):
 
         tracer_cls = getattr(self, '__class__', None)
         self.graph = Graph(tracer_cls=tracer_cls)
-        
+
         def collect_default_signature(fn) -> Dict[str, Any]:
             sig = inspect.signature(fn)
             return {
@@ -558,12 +558,12 @@ class ConcreteTracer(TracerBase):
                 for k, v in sig.parameters.items()
                 if v.default is not inspect.Parameter.empty
             }
-        
+
         if isinstance(concrete_args, tuple):
             concrete_args = (*concrete_args, *collect_default_signature(fn).values())
         else:
             concrete_args = {**concrete_args, **collect_default_signature(fn)}
-        
+
         # When we encounter a Tensor value that's not a parameter, we look if it
         # is some other attribute on the model. Construct a dict mapping Tensor
         # values to the qualified name here for efficiency. This is used downstream
