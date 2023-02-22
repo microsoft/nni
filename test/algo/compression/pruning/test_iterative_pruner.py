@@ -17,7 +17,7 @@ from nni.compression.pytorch.pruning import (
     AutoCompressPruner
 )
 
-from ..assets.common import create_model, log_dir, validate_masks, validate_dependency_aware
+from ..assets.common import create_model, log_dir, validate_masks
 from ..assets.device import device
 from ..assets.simple_mnist import (
     create_lighting_evaluator,
