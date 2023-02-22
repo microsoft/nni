@@ -10,7 +10,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from enum import Enum, auto
 from functools import partial, reduce
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, List, Union
 
 import torch
 from torch.utils._pytree import tree_map
@@ -51,7 +51,7 @@ def flop_count(module: Union[torch.nn.Module, Callable], *args, verbose: bool = 
         Whether to only count the number of floating point operations in the forward pass.
     kwargs : Any
         The keyword arguments to pass to the model.
-    
+
     Returns
     -------
     int
@@ -77,9 +77,9 @@ def flop_count(module: Union[torch.nn.Module, Callable], *args, verbose: bool = 
 
     class FlopTensor(torch.Tensor):
         elem: torch.Tensor
-    
+
         __slots__ = ['elem']
-    
+
         @staticmethod
         def __new__(cls, elem):
             # The wrapping tensor (FlopTensor) shouldn't hold any
@@ -95,39 +95,39 @@ def flop_count(module: Union[torch.nn.Module, Callable], *args, verbose: bool = 
             # ...the real tensor is held as an element on the tensor.
             r.elem = elem
             return r
-    
+
         def __repr__(self):
             if self.grad_fn:
                 return f"FlopTensor({self.elem}, grad_fn={self.grad_fn})"
             return f"FlopTensor({self.elem})"
-    
+
         @classmethod
         def __torch_dispatch__(cls, func, types, args=(), kwargs=None):
             def unwrap(e):
                 return e.elem if isinstance(e, FlopTensor) else e
-    
+
             # no_dispatch is only needed if you use enable_python_mode.
             # It prevents infinite recursion.
             rs = func(*tree_map(unwrap, args), **tree_map(unwrap, kwargs))
             outs = normalize_tuple(rs)
-    
+
             if func in flop_mapping:
                 nonlocal flop_counts, total_flop_count, cur_phase
                 flop_count = flop_mapping.get(func, zero_flop_jit)(args, outs)
                 for par in parents:
                     flop_counts[par][func.__name__] += flop_count
                 total_flop_count[cur_phase] += flop_count
-    
+
             def wrap(e):
                 return FlopTensor(e) if isinstance(e, torch.Tensor) else e
-    
+
             rs = tree_map(wrap, rs)
             return rs
- 
+
 
     def is_autogradable(x):
         return isinstance(x, torch.Tensor) and x.is_floating_point()
-    
+
     def normalize_tuple(x):
         if not isinstance(x, tuple):
             return (x,)

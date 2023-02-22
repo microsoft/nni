@@ -1,14 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from typing import Any, Dict, List, Tuple, Optional
+from dataclasses import dataclass, field
+
+
 import torch
 import torch.fx
 from torch.fx import Interpreter
-from torch.fx.node import Target, Argument, Node
-from typing import Any, Dict, List, Tuple, Union, Optional, Callable
-from dataclasses import dataclass, field
-from torch.utils._pytree import tree_map, tree_flatten
-from numbers import Number
+from torch.fx.node import Argument, Node, Target
 
 from .flop_utils import flop_count
 
@@ -102,7 +102,7 @@ class NInfo:
 
     def __post_init__(self):
         self.node.meta['info'] = self
-    
+
     @property
     def param_size(self) -> int:
         return compute_size_in_bytes(self.parameters)
@@ -121,7 +121,7 @@ class GraphCounter(Interpreter):
         This method inherits ``run_node`` in `Interpreter` but adds the following features:
 
         - ``call_module`` and ``call_function`` are the only two types of nodes that are profiled.
-        - ``call_method``, ``placeholder``, and ``output`` are not profiled because they are not 
+        - ``call_method``, ``placeholder``, and ``output`` are not profiled because they are not
         computationally intensive.
         - ``get_attr`` is a maybe_profiled node. It is profiled because its ``rst`` can be a `nn.Parameter`.
 
@@ -137,31 +137,31 @@ class GraphCounter(Interpreter):
         """
         rst = super().run_node(node)
         if node.op in self._to_profile:
-            n_info = NInfo(node, flops=rst[1], parameters=rst[2])
+            NInfo(node, flops=rst[1], parameters=rst[2])
             rst = rst[0]
         elif node.op in self._maybe_profile:
-            n_info = NInfo(node, parameters=rst[2])
+            NInfo(node, parameters=rst[2])
             rst = rst[0]
         else:
-            n_info = NInfo(node)
+            NInfo(node)
         return rst
-    
-    def call_function(self, target: Callable, args: Tuple[Argument, ...], kwargs: Dict[str, Any]) -> Any:
+
+    def call_function(self, target: 'Target', args: Tuple[Argument, ...], kwargs: Dict[str, Any]) -> Any:
         rst = super().call_function(target, args, kwargs)
         return rst, flop_count(target, *args, **kwargs), {}   # FIXME: call_function might also have flops
-        
+
     def call_module(self, target: 'Target', args: Tuple[Argument, ...], kwargs: Dict[str, Any]) -> Any:
         # Execute the method and return the result
         assert isinstance(target, str)
         submod = self.fetch_attr(target)
         return (
-            submod(*args, **kwargs), 
+            submod(*args, **kwargs),
             flop_count(submod, *args, **kwargs),
             {
                 k: v for k, v in submod.named_parameters()
             }
         )
-    
+
     def get_attr(self, target: 'Target', args: Tuple[Argument, ...], kwargs: Dict[str, Any]) -> Any:
         assert isinstance(target, str)
         rst = self.fetch_attr(target)
@@ -172,7 +172,7 @@ class GraphCounter(Interpreter):
                 {target: rst}
             )
         return rst, 0, {}
-    
+
     def summarize(self) -> Dict[str, NInfo]:
         """
         Summarizes the profiled statistics of the `GraphModule` in
@@ -213,7 +213,7 @@ class GraphCounter(Interpreter):
         ]
 
         return tabulate(node_summaries, headers=headers, stralign='right')
-    
+
 
 def counter_pass(module: torch.fx.GraphModule, *args, verbose=False) -> torch.fx.GraphModule:
     """A pass that counts the number of FLOPs and parameters in a model.
@@ -222,7 +222,7 @@ def counter_pass(module: torch.fx.GraphModule, *args, verbose=False) -> torch.fx
     ----------
     module: torch.fx.GraphModule
         The module to be profiled.
-    
+
     verbose: bool
         Whether to print the summary of the profiled statistics. Default: False.
 
