@@ -162,6 +162,9 @@ class ConcreteTracer(TracerBase):
         _orig_set:                  ([], True),
         _orig_frozenset:            ([], True),
         _orig_dict:                 ([], True),
+        
+        # extra
+        reversed:   ((), False),
     }
     @compatibility(is_backward_compatible=True)
     def __init__(self, autowrap_modules: Tuple[ModuleType] = default_autowrap_modules,
@@ -547,7 +550,20 @@ class ConcreteTracer(TracerBase):
 
         tracer_cls = getattr(self, '__class__', None)
         self.graph = Graph(tracer_cls=tracer_cls)
-
+        
+        def collect_default_signature(fn) -> Dict[str, Any]:
+            sig = inspect.signature(fn)
+            return {
+                k: v.default
+                for k, v in sig.parameters.items()
+                if v.default is not inspect.Parameter.empty
+            }
+        
+        if isinstance(concrete_args, tuple):
+            concrete_args = (*concrete_args, *collect_default_signature(fn).values())
+        else:
+            concrete_args = {**concrete_args, **collect_default_signature(fn)}
+        
         # When we encounter a Tensor value that's not a parameter, we look if it
         # is some other attribute on the model. Construct a dict mapping Tensor
         # values to the qualified name here for efficiency. This is used downstream
@@ -876,7 +892,7 @@ class ConcreteTracer(TracerBase):
                     _autowrap_check(self, module.__dict__, self._autowrap_function_ids, self.autowrap_leaf_pairs, self.agfunc_dict)
                 with OperatorPatcherContext(self, use_operator_patch, operator_patch_backlist):
                     self.create_node('output', 'output',
-                                    (self.create_arg(OperatorPatcherContext.patch_run(fn, *args, *more_args, **kwargs)),),
+                                    (self.create_arg(fn(*args, *more_args, **kwargs)),),
                                     {}, type_expr=fn.__annotations__.get('return', None))
         finally:
             # for cuda versions of pytorch, autograd.Function.apply should be reverted manually
@@ -1218,7 +1234,7 @@ def _create_wrapped_attr_for_middle_class(tracer: ConcreteTracer, clz, the_path_
 def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    concrete_args: Union[Dict[str, Any], Tuple],
                    *,
-                   use_function_patch: bool = False,
+                   use_function_patch: bool = True,
                    function_patch_backlist: List[str] = [],
                    forwrad_function_name: str = 'forward',
                    check_args: Optional[Dict[str, Any]] = None,
@@ -1360,7 +1376,7 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
     graph = tracer.trace(root, concrete_args, use_function_patch, function_patch_backlist, forwrad_function_name)
     graph_check = tracer.trace(root, concrete_args, use_function_patch, function_patch_backlist, forwrad_function_name)
     # compare to check equal
-    assert len(graph.nodes) == len(graph_check.nodes)
+    assert len(graph.nodes) == len(graph_check.nodes), f'{len(graph.nodes)} != {len(graph_check.nodes)}'
     for node_a, node_b in zip(graph.nodes, graph_check.nodes):
         node_a: Node
         node_b: Node
