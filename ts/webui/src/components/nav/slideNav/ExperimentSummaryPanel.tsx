@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Stack, PrimaryButton, DefaultButton, Panel, StackItem } from '@fluentui/react';
 import MonacoEditor from 'react-monaco-editor';
 import { downFile } from '@static/function';
@@ -7,31 +7,23 @@ import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { caclMonacoEditorHeight } from '@static/function';
 import '@style/logPanel.scss';
 
+// TODO: the same as the file LogPanel.tsx, should clear the timerIdList rather than only the timer Id
+
 interface ExpPanelProps {
     closeExpPanel: () => void;
     experimentProfile: object;
 }
 
-interface ExpPanelState {
-    experiment: string;
-    expPanelHeight: number;
-}
+const ExperimentSummaryPanel = (props: ExpPanelProps): any => {
+    const { closeExpPanel } = props;
 
-class ExperimentSummaryPanel extends React.Component<ExpPanelProps, ExpPanelState> {
-    public _isExperimentMount!: boolean;
-    private refreshId!: number | undefined;
+    // experiment -> experimentSummaryData
+    const [experiment, setExperiment] = useState('' as string);
+    const [expPanelHeight, setExpPanelHeight] = useState(window.innerHeight as number);
+    let refreshId: number = 0; // TODO: use list rather than number
 
-    constructor(props: ExpPanelProps) {
-        super(props);
-
-        this.state = {
-            experiment: '',
-            expPanelHeight: window.innerHeight
-        };
-    }
-
-    getExperimentContent = (): void => {
-        const experimentData = JSON.parse(JSON.stringify(this.props.experimentProfile));
+    const getExperimentContent = (): void => {
+        const experimentData = JSON.parse(JSON.stringify(props.experimentProfile));
         const trialMessagesArr = TRIALS.getTrialJobList();
         const interResultList = TRIALS.getMetricsList();
         Object.keys(trialMessagesArr).map(item => {
@@ -50,67 +42,56 @@ class ExperimentSummaryPanel extends React.Component<ExpPanelProps, ExpPanelStat
             experimentParameters: experimentData,
             trialMessage: trialMessagesArr
         };
-        if (this._isExperimentMount === true) {
-            this.setState({ experiment: JSON.stringify(result, null, 4) });
-        }
+        setExperiment(JSON.stringify(result, null, 4));
 
         if (['DONE', 'ERROR', 'STOPPED', 'VIEWED'].includes(EXPERIMENT.status)) {
-            if (this.refreshId !== null || this.refreshId !== undefined) {
-                window.clearInterval(this.refreshId);
+            if (refreshId !== undefined) {
+                window.clearInterval(refreshId);
             }
         }
     };
 
-    downExperimentParameters = (): void => {
-        const { experiment } = this.state;
+    const downExperimentParameters = (): void => {
         downFile(experiment, 'experiment.json');
     };
 
-    onWindowResize = (): void => {
-        this.setState(() => ({ expPanelHeight: window.innerHeight }));
+    const onWindowResize = (): void => {
+        setExpPanelHeight(window.innerHeight);
     };
 
-    componentDidMount(): void {
-        this._isExperimentMount = true;
-        this.getExperimentContent();
-        this.refreshId = window.setInterval(this.getExperimentContent, 10000);
-        window.addEventListener('resize', this.onWindowResize);
-    }
+    useEffect(() => {
+        getExperimentContent();
+        refreshId = window.setInterval(getExperimentContent, 10000);
+        window.addEventListener('resize', onWindowResize);
+        return function () {
+            window.clearTimeout(refreshId);
+            window.removeEventListener('resize', onWindowResize);
+        };
+    }, []); // DidMount and willUnMount component
+    const monacoEditorHeight = caclMonacoEditorHeight(expPanelHeight);
 
-    componentWillUnmount(): void {
-        this._isExperimentMount = false;
-        window.clearTimeout(this.refreshId);
-        window.removeEventListener('resize', this.onWindowResize);
-    }
-
-    render(): React.ReactNode {
-        const { closeExpPanel } = this.props;
-        const { experiment, expPanelHeight } = this.state;
-        const monacoEditorHeight = caclMonacoEditorHeight(expPanelHeight);
-
-        return (
-            <Panel isOpen={true} hasCloseButton={false} isLightDismiss={true} onLightDismissClick={closeExpPanel}>
-                <div className='panel'>
-                    <div className='panelName'>Summary</div>
-                    <MonacoEditor
-                        width='100%'
-                        height={monacoEditorHeight}
-                        language='json'
-                        value={experiment}
-                        options={DRAWEROPTION}
-                    />
-                    <Stack horizontal className='buttons'>
-                        <StackItem grow={50} className='download'>
-                            <PrimaryButton text='Download' onClick={this.downExperimentParameters} />
-                        </StackItem>
-                        <StackItem grow={50} className='close'>
-                            <DefaultButton text='Close' onClick={closeExpPanel} />
-                        </StackItem>
-                    </Stack>
-                </div>
-            </Panel>
-        );
-    }
-}
+    return (
+        <Panel isOpen={true} hasCloseButton={false} isLightDismiss={true} onLightDismissClick={closeExpPanel}>
+            <div className='panel'>
+                <div className='panelName'>Summary</div>
+                <MonacoEditor
+                    width='100%'
+                    height={monacoEditorHeight}
+                    language='json'
+                    value={experiment}
+                    options={DRAWEROPTION}
+                />
+                <Stack horizontal className='buttons'>
+                    <StackItem grow={50} className='download'>
+                        <PrimaryButton text='Download' onClick={downExperimentParameters} />
+                    </StackItem>
+                    <StackItem grow={50} className='close'>
+                        <DefaultButton text='Close' onClick={closeExpPanel} />
+                    </StackItem>
+                </Stack>
+            </div>
+        </Panel>
+    );
+};
 
 export default ExperimentSummaryPanel;

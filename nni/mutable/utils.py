@@ -29,7 +29,7 @@ def reset_uid(namespace: str = 'default') -> None:
     _last_uid[namespace] = 0
 
 
-class NoContextError(Exception):
+class NoContextError(IndexError):
     """Exception raised when context is missing."""
     pass
 
@@ -163,9 +163,9 @@ class label_scope:
         # The full "path" of current scope.
         # It should also contain the part after the last ``/``.
         # No validation here, because it's not considered as public API.
-        self.path = _path
-        if self.path is not None:
-            assert self.path, 'path should not be empty'
+        self._path = _path
+        if self._path is not None:
+            assert self._path, 'path should not be empty'
 
         if _path:
             self.basename = _path[-1]
@@ -178,7 +178,7 @@ class label_scope:
         # Its path should not change.
         # Otherwise, we compute the path based on its parent.
 
-        if self.path is None:
+        if self._path is None:
             parent_scope = label_scope.current()
             if self.basename is None:
                 if parent_scope is None:
@@ -194,9 +194,10 @@ class label_scope:
                 self.basename = parent_scope.next_label()
 
             if parent_scope is not None:
-                self.path = parent_scope.path + [self.basename]
+                assert parent_scope.path is not None, 'Parent scope is not entered.'
+                self._path = parent_scope.path + [self.basename]
             else:
-                self.path = [self.basename]
+                self._path = [self.basename]
 
         # Since path is sometimes already set (e.g., when re-enter),
         # parent_scope is not necessarily the real parent of current scope.
@@ -220,6 +221,10 @@ class label_scope:
         if not isinstance(other, label_scope):
             return False
         return self.path == other.path
+
+    @property
+    def path(self) -> list[str] | None:
+        return self._path
 
     @property
     def absolute_scope(self) -> str:

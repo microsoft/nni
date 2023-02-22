@@ -5,10 +5,10 @@ from typing import Any
 
 import torch
 
-from .target_space import PruningTargetSpace, QuantizationTargetSpace, TargetSpace
+from .target_space import PruningTargetSpace, QuantizationTargetSpace
 
 
-def bypass(target: torch.Tensor, target_space: TargetSpace):
+def bypass(target: torch.Tensor, target_space: QuantizationTargetSpace):
     return target * 1.
 
 

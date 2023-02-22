@@ -509,14 +509,12 @@ class LightningEvaluator(Evaluator):
                     if 'lr_scheduler' in opt_lrs_dict:
                         opt_lrs_dict['lr_scheduler']['scheduler'] = lr_schedulers[opt_lrs_dict['lr_scheduler']['scheduler']]
                 return opt_lrs_dicts
-
         elif self._lr_scheduler_helpers:
             def new_configure_optimizers(_):  # type: ignore
                 optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
                 lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]])
                                  for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
                 return optimizers, lr_schedulers
-
         else:
             def new_configure_optimizers(_):
                 optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore

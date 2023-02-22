@@ -44,7 +44,7 @@ class QATQuantizer(Quantizer):
         List of configurations for quantization. Supported keys for dict:
             - quant_types : List[str]
                 Type of quantization you want to apply, currently support '_input_', 'weight', '_output_'.
-                Note that 
+                Note that
             - quant_bits : Union[int, Dict[str, int]]
                 Bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
                 When the type is int, all quantization types share same bits length.

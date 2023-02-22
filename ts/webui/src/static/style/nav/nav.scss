@@ -1,5 +1,9 @@
 $barHeight: 56px;
 
+.header {
+    background: #0071bc;
+}
+
 .navOptions {
     .ms-Button-icon {
         color: #fff;
@@ -60,13 +64,19 @@ $barHeight: 56px;
     &-refresh {
         position: relative;
         display: flex;
+
+        button {
+            height: 36px;
+            padding: 0 6px;
+            box-sizing: border-box;
+            background: #f9fafb;
+        }
     }
 
     &-refresh-num {
         position: absolute;
-        top: -13px;
-        left: 17px;
-        color: #fff;
+        top: -2px;
+        left: 19px;
         font-size: 12px;
     }
 }
@@ -105,4 +115,31 @@ $barHeight: 56px;
         top: -3px;
         padding-left: 4px;
     }
+}
+
+.nav-main {
+    .title {
+        line-height: 64px;
+        margin-left: 32px;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .options {
+        position: absolute;
+        right: 40px;
+        margin-top: 14px;
+
+        /* navMaintoken: gap = 16, 24-15=9 */
+        .bar {
+            margin-left: 24px;
+            margin-right: 8px;
+            font-size: 22px;
+            color: #e5e7eb;
+        }
+    }
+}
+
+.experiments-info .contentBox {
+    margin: 0 auto;
 }
