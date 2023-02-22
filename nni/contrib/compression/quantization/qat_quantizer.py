@@ -92,7 +92,7 @@ class QATQuantizer(Quantizer):
 
     def track_min_max_val(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
         # in a fused compression pipeline, the target name may be another compressor's target name
-        if not wrapper.training or target_name not in self._target_spaces:
+        if target_name not in wrapper.quantization_target_spaces or not wrapper.training:
             return
         return track_min_max_val(wrapper, target_name, target)
 
@@ -142,7 +142,6 @@ class QATQuantizer(Quantizer):
                     target_space.zero_point = torch.empty_like(target_space.tracked_max)
 
     def register_trigger(self, evaluator: Evaluator):
-
         def optimizer_task():
             self.current_step += 1
             if self.current_step == self.quant_start_step:

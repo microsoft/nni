@@ -123,8 +123,13 @@ config_list = [{
     'granularity': 'default',
 }]
 
+model.train()
 quantizer = QATQuantizer(model, config_list, evaluator, len(train_dataloader))
-real_input = next(iter(train_dataloader))[0].to(device)
+print(quantizer._target_spaces)
+# real_input = next(iter(train_dataloader))[0].to(device)
+for data in train_dataloader:
+    real_input = data[0].to(device)
+    break
 quantizer.track_forward(real_input)
 
 start = time.time()
