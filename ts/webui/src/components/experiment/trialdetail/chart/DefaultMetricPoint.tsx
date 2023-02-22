@@ -182,7 +182,6 @@ const DefaultPoint = (props: DefaultPointProps) => {
     };
 
     useEffect(() => {
-        // (trialIds: string[], hasBestCurve: boolean, finalKey: string, bestCurveEnabled: boolean, optimizeMode: string
         setGraph(generateGraph(trialIds, hasBestCurve, userSelectAccuracyNumberKey, bestCurveEnabled, metricGraphMode));
     }, [trialIds.length, bestCurveEnabled, userSelectAccuracyNumberKey, metricGraphMode]);
 
@@ -192,72 +191,6 @@ const DefaultPoint = (props: DefaultPointProps) => {
             changeExpandRowIDs(params.data[2], 'chart');
         }
     };
-
-    // const generateScatterSeries = (trials: Trial[]): any => {
-    //     let data;
-    //     if (trials[0].accuracyNumberTypeDictKeys.length > 1) {
-    //         // dict type final results
-    //         data = trials.map(trial => [
-    //             trial.sequenceId,
-    //             trial.acc === undefined ? 0 : formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
-    //             trial.id,
-    //             trial.parameter
-    //         ]);
-    //     } else {
-    //         data = trials.map(trial => [
-    //             trial.sequenceId,
-    //             formatAccuracy(trial.accuracy),
-    //             trial.id,
-    //             trial.parameter
-    //         ]);
-    //     }
-
-    //     return {
-    //         symbolSize: 6,
-    //         type: 'scatter',
-    //         data
-    //     };
-    // }
-
-    // const generateBestCurveSeries = (trials: Trial[]): any => {
-    //     let best = trials[0];
-    //     const data = [
-    //         [
-    //             best.sequenceId,
-    //             best.acc === undefined ? 0 : formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
-    //             best.id,
-    //             best.parameter
-    //         ]
-    //     ];
-    //     for (let i = 1; i < trials.length; i++) {
-    //         const trial = trials[i];
-    //         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    //         const delta = trial.acc![userSelectAccuracyNumberKey] - best.acc![userSelectAccuracyNumberKey];
-    //         const better = userSelectOptimizeMode === 'minimize' ? delta < 0 : delta > 0;
-    //         if (better) {
-    //             data.push([
-    //                 trial.sequenceId,
-    //                 trial.acc === undefined ? 0 : formatAccuracy(trial.acc[userSelectAccuracyNumberKey]),
-    //                 best.id,
-    //                 trial.parameter
-    //             ]);
-    //             best = trial;
-    //         } else {
-    //             data.push([
-    //                 trial.sequenceId,
-    //                 best.acc === undefined ? 0 : formatAccuracy(best.acc[userSelectAccuracyNumberKey]),
-    //                 best.id,
-    //                 trial.parameter
-    //             ]);
-    //         }
-    //     }
-
-    //     return {
-    //         type: 'line',
-    //         lineStyle: { color: '#FF6600' },
-    //         data
-    //     };
-    // }
 
     const updateUserOptimizeMode = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
@@ -272,25 +205,33 @@ const DefaultPoint = (props: DefaultPointProps) => {
         }
     };
 
-    // const generateGraph = (): any => {
-    //     const trials = TRIALS.getTrials(trialIds).filter(trial => trial.sortable);
-    //     if (trials.length === 0) {
-    //         return EmptyGraph;
-    //     }
-    //     const graph = generateGraphConfig(hasBestCurve, userSelectAccuracyNumberKey);
-    //     if (bestCurveEnabled) {
-    //         (graph as any).series = [generateBestCurveSeries(trials), generateScatterSeries(trials)];
-    //     } else {
-    //         (graph as any).series = [generateScatterSeries(trials)];
-    //     }
-    //     setGraph(graph);
-    // }
-
     const trials = TRIALS.getTrials(trialIds).filter(trial => trial.sortable);
     let dictDropdown: string[] = [];
     if (trials.length > 0) {
         dictDropdown = trials[0].accuracyNumberTypeDictKeys;
     }
+
+    const defaultMetricChart = React.useMemo(() => {
+        return (
+            <div className='default-metric-graph graph'>
+                <ReactEcharts
+                    option={defaultMetricOption}
+                    style={{
+                        width: '100%',
+                        height: chartHeight,
+                        margin: '0 auto'
+                    }}
+                    theme='nni_theme'
+                    // notMerge={true} // update now
+                    lazyUpdate={true}
+                    onEvents={{ click: pointClick }}
+                />
+                <div className='default-metric-noData fontColor333'>
+                    {defaultMetricOption === EmptyGraph ? 'No data' : ''}
+                </div>
+            </div>
+        );
+    }, [defaultMetricOption]);
 
     return (
         <div>
@@ -318,23 +259,7 @@ const DefaultPoint = (props: DefaultPointProps) => {
                     )}
                 </Stack>
             )}
-            <div className='default-metric-graph graph'>
-                <ReactEcharts
-                    option={defaultMetricOption}
-                    style={{
-                        width: '100%',
-                        height: chartHeight,
-                        margin: '0 auto'
-                    }}
-                    theme='nni_theme'
-                    // notMerge={true} // update now
-                    lazyUpdate={true}
-                    onEvents={{ click: pointClick }}
-                />
-                <div className='default-metric-noData fontColor333'>
-                    {defaultMetricOption === EmptyGraph ? 'No data' : ''}
-                </div>
-            </div>
+            {defaultMetricChart}
         </div>
     );
 };

@@ -552,7 +552,7 @@ _OPTIMIZERS = Union[Optimizer, List[Optimizer]]
 _TRAINING_STEP = Callable[[Any], Union[Tensor, Tuple[Tensor], Dict[str, Tensor]]]
 _SCHEDULERS = Union[None, _LRScheduler, List[_LRScheduler]]
 _EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
-_TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, _SCHEDULERS, Optional[int], Optional[int]], None]
+_TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, Optional[_SCHEDULERS], Optional[int], Optional[int]], None]
 
 
 class TorchEvaluator(Evaluator):

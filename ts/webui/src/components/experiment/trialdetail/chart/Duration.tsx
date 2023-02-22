@@ -25,8 +25,10 @@ const drawDurationOptions = (dataObj: Runtrial): any => {
             enterable: true,
             formatter: (data: any): React.ReactNode =>
                 `<div class="tooldetailAccuracy">
-                    <div>Trial No.: ${data[0].dataIndex}</div>
-                    <div>Duration: ${convertDuration(data[0].data)}</div>
+                    <div class='main'>
+                        <div>Trial No.: ${data[0].dataIndex}</div>
+                        <div>Duration: ${convertDuration(data[0].data)}</div>
+                    </div>
                 </div>
                 `
         },

@@ -50,6 +50,13 @@ def test_frozen_context_complex():
 
 
 def test_ensure_frozen(caplog):
+    assert ensure_frozen(Categorical([1, 2, 3]), strict=False) == 1
+    assert ensure_frozen(Categorical([1, 2, 3], label='a'), sample={'a': 2}, strict=False) == 2
+    assert ensure_frozen('anything', strict=False) == 'anything'
+
+    with pytest.raises(RuntimeError, match='context'):
+        ensure_frozen(Categorical([1, 2, 3], label='a'))
+
     with frozen_context({'a': 1, 'b': 2}):
         assert ensure_frozen(Categorical([1, 2], label='a')) == 1
         assert ensure_frozen(Categorical([1, 2], label='b')) == 2
@@ -59,7 +66,7 @@ def test_ensure_frozen(caplog):
         assert 'add_mutable' in caplog.text
 
         with frozen_context.bypass():
-            assert ensure_frozen(Categorical([1, 2], label='a', default=2)) == 2
+            assert ensure_frozen(Categorical([1, 2], label='a', default=2), strict=False) == 2
             with pytest.raises(RuntimeError, match='context'):
                 ensure_frozen(Categorical([1, 2], label='a'), retries=-1)
 

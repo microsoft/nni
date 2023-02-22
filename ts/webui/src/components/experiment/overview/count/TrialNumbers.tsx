@@ -22,7 +22,6 @@ export const TrialCount = (): any => {
     const maxTrialNum = EXPERIMENT.maxTrialNumber;
     // support type [0, 1], not 98%
     const bar2Percent = bar2 / maxTrialNum;
-    // const { updateOverviewPage } = useContext(AppContext);
     return (
         <React.Fragment>
             <Stack horizontal horizontalAlign='space-between' tokens={line1Tokens} className='count marginTop'>
@@ -81,7 +80,6 @@ export const TrialCount = (): any => {
                             title: 'Concurrency',
                             field: 'trialConcurrency',
                             editType: CONTROLTYPE[2],
-                            // maxExecDuration: EXPERIMENT.profile.params.maxExecDuration,
                             maxExecDuration: '',
                             maxTrialNum: EXPERIMENT.maxTrialNumber,
                             trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
