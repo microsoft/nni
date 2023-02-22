@@ -10,7 +10,6 @@ from collections import defaultdict
 from contextlib import contextmanager
 from enum import Enum, auto
 from functools import partial, reduce
-from numbers import Number
 from typing import Any, Callable, List, Optional, Union
 
 import torch
@@ -36,7 +35,7 @@ def _format_flops(flops: float) -> str:
     return f'{flops} FLOPs'
 
 
-def flop_count(module: Union[torch.nn.Module, Callable] = None, *args, verbose: bool = False, forward_only: bool = True, **kwargs) -> Number:
+def flop_count(module: Union[torch.nn.Module, Callable], *args, verbose: bool = False, forward_only: bool = True, **kwargs) -> int:
     """
     Count the number of floating point operations in a model.
     Ideas from https://pastebin.com/AkvAyJBw.
@@ -55,7 +54,7 @@ def flop_count(module: Union[torch.nn.Module, Callable] = None, *args, verbose: 
     
     Returns
     -------
-    Number
+    int
         The number of floating point operations.
     """
     maybe_inplace = (getattr(module, 'inplace', False) or kwargs.get('inplace', False)
@@ -248,7 +247,7 @@ def flop_count(module: Union[torch.nn.Module, Callable] = None, *args, verbose: 
         return total_flop_count[Phase.FWD], total_flop_count[Phase.BWD]
 
 
-def matmul_flop_jit(inputs: List[Any], outputs: List[Any]) -> Number:
+def matmul_flop_jit(inputs: List[Any], outputs: List[Any]) -> int:
     """
     Count flops for matmul.
     """
@@ -261,7 +260,7 @@ def matmul_flop_jit(inputs: List[Any], outputs: List[Any]) -> Number:
     return flops
 
 
-def addmm_flop_jit(inputs: List[Any], outputs: List[Any]) -> Number:
+def addmm_flop_jit(inputs: List[Any], outputs: List[Any]) -> int:
     """
     Count flops for fully connected layers.
     """
@@ -278,7 +277,7 @@ def addmm_flop_jit(inputs: List[Any], outputs: List[Any]) -> Number:
     return flops
 
 
-def linear_flop_jit(inputs: List[Any], outputs: List[Any]) -> Number:
+def linear_flop_jit(inputs: List[Any], outputs: List[Any]) -> int:
     """
     Count flops for the aten::linear operator.
     """
@@ -292,7 +291,7 @@ def linear_flop_jit(inputs: List[Any], outputs: List[Any]) -> Number:
     return flops
 
 
-def bmm_flop_jit(inputs: List[Any], outputs: List[Any]) -> Number:
+def bmm_flop_jit(inputs: List[Any], outputs: List[Any]) -> int:
     """
     Count flops for the bmm operation.
     """
@@ -311,7 +310,7 @@ def conv_flop_count(
     w_shape: List[int],
     out_shape: List[int],
     transposed: bool = False,
-) -> Number:
+) -> int:
     """
     Count flops for convolution. Note only multiplication is
     counted. Computation for addition and bias is ignored.
@@ -368,7 +367,7 @@ def norm_flop_counter(affine_arg_index: int, input_arg_index: int) -> Callable:
         affine_arg_index: index of the affine argument in inputs
     """
 
-    def norm_flop_jit(inputs: List[Any], outputs: List[Any]) -> Number:
+    def norm_flop_jit(inputs: List[Any], outputs: List[Any]) -> int:
         """
         Count flops for norm layers.
         """
@@ -385,7 +384,7 @@ def norm_flop_counter(affine_arg_index: int, input_arg_index: int) -> Callable:
     return norm_flop_jit
 
 
-def batchnorm_flop_jit(inputs: List[Any], outputs: List[Any], training: bool = None) -> Number:
+def batchnorm_flop_jit(inputs: List[Any], outputs: List[Any], training: bool = None) -> int:
     if training is None:
         training = inputs[-3]
     assert isinstance(training, bool), "Signature of aten::batch_norm has changed!"
@@ -405,7 +404,7 @@ def ewise_flop_counter(input_scale: float = 1, output_scale: float = 0) -> Calla
         output_scale: scale of the output tensor (first element in outputs)
     """
 
-    def ewise_flop(inputs: List[Any], outputs: List[Any]) -> Number:
+    def ewise_flop(inputs: List[Any], outputs: List[Any]) -> int:
         ret = 0
         if input_scale != 0:
             shape = inputs[0].shape

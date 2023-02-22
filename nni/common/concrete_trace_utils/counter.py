@@ -5,7 +5,7 @@ import torch
 import torch.fx
 from torch.fx import Interpreter
 from torch.fx.node import Target, Argument, Node
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Tuple, Union, Optional, Callable
 from dataclasses import dataclass, field
 from torch.utils._pytree import tree_map, tree_flatten
 from numbers import Number
@@ -146,7 +146,7 @@ class GraphCounter(Interpreter):
             n_info = NInfo(node)
         return rst
     
-    def call_function(self, target: 'Target', args: Tuple[Argument, ...], kwargs: Dict[str, Any]) -> Any:
+    def call_function(self, target: Callable, args: Tuple[Argument, ...], kwargs: Dict[str, Any]) -> Any:
         rst = super().call_function(target, args, kwargs)
         return rst, flop_count(target, *args, **kwargs), {}   # FIXME: call_function might also have flops
         
