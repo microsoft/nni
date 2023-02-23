@@ -115,23 +115,15 @@ class EvaluatorBasedHookDataCollector(EvaluatorBasedDataCollector):
     NOTE: Only support one target has one hook right now.
     """
 
-    def collect(self, mode: str = 'train') -> Dict[str, Dict[str, List]]:
+    def collect(self) -> Dict[str, Dict[str, List]]:
         assert self.compressor.bound_model is not None
-        if mode == 'train':
-            self.evaluator.train(max_steps=self.max_steps, max_epochs=self.max_epochs)
-        elif mode == 'evaluate':
-            self.evaluator.evaluate()
-        elif mode == 'predict':
-            self.evaluator.predict()
-        else:
-            raise ValueError(f'Unknown mode "{mode}" in collect() of EvaluatorBasedHookDataCollector.')
+        self.evaluator.train(max_steps=self.max_steps, max_epochs=self.max_epochs)
 
         data = {}
         for module_name, hooks in self._hooks.items():
             data[module_name] = {}
             for target_name, hook in hooks.items():
-                # TODO: remove hasattr in the new version, as is_ddp_model always exists
-                if hasattr(self.compressor, 'is_ddp_model') and self.compressor.is_ddp_model:
+                if self.compressor.is_ddp_model:
                     data[module_name][target_name] = all_reduce_on_multiple_gpus(hook.buffer)
                 else:
                     data[module_name][target_name] = hook.buffer

@@ -7,7 +7,6 @@ from .lsq_quantizer import LsqQuantizer
 from .native_quantizer import NaiveQuantizer
 from .observer_quantizer import ObserverQuantizer
 from .qat_quantizer import QAT_Quantizer
-from .ptq_quantizer import PtqQuantizer
 
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer', 'LsqQuantizer', 'ObserverQuantizer']
