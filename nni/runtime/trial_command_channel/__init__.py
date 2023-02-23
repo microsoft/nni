@@ -44,7 +44,7 @@ def set_default_trial_command_channel(channel: Optional[TrialCommandChannel] = N
         assert dispatcher_env_vars.SDK_PROCESS != 'dispatcher'
 
         channel_url = trial_env_vars.NNI_TRIAL_COMMAND_CHANNEL
-        if channel_url.startswith('import://'):
+        if isinstance(channel_url, str) and channel_url.startswith('import://'):
             _, channel_class_name = channel_url.split('://', 1)
             module_name, class_name = channel_class_name.rsplit('.', 1)
             module = __import__(module_name)
