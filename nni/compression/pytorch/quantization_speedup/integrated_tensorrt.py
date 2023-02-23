@@ -182,7 +182,7 @@ def build_engine_without_calib(onnx_model_file, config):
         An ICudaEngine for executing inference on a built network
     """
     builder = trt.Builder(TRT_LOGGER)
-    network = builder.create_network(common.EXPLICIT_BATCH)
+    network = builder.create_network(common.explicit_batch())
     trt_config = builder.create_builder_config()
     parser = trt.OnnxParser(network, TRT_LOGGER)
 
@@ -219,7 +219,7 @@ def build_engine_with_calib(onnx_model_file, calib, input_shape):
     ----------
     """
     builder = trt.Builder(TRT_LOGGER)
-    network = builder.create_network(common.EXPLICIT_BATCH)
+    network = builder.create_network(common.explicit_batch())
     trt_config = builder.create_builder_config()
     parser = trt.OnnxParser(network, TRT_LOGGER)
 
