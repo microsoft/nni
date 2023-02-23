@@ -166,6 +166,7 @@ class ExecutionEngine:
     def dispatch_model_event(self, event: ModelEvent | str | ModelEventType, **kwargs: Any) -> None:
         """
         Dispatch a model event to all callbacks. Invoke :meth:`default_callback` at the end.
+        This is a utility method for subclass of :class:`ExecutionEngine` to dispatch (emit) events.
 
         If the engine intends to change the model status / metrics, and also notifies the listeners,
         they are supposed to construct a model event and call :meth:`dispatch_model_event`,
