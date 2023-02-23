@@ -50,6 +50,8 @@ def set_default_trial_command_channel(channel: Optional[TrialCommandChannel] = N
             module = __import__(module_name)
             channel_class = getattr(module, class_name)
             _channel = channel_class()
+            if not isinstance(_channel, TrialCommandChannel):
+                raise TypeError(f'{_channel} is not an instance of TrialCommandChannel')
         elif channel_url:
             from .v3 import TrialCommandChannelV3
             _channel = TrialCommandChannelV3(channel_url)
