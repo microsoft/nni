@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
-from typing import List, Dict, Union
+from typing import List, Dict
 
 import torch
 from torch import Tensor
@@ -39,7 +39,6 @@ class BNNQuantizer(Quantizer):
     def init_scale_zp(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
         if self.is_init or target_name not in wrapper.quantization_target_spaces:
             return
-        shape = target.shape if target is not None else None
         target_space = wrapper.quantization_target_spaces[target_name]
         target_space.zero_point = torch.tensor(0.0).to(target.device)
         target_space.scale = torch.tensor(1.0).to(target.device)

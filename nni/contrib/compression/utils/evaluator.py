@@ -231,6 +231,12 @@ class Evaluator:
                 target_param_group = optimizers[0].param_groups[0]
                 add_param(param_lis, target_param_group, optimizers[0])
 
+    def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]] | None = None):
+        '''
+        Adding param_groups for optimizers
+        '''
+        raise NotImplementedError
+
     def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         """
         The patch may add additional loss or replace the original loss. Here is an example::

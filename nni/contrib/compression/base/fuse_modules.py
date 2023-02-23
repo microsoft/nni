@@ -104,7 +104,7 @@ def fuse_conv_bn(wrapper, fused_modules, *args, **kwargs):
     q_param_dict = {k: v.target for k, v in wrapper.quantization_target_spaces.items() if v.type is TargetType.PARAMETER}
     bn_module = fused_modules[1]
     conv_module = wrapper.module
-    
+
     assert bn_module.num_features == conv_module.out_channels, 'The output channel of Conv must match num_features of BatchNorm'
 
     if 'weight' not in q_param_dict:

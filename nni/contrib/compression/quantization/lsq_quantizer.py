@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
-from typing import List, Dict, Union
+from typing import List, Dict
 
 import torch
 from torch import Tensor
