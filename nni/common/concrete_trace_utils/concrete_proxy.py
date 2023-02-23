@@ -40,7 +40,7 @@ _logger = logging.getLogger(__name__)
 class ConcreteProxy(Proxy):
     """
     `ConcreteProxy` is a wrapped proxy carried the real intermediate value.
-    We can use it to trace a more compatible model, and pass the branches.
+    We can use it to trace a more compatibal model, and pass the branches.
     """
 
     # TODO: python bytecode changes a lot in version 3.11. these ops should be updated.
