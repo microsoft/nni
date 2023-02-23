@@ -101,7 +101,8 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
     return config_list
 
 
-def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> Tuple[Dict[str, torch.nn.Module], Dict[str, Any]]:
+def select_modules_by_config(model: torch.nn.Module, \
+                             config: Dict[str, Any]) -> Tuple[Dict[str, torch.nn.Module], Dict[str, Any], List[str]]:
     """
     This is a helper function for selecting the modules in model specified in config.
 
@@ -114,6 +115,7 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
         - ``exclude_op_names``: a module name list, the modules with these names will be excluded.
         - ``exclude_op_types``: a module type name list, the modules satisfied these types will be excluded.
         - ``exclude_op_names_re``: a regular expression list, the modules satisfied the regular expressions will be excluded.
+        - ``fuse_names``: a List contains fusion module names in the model.
 
     A module is selected if it satisfies all the following conditions:
         1. If ``op_names`` or ``op_names_re`` is not empty, the module name should in ``op_names``
@@ -136,7 +138,7 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
         (named_module_dict, public_config).
         Named module dict is {module_name: selected_module}
         Public config is the passed-in config without keys:
-        ['op_names', 'op_types', 'op_names_re', 'exclude_op_names', 'exclude_op_types', 'exclude_op_names_re'].
+        ['op_names', 'op_types', 'op_names_re', 'exclude_op_names', 'exclude_op_types', 'exclude_op_names_re', 'fuse_names'].
     """
     # intersection(union(op_names, op_names_re), op_types) - exclude_op_names - exclude_op_names_re - exclude_op_types
     name2module = {}
@@ -152,6 +154,7 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
     exclude_op_names = config.pop('exclude_op_names', list())
     exclude_op_types = config.pop('exclude_op_types', list())
     exclude_op_names_re = config.pop('exclude_op_names_re', list())
+    fuse_names = config.pop('fuse_names', list())
 
     for op_name_re in op_names_re:
         for op_name in name2module:
@@ -177,7 +180,10 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
     for op_type in exclude_op_types:
         op_names.difference_update(type2names.get(op_type, set()))
 
-    return {module_name: name2module[module_name] for module_name in op_names}, config
+    if len(fuse_names) > 0 and len(op_names) > 1:
+        raise ValueError("When setting fuse_names, op_names can contain only one module name")
+
+    return {module_name: name2module[module_name] for module_name in op_names}, config, fuse_names
 
 
 # a temporary verification function, need a wider coverage, customizable, and easy-to-extend implementation.
