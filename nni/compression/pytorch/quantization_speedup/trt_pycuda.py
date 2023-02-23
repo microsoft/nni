@@ -21,8 +21,8 @@ import pycuda.driver as cuda
 import pycuda.autoinit        # pylint: disable=unused-import
 import tensorrt as trt
 
-
-EXPLICIT_BATCH = 1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+# FIXME: make autodoc happy
+EXPLICIT_BATCH = 1 << 0 #(int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
 
 def GiB(val):
     return val * 1 << 30
