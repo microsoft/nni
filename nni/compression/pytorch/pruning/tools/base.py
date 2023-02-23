@@ -296,8 +296,6 @@ class EvaluatorBasedDataCollector(DataCollector):
             self._hooks = hooks
             hook_list = [hook for _ in hooks.values() for hook in _.values()]
             self.evaluator.register_hooks(hook_list)
-        else:
-            self._hooks = {}
 
 
 class MetricsCalculator:

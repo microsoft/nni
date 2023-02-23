@@ -667,21 +667,6 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError('Quantizer must overload quantize_input()')
 
-    # TODO: to deal with affine=False and track_running_stats=False of the bn operator
-    def _fold_bn(self, bn_module, weight, bias):
-        running_mean = bn_module.running_mean
-        running_var = torch.sqrt(bn_module.running_var + bn_module.eps)
-        bn_weight = bn_module.weight
-        bn_bias = bn_module.bias
-        dimensions = len(weight.shape)
-        shape = [-1] + [1] * (dimensions - 1)
-        new_weight = weight * bn_weight.reshape(shape) / running_var.reshape(shape)
-        if bias is not None:
-            new_bias = bn_bias + (bias - running_mean) / running_var * bn_weight
-        else:
-            new_bias = bn_bias - running_mean / running_var * bn_weight
-        return new_weight, new_bias
-
     def fold_bn(self, *inputs, wrapper):
         """
         Simulate batch normalization folding in the training graph. Folded weight and bias are
@@ -698,17 +683,22 @@ class Quantizer(Compressor):
         -------
         Tuple of torch.Tensor
         """
-        assert self.bound_model is not None
         module = wrapper.module
         bn_module = wrapper.bn_module
-        # TODO: the following is for training, should also properly handle inference
-        # maybe move this logic out of this base quantizer class
         with torch.no_grad():
             output = module(*inputs)
             _ = bn_module(output)
-        weight = module.old_weight
-        bias = module.old_bias if hasattr(module, 'old_bias') else None
-        new_weight, new_bias = self._fold_bn(bn_module, weight, bias)
+        running_mean = bn_module.running_mean
+        running_var = torch.sqrt(bn_module.running_var + bn_module.eps)
+        bn_weight = bn_module.weight
+        bn_bias = bn_module.bias
+        dimensions = len(module.weight.shape)
+        shape = [-1] + [1] * (dimensions - 1)
+        new_weight = module.old_weight * bn_weight.reshape(shape) / running_var.reshape(shape)
+        if hasattr(module, 'old_bias'):
+            new_bias = bn_bias + (module.old_bias - running_mean) / running_var * bn_weight
+        else:
+            new_bias = bn_bias - running_mean / running_var * bn_weight
         return new_weight, new_bias
 
     def _wrap_modules(self, layer, config):
@@ -733,7 +723,6 @@ class Quantizer(Compressor):
         # bound bn module to corresponding conv module
         bn_module = None
         if layer.name in self.conv_bn_patterns:
-            _logger.info('Has batchnorm layer name: %s', layer.name)
             bn_module_name = self.conv_bn_patterns[layer.name]
             for name, module in self.bound_model.named_modules():
                 if name == bn_module_name:

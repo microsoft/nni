@@ -10,4 +10,4 @@ from .qat_quantizer import QAT_Quantizer
 from .ptq_quantizer import PtqQuantizer
 
 
-__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer', 'LsqQuantizer', 'ObserverQuantizer', 'PtqQuantizer']
+__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer', 'LsqQuantizer', 'ObserverQuantizer']
