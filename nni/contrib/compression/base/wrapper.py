@@ -173,7 +173,7 @@ class ModuleWrapper(torch.nn.Module):
             elif isinstance(original_bias, torch.Tensor):
                 self.module.register_buffer('bias', original_bias.detach().clone())
             delattr(self.module, 'original_bias')
-        if not self.is_bias and check_bias(self.module):
+        if len(self.fused_modules) > 0 and not self.is_bias and check_bias(self.module):
             delattr(self.module, 'bias')
             self.module.register_parameter('bias', None)
 
