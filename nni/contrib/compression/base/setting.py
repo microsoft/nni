@@ -215,6 +215,9 @@ class QuantizationSetting(ModuleSetting):
         'ConvTranspose3d': default_setting,
         'ReLU': activation_setting,
         'ReLU6': activation_setting,
+        'BatchNorm1d': default_setting,
+        'Hardtanh': activation_setting,
+        'MaxPool2d': activation_setting,
     }
 
 

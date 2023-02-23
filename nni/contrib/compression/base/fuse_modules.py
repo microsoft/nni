@@ -75,7 +75,6 @@ def conv_forward(inputs: torch.Tensor, conv_module: Union[nn.Conv1d, nn.Conv2d, 
         raise TypeError(f"Only support to use conv1d, conv2d, conv3d to compute, but got {type(conv_module)}")
 
 
-
 def get_bias(wrapper, param_dict):
     if 'bias' in param_dict:
         return param_dict['bias']
@@ -83,6 +82,7 @@ def get_bias(wrapper, param_dict):
         return wrapper.module.original_bias
     else:
         return None
+
 
 def set_bias(wrapper, fused_bias):
     return fused_bias if wrapper.is_bias else torch.nn.Parameter(fused_bias, False)
@@ -104,7 +104,7 @@ def fuse_conv_bn(wrapper, fused_modules, *args, **kwargs):
     q_param_dict = {k: v.target for k, v in wrapper.quantization_target_spaces.items() if v.type is TargetType.PARAMETER}
     bn_module = fused_modules[1]
     conv_module = wrapper.module
-
+    
     assert bn_module.num_features == conv_module.out_channels, 'The output channel of Conv must match num_features of BatchNorm'
 
     if 'weight' not in q_param_dict:

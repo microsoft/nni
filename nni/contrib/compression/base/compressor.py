@@ -321,12 +321,31 @@ class Quantizer(Compressor):
                         else target_space.zero_point,
                     'quant_dtype': target_space.quant_dtype if target_space.quant_dtype else 'int8',
                     'quant_scheme': target_space.quant_scheme,
+                    'quant_bits': target_space.quant_bits,
                 }
                 if target_space.tracked_max is not None:
                     calibration_config[module_name][target_name]['tracked_max'] = target_space.tracked_max.cpu()
+                else:
+                    tracked_max = target_space.scale * (target_space.qmax - target_space.zero_point)
+                    calibration_config[module_name][target_name]["tracked_max"] = tracked_max.cpu() \
+                        if isinstance(target_space.scale, torch.Tensor) else tracked_max
                 if target_space.tracked_min is not None:
                     calibration_config[module_name][target_name]['tracked_min'] = target_space.tracked_min.cpu()
+                else:
+                    tracked_min = target_space.scale * (target_space.qmin - target_space.zero_point)
+                    calibration_config[module_name][target_name]["tracked_min"] = tracked_min.cpu() \
+                        if isinstance(target_space.scale, torch.Tensor) else tracked_min
+
         return calibration_config
+
+    def patch_optimizer_param_group(self):
+        module_name_param_dict = {}
+        for module_name, _ in self._target_spaces.items():
+            wrapper = self._module_wrappers[module_name]
+            if getattr(wrapper.module, "original_bias", None) is not None:
+                module_name_param_dict[module_name] = [wrapper.module.original_bias]
+
+        return module_name_param_dict if len(module_name_param_dict) > 0 else None
 
     def compress(self, max_steps: int | None, max_epochs: int | None):
         super().compress(max_steps, max_epochs)

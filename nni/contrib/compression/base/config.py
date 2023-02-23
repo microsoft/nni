@@ -205,7 +205,8 @@ def default_config_schema(mode: Literal['pruning', 'quantization', 'distillation
             'quant_dtype': str,
             Optional('quant_scheme'): Or('affine', 'symmetric'),
             Optional('granularity'): Or('default', 'in_channel', 'out_channel', 'per_channel', list),
-            Optional('apply_method'): Or('bypass', 'clamp_round', 'qat_clamp_round')
+            Optional('apply_method'): Or('bypass', 'clamp_round', 'qat_clamp_round'),
+            Optional('fuse_names'): [str]
         }
     else:
         setting_schema = {

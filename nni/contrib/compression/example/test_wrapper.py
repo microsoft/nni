@@ -77,7 +77,7 @@ config_list_2 = [{
 }]
 
 
-config_list_1 = trans_legacy_config_list(deepcopy(config_list_1)) 
+config_list_1 = trans_legacy_config_list(deepcopy(config_list_1))
 config_list_2 = trans_legacy_config_list(deepcopy(config_list_2))
 print(config_list_1)
 print(config_list_2)

@@ -95,7 +95,7 @@ class QATQuantizer(Quantizer):
 
     def track_min_max_val(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
         # in a fused compression pipeline, the target name may be another compressor's target name
-        if not wrapper.training or target_name not in self._target_spaces:
+        if not wrapper.training or target_name not in wrapper.quantization_target_spaces:
             return
         return track_min_max_val(wrapper, target_name, target)
 
@@ -157,6 +157,7 @@ class QATQuantizer(Quantizer):
         self._fusion_compress(max_steps, max_epochs)
 
     def _fuse_preprocess(self, evaluator: Evaluator) -> None:
+        evaluator.patch_optim_param_group(self.patch_optimizer_param_group())
         self.register_trigger(evaluator)
 
     def _fuse_postprocess(self, evaluator: Evaluator) -> None:
