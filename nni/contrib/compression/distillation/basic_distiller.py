@@ -47,18 +47,18 @@ class TeacherModelBasedDistiller(Distiller):
 
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
-                 teacher_model: torch.nn.Module, teacher_predict: Callable[[Any], torch.Tensor],
+                 teacher_model: torch.nn.Module, teacher_predict: Callable[[Any, torch.nn.Module], torch.Tensor],
                  origin_loss_lambda: float = 1.):
         ...
 
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
-                 teacher_model: torch.nn.Module, teacher_predict: Callable[[Any], torch.Tensor],
+                 teacher_model: torch.nn.Module, teacher_predict: Callable[[Any, torch.nn.Module], torch.Tensor],
                  origin_loss_lambda: float = 1., existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         ...
 
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
-                 teacher_model: torch.nn.Module, teacher_predict: Callable[[Any], torch.Tensor],
+                 teacher_model: torch.nn.Module, teacher_predict: Callable[[Any, torch.nn.Module], torch.Tensor],
                  origin_loss_lambda: float = 1., existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         assert model is not teacher_model, 'Student model and teacher model should not be the same.'
         super().__init__(model=model, config_list=config_list, evaluator=evaluator,
@@ -67,8 +67,8 @@ class TeacherModelBasedDistiller(Distiller):
         self.teacher_model = teacher_model
         self.teacher_predict = teacher_predict
         self.origin_loss_lambda = origin_loss_lambda
-        self._teacher_target_spaces: _DISTILLATION_TARGET_SPACES
-        self._teacher_module_wrappers, self._teacher_target_spaces = register_wrappers(self.teacher_model, self.config_list, self.mode)
+        self._teacher_module_wrappers, target_spaces = register_wrappers(self.teacher_model, self.config_list, self.mode) 
+        self._teacher_target_spaces: _DISTILLATION_TARGET_SPACES = target_spaces  # type: ignore
         self._teacher_is_wrapped = False
         self.wrap_teacher_model()
 
@@ -219,7 +219,7 @@ class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
                     f'only support set one link for target in {self.__class__.__name__}'
                 stu_hs = target_space.hidden_state
                 link = target_space.link if isinstance(target_space.link, str) else target_space.link[0]
-                tea_hs = self._teacher_target_spaces[link][target_name]
+                tea_hs = self._teacher_target_spaces[link][target_name].hidden_state
                 assert stu_hs is not None and tea_hs is not None, \
                     'Please run AdaptiveShapeLayerwiseDistiller.track_forward(...) first before compress.'
                 if stu_hs.shape[-1] == tea_hs.shape[-1]:

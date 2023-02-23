@@ -392,8 +392,13 @@ class DistillationTargetSpace(TargetSpace):
         self._setting['lambda'] = val
 
     @property
-    def link(self):
+    def link(self) -> str | List[str] | Tuple[str]:
         return self.setting.get('link', None)
+
+    @link.setter
+    def link(self, val: str | List[str] | Tuple[str]):
+        assert isinstance(val, str) or all(isinstance(v, str) for v in val)
+        self._setting['link'] = val
 
     @property
     def apply_method(self) -> str:
