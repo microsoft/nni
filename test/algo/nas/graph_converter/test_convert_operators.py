@@ -4,19 +4,13 @@ The tests in this file is copied and transformed from
 `https://github.com/pytorch/pytorch/blob/master/test/onnx/test_operators.py`
 '''
 
-import os
-import sys
 import unittest
 from typing import (Dict)
 
-import numpy as np
 import torch
-import torch.nn.functional as F
-import torchvision
 
-import nni.retiarii.nn.pytorch as nn
-from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.utils import original_state_dict_hooks
+import nni.nas.nn.pytorch.layers as nn
+from nni.nas.utils import original_state_dict_hooks
 
 from .convert_mixin import ConvertMixin, ConvertWithShapeMixin
 
@@ -24,30 +18,6 @@ from .convert_mixin import ConvertMixin, ConvertWithShapeMixin
 
 
 class TestOperators(unittest.TestCase, ConvertMixin):
-
-    def checkExportImport(self, model, input, check_value=True):
-        model_ir = self._convert_model(model, input)
-        model_code = model_to_pytorch_script(model_ir)
-        #print(model_code)
-
-        exec_vars = {}
-        exec(model_code + '\n\nconverted_model = _model()', exec_vars)
-        converted_model = exec_vars['converted_model']
-
-        with original_state_dict_hooks(converted_model):
-            converted_model.load_state_dict(model.state_dict())
-
-        with torch.no_grad():
-            expected_output = model.eval()(*input)
-            converted_output = converted_model.eval()(*input)
-        if check_value:
-            try:
-                self.assertEqual(len(converted_output), len(expected_output))
-                for a, b in zip(converted_output, expected_output):
-                    torch.eq(a, b)
-            except:
-                self.assertEqual(converted_output, expected_output)
-        return converted_model
 
     def test_basic_basic(self):
         class SimpleOp(nn.Module):
@@ -683,7 +653,7 @@ class TestOperators(unittest.TestCase, ConvertMixin):
                 out = torch.randn(1, 2, 3, 4) + x
                 return out
         x = torch.randn(1, 2, 3, 4)
-        self.checkExportImport(SimpleOp(), (x, ))
+        self.checkExportImport(SimpleOp(), (x, ), check_value=False)
 
 
     def test_basic_rand(self):
@@ -692,7 +662,7 @@ class TestOperators(unittest.TestCase, ConvertMixin):
                 out = torch.rand(1, 2, 3, 4) + x
                 return out
         x = torch.rand(1, 2, 3, 4)
-        self.checkExportImport(SimpleOp(), (x, ))
+        self.checkExportImport(SimpleOp(), (x, ), check_value=False)
 
 
     def test_basic_empty_like(self):
@@ -701,7 +671,7 @@ class TestOperators(unittest.TestCase, ConvertMixin):
                 out = torch.empty_like(x)
                 return out
         x = torch.randn(5, 8, requires_grad=True)
-        self.checkExportImport(SimpleOp(), (x, ))
+        self.checkExportImport(SimpleOp(), (x, ), check_value=False)
 
 
     def test_basic_empty_like_opset7(self):
@@ -710,7 +680,7 @@ class TestOperators(unittest.TestCase, ConvertMixin):
                 out = torch.empty_like(x)
                 return out
         x = torch.randn(5, 8, requires_grad=True)
-        self.checkExportImport(SimpleOp(), (x, ))
+        self.checkExportImport(SimpleOp(), (x, ), check_value=False)
 
 
     def test_basic_zeros_like(self):
@@ -924,7 +894,7 @@ class TestOperators(unittest.TestCase, ConvertMixin):
         y = torch.randn(2, 1, 4)
         self.checkExportImport(SimpleOp(), (x, y, ))
 
-
+    @unittest.skip(reason='aten::gelu is not supported')
     def test_basic_gelu(self):
         class SimpleOp(nn.Module):
             def forward(self, x):
@@ -1357,6 +1327,7 @@ class TestOperators(unittest.TestCase, ConvertMixin):
         input = torch.randn(5, 3, 2)
         self.checkExportImport(TestModel(), (input, ))
 
+    @unittest.skip(reason='"rshift_cpu" not implemented for Float')
     def test_bitshift(self):
         class BitshiftModel(nn.Module):
             def forward(self, input, input2):

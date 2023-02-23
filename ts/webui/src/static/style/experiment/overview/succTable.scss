@@ -1,4 +1,4 @@
-$tableHeight: 432px;
+$tableHeight: 520px;
 
 .scrollPanel {
     height: $tableHeight;
@@ -6,6 +6,7 @@ $tableHeight: 432px;
 
 #succTable {
     height: $tableHeight;
+    font-size: 16px;
     position: relative;
     top: -10px;
 
@@ -27,7 +28,15 @@ $tableHeight: 432px;
     }
 
     .succeed-padding {
-        padding-left: 6px;
+        padding: 0 6px;
         box-sizing: border-box;
+    }
+
+    .No,
+    .id,
+    .metric,
+    .duration-list {
+        font-size: 16px;
+        color: black;
     }
 }

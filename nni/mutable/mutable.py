@@ -101,6 +101,11 @@ def _mutable_equal(mutable1: Any, mutable2: Any) -> bool:
             else:
                 return False
         return True
+    if isinstance(mutable1, np.ndarray):
+        if not isinstance(mutable2, np.ndarray):
+            return False
+        return np.array_equal(mutable1, mutable2)
+
     return mutable1 == mutable2
 
 
@@ -342,6 +347,14 @@ class Mutable:
         """Return a string representation of the extra information."""
         return ''
 
+    def as_legacy_dict(self) -> dict:
+        """Convert the mutable into the legacy dict representation.
+
+        For example, ``{"_type": "choice", "_value": [1, 2, 3]}`` is the legacy dict representation of
+        ``nni.mutable.Categorical([1, 2, 3])``.
+        """
+        raise NotImplementedError(f'as_legacy_dict is not implemented for this type of mutable: {type(self)}.')
+
     def equals(self, other: Any) -> bool:
         """Compare two mutables.
 
@@ -482,7 +495,7 @@ class Mutable:
         # Used in ``nni.trace``.
         # Calling ``ensure_frozen()`` by default.
         from .frozen import ensure_frozen
-        return ensure_frozen(self)
+        return ensure_frozen(self, strict=False)
 
 
 class LabeledMutable(Mutable):
@@ -601,6 +614,14 @@ class MutableSymbol(LabeledMutable, Symbol, MutableExpression):
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.extra_repr()})'
 
+    def int(self) -> MutableExpression[int]:
+        """Cast the mutable to an integer."""
+        return MutableExpression.to_int(self)
+
+    def float(self) -> MutableExpression[float]:
+        """Cast the mutable to a float."""
+        return MutableExpression.to_float(self)
+
 
 class Categorical(MutableSymbol, Generic[Choice]):
     """Choosing one from a list of categorical values.
@@ -639,8 +660,8 @@ class Categorical(MutableSymbol, Generic[Choice]):
     ) -> None:
         values = list(values)
         assert values, 'Categorical values must not be empty.'
-        self.label = auto_label(label)
-        self.values = values
+        self.label: str = auto_label(label)
+        self.values: list[Choice] = values
         self.weights = weights if weights is not None else [1 / len(values)] * len(values)
 
         if default is not MISSING:
@@ -677,6 +698,12 @@ class Categorical(MutableSymbol, Generic[Choice]):
 
     def __len__(self):
         return len(self.values)
+
+    def as_legacy_dict(self) -> dict:
+        return {
+            '_type': 'choice',
+            '_value': self.values,
+        }
 
     def default(self, memo: Sample | None = None) -> Choice:
         """The default() of :class:`Categorical` is the first value unless default value is set.
@@ -1061,6 +1088,9 @@ class Numerical(MutableSymbol):
         self.quantize = quantize
         self.low = low
         self.high = high
+        self.mu = mu
+        self.sigma = sigma
+        self.log_distributed = log_distributed
 
         self.label = auto_label(label)
 
@@ -1104,7 +1134,15 @@ class Numerical(MutableSymbol):
             self.label == other.label
 
     def extra_repr(self) -> str:
-        return f'{self.low}, {self.high}, label={self.label!r}'
+        rv = f'{self.low}, {self.high}, '
+        if self.mu is not None and self.sigma is not None:
+            rv += f'mu={self.mu}, sigma={self.sigma}, '
+        if self.quantize is not None:
+            rv += f'q={self.quantize}, '
+        if self.log_distributed:
+            rv += 'log_distributed=True, '
+        rv += f'label={self.label!r}'
+        return rv
 
     def check_contains(self, sample: Sample) -> SampleValidationError | None:
         if self.label not in sample:
@@ -1118,8 +1156,12 @@ class Numerical(MutableSymbol):
             return SampleValidationError(f'{sample_val} is higher than upper bound {self.high}')
         if self.distribution.pdf(sample_val) == 0:
             return SampleValidationError(f'{sample_val} is not in the distribution {self.distribution}')
-        if self.quantize is not None and abs(sample_val % self.quantize) > 1e-6:
-            return SampleValidationError(f'{sample_val} is not a multiple of {self.quantize}')
+        if self.quantize is not None and (
+            abs(sample_val - self.low) > 1e-6 and
+            abs(self.high - sample_val) > 1e-6 and
+            abs(sample_val - round(sample_val / self.quantize) * self.quantize) > 1e-6
+        ):
+            return SampleValidationError(f'{sample_val} is not on the boundary and not a multiple of {self.quantize}')
         return None
 
     def qclip(self, x: float) -> float:
@@ -1199,6 +1241,7 @@ class Numerical(MutableSymbol):
 
         if granularity is None:
             granularity = 1
+        assert granularity > 0
 
         err = self.check_contains(memo)
         if isinstance(err, SampleMissingError):
