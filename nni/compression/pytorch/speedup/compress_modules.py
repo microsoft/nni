@@ -737,8 +737,6 @@ def replace_embedding(embedding, masks):
     if not isinstance(output_mask, torch.Tensor):
         raise OutputTypeError(type(output_mask), torch.Tensor)
 
-    in_mask = in_masks[0]
-
     weight_mask = weight_mask['weight']
 
     # never prune num_embeddings
