@@ -64,7 +64,7 @@ def update_config(wrapper_config: Dict[str, Dict[str, Any]], configs: Dict[str, 
         else:
             for name, value in config.items():
                 if name not in wrapper_config[mode]:
-                    wrapper_config[mode][name] = value 
+                    wrapper_config[mode][name] = value
                 elif isinstance(value, (Dict, Set)):
                     wrapper_config[mode][name].update(value)
                 elif isinstance(value, List):
