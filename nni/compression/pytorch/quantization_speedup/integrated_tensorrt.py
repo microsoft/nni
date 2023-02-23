@@ -3,7 +3,6 @@
 
 import time
 import logging
-import queue
 import tensorrt as trt
 import numpy as np
 import torch
@@ -136,11 +135,11 @@ def config_network_precision(network, config):
             output = layer.get_output(i)
             out2layer[output.name] = layer
         for i in range(layer.num_inputs):
-            input = layer.get_input(i)
-            if input.name in in2layer:
-                in2layer[input.name].append(layer)
+            _input = layer.get_input(i)
+            if _input.name in in2layer:
+                in2layer[_input.name].append(layer)
             else:
-                in2layer[input.name] = [layer]
+                in2layer[_input.name] = [layer]
 
     net_input = network.get_input(0)
     assert net_input.name in in2layer
@@ -326,7 +325,7 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
             Model input tensor, the first dimension should be batch dimension.
         reset_context : bool
             whether reset the engine context.
-        
+
         Returns
         -------
         torch.Tensor
