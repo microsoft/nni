@@ -73,7 +73,7 @@ config_list_2 = [{
     'quant_dtype': 'int2',
     'quant_scheme': 'affine',
     'granularity': 'default',
-    'fuse_names': ["conv1", "batchnorm1", "relu1"]
+    'fuse_names': ["conv1", "batchnorm1"]
 }]
 
 
