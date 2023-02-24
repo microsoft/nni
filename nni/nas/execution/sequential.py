@@ -47,6 +47,8 @@ class SequentialTrialCommandChannel(TrialCommandChannel):
             self.engine.dispatch_model_event(IntermediateMetricEvent(self.model, value))
         elif type == 'FINAL':
             self.engine.dispatch_model_event(FinalMetricEvent(self.model, value))
+        else:
+            raise ValueError(f'Unknown metric type: {type}')
 
 
 class SequentialExecutionEngine(ExecutionEngine):
