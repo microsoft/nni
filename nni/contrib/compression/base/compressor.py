@@ -325,13 +325,13 @@ class Quantizer(Compressor):
                 }
                 if target_space.tracked_max is not None:
                     calibration_config[module_name][target_name]['tracked_max'] = target_space.tracked_max.cpu()
-                elif not target_space.tracked_max and target_space.zero_point is not None and target_space.scale is not None:
+                elif target_space.zero_point is not None and target_space.scale is not None:
                     tracked_max = target_space.scale * (target_space.qmax - target_space.zero_point)
                     calibration_config[module_name][target_name]["tracked_max"] = tracked_max.cpu() \
                         if isinstance(target_space.scale, torch.Tensor) else tracked_max
                 if target_space.tracked_min is not None:
                     calibration_config[module_name][target_name]['tracked_min'] = target_space.tracked_min.cpu()
-                elif not target_space.tracked_min and target_space.zero_point is not None and target_space.scale is not None:
+                elif target_space.zero_point is not None and target_space.scale is not None:
                     tracked_min = target_space.scale * (target_space.qmin - target_space.zero_point)
                     calibration_config[module_name][target_name]["tracked_min"] = tracked_min.cpu() \
                         if isinstance(target_space.scale, torch.Tensor) else tracked_min
