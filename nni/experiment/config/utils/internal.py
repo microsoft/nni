@@ -144,7 +144,7 @@ def guess_list_config_type(objs, type_hint, _hint_list_item=False) -> list[Confi
         try:
             configs = [cls(**obj) for obj in objs]
         except Exception:
-            # FIXME: The errors are eaten here. We should at least print one of them.
+            # FIXME: The reason why the guess failed is eaten here. We should at least print one of them.
             continue
         candidate_configs.append(configs)
 
