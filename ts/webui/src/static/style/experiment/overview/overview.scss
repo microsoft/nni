@@ -1,6 +1,5 @@
 $boxPadding: 24px;
 $boxBorderRadius: 5px;
-$boxGapPadding: 10px;
 
 .overviewWrapper {
     display: grid;
@@ -75,12 +74,7 @@ $boxGapPadding: 10px;
         margin-left: 7px;
     }
 
-    .mincenter {
-        margin: 0 13px 0 $boxGapPadding;
-    }
-
     .chooseEntry {
-        margin-right: $boxGapPadding;
         line-height: 30px;
     }
 }
