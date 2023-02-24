@@ -256,8 +256,9 @@ def _dict_factory(items):
     ret = {}
     for key, value in items:
         if value is not None:
-            # FIXME: none is not missing. Sometimes we need to dump none.
-            #        but dump all none's will make the config file too long.
+            # NOTE (zhe):
+            # It's hard for end users to set a field to missing, so I decided to treat None as "not set".
+            # If a field needs explicit "None", use something like magic string.
             k = utils.camel_case(key)
             v = str(value) if isinstance(value, Path) else value
             ret[k] = v

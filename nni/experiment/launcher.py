@@ -18,7 +18,6 @@ from typing import Any, TYPE_CHECKING, cast
 from typing_extensions import Literal
 
 from .config import ExperimentConfig
-from .config.utils import load_experiment_config
 from . import rest
 from ..tools.nnictl.config_utils import Experiments, Config
 from ..tools.nnictl.nnictl_utils import update_experiment
@@ -208,7 +207,7 @@ def _save_experiment_information(experiment_id: str, port: int, start_time: int,
     experiments_config.add_experiment(experiment_id, port, start_time, platform, name, pid=pid, logDir=logDir, tag=tag)
 
 
-def get_stopped_experiment_config(exp_id: str, exp_dir: str | None = None) -> ExperimentConfig:
+def get_stopped_experiment_config(exp_id: str, exp_dir: str | Path | None = None) -> ExperimentConfig:
     """Get the experiment config of a stopped experiment.
 
     Parameters
@@ -224,6 +223,8 @@ def get_stopped_experiment_config(exp_id: str, exp_dir: str | None = None) -> Ex
     It's the config returned by :func:`get_stopped_experiment_config_json`,
     loaded by :class:`ExperimentConfig`.
     """
+    if isinstance(exp_dir, Path):
+        exp_dir = str(exp_dir)
     config_json = get_stopped_experiment_config_json(exp_id, exp_dir)  # type: ignore
     if config_json is None:
         raise ValueError(f'Config of {exp_id} (under {exp_dir}) failed to be loaded.')

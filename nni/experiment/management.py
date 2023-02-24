@@ -12,7 +12,7 @@ def generate_experiment_id() -> str:
 
 
 def is_valid_experiment_id(experiment_id: str) -> bool:
-    return re.match(r'^[A-Za-z0-9_\-]{1,32}$', experiment_id)
+    return re.match(r'^[A-Za-z0-9_\-]{1,32}$', experiment_id) is not None
 
 
 def create_experiment_directory(experiment_id: str) -> Path:

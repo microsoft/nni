@@ -91,8 +91,10 @@ class ExperimentConfig(ConfigBase):
         if kwargs.get('experimentType') == 'nas':
             # Loaded by JSON or YAML.
             # Send the kwargs to the NAS config constructor.
-            from nni.nas.experiment import NasExperimentConfig
-            return NasExperimentConfig.__new__(NasExperimentConfig)
+            # TODO: uncomment this when NAS part is done.
+            # from nni.nas.experiment import NasExperimentConfig
+            # return NasExperimentConfig.__new__(NasExperimentConfig)
+            raise NotImplementedError('NAS experiment is not supported yet.')
         else:
             return super().__new__(cls)
 

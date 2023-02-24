@@ -81,7 +81,11 @@ class Experiment:
         Web portal port. Or ``None`` if the experiment is not running.
     """
 
-    def __init__(self, config_or_platform: ExperimentConfig | str | list[str] | None, id: str | None = None):
+    def __init__(
+        self,
+        config_or_platform: ExperimentConfig | str | list[str] | None,
+        id: str | None = None  # pylint: disable=redefined-builtin
+    ):
         self.config: ExperimentConfig | None = None
         if id is not None:
             if not management.is_valid_experiment_id(id):

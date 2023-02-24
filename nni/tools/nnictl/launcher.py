@@ -11,7 +11,7 @@ from nni.experiment import Experiment, RunMode
 from nni.experiment.config import ExperimentConfig, convert, utils
 
 # used for v1-only legacy setup, remove them later
-from nni.experiment.launcher import get_stopped_experiment_config_json, get_stopped_experiment_config
+from nni.experiment.launcher import get_stopped_experiment_config_json
 from . import legacy_launcher
 
 _logger = logging.getLogger(__name__)
