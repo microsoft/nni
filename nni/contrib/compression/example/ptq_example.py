@@ -42,9 +42,10 @@ class NaiveModel(torch.nn.Module):
         self.relu3 = torch.nn.ReLU6()
         self.max_pool1 = torch.nn.MaxPool2d(2, 2)
         self.max_pool2 = torch.nn.MaxPool2d(2, 2)
+        self.batchnorm1 = torch.nn.BatchNorm2d(20)
 
     def forward(self, x):
-        x = self.relu1(self.conv1(x))
+        x = self.relu1(self.batchnorm1(self.conv1(x)))
         x = self.max_pool1(x)
         x = self.relu2(self.conv2(x))
         x = self.max_pool2(x)
@@ -142,7 +143,7 @@ def main():
         'quant_dtype': 'int8',
         'quant_scheme': 'affine',
         'granularity': 'default',
-        'fuse_names': ["conv1", "batchnorm1"]
+        # 'fuse_names': ["conv1", "batchnorm1"]
     }]
     print(f"config={configure_list}")
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
@@ -150,7 +151,7 @@ def main():
     fused_modules_lis = [["conv1", "batchnorm1"]]
     optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.5)
     evaluator = TorchEvaluator(training_model, optimizer, training_step, evaluating_func=evaluating_model)
-    quantizer = PtqQuantizer(model.eval(), configure_list, evaluator)
+    quantizer = PtqQuantizer(model, configure_list, evaluator)
     model, calibration_config = quantizer.compress(None, 5)
     # measure the accuracy of the quantized model.
     after_acc = evaluating_model(model)
