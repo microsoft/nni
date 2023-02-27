@@ -29,7 +29,7 @@ class Profiler:
 
 class ExpressionProfiler(Profiler):
     """Profiler whose :meth:`profile` method is an evaluation of a precomputed expression.
-    
+
     This type of profiler is useful for optimization and analysis.
     For example, to find the best model size is equivalent to find the minimum value of the expression.
     Users can also compute the mathematical expression for a distribution of model samples.
