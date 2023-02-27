@@ -28,78 +28,67 @@ from nni.tools.nnictl.config_utils import Experiments
 
 _logger = logging.getLogger(__name__)
 
+
 def _get_current_timestamp() -> int:
     import time
     return int(time.time() * 1000)
 
+
 class NasExperiment(Experiment):
     """
-    ???
-
     The entry for a NAS experiment.
     Users can use this class to start/stop or inspect an experiment, like exporting the results.
 
     Experiment is a sub-class of :class:`nni.experiment.Experiment`, there are many similarities such as
     configurable training service to distributed running the experiment on remote server.
-    But unlike :class:`nni.experiment.Experiment`, RetiariiExperiment doesn't support configure:
+    But unlike :class:`nni.experiment.Experiment`, :class:`NasExperiment` doesn't support configure:
 
     - ``trial_code_directory``, which can only be current working directory.
     - ``search_space``, which is auto-generated in NAS.
-    - ``trial_command``, which must be ``python -m nni.retiarii.trial_entry`` to launch the modulized trial code.
+    - ``trial_command``, which is auto-set to launch the modulized trial code.
 
-    RetiariiExperiment also doesn't have tuner/assessor/advisor, because they are also implemented in strategy.
+    :class:`NasExperiment` also doesn't have tuner/assessor/advisor, because such functionality is already implemented in strategy.
 
     Also, unlike :class:`nni.experiment.Experiment` which is bounded to a node server,
-    RetiariiExperiment optionally starts a node server to schedule the trials, when the strategy is a multi-trial strategy.
+    :class:`NasExperiment` optionally starts a node server to schedule the trials, depending on the configuration of execution engine.
     When the strategy is one-shot, the step of launching node server is omitted, and the experiment is run locally by default.
 
     Configurations of experiments, such as execution engine, number of GPUs allocated,
-    should be put into a :class:`RetiariiExeConfig` and used as an argument of :meth:`RetiariiExperiment.run`.
-
-    ``wait_completion`` does not work for :class:`NasExperiment`.
+    should be put into a :class:`NasExperimentConfig` and passed to the initialization of an experiment.
+    The config can be also altered after the experiment is initialized.
 
     Parameters
     ----------
-    base_model : nn.Module
-        The model defining the search space / base skeleton without mutation.
-        It should be wrapped by decorator ``nni.retiarii.model_wrapper``.
-    evaluator : nni.retiarii.Evaluator, default = None
+    model_space
+        The model space to search.
+    evaluator
         Evaluator for the experiment.
-        If you are using a one-shot trainer, it should be placed here, although this usage is deprecated.
-    strategy : nni.retiarii.strategy.Strategy, default = None
+    strategy
         Exploration strategy. Can be multi-trial or one-shot.
-    trainer : BaseOneShotTrainer
-        Kept for compatibility purposes.
+    config
+        Configurations of the experiment. See :class:`~nni.nas.experiment.NasExperimentConfig` for details.
+        When not provided, a default config will be created based on current model space, evaluator and strategy.
+        Detailed rules can be found in :meth:`nni.nas.experiment.NasExperimentConfig.default`.
+
+    Warnings
+    --------
+    ``wait_completion`` doesn't work for NAS experiment because NAS experiment **always wait for completion**.
 
     Examples
     --------
-    Multi-trial NAS:
-
-    >>> base_model = Net()
+    >>> base_model = MobileNetV3Space()
     >>> search_strategy = strategy.Random()
-    >>> model_evaluator = FunctionalEvaluator(evaluate_model)
-    >>> exp = RetiariiExperiment(base_model, model_evaluator, [], search_strategy)
-    >>> exp_config = RetiariiExeConfig('local')
-    >>> exp_config.trial_concurrency = 2
+    >>> model_evaluator = Classification()
+    >>> exp = NasExperiment(base_model, model_evaluator, search_strategy)
     >>> exp_config.max_trial_number = 20
     >>> exp_config.training_service.use_active_gpu = False
     >>> exp.run(exp_config, 8081)
 
-    One-shot NAS:
-
-    >>> base_model = Net()
-    >>> search_strategy = strategy.DARTS()
-    >>> evaluator = pl.Classification(train_dataloader=train_loader, val_dataloaders=valid_loader)
-    >>> exp = RetiariiExperiment(base_model, evaluator, [], search_strategy)
-    >>> exp_config = RetiariiExeConfig()
-    >>> exp_config.execution_engine = 'oneshot'  # must be set of one-shot strategy
-    >>> exp.run(exp_config)
-
-    Export top models:
+    Export top models and re-initialize the top model:
 
     >>> for model_dict in exp.export_top_models(formatter='dict'):
     ...     print(model_dict)
-    >>> with nni.retarii.fixed_arch(model_dict):
+    >>> with model_context(model_dict):
     ...     final_model = Net()
     """
 
@@ -112,7 +101,7 @@ class NasExperiment(Experiment):
                  evaluator: Evaluator,
                  strategy: Strategy,
                  config: NasExperimentConfig | None = None,
-                 id: str | None = None) -> None:
+                 id: str | None = None) -> None:  # pylint: disable=redefined-builtin
         self.model_space = model_space
         self.evaluator = evaluator
         self.strategy = strategy
@@ -212,7 +201,7 @@ class NasExperiment(Experiment):
 
     def _stop_without_nni_manager(self):
         """Update the experiment manifest.
-        
+
         For future resume and experiment management.
         """
         Experiments().update_experiment(self.id, 'status', 'STOPPED')
@@ -353,7 +342,7 @@ class NasExperiment(Experiment):
 
     def _nni_manager_required(self) -> bool:
         """Return whether NNI manager and training service are created.
-        
+
         Use engine type (in config) as an indicator.
         """
         engine_config = self.config.canonical_copy().execution_engine
@@ -361,7 +350,7 @@ class NasExperiment(Experiment):
 
     def _send_space_to_nni_manager(self) -> None:
         """Make the search space informative on WebUI.
-        
+
         Note: It doesn't work for complex search spaces (e.g., with mutators).
         """
         legacy_space_dict = {}
