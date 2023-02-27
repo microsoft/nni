@@ -61,11 +61,16 @@ export function resetGlobals(): void {
         mode: 'unittest'
     };
     const paths = createPaths(args);
-    // init log stream here to create nnimanager.log for easy debugbility
-    if (global.nni !== undefined && global.nni.logStream !== undefined) {
-        global.nni.logStream.close();
-    }
-    const logStream = initLogStream(args, paths);
+    const logStream = {
+        writeLine: (_line: string): void => { /* dummy */ },
+        writeLineSync: (_line: string): void => { /* dummy */ },
+        close: async (): Promise<void> => { /* dummy */ }
+    };
+    // // init log stream here to create nnimanager.log for easy debugbility
+    // if (global.nni !== undefined && global.nni.logStream !== undefined) {
+    //     global.nni.logStream.close();
+    // }
+    // const logStream = initLogStream(args, paths);
     const rest = new RestManager();
     const shutdown = {
         register: (..._: any): void => { /* dummy */ },
