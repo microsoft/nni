@@ -4,7 +4,8 @@
 # v2
 from .attr import (
     get_nested_attr,
-    set_nested_attr
+    set_nested_attr,
+    has_nested_attr
 )
 from .config_validation import CompressorSchema
 from .constructor_helper import (

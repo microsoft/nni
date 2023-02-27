@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { DefaultButton, IColumn, Icon, PrimaryButton, Stack, StackItem, Checkbox } from '@fluentui/react';
+import { DefaultButton, IColumn, Icon, PrimaryButton, Stack, Checkbox } from '@fluentui/react';
 import { Trial } from '@model/trial';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { convertDuration, formatTimestamp, copyAndSort, parametersType, _inferColumnTitle } from '@static/function';
@@ -16,6 +16,7 @@ import ExpandableDetails from '@components/common/ExpandableDetails/ExpandableIn
 import PaginationTable from '@components/common/PaginationTable';
 import CopyButton from '@components/common/CopyButton';
 import TooltipHostIndex from '@components/common/TooltipHostIndex';
+import { buttonsGap } from '@components/common/Gap';
 import { getValue } from '@model/localStorage';
 import { AppContext } from '@/App';
 require('echarts/lib/chart/line');
@@ -23,7 +24,13 @@ require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
 
 const defaultDisplayedColumns = ['sequenceId', 'id', 'duration', 'status', 'latestAccuracy'];
-
+const columnsWidths = [
+    { name: 'sequenceId', value: [140, 250] },
+    { name: 'id', value: [145, 270] },
+    { name: 'duration', value: [163, 296] },
+    { name: 'status', value: [165, 310] },
+    { name: 'latestAccuracy', value: [180, 306] }
+];
 interface TableListProps {
     tableSource: Trial[];
 }
@@ -56,7 +63,7 @@ const TableList = (props: TableListProps): any => {
         const newColumns: IColumn[] = columns.slice();
         const currColumn: IColumn = newColumns.filter(currCol => column.key === currCol.key)[0];
         const isSortedDescending = !currColumn.isSortedDescending;
-        setSortInfo({ field: column.key, isDescend: isSortedDescending }); // TODO: some little bugs
+        setSortInfo({ field: column.key, isDescend: isSortedDescending });
     };
 
     const _trialsToTableItems = (trials: Trial[]): any[] => {
@@ -196,14 +203,18 @@ const TableList = (props: TableListProps): any => {
             }
             const columnTitle = _inferColumnTitle(k);
             // TODO: add blacklist
-            // 0.85: tableWidth / screen
-            const widths = window.innerWidth * 0.85;
             columns.push({
                 name: columnTitle,
                 key: k,
                 fieldName: k,
-                minWidth: widths * 0.12,
-                maxWidth: widths * 0.19,
+                minWidth:
+                    columnsWidths.find(item => item.name === k) !== undefined
+                        ? columnsWidths.find(item => item.name === k)!.value[0]
+                        : 150,
+                maxWidth:
+                    columnsWidths.find(item => item.name === k) !== undefined
+                        ? columnsWidths.find(item => item.name === k)!.value[1]
+                        : 250,
                 isResizable: true,
                 onColumnClick: _onColumnClick,
                 ...(k === 'status' && {
@@ -244,8 +255,8 @@ const TableList = (props: TableListProps): any => {
             name: 'Operation',
             key: '_operation',
             fieldName: 'operation',
-            minWidth: 150,
-            maxWidth: 160,
+            minWidth: 207,
+            maxWidth: 221,
             isResizable: true,
             className: 'detail-table',
             onRender: _renderOperationColumn
@@ -298,19 +309,13 @@ const TableList = (props: TableListProps): any => {
                 <span style={{ marginRight: 12 }}>{tableListIcon}</span>
                 <span className='fontColor333'>Trial jobs</span>
             </Stack>
-            <Stack horizontal className='allList'>
-                <StackItem>
-                    <Stack horizontal horizontalAlign='end' className='allList'>
-                        <Search
-                            searchFilter={searchItems} // search filter list
-                            changeSearchFilterList={changeSearchFilterList}
-                        />
-                    </Stack>
-                </StackItem>
-
-                <StackItem styles={{ root: { position: 'absolute', right: '0' } }}>
+            <Stack horizontal horizontalAlign='space-between' className='allList'>
+                <Search
+                    searchFilter={searchItems} // search filter list
+                    changeSearchFilterList={changeSearchFilterList}
+                />
+                <Stack horizontal horizontalAlign='end' tokens={buttonsGap}>
                     <DefaultButton
-                        className='allList-button-gap'
                         text='Add/Remove columns'
                         onClick={(): void => {
                             setCustomizeColumnsDialogVisible(true);
@@ -318,7 +323,6 @@ const TableList = (props: TableListProps): any => {
                     />
                     <DefaultButton
                         text='Compare'
-                        className='allList-compare'
                         onClick={(): void => {
                             setCompareDialogVisible(true);
                         }}
@@ -336,7 +340,7 @@ const TableList = (props: TableListProps): any => {
                         />
                     )}
                     <TensorboardUI selectedRowIds={selectedRowIds} changeSelectTrialIds={changeSelectTrialIds} />
-                </StackItem>
+                </Stack>
             </Stack>
             {columns && displayedItems && (
                 <PaginationTable

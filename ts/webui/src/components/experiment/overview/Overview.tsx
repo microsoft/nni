@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Stack, Icon, Dropdown, DefaultButton } from '@fluentui/react';
+import { Stack, Dropdown, DefaultButton } from '@fluentui/react';
 import { TRIALS } from '@static/datamodel';
 import { Trial } from '@static/model/trial';
 import { AppContext } from '@/App';
@@ -8,6 +8,7 @@ import DefaultPoint from '../trialdetail/chart/DefaultMetricPoint';
 import { BasicInfo } from './basic/BasicInfo';
 import { Duration } from './count/Duration';
 import { TrialCount } from './count/TrialNumbers';
+import { buttonsGap } from '@components/common/Gap';
 import '@style/experiment/overview/overview.scss';
 import '@style/experiment/overview/topTrial.scss';
 import '@style/table.scss';
@@ -91,38 +92,29 @@ const Overview = (): any => {
                                 Top trials<span className='font-untheme'>{bestTrialEntries}</span>
                             </h3>
                         </div>
-                        {/* <div className='topTrialTitle'> */}
-                        <Stack horizontal horizontalAlign='end'>
+                        <Stack horizontal horizontalAlign='end' tokens={buttonsGap}>
                             <DefaultButton
-                                onClick={clickMaxTop}
+                                text='Maximize'
                                 className={metricGraphMode === 'Maximize' ? 'active' : ''}
-                                styles={{ root: { width: 94, padding: 0 } }}
-                            >
-                                <Icon iconName='Market' />
-                                <span className='max'>Maximize</span>
-                            </DefaultButton>
-                            <div className='mincenter'>
-                                <DefaultButton
-                                    onClick={clickMinTop}
-                                    className={metricGraphMode === 'Minimize' ? 'active' : ''}
-                                    styles={{ root: { width: 94, padding: 0 } }}
-                                >
-                                    <Icon iconName='MarketDown' />
-                                    <span className='max'>Minimize</span>
-                                </DefaultButton>
-                            </div>
+                                styles={{ root: { padding: '0 8px' } }}
+                                iconProps={{ iconName: 'Market' }}
+                                onClick={clickMaxTop}
+                            />
+                            <DefaultButton
+                                text='Minimize'
+                                className={`mincenter ${metricGraphMode === 'Minimize' ? 'active' : ''}`}
+                                styles={{ root: { padding: '0 8px' } }}
+                                iconProps={{ iconName: 'MarketDown' }}
+                                onClick={clickMinTop}
+                            />
+                            <div className='chooseEntry'>Display top</div>
                             <div>
-                                <Stack horizontal>
-                                    <div className='chooseEntry'>Display top</div>
-                                    <div>
-                                        <Dropdown
-                                            selectedKey={bestTrialEntries}
-                                            options={entriesOption}
-                                            onChange={updateEntries}
-                                            styles={{ root: { width: 70 } }}
-                                        />
-                                    </div>
-                                </Stack>
+                                <Dropdown
+                                    selectedKey={bestTrialEntries}
+                                    options={entriesOption}
+                                    onChange={updateEntries}
+                                    styles={{ root: { width: 70 } }}
+                                />
                             </div>
                         </Stack>
                     </Stack>

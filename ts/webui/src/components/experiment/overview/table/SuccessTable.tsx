@@ -40,7 +40,6 @@ const tooltipStr = (
 
 const SuccessTable = (props: SuccessTableProps): any => {
     const { trialIds, expandRowIDs, updateOverviewPage, changeExpandRowIDs } = props;
-    // 这个不应该是准确的吗？怎么是any呢
     const [source, setSource] = useState(TRIALS.table(trialIds) as Array<any>);
     const [sortInfo, setSortInfo] = useState({ field: '', isDescend: false } as SortInfo);
 
@@ -82,7 +81,7 @@ const SuccessTable = (props: SuccessTableProps): any => {
                             transform: `rotate(${expandRowIDs.has(item.id) ? 90 : 0}deg)`
                         }
                     }}
-                    className='cursor bold positionTop'
+                    className='cursor bold positionTopSuccess'
                     onClick={expandTrialId.bind(this, Event, item.id)}
                 />
             ),
@@ -95,8 +94,8 @@ const SuccessTable = (props: SuccessTableProps): any => {
             name: 'Trial No.',
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
-            minWidth: 108,
-            maxWidth: 143,
+            minWidth: 133,
+            maxWidth: 255,
             isResizable: true,
             data: 'number',
             onColumnClick: onColumnClick,
@@ -106,8 +105,8 @@ const SuccessTable = (props: SuccessTableProps): any => {
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: 130,
-            maxWidth: 196,
+            minWidth: 160,
+            maxWidth: 330,
             isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
@@ -122,8 +121,8 @@ const SuccessTable = (props: SuccessTableProps): any => {
         {
             name: 'Duration',
             key: 'duration',
-            minWidth: 120,
-            maxWidth: 179,
+            minWidth: 124,
+            maxWidth: 300,
             isResizable: true,
             fieldName: 'duration',
             data: 'number',
@@ -137,8 +136,8 @@ const SuccessTable = (props: SuccessTableProps): any => {
         {
             name: 'Status',
             key: 'status',
-            minWidth: 145,
-            maxWidth: 209,
+            minWidth: 152,
+            maxWidth: 288,
             isResizable: true,
             fieldName: 'status',
             onRender: (item: any): React.ReactNode => (
@@ -150,7 +149,7 @@ const SuccessTable = (props: SuccessTableProps): any => {
             key: 'accuracy',
             fieldName: 'accuracy',
             minWidth: 132,
-            maxWidth: 192,
+            maxWidth: 200,
             isResizable: true,
             data: 'number',
             onColumnClick: onColumnClick,
@@ -204,7 +203,6 @@ const SuccessTable = (props: SuccessTableProps): any => {
                     columns={columns}
                     items={keepSortedSource}
                     setKey='set'
-                    // compact={true}
                     onRenderRow={onRenderRow}
                     onRenderDetailsHeader={onRenderDetailsHeader}
                     selectionMode={0} // close selector function

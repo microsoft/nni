@@ -1,5 +1,9 @@
 $themeBlue: #0071bc;
 
+.ms-Dialog-main {
+    max-width: 500px;
+}
+
 .ellipsis {
     overflow: hidden;
     white-space: nowrap;
@@ -49,10 +53,6 @@ $themeBlue: #0071bc;
 .graph > div > div {
     padding: 0 !important;
     border: none !important;
-}
-
-.elementMarginLeft {
-    margin-left: 10px;
 }
 
 .operationBtn {
@@ -136,10 +136,15 @@ h3.title {
 .duration-global-color {
     b {
         color: black;
+        margin: 0 1px;
     }
 
     span {
         font-size: 16px;
         color: #9ca3af;
     }
+}
+
+.borderRadius {
+    border-radius: 4px;
 }
