@@ -34,8 +34,6 @@ export interface WebSocketChannel {
  **/
 export function getWebSocketChannel(): WebSocketChannel {
     return channelSingleton;
-    // channelSingleton = new WebSocketChannelImpl();
-    // return channelSingleton;
 }
 
 /**
@@ -192,8 +190,12 @@ class WebSocketChannelImpl implements WebSocketChannel {
     }
 }
 
-const channelSingleton: WebSocketChannelImpl = new WebSocketChannelImpl();
-// let channelSingleton: WebSocketChannelImpl;
+let channelSingleton: WebSocketChannelImpl = new WebSocketChannelImpl();
+
+// NOTE: this function is only for unittest of nnimanager
+export function resetChannelSingleton(): void {
+    channelSingleton = new WebSocketChannelImpl();
+}
 
 let heartbeatInterval: number = 5000;
 

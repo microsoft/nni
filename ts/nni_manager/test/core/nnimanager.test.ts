@@ -21,7 +21,8 @@ import { TensorboardManager } from '../../common/tensorboardManager';
 import { NNITensorboardManager } from '../../extensions/nniTensorboardManager';
 import * as path from 'path';
 import { RestServer } from '../../rest_server';
-import globals from '../../common/globals';
+import globals from '../../common/globals/unittest';
+import { resetChannelSingleton } from '../../core/tuner_command_channel/websocket_channel';
 import * as timersPromises from 'timers/promises';
 
 let nniManager: NNIManager;
@@ -111,9 +112,10 @@ async function prepareExperiment(): Promise<void> {
     assert.strictEqual(expId, 'unittest');
 
     // Sleep here because the start of tuner takes a while.
-    // Also, wait for that some trials are submitted, waiting for at most 3 seconds.
+    // Also, wait for that some trials are submitted, waiting for at most 5 seconds.
+    // NOTE: this waiting period should be long enough depending on different running environment and randomness.
     for (let i = 0; i < 5; i++) {
-        await timersPromises.setTimeout(500);
+        await timersPromises.setTimeout(1000);
         if (manager.currSubmittedTrialNum >= 2)
             break;
     }
@@ -296,6 +298,10 @@ describe('Unit test for nnimanager basic testing', function () {
 });
 
 async function resumeExperiment(): Promise<void> {
+    globals.reset();
+    // explicitly reset the websocket channel because it is singleton, does not work when two experiments
+    // (one is start and the other is resume) run in the same process.
+    resetChannelSingleton();
     await initContainer('resume');
     nniManager = component.get(Manager);
 
@@ -324,7 +330,7 @@ async function testMaxTrialNumberAfterResume(): Promise<void> {
     // testing the resumed nnimanager correctly counts (max) trial number
     // waiting 4 seconds to make trials reach maxTrialNum, waiting this long
     // because trial concurrency is set to 1.
-    await timersPromises.setTimeout(4000);
+    await timersPromises.setTimeout(8000);
     const trialJobDetails = await nniManager.listTrialJobs();
     assert.strictEqual(trialJobDetails.length, 5);
 }
