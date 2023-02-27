@@ -33,9 +33,9 @@ export interface WebSocketChannel {
  *  Remember to invoke ``await channel.init()`` before doing anything else.
  **/
 export function getWebSocketChannel(): WebSocketChannel {
-    // return channelSingleton;
-    channelSingleton = new WebSocketChannelImpl();
     return channelSingleton;
+    // channelSingleton = new WebSocketChannelImpl();
+    // return channelSingleton;
 }
 
 /**
@@ -192,8 +192,8 @@ class WebSocketChannelImpl implements WebSocketChannel {
     }
 }
 
-// const channelSingleton: WebSocketChannelImpl = new WebSocketChannelImpl();
-let channelSingleton: WebSocketChannelImpl;
+const channelSingleton: WebSocketChannelImpl = new WebSocketChannelImpl();
+// let channelSingleton: WebSocketChannelImpl;
 
 let heartbeatInterval: number = 5000;
 

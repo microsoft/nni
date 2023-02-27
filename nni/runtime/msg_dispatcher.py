@@ -87,7 +87,7 @@ class MsgDispatcher(MsgDispatcherBase):
     def handle_initialize(self, data):
         """Data is search space
         """
-        _logger.info('Initial search space: %s, %s', type(data), data)
+        _logger.info('Initial search space: %s', data)
         self.tuner.update_search_space(data)
         self.send(CommandType.Initialized, '')
 

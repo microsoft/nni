@@ -269,6 +269,7 @@ class NNIManager implements Manager {
         const recoveredTrialNum = this.addRecoveredTrialJob(allTrialJobs);
         // minus the number of the recovered trials,
         // the recovered trials should not be counted in maxTrialNumber.
+        this.log.info(`Number of current submitted trials: ${this.currSubmittedTrialNum}, where ${recoveredTrialNum} is resuming.`);
         this.currSubmittedTrialNum -= recoveredTrialNum;
 
         // Collect generated trials and imported trials

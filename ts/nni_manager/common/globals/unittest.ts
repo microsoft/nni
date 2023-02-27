@@ -23,8 +23,7 @@ import os from 'os';
 import path from 'path';
 
 import type { NniManagerArgs } from './arguments';
-import type { LogStream } from './log_stream';
-import { initLogStream } from './log_stream';
+import { LogStream, initLogStream } from './log_stream';
 import { NniPaths, createPaths } from './paths';
 import { RestManager } from './rest';
 
@@ -61,12 +60,10 @@ export function resetGlobals(): void {
         mode: 'unittest'
     };
     const paths = createPaths(args);
-    // const logStream = {
-    //     writeLine: (_line: string): void => { /* dummy */ },
-    //     writeLineSync: (_line: string): void => { /* dummy */ },
-    //     close: async (): Promise<void> => { /* dummy */ }
-    // };
-    // modify logStream in unittest globals to create nnimanager.log for easy debugbility
+    // init log stream here to create nnimanager.log for easy debugbility
+    if (global.nni !== undefined && global.nni.logStream !== undefined) {
+        global.nni.logStream.close();
+    }
     const logStream = initLogStream(args, paths);
     const rest = new RestManager();
     const shutdown = {
