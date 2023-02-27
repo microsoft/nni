@@ -192,7 +192,8 @@ class WebSocketChannelImpl implements WebSocketChannel {
 
 let channelSingleton: WebSocketChannelImpl = new WebSocketChannelImpl();
 
-// NOTE: this function is only for unittest of nnimanager
+// NOTE: this function is only for unittest of nnimanager,
+// because resuming an experiment should reset websocket channel.
 export function resetChannelSingleton(): void {
     channelSingleton = new WebSocketChannelImpl();
 }

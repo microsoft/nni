@@ -109,7 +109,7 @@ class MsgDispatcher(MsgDispatcherBase):
             self.send(CommandType.NoMoreTrialJobs, _pack_parameter(ids[0], ''))
 
     def handle_update_search_space(self, data):
-        _logger.info('New search space: %s %s', type(data), data)
+        _logger.info('New search space: %s', data)
         self.tuner.update_search_space(data)
 
     def handle_import_data(self, data):
