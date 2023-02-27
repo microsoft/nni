@@ -30,6 +30,43 @@ _logger = logging.getLogger(__name__)
 
 @dataclass(init=False)
 class NasExperimentConfig(ExperimentConfig):
+    """Config for NAS experiment.
+
+    Other than training service fields which also exists in a HPO experiment,
+    additional fields provided by NAS include execution engine and model format.
+    Execution engine is used to specify how to (e.g., distributedly or sequentially) run a trial,
+    and model format specifies the format of the converted model space used throughout the NAS experiment.
+
+    It can be constructed via 3 approaches.
+
+    1. Create a default config and then modify some fields (recommended).
+       The default config should be good enough for most cases. Users only need to update some fields like concurrency.
+       See details in :meth:`default`. Example::
+
+        config = NasExperimentConfig.default(model_space, evaluator, strategy)
+        config.trial_concurrency = 4
+
+    2. Create an object by providing several required fields, and then set other fields.
+       Though marked as optional in function signature, it's recommended to set all three fields.
+    
+        config = NasExperimentConfig('ts', 'graph', 'local')
+        config.experiment_name = 'hello'
+        config.execution_engine.dummy_input = [1, 3, 224, 224]
+
+    3. Create an empty object and set all fields manually. Put the fields into kwargs should also work::
+
+        config = NasExperimentConfig()
+        config.execution_engine = TrainingServiceEngineConfig()
+        config.model_format = SimplifiedModelFormatConfig()
+        config.training_service = LocalConfig(use_active_gpu=True)
+
+        # equivalent to
+        config = NasExperimentConfig(
+            execution_engine=TrainingServiceEngineConfig(),
+            model_format=SimplifiedModelFormatConfig(),
+            training_service=LocalConfig(use_active_gpu=True)
+        )
+    """
     # TODO: refactor this class to inherit from a new common base class with HPO config
     experiment_type: Literal['nas'] = 'nas'
     search_space: Any = RESERVED
@@ -69,6 +106,15 @@ class NasExperimentConfig(ExperimentConfig):
 
     @classmethod
     def default(cls, model_space: ModelSpace, evaluator: Evaluator, strategy: Strategy) -> NasExperimentConfig:
+        """Instantiate a default config. Infer from current setting of model space, evaluator and strategy.
+
+        If the strategy is found to be a one-shot strategy, the execution engine will be set to "sequential" and
+        model format will be set to "raw" to preserve the weights and the model object.
+
+        If the strategy is found to be a multi-trial strategy, training service engine will be used by default,
+        and the training service will be set to "local" if not provided.
+        Model format will be set to "simplified" for performance and memory efficiency.
+        """
         _logger.info('Config is not provided. Will try to infer.')
 
         trial_concurrency = 1       # no effect if not going parallel
@@ -81,12 +127,12 @@ class NasExperimentConfig(ExperimentConfig):
             from nni.nas.oneshot.pytorch.strategy import OneShotStrategy, is_supernet
             if isinstance(strategy, OneShotStrategy):
                 _logger.info('Strategy is found to be a one-shot strategy. '
-                             'Setting execution engine to "sequential" and format to "keep".')
+                             'Setting execution engine to "sequential" and format to "raw".')
                 execution_engine = 'sequential'
                 model_format = 'raw'
             if is_supernet(model_space):
                 _logger.info('Model space is found to be a one-shot supernet. '
-                             'Setting execution engine to "sequential" and format to "keep" to preserve the weights.')
+                             'Setting execution engine to "sequential" and format to "raw" to preserve the weights.')
                 execution_engine = 'sequential'
                 model_format = 'raw'
         except ImportError:
