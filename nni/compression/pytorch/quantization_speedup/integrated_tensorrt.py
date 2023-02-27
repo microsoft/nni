@@ -18,8 +18,9 @@ logger = logging.getLogger(__name__)
 Precision_Dict = {
     8: trt.int8,
     16: trt.float16,
-    'f32': trt.float32,
-    'i32': trt.int32
+    # NOTE: uncomment them or refactor when they are required
+    # 'f32': trt.float32,
+    # 'i32': trt.int32
     # trt.bool
 }
 
@@ -71,6 +72,8 @@ def _handle_gemm(layer, config, out2layer, in2layer):
     w_out_tensor.dynamic_range = (config['min_weight'], config['max_weight'])
     print('special gemm: ', w_out_tensor.dynamic_range)
     # TODO: handle sum & bias
+    # NOTE: a feasible way is setting bias to 0 in quantization algorithm size
+    # and track the dynamic range without bias.
     return weight_layer.name
 
 def apply_precision_to_layer(layer, config):
@@ -82,6 +85,7 @@ def apply_precision_to_layer(layer, config):
         assert 'tracked_max_input' in config
         tracked_min_input = config['tracked_min_input']
         tracked_max_input = config['tracked_max_input']
+        # NOTE: only support one input tensor for now
         in_tensor = layer.get_input(0)
         in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
     if 'output_bits' in config:
@@ -107,6 +111,7 @@ def propagate_from_low_bit_predecessor(layer, out2layer, default_precision=trt.f
     tensor = layer.get_input(0)
     if tensor is not None:
         predecessor = out2layer[tensor.name]
+        # NOTE: only support int8 for now
         if predecessor.get_output_type(0) == trt.int8:
             dynamic_range = tensor.dynamic_range
 
@@ -244,7 +249,7 @@ def build_engine_with_calib(onnx_model_file, calib, input_shape):
     profile.set_shape(input_name, min=input_shape, opt=input_shape, max=input_shape)
     trt_config.add_optimization_profile(profile)
 
-    config_network_to_int8(network) # not sure whether it takes effect
+    config_network_to_int8(network) # not sure whether it is necessary because trt.BuilderFlag.INT8 is set.
 
     engine = builder.build_engine(network, trt_config)
     return engine
