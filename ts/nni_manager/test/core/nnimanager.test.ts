@@ -225,9 +225,12 @@ async function testGetMetricDataWithTrialJobId(): Promise<void> {
 
 async function testGetMetricDataWithInvalidTrialJobId(): Promise<void> {
     // Query an invalid trialJobId
+    console.log('zql');
     const metrics = await nniManager.getMetricData('4321');
+    console.log('zql2');
     // The returned is an empty list
     assert.strictEqual(metrics.length, 0);
+    console.log('zql3');
 }
 
 async function testGetTrialJobStatistics(): Promise<void> {
@@ -253,16 +256,21 @@ async function testGetTrialJobStatistics(): Promise<void> {
     // { trialJobStatus: 'RUNNING', trialJobNumber: 1 },
     // { trialJobStatus: 'WAITING', trialJobNumber: 1 }
     // ]
-
+    console.log('zql4');
     for (let i = 0; i < 5; i++) {
         await timersPromises.setTimeout(500);
         const trialJobDetails = await nniManager.listTrialJobs();
+        console.log('zql4.x');
         if (trialJobDetails.length >= 4)
             break;
     }
+    console.log('zql5');
     const statistics = await nniManager.getTrialJobStatistics();
+    console.log('zql6');
     assert.isAtLeast(statistics.length, 2);
+    console.log('zql7');
     const succeededTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'SUCCEEDED');
+    console.log('zql8');
     if (succeededTrials) {
         if (succeededTrials.trialJobNumber !== 2) {
             const canceledTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'USER_CANCELED');
@@ -274,21 +282,28 @@ async function testGetTrialJobStatistics(): Promise<void> {
     }
     else
         assert.fail('SUCCEEDED trial not found!');
+    console.log('zql9');
     const runningTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'RUNNING');
+    console.log('zql10');
     if (runningTrials)
         assert.strictEqual(runningTrials.trialJobNumber, 1);
     else
         assert.fail('RUNNING trial not found!');
     const waitingTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'WAITING');
+    console.log('zql11');
     if (waitingTrials)
         assert.strictEqual(waitingTrials.trialJobNumber, 1);
     else
         assert.fail('RUNNING trial not found!');
+    console.log('zql12');
 }
 
 async function testFinalExperimentStatus(): Promise<void> {
+    console.log('zql13');
     const status = nniManager.getStatus();
+    console.log('zql14');
     assert.notEqual(status.status, 'ERROR');
+    console.log('zql15');
 }
 
 
