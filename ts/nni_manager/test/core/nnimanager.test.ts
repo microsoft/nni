@@ -87,6 +87,11 @@ async function initContainer(mode: string = 'create'): Promise<void> {
 }
 
 async function prepareExperiment(): Promise<void> {
+    // create ~/nni-experiments/.experiment
+    const expsFile = path.join(globals.args.experimentsDirectory, '.experiment');
+    if (!fs.existsSync(expsFile)) {
+        fs.writeFileSync(expsFile, '{}');
+    }
     // clean the db file under the unittest experiment directory.
     // NOTE: cannot remove the whole exp directory, it seems the directory is created before this line.
     const unittestPath = path.join(globals.args.experimentsDirectory, globals.args.experimentId, 'db');
@@ -204,7 +209,8 @@ async function testUpdateExperimentProfileMaxTrialNum(maxTrialNum: number): Prom
 
 async function testGetStatus(): Promise<void> {
     const status = nniManager.getStatus();
-    assert.strictEqual(status.status, 'RUNNING');
+    // it is possible that the submitted trials run too fast to reach status NO_MORE_TRIAL
+    assert.include(['RUNNING', 'NO_MORE_TRIAL'], status.status);
 }
 
 async function testGetMetricDataWithTrialJobId(): Promise<void> {
@@ -226,9 +232,10 @@ async function testGetMetricDataWithInvalidTrialJobId(): Promise<void> {
 
 async function testGetTrialJobStatistics(): Promise<void> {
     // Waiting for 1 second to make sure SUCCEEDED status has been sent from
-    // the mocked training service. There would be at least two trials has
-    // SUCCEEDED status, i.e., trial '1234' and '3456', though '1234' has been
-    // cancelled (by a former test) before the SUCCEEDED status.
+    // the mocked training service. There would be at least one trials has
+    // SUCCEEDED status, i.e., '3456'.
+    // '1234' may be in SUCCEEDED status or USER_CANCELED status,
+    // depending on the order of SUCCEEDED and USER_CANCELED events.
     // There are 4 trials, because maxTrialNumber is updated to 4.
     // Then accordingly to the mocked training service, there are two trials
     // SUCCEEDED, one trial RUNNING, and one trial WAITING.
@@ -236,6 +243,13 @@ async function testGetTrialJobStatistics(): Promise<void> {
     // An example statistics:
     // [
     // { trialJobStatus: 'SUCCEEDED', trialJobNumber: 2 },
+    // { trialJobStatus: 'RUNNING', trialJobNumber: 1 },
+    // { trialJobStatus: 'WAITING', trialJobNumber: 1 }
+    // ]
+    // or
+    // [
+    // { trialJobStatus: 'USER_CANCELED', trialJobNumber: 1 },
+    // { trialJobStatus: 'SUCCEEDED', trialJobNumber: 1 },
     // { trialJobStatus: 'RUNNING', trialJobNumber: 1 },
     // { trialJobStatus: 'WAITING', trialJobNumber: 1 }
     // ]
@@ -249,8 +263,15 @@ async function testGetTrialJobStatistics(): Promise<void> {
     const statistics = await nniManager.getTrialJobStatistics();
     assert.isAtLeast(statistics.length, 2);
     const succeededTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'SUCCEEDED');
-    if (succeededTrials)
-        assert.strictEqual(succeededTrials.trialJobNumber, 2);
+    if (succeededTrials) {
+        if (succeededTrials.trialJobNumber !== 2) {
+            const canceledTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'USER_CANCELED');
+            if (canceledTrials)
+                assert.strictEqual(canceledTrials.trialJobNumber, 1);
+            else
+                assert.fail('USER_CANCELED trial not found when succeeded trial number is not 2!');
+        }
+    }
     else
         assert.fail('SUCCEEDED trial not found!');
     const runningTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'RUNNING');
