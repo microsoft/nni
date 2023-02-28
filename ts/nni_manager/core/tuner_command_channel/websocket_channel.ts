@@ -163,10 +163,10 @@ class WebSocketChannelImpl implements WebSocketChannel {
     }
 
     private heartbeat(): void {
-        if (this.waitingPong) {
-            this.ws.terminate();  // this will trigger "close" event
-            this.handleError(new Error('tuner_command_channel: Tuner loses responsive'));
-        }
+        // if (this.waitingPong) {
+        //     this.ws.terminate();  // this will trigger "close" event
+        //     this.handleError(new Error('tuner_command_channel: Tuner loses responsive'));
+        // }
 
         this.waitingPong = true;
         this.ws.ping();

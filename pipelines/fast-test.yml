@@ -150,6 +150,7 @@ stages:
 
     - script: |
         set -e
+        echo hello
         npm --prefix ts/nni_manager run test
         cp ts/nni_manager/coverage/cobertura-coverage.xml coverage/typescript.xml
       displayName: TypeScript unit test
