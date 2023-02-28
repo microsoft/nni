@@ -9,7 +9,7 @@ import { getValue } from '@model/localStorage';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { SingleAxis, MultipleAxes } from '@static/interface';
 import ChangeColumnComponent from '../ChangeColumnComponent';
-
+import { buttonsGap } from '@components/common/Gap';
 import 'parcoord-es/dist/parcoords.css';
 import '@style/button.scss';
 import '@style/experiment/trialdetail/para.scss';
@@ -100,16 +100,15 @@ const Para = (props: ParaProps) => {
                 });
             });
             return (
-                <div>
-                    <span className='para-filter-text para-filter-middle'>Metrics</span>
+                <React.Fragment>
+                    <div className='para-filter-text'>Metrics</div>
                     <Dropdown
                         selectedKey={primaryMetricKey}
                         options={finalKeysDropdown}
                         onChange={updateEntries}
-                        styles={{ root: { width: 150, display: 'inline-block' } }}
-                        className='para-filter-percent'
+                        styles={{ root: { width: 150 } }}
                     />
-                </div>
+                </React.Fragment>
             );
         }
     };
@@ -286,13 +285,12 @@ const Para = (props: ParaProps) => {
     }, [noChart, chosenDimensions]);
     return (
         <div className='parameter'>
-            <Stack horizontal className='para-filter' horizontalAlign='end'>
+            <Stack horizontal className='para-filter' horizontalAlign='end' tokens={buttonsGap}>
                 <DefaultButton
                     text='Add/Remove axes'
                     onClick={(): void => {
                         setCustomizeColumnsDialogVisible(true);
                     }}
-                    styles={{ root: { marginRight: 10 } }}
                 />
                 <Dropdown
                     selectedKey={metricGraphMode}
@@ -302,7 +300,6 @@ const Para = (props: ParaProps) => {
                         { key: 'Minimize', text: 'Minimize' }
                     ]}
                     styles={{ dropdown: { width: 100 } }}
-                    className='para-filter-percent'
                 />
                 <Dropdown
                     selectedKey={selectedPercent}
@@ -314,7 +311,6 @@ const Para = (props: ParaProps) => {
                         { key: '1', text: 'Top 100%' }
                     ]}
                     styles={{ dropdown: { width: 120 } }}
-                    className='para-filter-percent'
                 />
                 {finalKeysDropdown()}
             </Stack>

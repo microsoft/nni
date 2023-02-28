@@ -55,10 +55,6 @@ $themeBlue: #0071bc;
     border: none !important;
 }
 
-.elementMarginLeft {
-    margin-left: 10px;
-}
-
 .operationBtn {
     i {
         color: $themeBlue;
@@ -140,10 +136,15 @@ h3.title {
 .duration-global-color {
     b {
         color: black;
+        margin: 0 1px;
     }
 
     span {
         font-size: 16px;
         color: #9ca3af;
     }
+}
+
+.borderRadius {
+    border-radius: 4px;
 }
