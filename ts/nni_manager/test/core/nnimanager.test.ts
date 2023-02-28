@@ -118,7 +118,7 @@ async function prepareExperiment(): Promise<void> {
     assert.strictEqual(expId, 'unittest');
 
     // Sleep here because the start of tuner takes a while.
-    // Also, wait for that some trials are submitted, waiting for at most 5 seconds.
+    // Also, wait for that some trials are submitted, waiting for at most 10 seconds.
     // NOTE: this waiting period should be long enough depending on different running environment and randomness.
     for (let i = 0; i < 10; i++) {
         await timersPromises.setTimeout(1000);
@@ -368,9 +368,9 @@ async function resumeExperiment(): Promise<void> {
 
 async function testMaxTrialNumberAfterResume(): Promise<void> {
     // testing the resumed nnimanager correctly counts (max) trial number
-    // waiting 4 seconds to make trials reach maxTrialNum, waiting this long
+    // waiting 12 seconds to make trials reach maxTrialNum, waiting this long
     // because trial concurrency is set to 1.
-    await timersPromises.setTimeout(8000);
+    await timersPromises.setTimeout(18000);
     const trialJobDetails = await nniManager.listTrialJobs();
     assert.strictEqual(trialJobDetails.length, 5);
 }
