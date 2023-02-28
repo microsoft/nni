@@ -200,16 +200,19 @@ class Evaluator:
                 else:
                     params = list(params)
                 name_lis = [param2name_dict[id(p)] for p in params]
+                target_prefix_name = ".".join(module_name.strip().split(".")[:-1])
 
                 for name in name_lis:
-                    if module_name in name:
+                    # match module_name
+                    prefix_name = ".".join(name.strip().split(".")[:-1])
+                    if target_prefix_name == prefix_name:
                         return param_group
 
             return None
 
         def add_param(param_lis: List[Tensor], target_param_group: Dict, optimizer: Optimizer):
             for param in param_lis:
-                new_param_group = target_param_group.copy()
+                new_param_group = {k:v for k, v in target_param_group.items() if k != 'params'}
                 new_param_group["params"] = param
                 optimizer.add_param_group(new_param_group)
 
@@ -464,10 +467,9 @@ class LightningEvaluator(Evaluator):
         else:
             _logger.warning('Did not bind any model, no need to unbind model.')
 
-    def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]] | None = None):
+    def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
         assert isinstance(self.model, pl.LightningModule)
-        if module_name_param_dict is None:
-            return
+        assert module_name_param_dict is not None
 
         optimizers_lr_schedulers: Any = self.model.configure_optimizers()
 
@@ -797,10 +799,9 @@ class TorchEvaluator(Evaluator):
                                for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
         self._first_optimizer_step = self._optimizers[0].step
 
-    def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]] | None = None):
+    def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
         assert isinstance(self.model, Module)
-        if module_name_param_dict is None:
-            return
+        assert module_name_param_dict is not None
 
         self._optimizer_add_param_group(self.model, module_name_param_dict, self._optimizers) # type: ignore
 
@@ -993,10 +994,9 @@ class TransformersEvaluator(Evaluator):
         self.trainer.optimizer = self._optimizer_helper.call(self.model, self._param_names_map)
         self._ori_trainer_attr['optimizer.step'] = self.trainer.optimizer.step
 
-    def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]] | None = None):
+    def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
         assert isinstance(self.model, Module)
-        if module_name_param_dict is None:
-            return
+        assert module_name_param_dict is not None
 
         self._optimizer_add_param_group(self.model, module_name_param_dict, self.trainer.optimizer)
 
