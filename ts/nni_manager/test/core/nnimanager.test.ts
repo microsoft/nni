@@ -87,6 +87,7 @@ async function initContainer(mode: string = 'create'): Promise<void> {
 }
 
 async function prepareExperiment(): Promise<void> {
+    globals.showLog();
     // create ~/nni-experiments/.experiment
     const expsFile = path.join(globals.args.experimentsDirectory, '.experiment');
     if (!fs.existsSync(expsFile)) {
@@ -337,6 +338,7 @@ describe('Unit test for nnimanager basic testing', function () {
 
 async function resumeExperiment(): Promise<void> {
     globals.reset();
+    globals.showLog();
     // explicitly reset the websocket channel because it is singleton, does not work when two experiments
     // (one is start and the other is resume) run in the same process.
     resetChannelSingleton();
