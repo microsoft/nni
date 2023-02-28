@@ -120,7 +120,7 @@ async function prepareExperiment(): Promise<void> {
     // Sleep here because the start of tuner takes a while.
     // Also, wait for that some trials are submitted, waiting for at most 5 seconds.
     // NOTE: this waiting period should be long enough depending on different running environment and randomness.
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
         await timersPromises.setTimeout(1000);
         if (manager.currSubmittedTrialNum >= 2)
             break;
