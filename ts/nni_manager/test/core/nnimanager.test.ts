@@ -258,9 +258,11 @@ async function testGetTrialJobStatistics(): Promise<void> {
     // ]
     console.log('zql4');
     for (let i = 0; i < 5; i++) {
-        await timersPromises.setTimeout(500);
-        const trialJobDetails = await nniManager.listTrialJobs();
         console.log('zql4.x');
+        await timersPromises.setTimeout(500);
+        console.log('zql4.y');
+        const trialJobDetails = await nniManager.listTrialJobs();
+        console.log('zql4.z');
         if (trialJobDetails.length >= 4)
             break;
     }
