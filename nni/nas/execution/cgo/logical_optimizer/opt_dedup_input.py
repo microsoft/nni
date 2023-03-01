@@ -3,17 +3,12 @@
 
 from typing import List, Dict, Tuple
 
-from nni.nas.utils import uid
-from nni.nas.evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule
+from nni.mutable.utils import uid
 from nni.common.device import GPUDevice
 
-from nni.nas.execution.common.graph import Graph, Model, Node
+from nni.nas.space import GraphModelSpace, Graph, Node
 from .interface import AbstractOptimizer
-from .logical_plan import (AbstractLogicalNode, LogicalGraph, LogicalPlan,
-                           OriginNode)
-
-
-_supported_evaluators = [MultiModelSupervisedLearningModule]
+from .logical_plan import AbstractLogicalNode, LogicalGraph, LogicalPlan, OriginNode
 
 
 class DedupInputNode(AbstractLogicalNode):
@@ -23,7 +18,6 @@ class DedupInputNode(AbstractLogicalNode):
     These models will share the result of once calculation.
     """
 
-
     def __init__(self, logical_graph: LogicalGraph, node_id: int,
                  nodes_to_dedup: List[Node], _internal=False):
         super().__init__(logical_graph, node_id,
@@ -32,7 +26,7 @@ class DedupInputNode(AbstractLogicalNode):
         self.origin_nodes: List[OriginNode] = nodes_to_dedup.copy()
         self.related_models = [_.original_graph.model for _ in self.origin_nodes]
 
-    def assemble(self, multi_model_placement: Dict[Model, GPUDevice]) -> Tuple[Node, GPUDevice]:
+    def assemble(self, multi_model_placement: Dict[GraphModelSpace, GPUDevice]) -> Tuple[Node, GPUDevice]:
         for node in self.origin_nodes:
             if node.original_graph.model in multi_model_placement:
                 new_node = Node(node.original_graph, node.id,
@@ -54,10 +48,10 @@ class DedupInputOptimizer(AbstractOptimizer):
         pass
 
     def _check_supported_evaluator(self, evaluator):
-        for e in _supported_evaluators:
-            if isinstance(evaluator, e):
-                return True
-        return False
+        # NOTE(yuge): I think this is buggy. But I'm not sure whether I should fix it.
+        from nni.nas.execution.cgo.evaluator import MultiModelLightningModule
+        _supported_evaluators = (MultiModelLightningModule, )
+        return isinstance(evaluator, _supported_evaluators)
 
     def _check_deduplicate_by_node(self, root_node, node_to_check):
         if root_node == node_to_check:
