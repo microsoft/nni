@@ -27,9 +27,6 @@ def conclude_assumptions(values: list[int | float]) -> dict[str, bool]:
         return assumptions
 
     assumptions['integer'] = all(isinstance(v, int) for v in values)
-    if not assumptions['integer']:
-        return assumptions
-
     if all(v > 0 for v in values):
         assumptions['positive'] = True
     if all(v < 0 for v in values):
@@ -42,6 +39,10 @@ def conclude_assumptions(values: list[int | float]) -> dict[str, bool]:
         assumptions['zero'] = True
     if all(v != 0 for v in values):
         assumptions['nonzero'] = True
+
+    if not assumptions['integer']:
+        return assumptions
+
     if all(v % 2 == 0 for v in values):
         assumptions['even'] = True
     if all(v % 2 == 1 for v in values):

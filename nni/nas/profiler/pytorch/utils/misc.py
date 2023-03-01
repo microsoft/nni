@@ -19,6 +19,13 @@ def standardize_arguments(args: tuple | Any, process_fn: Callable | None = None)
     """
     Standardize the arguments to standard Python arguments.
 
+    Following the pracitce of ``torch.onnx.export``, it accepts three types of arguments and forms them into
+    a tuple of positional arguments and a dictionary of keyword arguments:
+
+    1. a tuple of arguments: ``(x, y, z)``
+    2. a tensor: ``torch.Tensor([1])``
+    3. a tuple of arguments ending with a dictionary of named arguments: ``(x, {"y": input_y, "z": input_z})``
+
     Parameters
     ----------
     args
