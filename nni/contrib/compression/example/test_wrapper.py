@@ -53,14 +53,14 @@ config_list_1 = [
     'granularity': 'default'
 },
 {
-    'op_names': ['conv2', "conv1"],
+    'op_names': ['conv2'],
     'target_names': ['_output_','weight', '_input_'],
     'quant_dtype': 'int2',
     'quant_scheme': 'affine',
     'granularity': 'default',
 },
 {
-    'op_names': ['relu2', 'relu1'],
+    'op_names': ['relu2'],
     'target_names': ['_output_'],
     'quant_dtype': 'int4',
     'quant_scheme': 'affine',
@@ -69,11 +69,11 @@ config_list_1 = [
 
 config_list_2 = [{
     'op_names': ['conv1'],
-    'target_names': ['weight', '_input_', "_output_", "bias"],
+    'target_names': ['weight', '_input_', "_output_"],
     'quant_dtype': 'int2',
     'quant_scheme': 'affine',
     'granularity': 'default',
-    'fuse_names': ["conv1", "batchnorm1"]
+    'fuse_names': [("conv1", "batchnorm1", "relu1")]
 }]
 
 
@@ -84,11 +84,11 @@ print(config_list_2)
 
 module_wrappers_1, target_spaces_1 = register_wrappers(model, config_list_1, "quantization")
 print(f"target_space_1={target_spaces_1}\n")
+
 for module_name, wrapper in module_wrappers_1.items():
     print(f"module_name={module_name}\tconfig={wrapper.config}\twrapper={wrapper}\n")
 
 module_wrappers_2, target_spaces_2 = register_wrappers(model, config_list_2, "quantization", module_wrappers_1)
-print(f"target_space_2={target_spaces_2}\n")
 for module_name, wrapper in module_wrappers_2.items():
     print(f"module_name={module_name}\tconfig={wrapper.config}\twrapper={wrapper}\n")
 print(f"target_space_2={target_spaces_2}\n")

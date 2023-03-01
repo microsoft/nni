@@ -102,7 +102,7 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
 
 
 def select_modules_by_config(model: torch.nn.Module, \
-                             config: Dict[str, Any]) -> Tuple[Dict[str, torch.nn.Module], Dict[str, Any], List[str]]:
+                             config: Dict[str, Any]) -> Tuple[Dict[str, torch.nn.Module], Dict[str, Any], List[Tuple[str]]]:
     """
     This is a helper function for selecting the modules in model specified in config.
 
@@ -115,7 +115,7 @@ def select_modules_by_config(model: torch.nn.Module, \
         - ``exclude_op_names``: a module name list, the modules with these names will be excluded.
         - ``exclude_op_types``: a module type name list, the modules satisfied these types will be excluded.
         - ``exclude_op_names_re``: a regular expression list, the modules satisfied the regular expressions will be excluded.
-        - ``fuse_names``: a List contains fusion module names in the model.
+        - ``fuse_names``: a List contains tuples of fusion module names in the model.
 
     A module is selected if it satisfies all the following conditions:
         1. If ``op_names`` or ``op_names_re`` is not empty, the module name should in ``op_names``
@@ -180,8 +180,8 @@ def select_modules_by_config(model: torch.nn.Module, \
     for op_type in exclude_op_types:
         op_names.difference_update(type2names.get(op_type, set()))
 
-    if len(fuse_names) > 0 and len(op_names) > 1:
-        raise ValueError("When setting fuse_names, op_names can contain only one module name")
+    if len(fuse_names) > 0 and len(op_names) != len(fuse_names):
+        raise ValueError("When setting fuse_names, the length of op_names should equal to fuse_nams")
 
     return {module_name: name2module[module_name] for module_name in op_names}, config, fuse_names
 
@@ -206,7 +206,7 @@ def default_config_schema(mode: Literal['pruning', 'quantization', 'distillation
             Optional('quant_scheme'): Or('affine', 'symmetric'),
             Optional('granularity'): Or('default', 'in_channel', 'out_channel', 'per_channel', list),
             Optional('apply_method'): Or('bypass', 'clamp_round', 'qat_clamp_round'),
-            Optional('fuse_names'): [str]
+            Optional('fuse_names'): [(str,)]
         }
     else:
         setting_schema = {
