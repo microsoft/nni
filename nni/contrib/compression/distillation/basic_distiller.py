@@ -141,6 +141,13 @@ class TeacherModelBasedDistiller(Distiller):
 
 class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
     """
+    Each student model distillation target (i.e., the output of a layer in the student model) will link to a list of
+    teacher model distillation targets in this distiller.
+    During distillation, a student target will compute a list of distillation losses with each of its linked teacher targets,
+    then choose the minimum loss in the loss list as current student target distillation loss.
+    The final distillation loss is the sum of each student target distillation loss multiplied by lambda.
+    The final training loss is original loss multiplied by origin_loss_lambda add final distillation loss.
+
     Parameters
     ----------
     model
@@ -206,6 +213,50 @@ class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
 
 
 class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
+    """
+    This distiller will adaptively align the last dimension between student distillation target and teacher distillation target
+    by adding a trainable ``torch.nn.Linear`` between them.
+    (If the last dimensions between student and teacher have already aligned, won't add a new linear layer.)
+
+    Note that this distiller need call ``Adaptive1dLayerwiseDistiller.track_forward(...)`` first to get the shape of each distillation
+    target to initialize the linear layer before call ``Adaptive1dLayerwiseDistiller.compress(...)``.
+
+    Parameters
+    ----------
+    model
+        The student model to be distilled.
+    config_list
+        Config list to configure how to distill.
+        Common keys please refer :doc:`Compression Config Specification </compression/compression_config_list>`.
+        Specific keys:
+            - 'lambda': By default, 1.
+              This is a scaling factor to control the loss scale, the final loss used during training is
+              ``(origin_loss_lambda * origin_loss + sum(lambda_i * distill_loss_i))``.
+              Here ``i`` represents the ``i-th`` distillation target.
+              The higher the value of lambda, the greater the contribution of the corresponding distillation target to the loss.
+            - 'link': By default, 'auto'.
+              'auto' or a teacher module name or a list of teacher module names,
+              the module name(s) of teacher module(s) will align with student module(s) configured in this config.
+              If 'auto' is set, will use student module name as the link,
+              usually requires the teacher model and the student model to be isomorphic.
+            - 'apply_method': By default, 'mse'.
+              'mse' and 'kl' are supported right now. 'mse' means the MSE loss, usually used to distill hidden states.
+              'kl' means the KL loss, usually used to distill logits.
+    evaluator
+        Please refer TODO.
+    teacher_model
+        The distillation teacher model.
+    teacher_predict
+        A callable function with two inputs (batch, model).
+
+        Example::
+
+            def teacher_predict(batch, teacher_model):
+                return teacher_model(**batch)
+
+    origin_loss_lambda
+        A scaling factor to control the original loss scale.
+    """
     def track_forward(self, *args, **kwargs):
         super().track_forward(*args, **kwargs)
         self.teacher_model(*args, **kwargs)
