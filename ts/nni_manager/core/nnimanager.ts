@@ -479,8 +479,8 @@ class NNIManager implements Manager {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
         } else if (platform === 'local') {
-            const module_ = await import('../training_service/local/localTrainingService');
-            return new module_.LocalTrainingService(<LocalConfig>config.trainingService);
+            const module_ = await import('../training_service/v3/compat');
+            return new module_.V3asV1(config.trainingService as TrainingServiceConfig);
         } else if (platform === 'kubeflow') {
             const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
             return new module_.KubeflowTrainingService();
@@ -506,9 +506,9 @@ class NNIManager implements Manager {
 
         let tunerWs: string;
         if (globals.args.urlPrefix) {
-            tunerWs = `ws://127.0.0.1:${globals.args.port}/${globals.args.urlPrefix}/tuner`;
+            tunerWs = `ws://localhost:${globals.args.port}/${globals.args.urlPrefix}/tuner`;
         } else {
-            tunerWs = `ws://127.0.0.1:${globals.args.port}/tuner`;
+            tunerWs = `ws://localhost:${globals.args.port}/tuner`;
         }
 
         if (globals.args.tunerCommandChannel) {

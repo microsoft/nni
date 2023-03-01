@@ -4,54 +4,45 @@ Evaluator
 FunctionalEvaluator
 -------------------
 
-..  autoclass:: nni.retiarii.evaluator.FunctionalEvaluator
+..  autoclass:: nni.nas.evaluator.FunctionalEvaluator
     :members:
 
 Classification
 --------------
 
-..  autoclass:: nni.retiarii.evaluator.pytorch.Classification
+..  autoclass:: nni.nas.evaluator.pytorch.Classification
     :members:
 
-..  autoclass:: nni.retiarii.evaluator.pytorch.ClassificationModule
+..  autoclass:: nni.nas.evaluator.pytorch.ClassificationModule
     :members:
 
 Regression
 ----------
 
-..  autoclass:: nni.retiarii.evaluator.pytorch.Regression
+..  autoclass:: nni.nas.evaluator.pytorch.Regression
     :members:
 
-..  autoclass:: nni.retiarii.evaluator.pytorch.RegressionModule
+..  autoclass:: nni.nas.evaluator.pytorch.RegressionModule
     :members:
 
 Utilities
 ---------
 
-..  autoclass:: nni.retiarii.evaluator.pytorch.Trainer
+..  autoclass:: nni.nas.evaluator.pytorch.Trainer
 
-..  autoclass:: nni.retiarii.evaluator.pytorch.DataLoader
+..  autoclass:: nni.nas.evaluator.pytorch.DataLoader
 
 Customization
 -------------
 
-..  autoclass:: nni.retiarii.Evaluator
+..  autoclass:: nni.nas.evaluator.Evaluator
     :members:
 
-..  autoclass:: nni.retiarii.evaluator.pytorch.Lightning
+..  autoclass:: nni.nas.evaluator.pytorch.Lightning
     :members:
 
-..  autoclass:: nni.retiarii.evaluator.pytorch.LightningModule
+..  autoclass:: nni.nas.evaluator.pytorch.LightningModule
     :members:
 
 Cross-graph Optimization (experimental)
 ---------------------------------------
-
-..  autoclass:: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule
-    :members:
-
-..  autoclass:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification
-    :members:
-
-..  autoclass:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression
-    :members:
