@@ -150,8 +150,8 @@ stages:
 
     - script: |
         set -e
-        echo hello
-        npm --prefix ts/nni_manager run test
+        npm --prefix ts/nni_manager run test -- --exclude test/core/nnimanager.test.ts
+        npm --prefix ts/nni_manager run test_nnimanager
         cp ts/nni_manager/coverage/cobertura-coverage.xml coverage/typescript.xml
       displayName: TypeScript unit test
 
@@ -198,7 +198,8 @@ stages:
 
     - script: |
         export PATH=${PWD}/toolchain/node/bin:$PATH
-        npm --prefix ts/nni_manager run test
+        npm --prefix ts/nni_manager run test -- --exclude test/core/nnimanager.test.ts
+        npm --prefix ts/nni_manager run test_nnimanager
       displayName: TypeScript unit test
 
   - job: windows
@@ -247,7 +248,8 @@ stages:
       displayName: Python unit test
 
     - script: |
-        CI=true npm --prefix ts/nni_manager run test --exclude test/core/nnimanager.test.ts
+        CI=true npm --prefix ts/nni_manager run test -- --exclude test/core/nnimanager.test.ts
+        CI=true npm --prefix ts/nni_manager run test_nnimanager
       displayName: TypeScript unit test
 
     - script: |
