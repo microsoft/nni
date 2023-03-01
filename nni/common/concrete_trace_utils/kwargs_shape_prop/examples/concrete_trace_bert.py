@@ -40,7 +40,7 @@ model.eval()
 with torch.no_grad():
     output_origin = model(**dummy_input)
 
-traced_model, tracer = concrete_trace(
+traced_model = concrete_trace(
     model,
     dummy_input,
     use_operator_patch=True,
