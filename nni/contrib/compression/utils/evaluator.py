@@ -190,7 +190,7 @@ class Evaluator:
                                   module_name_param_dict: Dict[str, List[Tensor]], optimizers: Optimizer | List[Optimizer]):
         # used in the bind_model process
         def find_param_group(param_groups: List[Dict], module_name: str):
-            for param_group in param_groups:
+            for i, param_group in enumerate(param_groups):
                 params = param_group["params"]
                 if isinstance(params, Tensor):
                     params = [params]
@@ -206,15 +206,25 @@ class Evaluator:
                     # match module_name
                     prefix_name = ".".join(name.strip().split(".")[:-1])
                     if target_prefix_name == prefix_name:
-                        return param_group
+                        return i
 
-            return None
+            return -1
 
-        def add_param(param_lis: List[Tensor], target_param_group: Dict, optimizer: Optimizer):
+        def add_param(param_lis: List[Tensor], target_param_group_idx: int, optimizer: Optimizer):
+            assert target_param_group_idx < len(optimizer.param_groups)
+            print(f"params_type={type(optimizer.param_groups[target_param_group_idx]["params"])}")
+            target_param_group = optimizer.param_groups[target_param_group_idx]
             for param in param_lis:
-                new_param_group = {k:v for k, v in target_param_group.items() if k != 'params'}
-                new_param_group["params"] = param
-                optimizer.add_param_group(new_param_group)
+                # copyed from torch
+                print(f"param:is_leaf={param.is_leaf}\tis_retain={param.retains_grad}\tdifferent={optimizer.differentiable}")
+                if not isinstance(param, toech.Tensor):
+                    raise TypeError("optimizer can only optimize Tensors, "
+                                "but one of the params is " + torch.typename(param))
+                target_param_group['params'].append(param)
+                # new_param_group = {k:v for k, v in target_param_group.items() if k != 'params'}
+                # print(f"")
+                # new_param_group["params"] = param
+                # optimizer.add_param_group(new_param_group)
 
         assert isinstance(model, (Module, pl.LightningModule))
         param2name_dict = {id(p): name for name, p in model.named_parameters()}
@@ -225,14 +235,14 @@ class Evaluator:
             is_find_param_group = False
             for optimizer in optimizers:
                 param_groups = optimizer.param_groups
-                target_param_group = find_param_group(param_groups, module_name)
-                if target_param_group is not None:
+                target_param_group_idx = find_param_group(param_groups, module_name)
+                if target_param_group_idx > 0:
                     is_find_param_group = True
-                    add_param(param_lis, target_param_group, optimizer)
+                    add_param(param_lis, target_param_group_idx, optimizer)
                     break
             if not is_find_param_group:
-                target_param_group = optimizers[0].param_groups[0]
-                add_param(param_lis, target_param_group, optimizers[0])
+                # target_param_group = optimizers[0].param_groups[0]
+                add_param(param_lis, 0, optimizers[0])
 
     def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         """
