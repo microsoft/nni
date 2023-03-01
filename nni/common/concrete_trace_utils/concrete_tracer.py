@@ -1413,4 +1413,6 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
     # # assert root(**concrete_args) == traced(**concrete_args)
     if check_args is not None:
         assert root(**check_args) == traced(**check_args)
+
+    # return traced, tracer
     return traced, tracer
