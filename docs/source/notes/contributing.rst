@@ -281,7 +281,7 @@ Other than built-in directives provided by Sphinx, we also provide some custom d
 Writing new tutorials
 ^^^^^^^^^^^^^^^^^^^^^
 
-Our tutorials are powered by `sphinx-gallery <https://sphinx-gallery.github.io/>`. Sphinx-gallery is an extension that builds an HTML gallery of examples from any set of Python scripts.
+Our tutorials are powered by `sphinx-gallery <https://sphinx-gallery.github.io/>`_. Sphinx-gallery is an extension that builds an HTML gallery of examples from any set of Python scripts.
 
 To contribute a new tutorial, here are the steps to follow:
 
