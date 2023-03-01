@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "test": "nyc --reporter=cobertura --reporter=text mocha test/**/nnimanager.test.ts",
+    "test": "nyc --reporter=cobertura --reporter=text mocha test/**/*.test.ts",
     "mocha": "mocha",
     "eslint": "eslint . --ext .ts"
   },

@@ -87,7 +87,7 @@ async function initContainer(mode: string = 'create'): Promise<void> {
 }
 
 async function prepareExperiment(): Promise<void> {
-    globals.showLog();
+    // globals.showLog();
     // create ~/nni-experiments/.experiment
     const expsFile = path.join(globals.args.experimentsDirectory, '.experiment');
     if (!fs.existsSync(expsFile)) {
@@ -338,7 +338,7 @@ describe('Unit test for nnimanager basic testing', function () {
 
 async function resumeExperiment(): Promise<void> {
     globals.reset();
-    globals.showLog();
+    // globals.showLog();
     // explicitly reset the websocket channel because it is singleton, does not work when two experiments
     // (one is start and the other is resume) run in the same process.
     resetChannelSingleton();
@@ -368,8 +368,8 @@ async function resumeExperiment(): Promise<void> {
 
 async function testMaxTrialNumberAfterResume(): Promise<void> {
     // testing the resumed nnimanager correctly counts (max) trial number
-    // waiting 12 seconds to make trials reach maxTrialNum, waiting this long
-    // because trial concurrency is set to 1.
+    // waiting 18 seconds to make trials reach maxTrialNum, waiting this long
+    // because trial concurrency is set to 1 and macos CI is pretty slow.
     await timersPromises.setTimeout(18000);
     const trialJobDetails = await nniManager.listTrialJobs();
     assert.strictEqual(trialJobDetails.length, 5);
