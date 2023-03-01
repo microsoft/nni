@@ -212,19 +212,13 @@ class Evaluator:
 
         def add_param(param_lis: List[Tensor], target_param_group_idx: int, optimizer: Optimizer):
             assert target_param_group_idx < len(optimizer.param_groups)
-            print(f"params_type={type(optimizer.param_groups[target_param_group_idx]["params"])}")
             target_param_group = optimizer.param_groups[target_param_group_idx]
             for param in param_lis:
                 # copyed from torch
-                print(f"param:is_leaf={param.is_leaf}\tis_retain={param.retains_grad}\tdifferent={optimizer.differentiable}")
                 if not isinstance(param, toech.Tensor):
                     raise TypeError("optimizer can only optimize Tensors, "
                                 "but one of the params is " + torch.typename(param))
                 target_param_group['params'].append(param)
-                # new_param_group = {k:v for k, v in target_param_group.items() if k != 'params'}
-                # print(f"")
-                # new_param_group["params"] = param
-                # optimizer.add_param_group(new_param_group)
 
         assert isinstance(model, (Module, pl.LightningModule))
         param2name_dict = {id(p): name for name, p in model.named_parameters()}
@@ -241,8 +235,13 @@ class Evaluator:
                     add_param(param_lis, target_param_group_idx, optimizer)
                     break
             if not is_find_param_group:
-                # target_param_group = optimizers[0].param_groups[0]
                 add_param(param_lis, 0, optimizers[0])
+
+    def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]] | None = None):
+        '''
+        Adding param_groups for optimizers
+        '''
+        raise NotImplementedError
 
     def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         """
