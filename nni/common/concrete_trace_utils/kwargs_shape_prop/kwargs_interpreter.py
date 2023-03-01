@@ -119,7 +119,6 @@ class KwargsInterpreter(Interpreter):
             except KeyError as ke:
                 # TODO: deal with the arguments with default values
                 return self.default_args[target]
-                # raise RuntimeError(f'Expected keyword argument for parameter {target}, but one was not passed in!')
             else:
                 self.used_concrete_kwargs.append(target)
                 return ret_arg
