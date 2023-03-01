@@ -22,12 +22,12 @@ from .target_space import (
     DistillationTargetSpace
 )
 from .fuse_modules import fuse_modules
-from ..utils.fused_utils import (
+from ..utils import (
     check_bias,
-    get_module,
     update_config,
     validate_fused_modules_config,
     get_fused_module_list,
+    get_nested_attr
 )
 
 _logger = logging.getLogger(__name__)
@@ -94,6 +94,8 @@ class ModuleWrapper(torch.nn.Module):
         self.fused_modules = fused_modules if fused_modules is not None else []
         if len(self.fused_modules) > 0:
             self.is_bias = check_bias(self.module) # used for fold_bn
+            assert self.is_bias in ['Tensor', 'None'], \
+                f'Only support mode Tensor or None, but got {self.is_bias}'
             self.register_bias()
 
     def register_bias(self):
@@ -101,7 +103,7 @@ class ModuleWrapper(torch.nn.Module):
             return
         types = {type(module) for module in self.fused_modules[1:]}
         intersec_types = types.intersection({nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d})
-        if self.is_bias and 'bias' not in self.quantization_target_spaces and len(intersec_types) > 0:
+        if self.is_bias == "Tensor" and 'bias' not in self.quantization_target_spaces and len(intersec_types) > 0:
             bias = self.module.bias
             if isinstance(bias, nn.parameter.Parameter):
                 self.module.register_parameter('original_bias', torch.nn.Parameter(bias.detach().clone()))
@@ -173,7 +175,7 @@ class ModuleWrapper(torch.nn.Module):
             elif isinstance(original_bias, torch.Tensor):
                 self.module.register_buffer('bias', original_bias.detach().clone())
             delattr(self.module, 'original_bias')
-        if len(self.fused_modules) > 0 and not self.is_bias and check_bias(self.module):
+        if len(self.fused_modules) > 0 and self.is_bias == 'None' and check_bias(self.module) == 'Tensor':
             delattr(self.module, 'bias')
             self.module.register_parameter('bias', None)
 
@@ -435,28 +437,32 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
     identity_module_set = set()
     module_set = set()
     for config in config_list:
+        fuse_module_names: List[Tuple[str]]
         modules, public_config, fuse_module_names = select_modules_by_config(model, config)
         if len(fuse_module_names) > 0:
             validate_fused_modules_config(fuse_module_names, model, public_config)
         for module_name, module in modules.items():
-            # fused_modules_names = find_fused_module_list(model, fused_modules_names_lis, module_name, mode)
             module_set.add(module_name)
-            fused_modules_names = get_fused_module_list(module_name, mode, fuse_module_names)
+            fused_modules_pair: Tuple[str] = get_fused_module_list(module_name, mode, fuse_module_names)
+            if len(fused_modules_pair) > 0:
+                fuse_module_names.remove(fused_modules_pair)
             old_wrapper = module_wrappers.get(module_name, None)
-            if len(fused_modules_names) > 0: #fusion model
-                identity_module_set.update(fused_modules_names[1:])
+            if len(fused_modules_pair) > 0: #fusion model
+                identity_module_set.update(fused_modules_pair[1:])
             wrapper, target_spaces = create_module_wrapper(model, module, module_name, mode, public_config, \
-                                                           old_wrapper, fused_modules_names)
+                                                           old_wrapper, list(fused_modules_pair))
             module_wrappers[module_name] = wrapper
             configured_target_spaces[module_name] = target_spaces
+        if len(fuse_module_names) > 0:
+            raise ValueError(f'{fuse_module_names} can\'t be fused with {modules.keys()}')
     if module_set.intersection(identity_module_set):
         raise ValueError(f"don't provide quantization configuration for identity module:{module_set.intersection(identity_module_set)}")
     for module_name, module in model.named_modules():
         if module_name in identity_module_set:
-            if module_name in module_wrappers:
+            if module_name in module_wrappers and not isinstance(module_wrappers[module_name], IdentityModuleWrapper):
                 warn_msg = f'Wrapper of {module_name} is wrapped, no need to wrap it because of module fusion.'
-                _logger.warning(warn_msg)
-            module_wrappers[module_name] = IdentityModuleWrapper(module, module_name, None)
+                raise ValueError(warn_msg)
+            module_wrappers[module_name] = IdentityModuleWrapper(module, module_name, None, None)
             identity_module_set.remove(module_name)
 
     assert len(identity_module_set) == 0, f"modules:{identity_module_set} are not in the model"
@@ -465,23 +471,23 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
 
 
 def create_module_wrapper(model:nn.Module, module: nn.Module, module_name: str, mode: Literal['pruning', 'quantization', 'distillation'], \
-        config: Dict[str, Any], wrapper: ModuleWrapper | None = None, fused_modules_names: List[str] | None = None):
-    fused_modules_names = fused_modules_names if fused_modules_names is not None else []
-    if mode != 'quantization' and len(fused_modules_names) > 0:
+        config: Dict[str, Any], wrapper: ModuleWrapper | None = None, fused_modules_pair: List[str] | None = None):
+    fused_modules_pair = fused_modules_pair if fused_modules_pair is not None else []
+    if mode != 'quantization' and len(fused_modules_pair) > 0:
         raise ValueError("Module fusion only happens during the quantization process")
     if isinstance(wrapper, IdentityModuleWrapper):
         raise ValueError('can\'t use other compression methods in the IdentityWrapper')
 
-    fused_modules = [get_module(model, f_module_name) for f_module_name in fused_modules_names] \
-        if len(fused_modules_names) > 0 else []
+    fused_modules = [get_nested_attr(model, f_module_name) for f_module_name in fused_modules_pair] \
+        if len(fused_modules_pair) > 0 else []
 
     if wrapper is not None:
-        if len(wrapper.fused_modules) > 0 and len(fused_modules_names) > 0:
+        if len(wrapper.fused_modules) > 0 and len(fused_modules_pair) > 0:
             raise ValueError(f'can\'t use two quantization wrappers to process the module:{module_name}')
         wrapper.unfreeze()
         target_spaces = wrapper.extend_target_spaces(config, mode)
         wrapper.config = update_config(wrapper.config, {mode: config})
-        if len(fused_modules_names) > 0:
+        if len(fused_modules_pair) > 0:
             wrapper.register_fusion_info(fused_modules)
     else:
         wrapper = ModuleWrapper(module, module_name, {mode: config}, fused_modules)

@@ -79,13 +79,13 @@ def conv_forward(inputs: torch.Tensor, conv_module: Union[nn.Conv1d, nn.Conv2d, 
 def get_bias(wrapper, param_dict):
     if 'bias' in param_dict:
         return param_dict['bias']
-    elif wrapper.is_bias:
+    elif wrapper.is_bias == 'Tensor':
         return wrapper.module.original_bias
     else:
         return None
 
 def set_bias(wrapper, fused_bias):
-    return fused_bias if wrapper.is_bias else torch.nn.Parameter(fused_bias, False)
+    return fused_bias if wrapper.is_bias == "Tensor" else torch.nn.Parameter(fused_bias, False)
 
 
 def fuse_modules(wrapper, *args, **kwargs):
