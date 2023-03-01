@@ -17,7 +17,6 @@ from threading import Event
 from typing import Any, Callable
 
 from nni.common.serializer import dump, load, PayloadTooLarge
-from nni.common.version import version_dump
 from nni.typehint import Parameters
 
 from .command_type import (
@@ -131,6 +130,9 @@ class TunerCommandChannel:
         placement_constraint
             The placement constraint of the created trial job.
         """
+        # Local import to reduce import delay.
+        from nni.common.version import version_dump
+
         trial_dict = {
             'parameter_id': parameter_id,
             'parameters': parameters,
