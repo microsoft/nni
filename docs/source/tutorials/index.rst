@@ -29,23 +29,6 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip=" Introduction ------------">
-
-.. only:: html
-
-  .. image:: /tutorials/images/thumb/sphx_glr_quantization_speedup_thumb.png
-    :alt: SpeedUp Model with Calibration Config
-
-  :ref:`sphx_glr_tutorials_quantization_speedup.py`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">SpeedUp Model with Calibration Config</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Here is a four-minute video to get you started with model quantization.">
 
 .. only:: html
@@ -114,6 +97,23 @@ Tutorials
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Quantization algorithms quantize a deep learning model usually in a simulated way. That is, to ...">
+
+.. only:: html
+
+  .. image:: /tutorials/images/thumb/sphx_glr_quantization_speedup_thumb.png
+    :alt: Speed Up Quantized Model with TensorRT
+
+  :ref:`sphx_glr_tutorials_quantization_speedup.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Speed Up Quantized Model with TensorRT</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="This is the 101 tutorial of Neural Architecture Search (NAS) on NNI. In this tutorial, we will ...">
 
 .. only:: html
@@ -172,11 +172,11 @@ Tutorials
    :hidden:
 
    /tutorials/pruning_speedup
-   /tutorials/quantization_speedup
    /tutorials/quantization_quick_start_mnist
    /tutorials/pruning_quick_start_mnist
    /tutorials/quantization_customize
    /tutorials/nasbench_as_dataset
+   /tutorials/quantization_speedup
    /tutorials/hello_nas
    /tutorials/darts
    /tutorials/pruning_bert_glue
