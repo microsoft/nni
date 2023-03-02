@@ -532,7 +532,9 @@ class ConcreteTracer(TracerBase):
 
         # Python modules to apply autowrap to at the start, in addition to
         # modules we see while tracing
-        self._autowrap_search: List[ModuleType] = list(sys.modules[m] for m in (*autowrap_modules, *ConcreteTracer.default_autowrap_modules))
+        self._autowrap_search: List[ModuleType] = list(
+            sys.modules[m] for m in (*autowrap_modules, *ConcreteTracer.default_autowrap_modules)
+        )
         # Functions we will eagerly wrap when we see them while tracing
         # this captures both `math.sqrt()` and `from math import sqrt` automatically
         self._autowrap_function_ids: Set[int] = {
@@ -648,8 +650,16 @@ class ConcreteTracer(TracerBase):
                     self.current_module_qualified_name = self.path_of_module(mod)
                     module_qualified_name = self.path_of_module(mod)
                     if not self.is_leaf_module(mod, module_qualified_name):
-                        _autowrap_check(self, mod.forward.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs, self.agfunc_dict)
-                        _autowrap_check(self, mod.__dict__, self._autowrap_function_ids, self.autowrap_leaf_pairs, self.agfunc_dict)
+                        _autowrap_check(self, 
+                                        mod.forward.__globals__, 
+                                        self._autowrap_function_ids, 
+                                        self.autowrap_leaf_pairs, 
+                                        self.agfunc_dict)
+                        _autowrap_check(self, 
+                                        mod.__dict__, 
+                                        self._autowrap_function_ids, 
+                                        self.autowrap_leaf_pairs, 
+                                        self.agfunc_dict)
                         return _orig_module_call(mod, *args, **kwargs)
                     else:
                         return self.create_proxy('call_module', module_qualified_name, args, kwargs)
