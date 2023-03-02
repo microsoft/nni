@@ -483,9 +483,11 @@ class LightningEvaluator(Evaluator):
         assert isinstance(self.model, pl.LightningModule)
         assert module_name_param_dict is not None
 
+        old_configure_optimizers = self.model.configure_optimizers
+
         if self._opt_returned_dicts:
             def new_configure_optimizers(_):  # type: ignore
-                optimizers_lr_schedulers: Any = self.model.configure_optimizers() # type: ignore
+                optimizers_lr_schedulers: Any = old_configure_optimizers() # type: ignore
                 optimizers = [opt_lrs_dict['optimizer'] for opt_lrs_dict in optimizers_lr_schedulers]
                 # add param group
                 self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers) # type: ignore
@@ -494,7 +496,7 @@ class LightningEvaluator(Evaluator):
 
         elif self._lr_scheduler_helpers:
             def new_configure_optimizers(_):  # type: ignore
-                optimizers_lr_schedulers: Any = self.model.configure_optimizers() # type: ignore
+                optimizers_lr_schedulers: Any = old_configure_optimizers() # type: ignore
                 optimizers, lr_schedulers = optimizers_lr_schedulers
                 # add param_group
                 self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers) # type: ignore
@@ -503,7 +505,7 @@ class LightningEvaluator(Evaluator):
 
         else:
             def new_configure_optimizers(_):
-                optimizers_lr_schedulers: Any = self.model.configure_optimizers() # type: ignore
+                optimizers_lr_schedulers: Any = old_configure_optimizers() # type: ignore
                 # add param_group
                 self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers_lr_schedulers) # type: ignore
 
