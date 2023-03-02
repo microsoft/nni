@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import builtins
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .concrete_tracer import ConcreteTracer
@@ -21,6 +22,7 @@ from .utils import (
     _orig_len,
     _orig_dict,
     _orig_zip,
+    _orig_tuple,
 )
 
 _logger = logging.getLogger(__name__)
@@ -227,6 +229,9 @@ class OperatorPatcher:
                 closure_dict = _orig_dict(_orig_zip(co_freevars, [c.cell_contents for c in closures]))
 
             var_dict = {}
+            # TODO: workaround for typing.Tuple pass _check_generic, need a elegant way in future
+            tuple_wrapped = tuple
+            setattr(builtins, 'tuple', _orig_tuple)
             exec(
                 # use func.__code__.co_filename to make the new function easily debuggable.
                 compile(new_tree, func_inner.__code__.co_filename, 'exec'),
@@ -236,6 +241,7 @@ class OperatorPatcher:
                     **closure_dict,
                 },
                 var_dict)
+            setattr(builtins, 'tuple', tuple_wrapped)
             if the_self is not None:
                 return var_dict['new_func'].__get__(the_self)
             else:
