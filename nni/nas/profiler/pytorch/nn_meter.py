@@ -6,7 +6,7 @@ from __future__ import annotations
 import functools
 import logging
 import tempfile
-from typing import Any, Callable, Iterable
+from typing import Any, Iterable
 
 import torch
 from torch import nn
