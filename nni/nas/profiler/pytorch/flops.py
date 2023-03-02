@@ -8,11 +8,10 @@ __all__ = [
     'count_flops_params', 'register_flops_formula'
 ]
 
-import inspect
 import logging
 from dataclasses import dataclass, fields
 from functools import partial, reduce
-from typing import Any, NamedTuple, Tuple, TypeVar, Type, Callable
+from typing import Any, NamedTuple, Callable, cast
 
 from torch import nn
 
@@ -103,7 +102,7 @@ def count_flops_params(name: str, module: nn.Module, shapes: dict[str, tuple[Mut
         if children_flops:
             rv = sum(children_flops)
             _logger.debug('FLOPs of %s sums up to be: %r', name, rv)
-            return rv
+            return cast(FlopsResult, rv)
         else:
             # Leaf module. No children.
             if type(module) not in _unlisted_types:
@@ -360,18 +359,19 @@ def _count_repeat(module: nas_nn.Repeat, input: tuple[MutableShape,], output: Mu
                   name: str, shapes: dict[str, tuple[MutableShape, MutableShape]],
                   config: FlopsParamsCounterConfig) -> FlopsResult:
     if isinstance(module.depth_choice, int):
-        return sum(
+        assert module.depth_choice > 0
+        return cast(FlopsResult, sum(
             count_flops_params(
                 concat_name(name, f'blocks.{i}'),
                 module.blocks[i],
                 shapes,
                 config
             ) for i in range(module.depth_choice)
-        )
+        ))
     else:
         flops_results: list[MutableExpression] = []
         params_results: list[MutableExpression] = []
-        for depth, sub in enumerate(module, start=1):
+        for depth, sub in enumerate(module.blocks, start=1):
             sub_result = count_flops_params(
                 concat_name(name, f'blocks.{depth - 1}'),
                 sub, shapes, config
@@ -421,9 +421,9 @@ def find_flops_formula(module: nn.Module) -> Callable[..., FlopsResult] | None:
         The FLOPs counting formula.
     """
     if hasattr(module.__class__, '_count_flops'):
-        return module.__class__._count_flops
+        return module.__class__._count_flops  # type: ignore
     elif type(module) in _flops_formula:
-        return _flops_formula[type(module)]
+        return _flops_formula[type(module)]  # type: ignore
     return None
 
 

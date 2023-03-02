@@ -38,9 +38,9 @@ def to_onnx(model: nn.Module, example_inputs: Any) -> Any:
         raise
 
     with tempfile.TemporaryFile() as fp:
-        torch.onnx.export(model, example_inputs, fp, export_params=False)
+        torch.onnx.export(model, example_inputs, fp, export_params=False)  # type: ignore
         fp.seek(0)
-        model = onnx.load(fp, load_external_data=False)
+        model = onnx.load(fp, load_external_data=False)  # type: ignore
 
     model_simp, check = onnxsim.simplify(model)
     if not check:
@@ -68,7 +68,7 @@ def sample_to_condition(mutables: dict[str, LabeledMutable], sample: Sample) -> 
 
 def combinations(
     module: Mutable | nn.Module, input_shape: tuple[MutableShape, ...]
-) -> Iterable[tuple[MutableExpression[bool], Any, Any]]:
+) -> Iterable[tuple[MutableExpression[bool] | bool, Any, Any]]:
     """List all the combinations of the (mutable) module and the input shape.
 
     The returned iterator yields a tuple of (sample, module, input) for each combination.
@@ -213,7 +213,7 @@ class NnMeterProfiler(ExpressionProfiler):
 
         else:
             sub_results: list[MutableExpression] = []
-            for depth, sub in enumerate(module, start=1):
+            for depth, sub in enumerate(module.blocks, start=1):
                 sub_results.append(
                     (module.depth_choice >= depth) * self.estimate_latency(
                         concat_name(name, f'blocks.{depth - 1}'),
