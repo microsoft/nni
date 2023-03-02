@@ -80,7 +80,7 @@ def find_shape_inference_formula(module_or_func: Any) -> Formula | None:
         # Shape inference formulas are fetched in the following order:
         # 1. Check `_shape_forward` of the module.
         if hasattr(module_or_func.__class__, '_shape_forward'):
-            formula: Any = module_or_func.__class__._shape_forward
+            formula: Any = module_or_func.__class__._shape_forward  # type: ignore
         # 2. Check global registered formulas.
         elif type(module_or_func) in _shape_inference_formulas:
             formula = _shape_inference_formulas[type(module_or_func)]
@@ -112,6 +112,12 @@ def _safe_register_aten_formula(name: str, formula: Formula) -> None:
 
 
 # General formulas for operators that do not change the shape.
+
+def ensure_shape(input: ShapeTensor) -> MutableShape:
+    if input.real_shape is not None:
+        return input.real_shape
+    raise ValueError(f'Shape of input is not known: f{input}')
+
 
 def keep_shape_formula(any_callable: Any, *args, **kwargs) -> MutableShape:
     if len(args) == 1:
@@ -163,9 +169,10 @@ def maxpool2d_formula(module: nn.MaxPool2d | nas_nn.MutableMaxPool2d, input: Sha
 
 
 def multihead_attention_formula(module: nn.MultiheadAttention | nas_nn.MutableMultiheadAttention,
-                                query: ShapeTensor, key: ShapeTensor, *args: Any, **kwargs) -> MutableShape:
+                                query: ShapeTensor, key: ShapeTensor, *args: Any, **kwargs) -> tuple[MutableShape, MutableShape | None]:
     shape = list(query.real_shape)  # type: ignore
     attn_shape = MutableShape(*shape[:-1], _getattr(module, 'embed_dim'))
+    key_shape = ensure_shape(key)
 
     weights_shape = None
     if kwargs.get('need_weights', True):
@@ -178,13 +185,13 @@ def multihead_attention_formula(module: nn.MultiheadAttention | nas_nn.MutableMu
         if len(shape) == 2:
             # unbatched
             N, L = None, shape[0]
-            S = key.real_shape[0]
+            S = key_shape[0]
         elif batch_first:
             N, L = shape[0], shape[1]
-            S = key.real_shape[1]
+            S = key_shape[1]
         else:
             L, N = shape[0], shape[1]
-            S = key.real_shape[0]
+            S = key_shape[0]
 
         if kwargs.get('average_attn_weights', True):
             if N is None:
@@ -241,7 +248,7 @@ def repeat_formula(module: nas_nn.Repeat, input: ShapeTensor, is_leaf: Callable[
         expressions = {}
         if 0 in possible_depths:
             expressions[0] = extract_shape_info(input)
-        for depth, sub in enumerate(module, start=1):
+        for depth, sub in enumerate(module.blocks, start=1):
             input = cast(ShapeTensor, shape_inference(sub, input, is_leaf=is_leaf))
             if depth in possible_depths:
                 expressions[depth] = extract_shape_info(input)
@@ -258,8 +265,9 @@ def _canonicalize_dims(dims: list[int], n_dims: int, fn: Any) -> list[int]:
 
 
 def aten_reshape_alias_formula(fn: Any, input: ShapeTensor, size: list[int], stride: list[int]) -> MutableShape:
-    if input.real_shape.is_mutable():
-        raise RuntimeError(f'Cannot infer the shape of {fn} because the input shape is not determined: {input.real_shape}, '
+    input_shape = ensure_shape(input)
+    if input_shape.is_mutable():
+        raise RuntimeError(f'Cannot infer the shape of {fn} because the input shape is not determined: {input_shape}, '
                            f'but output shape is fixed: {size}. '
                            'This happens when functions like `torch.flatten` is used on a mutable-shape input. '
                            'Try to use `.view()` instead.')
@@ -268,12 +276,13 @@ def aten_reshape_alias_formula(fn: Any, input: ShapeTensor, size: list[int], str
 
 
 def aten_mean_dim(fn: Any, input: ShapeTensor, dim: list[int], keepdim: bool = False, **kwargs) -> MutableShape:
-    dim = _canonicalize_dims(dim, len(input.real_shape), fn)
+    input_shape = ensure_shape(input)
+    dim = _canonicalize_dims(dim, len(input_shape), fn)
     if keepdim:
-        shape = [1 if i in dim else s for i, s in enumerate(input.real_shape)]
+        shape = [1 if i in dim else s for i, s in enumerate(input_shape)]
         return MutableShape(*shape)
     else:
-        return MutableShape(*[s for i, s in enumerate(input.real_shape) if i not in dim])
+        return MutableShape(*[s for i, s in enumerate(input_shape) if i not in dim])
 
 
 def aten_shape_broadcast(fn: Any, x: ShapeTensor, y: ShapeTensor, **kwargs) -> MutableShape:
@@ -283,17 +292,17 @@ def aten_shape_broadcast(fn: Any, x: ShapeTensor, y: ShapeTensor, **kwargs) -> M
     # 2. Merge the shape of x and y. Avoid 1.
 
     if y.real_shape is None:
-        return x.real_shape
+        return cast(MutableShape, x.real_shape)  # Assume x has shape.
     if x.real_shape is None:
-        return y.real_shape
+        return cast(MutableShape, y.real_shape)
 
     x_shape = list(x.real_shape)
     y_shape = list(y.real_shape)
 
     if len(x_shape) > len(y_shape):
-        y_shape = [1] * (len(x_shape) - len(y_shape)) + y_shape
+        y_shape = [1] * (len(x_shape) - len(y_shape)) + y_shape  # type: ignore
     elif len(x_shape) < len(y_shape):
-        x_shape = [1] * (len(y_shape) - len(x_shape)) + x_shape
+        x_shape = [1] * (len(y_shape) - len(x_shape)) + x_shape  # type: ignore
     assert len(x_shape) == len(y_shape)
 
     # Use "is" here to avoid generating mutable expressions.
@@ -302,27 +311,31 @@ def aten_shape_broadcast(fn: Any, x: ShapeTensor, y: ShapeTensor, **kwargs) -> M
 
 
 def aten_permute_formula(fn: Any, input: ShapeTensor, dims: list[int], **kwargs) -> MutableShape:
-    dims = _canonicalize_dims(dims, len(input.real_shape), fn)
-    return MutableShape(*[input.real_shape[d] for d in dims])
+    input_shape = ensure_shape(input)
+    dims = _canonicalize_dims(dims, len(input_shape), fn)
+    return MutableShape(*[input_shape[d] for d in dims])
 
 
 def aten_slice_formula(fn: Any, input: ShapeTensor, dim: int, start: int, end: int, step: int = 1, **kwargs) -> MutableShape:
-    dim = _canonicalize_dims([dim], len(input.real_shape), fn)[0]
-    start, end = _canonicalize_dims([start, end], input.real_shape[dim], fn)
+    input_shape = ensure_shape(input)
+    dim = _canonicalize_dims([dim], len(input_shape), fn)[0]
+    start, end = _canonicalize_dims([start, end], input_shape[dim], fn)  # type: ignore
     assert start >= 0 and end >= start and step > 0, f'Unsupported slice range: {start} {end} {step}'
-    end = MutableExpression.min(end, input.real_shape[dim])
-    return MutableShape(*[s if i != dim else (end - start) // step for i, s in enumerate(input.real_shape)])
+    end = MutableExpression.min(end, input_shape[dim])
+    return MutableShape(*[s if i != dim else (end - start) // step for i, s in enumerate(input_shape)])
 
 
 def aten_select_formula(fn: Any, input: ShapeTensor, dim: int, index: int, **kwargs) -> MutableShape:
-    dim = _canonicalize_dims([dim], len(input.real_shape), fn)[0]
-    return MutableShape(*[s for i, s in enumerate(input.real_shape) if i != dim])
+    input_shape = ensure_shape(input)
+    dim = _canonicalize_dims([dim], len(input_shape), fn)[0]
+    return MutableShape(*[s for i, s in enumerate(input_shape) if i != dim])
 
 
 def aten_cat_formula(fn: Any, input: list[ShapeTensor], dim: int = 0, **kwargs) -> MutableShape:
-    dim = _canonicalize_dims([dim], len(input[0].real_shape), fn)[0]
-    result = list(input[0].real_shape)
-    result[dim] = sum(t.real_shape[dim] for t in input)
+    first_input_shape = cast(MutableShape, input[0].real_shape)
+    dim = _canonicalize_dims([dim], len(first_input_shape), fn)[0]
+    result = list(first_input_shape)
+    result[dim] = sum(t.real_shape[dim] for t in input)  # type: ignore
     return MutableShape(*result)
 
 

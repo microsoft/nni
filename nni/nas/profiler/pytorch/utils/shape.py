@@ -10,7 +10,7 @@ __all__ = [
 import functools
 import logging
 import traceback
-from typing import Union, Tuple, Callable, Iterable, Any, NamedTuple, cast
+from typing import Union, Tuple, Callable, Iterable, Any, NamedTuple, Dict, cast, overload
 
 import torch
 from torch import nn
@@ -83,6 +83,8 @@ def switch_case_shape_info(indicator: Any, branches: dict[str, Any]) -> Any:
                              f'but got {shapes_flattened[0]} vs {s_flattened}')
         cases.append(case)
         shapes_flattened.append(s_flattened)
+
+    assert spec is not None, 'branches can not be empty'
 
     shapes_combined = []
 
@@ -179,6 +181,14 @@ class MutableShape(Mutable):
     def is_mutable(self):
         """Check if the shape contains any mutable element."""
         return any(isinstance(s, Mutable) for s in self._shape)
+
+    @overload
+    def __getitem__(self, index: int) -> IntExpression:
+        ...
+
+    @overload
+    def __getitem__(self, index: slice) -> MutableShape:
+        ...
 
     def __getitem__(self, index):
         if isinstance(index, slice):
@@ -313,6 +323,8 @@ class ShapeTensor(torch.Tensor):
         from torch.utils._pytree import tree_map
         from .shape_formula import find_shape_inference_formula
 
+        kwargs = cast(Dict[str, Any], kwargs)
+
         def unwrap(e):
             return e.elem if isinstance(e, ShapeTensor) else e
 
@@ -410,6 +422,7 @@ class ShapeTensor(torch.Tensor):
     def _view_impl(self, tensor: torch.Tensor, *shape: IntProxy | int) -> ShapeTensor:
         if any(s == -1 for s in shape):
             # the size -1 is inferred from other dimensions
+            assert self.real_shape is not None
             all_size = self.real_shape.numel()
             shape_lst = list(shape)
             infer_index = shape_lst.index(-1)  # type: ignore
@@ -511,7 +524,7 @@ def module_shape_inference_hook(module: nn.Module, input: Any, output: Any,
 
 def _register_shape_inference_hooks(
     module: nn.Module, skip_toplevel: bool = True, is_leaf: Callable[[nn.Module], bool] | None = None
-) -> tuple[list[RemovableHandle], dict[str, MutableShape]]:
+) -> tuple[list[RemovableHandle], dict[str, tuple[MutableShape, MutableShape]]]:
     """This method registers every submodule of ``module`` with a hook,
     so that when running forward, the results carry the shape information.
 
