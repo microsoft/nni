@@ -86,12 +86,9 @@ class ModuleWrapper(torch.nn.Module):
         # more track functions can be registered by ``ModuleWrapper.register_track_info_func``.
         # An example please refer ``track_target_shape``.
         self._track_funcs: List[Callable[[ModuleWrapper, str, Tensor], None]] = [track_target_shape]
-
-        # register for module fusion
-        self.register_fusion_info(fused_modules)
-
-    def register_fusion_info(self, fused_modules: List[torch.nn.Module] | None = None):
         self.fused_modules = fused_modules if fused_modules is not None else []
+
+    def register_fusion_info(self):
         if len(self.fused_modules) > 0:
             self.is_bias = check_bias(self.module) # used for fold_bn
             assert self.is_bias in ['Tensor', 'None'], \
@@ -148,6 +145,9 @@ class ModuleWrapper(torch.nn.Module):
             if target_space.type == TargetType.PARAMETER and isinstance(target_space.target, torch.nn.Parameter):
                 delattr(self.module, target_name)
                 self.module.register_buffer(target_name, target_space.target.detach().clone())
+
+        # register for module fusion
+        self.register_fusion_info()
 
     def unwrap(self):
         if not hasattr(self.module, '_nni_wrapper'):
@@ -488,7 +488,10 @@ def create_module_wrapper(model:nn.Module, module: nn.Module, module_name: str, 
         target_spaces = wrapper.extend_target_spaces(config, mode)
         wrapper.config = update_config(wrapper.config, {mode: config})
         if len(fused_modules_pair) > 0:
-            wrapper.register_fusion_info(fused_modules)
+            assert hasattr(wrapper.module, '_nni_wrapper'), \
+                f'wrapper {wrapper.name} is not wrapped, please wrap it before register new wrapper'
+            wrapper.fused_modules = fused_modules
+            wrapper.register_fusion_info()
     else:
         wrapper = ModuleWrapper(module, module_name, {mode: config}, fused_modules)
         if mode == 'pruning':

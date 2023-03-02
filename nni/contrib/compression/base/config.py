@@ -180,9 +180,6 @@ def select_modules_by_config(model: torch.nn.Module, \
     for op_type in exclude_op_types:
         op_names.difference_update(type2names.get(op_type, set()))
 
-    if len(fuse_names) > 0 and len(op_names) != len(fuse_names):
-        raise ValueError("When setting fuse_names, the length of op_names should equal to fuse_nams")
-
     return {module_name: name2module[module_name] for module_name in op_names}, config, fuse_names
 
 

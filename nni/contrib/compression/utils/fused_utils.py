@@ -27,7 +27,7 @@ def validate_fused_modules_config(fuse_module_names: List[Tuple[str]], model: nn
             f"Only support fuse two or three modules, but got {len(fused_pair)} modules"
         for i, module_name in enumerate(fused_pair):
             assert module_name in name2module, \
-                f"The module fusion configuration of {module_name} should be defined in the config_list"
+                f"{module_name} should be defined in the model"
             module = name2module[module_name]
             if i == 0 and type(module) not in FUSED_MODULES_TYPES_LIST:
                 raise ValueError(f"{module_name} is not supported to fuse, please register it in FUSED_MODULES_TYPES_LIST")
@@ -44,7 +44,8 @@ def get_fused_module_list(module_name: str, mode: str, fused_module_names: List[
     for fuse_pair in fused_module_names:
         if module_name == fuse_pair[0]:
             return fuse_pair
-    raise ValueError(f"can't find fusion configuration for {module_name}")
+
+    return ()
 
 
 def update_config(wrapper_config: Dict[str, Dict[str, Any]], configs: Dict[str, Dict[str, Any]]):
