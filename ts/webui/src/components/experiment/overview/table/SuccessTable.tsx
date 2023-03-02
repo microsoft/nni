@@ -81,7 +81,7 @@ const SuccessTable = (props: SuccessTableProps): any => {
                             transform: `rotate(${expandRowIDs.has(item.id) ? 90 : 0}deg)`
                         }
                     }}
-                    className='cursor bold positionTop'
+                    className='cursor bold positionTopSuccess'
                     onClick={expandTrialId.bind(this, Event, item.id)}
                 />
             ),
