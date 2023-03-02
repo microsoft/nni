@@ -111,7 +111,7 @@ class _ComboPruner(ScheduledPruner):
     def _fuse_preprocess(self, evaluator: Evaluator) -> None:
         self._initialize_state()
         self._register_trigger(evaluator)
-        self.bound_pruner._fuse_postprocess(evaluator)
+        self.bound_pruner._fuse_preprocess(evaluator)
 
     def _fuse_postprocess(self, evaluator: Evaluator) -> None:
         self.bound_pruner._fuse_postprocess(evaluator)
