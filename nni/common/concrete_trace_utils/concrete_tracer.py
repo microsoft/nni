@@ -8,7 +8,6 @@ import inspect
 import operator
 import functools
 import builtins
-import copy
 
 from itertools import chain
 from types import BuiltinMethodType, FunctionType, MethodDescriptorType, MethodType, MethodWrapperType, ModuleType
@@ -165,6 +164,7 @@ class ConcreteTracer(TracerBase):
         _orig_dict:                 ([], True),
     }
 
+    # add these to record module path information during tracing
     current_module_qualified_name : str = ''
     node_to_originating_module : Dict[torch.fx.Node, str] = {}
 
@@ -289,7 +289,6 @@ class ConcreteTracer(TracerBase):
         assert isinstance(kwargs_noded, dict)
 
         node = self.create_node(kind, target, args_noded, kwargs_noded, name, type_expr)
-        # return self.proxy(value_unwrapped, node)
         proxy = self.proxy(value_unwrapped, node)
         self.node_to_originating_module[proxy.node] = self.current_module_qualified_name
         return proxy
@@ -385,8 +384,6 @@ class ConcreteTracer(TracerBase):
         """
         return (m.__module__.startswith('torch.nn') and not _orig_isinstance(m, (Sequential, ModuleList, ModuleDict)))\
             or _orig_isinstance(m, self.leaf_module)
-        # return (m.__module__.startswith('torch.nn.functional') and not _orig_isinstance(m, (Sequential, ModuleList, ModuleDict)))\
-        #     or _orig_isinstance(m, self.leaf_module)
 
     @compatibility(is_backward_compatible=True)
     def path_of_module(self, mod: torch.nn.Module) -> str:
@@ -496,15 +493,15 @@ class ConcreteTracer(TracerBase):
 
     @compatibility(is_backward_compatible=True)
     def trace(self, root: Union[torch.nn.Module, Callable[..., Any]], *,
-                autowrap_modules: Tuple[str] = (),
-                autowrap_leaf_function = {},
-                autowrap_leaf_class = {},
-                leaf_module = (),
-                fake_middle_class = (),
-                concrete_args: Union[Dict[str, Any], Tuple],
-                use_operator_patch: bool = True,
-                operator_patch_backlist: List[str] = [],
-                forwrad_function_name: str = 'forward') -> Graph:
+              autowrap_modules: Tuple[str] = None,
+              autowrap_leaf_function = None,
+              autowrap_leaf_class = None,
+              leaf_module = None,
+              fake_middle_class = None,
+              concrete_args: Union[Dict[str, Any], Tuple],
+              use_operator_patch: bool = True,
+              operator_patch_backlist: List[str] = None,
+              forwrad_function_name: str = 'forward') -> Graph:
         """
         similar to _symbolic_trace.Tracer.trace
         different args:
@@ -525,6 +522,13 @@ class ConcreteTracer(TracerBase):
                 such as '__main__.FooModel' or '__main__.bar_func'. the namespace is
                 always needed.
         """
+        # preprocess arguments
+        autowrap_modules = autowrap_modules if autowrap_modules is not None else ()
+        autowrap_leaf_function = autowrap_leaf_function if autowrap_leaf_function is not None else {}
+        autowrap_leaf_class = autowrap_leaf_class if autowrap_leaf_class is not None else {}
+        leaf_module = leaf_module if leaf_module is not None else ()
+        fake_middle_class = fake_middle_class if fake_middle_class is not None else ()
+        operator_patch_backlist = operator_patch_backlist if operator_patch_backlist is not None else []
 
         # Python modules to apply autowrap to at the start, in addition to
         # modules we see while tracing
@@ -534,9 +538,7 @@ class ConcreteTracer(TracerBase):
         self._autowrap_function_ids: Set[int] = {
             id(value) for name, value in chain(*[m.__dict__.items() for m in self._autowrap_search])
             if not name.startswith("_") and callable(value)}
-
         self.submodule_paths: Optional[Dict[torch.nn.Module, str]] = None
-
         self.autowrap_leaf_function = {**autowrap_leaf_function, **ConcreteTracer.default_autowrap_leaf_function}
         self.autowrap_leaf_class = {**autowrap_leaf_class, **ConcreteTracer.default_autowrap_leaf_class}
         self.leaf_module = leaf_module
@@ -1234,14 +1236,14 @@ def _create_wrapped_attr_for_middle_class(tracer: ConcreteTracer, clz, the_path_
 def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    concrete_args: Union[Dict[str, Any], Tuple],
                    *,
-                   use_operator_patch: bool = False,
-                   operator_patch_backlist: List[str] = [],
+                   use_operator_patch: bool = True,
+                   operator_patch_backlist: List[str] = None,
                    forwrad_function_name: str = 'forward',
                    check_args: Optional[Dict[str, Any]] = None,
-                   autowrap_leaf_function = {},
-                   autowrap_leaf_class = {},
-                   leaf_module = (),
-                   fake_middle_class = ()) -> GraphModule:
+                   autowrap_leaf_function = None,
+                   autowrap_leaf_class = None,
+                   leaf_module = None,
+                   fake_middle_class = None) -> GraphModule:
     """
     Concrete tracing API
 
@@ -1414,5 +1416,8 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
     if check_args is not None:
         assert root(**check_args) == traced(**check_args)
 
+    # before returning the traced GraphModule, store module path info
+    setattr(traced, 'module_path', tracer.node_to_originating_module.copy())
+
     # return traced, tracer
-    return traced, tracer
+    return traced
