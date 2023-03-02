@@ -90,7 +90,9 @@ class PtqQuantizer(Quantizer):
         self._fusion_compress(max_steps, max_epochs)
 
     def _fuse_preprocess(self, evaluator: Evaluator) -> None:
-        evaluator.patch_optim_param_group(self.patch_optimizer_param_group())
+        module_name_param_dict = self.patch_optimizer_param_group()
+        if module_name_param_dict is not None:
+            evaluator.patch_optim_param_group(module_name_param_dict)
 
     def _fuse_postprocess(self, evaluator: Evaluator) -> None:
         self.evaluator.evaluate()

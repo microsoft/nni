@@ -30,7 +30,7 @@ def lsq_clamp_round(target: torch.Tensor, target_space: QuantizationTargetSpace)
     scale = grad_scale(target_space.scale, grad_scale_factor)
     new_target = torch.clamp(target / scale, qmin, qmax)
     dequantized_target = round_pass(new_target) * scale
-
+    print(f"after lsq_apply: {isinstance(dequantized_target, torch.nn.Parameter)}\trequires_grad={dequantized_target.requires_grad}\tis_leaf={dequantized_target.is_leaf}")
     return dequantized_target
 
 

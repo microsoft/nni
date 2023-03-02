@@ -142,11 +142,10 @@ def main():
         'quant_dtype': 'int8',
         'quant_scheme': 'affine',
         'granularity': 'default',
-        'fuse_names': ["conv1", "batchnorm1"]
+        'fuse_names': [("conv1", "batchnorm1")]
     }]
     print(configure_list)
     print("use fused modules")
-    fused_modules_lis = [["conv1", "batchnorm1"]]
     optimizer = nni.trace(torch.optim.SGD)(model.parameters(), momentum=0.5, lr=1e-2)
     # from torch.optim.lr_scheduler import StepLR
     # lrs = nni.trace(StepLR)(optimizer, step_size=300, gamma=0.1)
