@@ -488,10 +488,7 @@ def create_module_wrapper(model:nn.Module, module: nn.Module, module_name: str, 
         target_spaces = wrapper.extend_target_spaces(config, mode)
         wrapper.config = update_config(wrapper.config, {mode: config})
         if len(fused_modules_pair) > 0:
-            assert hasattr(wrapper.module, '_nni_wrapper'), \
-                f'wrapper {wrapper.name} is not wrapped, please wrap it before register new wrapper'
             wrapper.fused_modules = fused_modules
-            wrapper.register_fusion_info()
     else:
         wrapper = ModuleWrapper(module, module_name, {mode: config}, fused_modules)
         if mode == 'pruning':
