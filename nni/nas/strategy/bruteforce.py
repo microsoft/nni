@@ -30,20 +30,23 @@ class GridSearch(Strategy):
     shuffle
         Shuffle the order in a candidate list, so that they are tried in a random order.
         Currently, the implementation is a pseudo-random shuffle, which only shuffles the order of every 100 candidates.
-    dedup
-        Do not try the same configuration twice.
-        Turning it off might result in duplications when the space has an infinite size,
-        or the strategy tries to resume from a checkpoint.
+    seed
+        Random seed.
     """
 
     _shuffle_buffer_size: int = 100
     _granularity_patience: int = 3  # stop increasing granularity after this many times of no new sample found
 
-    def __init__(self, *, shuffle: bool = True, dedup: bool = True, seed: int | None = None):
+    def __init__(self, *, shuffle: bool = True, seed: int | None = None, dedup: bool = True):
         super().__init__()
 
         self.shuffle = shuffle
 
+        # Internal only:
+        # Do not try the same configuration twice.
+        # Turning it off might result in duplications when the space has an infinite size,
+        # or the strategy tries to resume from a checkpoint,
+        # but might improve memory efficiency in extreme cases.
         self._dedup = DeduplicationHelper() if dedup else None
         self._granularity = 1
         self._granularity_processed: int | None = None
