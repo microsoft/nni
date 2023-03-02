@@ -75,7 +75,6 @@ def conv_forward(inputs: torch.Tensor, conv_module: Union[nn.Conv1d, nn.Conv2d, 
         raise TypeError(f"Only support to use conv1d, conv2d, conv3d to compute, but got {type(conv_module)}")
 
 
-
 def get_bias(wrapper, param_dict):
     if 'bias' in param_dict:
         return param_dict['bias']
@@ -145,7 +144,7 @@ def fuse_conv_bn(wrapper, fused_modules, *args, **kwargs):
     bn_var_rsqrt = torch.rsqrt(bn_var + bn_eps)
     fused_conv_w = conv_weight * (bn_w * bn_var_rsqrt).reshape(shape)
     fused_conv_b = (conv_bias - bn_rm) * bn_var_rsqrt * bn_w + bn_b
-    q_param_dict['weight'] = torch.nn.Parameter(fused_conv_w, conv_weight.requires_grad)
+    q_param_dict['weight'] = fused_conv_w
     q_param_dict['bias'] = set_bias(wrapper, fused_conv_b)
 
     return q_param_dict, []

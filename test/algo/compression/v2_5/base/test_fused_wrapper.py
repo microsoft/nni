@@ -36,9 +36,6 @@ def test_fused_wrapper_register():
     wrappers_1, _ = register_wrappers(model, config_list_1, mode='quantization')
     assert set(wrappers_1.keys()) == set(['fc1', 'conv1'])
 
-    for _, wrapper in wrappers_1.items():
-        wrapper.wrap()
-
     wrappers_2, _ =register_wrappers(model, config_list_2, 'quantization', wrappers_1)
     assert set(wrappers_2.keys()) == set(['fc1', 'conv1', 'fc2', 'conv2', 'bn1', 'bn2'])
     for module_name, wrapper in wrappers_2.items():
