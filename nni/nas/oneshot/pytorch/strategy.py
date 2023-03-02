@@ -129,7 +129,7 @@ class OneShotStrategy(Strategy):
 
         The hook list will be appended by ``default_mutation_hooks`` in each one-shot module.
 
-        To be more specific, the input arguments are four arguments:
+        To be more specific, the input arguments of a hook are four arguments:
 
         1. a module that might be processed,
         2. name of the module in its parent module,
@@ -503,7 +503,7 @@ class DARTS(OneShotStrategy):
 
     * :class:`nni.nas.nn.pytorch.LayerChoice`.
     * :class:`nni.nas.nn.pytorch.InputChoice`.
-    * :class:`nni.nas.nn.pytorch.ParameterizedChoice` (only when parameters are choices and type is in {supported_ops}).
+    * :class:`nni.nas.nn.pytorch.ParametrizedModule` (only when parameters are choices and type is in {supported_ops}).
     * :class:`nni.nas.nn.pytorch.Repeat`.
     * :class:`nni.nas.nn.pytorch.Cell`.
 
@@ -669,7 +669,7 @@ class GumbelDARTS(DARTS):
 
     * :class:`nni.nas.nn.pytorch.LayerChoice`.
     * :class:`nni.nas.nn.pytorch.InputChoice`.
-    * :class:`nni.nas.nn.pytorch.ParameterizedChoice` (only when parameters are choices and type is in {supported_ops}).
+    * :class:`nni.nas.nn.pytorch.ParametrizedModule` (only when parameters are choices and type is in {supported_ops}).
     * :class:`nni.nas.nn.pytorch.Repeat`.
     * :class:`nni.nas.nn.pytorch.Cell`.
 
@@ -739,7 +739,7 @@ class RandomOneShot(OneShotStrategy):
 
     * :class:`nni.nas.nn.pytorch.LayerChoice`.
     * :class:`nni.nas.nn.pytorch.InputChoice`.
-    * :class:`nni.nas.nn.pytorch.ParameterizedChoice` (only when parameters' type is in {supported_ops}).
+    * :class:`nni.nas.nn.pytorch.ParametrizedModule` (only when parameters' type is in {supported_ops}).
     * :class:`nni.nas.nn.pytorch.Repeat`.
     * :class:`nni.nas.nn.pytorch.Cell`.
 
@@ -859,7 +859,7 @@ class ENAS(RandomOneShot):
 
     * :class:`nni.nas.nn.pytorch.LayerChoice`.
     * :class:`nni.nas.nn.pytorch.InputChoice` (only when ``n_chosen == 1`` or ``n_chosen is None``).
-    * :class:`nni.nas.nn.pytorch.ParameterizedChoice` (only when parameters are choices and type is in {supported_ops}).
+    * :class:`nni.nas.nn.pytorch.ParametrizedModule` (only when parameters are choices and type is in {supported_ops}).
     * :class:`nni.nas.nn.pytorch.Repeat`.
     * :class:`nni.nas.nn.pytorch.Cell`.
 
