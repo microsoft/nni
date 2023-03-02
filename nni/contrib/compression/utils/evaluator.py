@@ -212,19 +212,16 @@ class Evaluator:
 
         def add_param(param_lis: List[Tensor], target_param_group_idx: int, optimizer: Optimizer):
             assert target_param_group_idx < len(optimizer.param_groups)
-            print(f"params_type={type(optimizer.param_groups[target_param_group_idx]["params"])}")
             target_param_group = optimizer.param_groups[target_param_group_idx]
             for param in param_lis:
-                # copyed from torch
-                print(f"param:is_leaf={param.is_leaf}\tis_retain={param.retains_grad}\tdifferent={optimizer.differentiable}")
-                if not isinstance(param, toech.Tensor):
+                # copyed from torch.optim to check the validation of param
+                if not isinstance(param, torch.Tensor):
                     raise TypeError("optimizer can only optimize Tensors, "
                                 "but one of the params is " + torch.typename(param))
+                if not optimizer.defaults.get('differentiable', None) \
+                    and not (param.is_leaf or param.retains_grad): # type: ignore
+                    raise ValueError("can't optimize a non-leaf Tensor")
                 target_param_group['params'].append(param)
-                # new_param_group = {k:v for k, v in target_param_group.items() if k != 'params'}
-                # print(f"")
-                # new_param_group["params"] = param
-                # optimizer.add_param_group(new_param_group)
 
         assert isinstance(model, (Module, pl.LightningModule))
         param2name_dict = {id(p): name for name, p in model.named_parameters()}
@@ -236,13 +233,18 @@ class Evaluator:
             for optimizer in optimizers:
                 param_groups = optimizer.param_groups
                 target_param_group_idx = find_param_group(param_groups, module_name)
-                if target_param_group_idx > 0:
+                if target_param_group_idx >= 0:
                     is_find_param_group = True
                     add_param(param_lis, target_param_group_idx, optimizer)
                     break
             if not is_find_param_group:
-                # target_param_group = optimizers[0].param_groups[0]
                 add_param(param_lis, 0, optimizers[0])
+
+    def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]] | None = None):
+        '''
+        Adding param_groups for optimizers
+        '''
+        raise NotImplementedError
 
     def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
         """
@@ -483,7 +485,7 @@ class LightningEvaluator(Evaluator):
 
         if self._opt_returned_dicts:
             def new_configure_optimizers(_):  # type: ignore
-                optimizers_lr_schedulers: Any = self.model.configure_optimizers()
+                optimizers_lr_schedulers: Any = self.model.configure_optimizers() # type: ignore
                 optimizers = [opt_lrs_dict['optimizer'] for opt_lrs_dict in optimizers_lr_schedulers]
                 # add param group
                 self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers) # type: ignore
@@ -492,7 +494,7 @@ class LightningEvaluator(Evaluator):
 
         elif self._lr_scheduler_helpers:
             def new_configure_optimizers(_):  # type: ignore
-                optimizers_lr_schedulers: Any = self.model.configure_optimizers()
+                optimizers_lr_schedulers: Any = self.model.configure_optimizers() # type: ignore
                 optimizers, lr_schedulers = optimizers_lr_schedulers
                 # add param_group
                 self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers) # type: ignore
@@ -501,7 +503,7 @@ class LightningEvaluator(Evaluator):
 
         else:
             def new_configure_optimizers(_):
-                optimizers_lr_schedulers: Any = self.model.configure_optimizers()
+                optimizers_lr_schedulers: Any = self.model.configure_optimizers() # type: ignore
                 # add param_group
                 self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers_lr_schedulers) # type: ignore
 
@@ -813,7 +815,6 @@ class TorchEvaluator(Evaluator):
     def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
         assert isinstance(self.model, Module)
         assert module_name_param_dict is not None
-
         self._optimizer_add_param_group(self.model, module_name_param_dict, self._optimizers) # type: ignore
 
     def unbind_model(self):
