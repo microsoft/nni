@@ -67,7 +67,7 @@ def expression_simplification(expression: MutableExpression):
     # Mutables will be substituted with sympy symbol / expressions.
     mutable_substitutes: dict[str, Symbol | Expr] = {}
     # (inverse substitution, in lambdify) Each sympy symbol corresponds to a mutable expression.
-    inverse_substitutes: dict[Symbol, MutableExpression] = {}
+    inverse_substitutes: dict[Symbol | Expr, MutableExpression] = {}
 
     for name, mutable in mutables.items():
         if isinstance(mutable, Categorical):
