@@ -176,11 +176,6 @@ ExperimentConfig
       - Default: default connection chosen by system. IP of the current machine, used by training machines to access NNI manager. Not used in local mode.
         Except for the local mode, it is highly recommended to set this field manually.
 
-    * - useAnnotation
-      - ``bool``, optional
-      - Default: ``False``. Enable :doc:`annotation </hpo/nni_annotation>`.
-        When using annotation, ``searchSpace`` and ``searchSpaceFile`` should not be specified manually.
-
     * - debug
       - ``bool``, optional
       - Default: ``False``. Enable debug mode.
