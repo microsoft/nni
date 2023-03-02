@@ -601,3 +601,16 @@ class Experiment:
             New max_trial_number value.
         """
         self._update_experiment_profile('maxTrialNumber', value)
+
+    def kill_trial_job(self, trial_job_id: str):
+        """
+        Kill a trial job.
+
+        Parameters
+        ----------
+        trial_job_id: str
+            Trial job id.
+
+        """
+        rest.delete(self.port, '/trial-jobs/{}'.format(trial_job_id), self.url_prefix)
+
