@@ -2,6 +2,8 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
+
+import logging
 from typing import List, Dict
 
 import torch
@@ -11,6 +13,8 @@ from ..base.compressor import Quantizer
 from ..base.wrapper import ModuleWrapper
 from ..base.target_space import TargetType
 from ..utils.evaluator import Evaluator
+
+_logger = logging.getLogger(__name__)
 
 
 class BNNQuantizer(Quantizer):
@@ -53,10 +57,18 @@ class BNNQuantizer(Quantizer):
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         super().__init__(model, config_list, evaluator, existed_wrappers=existed_wrappers)
 
+        self.check_validation()
         self.evaluator: Evaluator
         self.is_init = False
         self.register_bnn_apply_method()
         self.register_track_func()
+
+    def check_validation(self):
+        for _, ts in self._target_spaces.items():
+            for _, target_space in ts.items():
+                if target_space.quant_dtype is not None:
+                    warn_msg = "BNNQuantizer will only quantize the value to 1 or -1; the quant_dtype value will not work"
+                    _logger.warning(warn_msg)
 
     def register_track_func(self):
         for module_name, _ in self._target_spaces.items():
