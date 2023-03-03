@@ -123,7 +123,7 @@ class TPE(HPOTunerStrategy):
 
     def __init__(self, *args, **kwargs):
         from nni.algorithms.hpo.tpe_tuner import TpeTuner
-        super().__init__(TpeTuner())
+        super().__init__(TpeTuner(*args, **kwargs))
 
 
 # alias for backward compatibility
