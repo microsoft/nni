@@ -72,7 +72,7 @@ def conv_forward(inputs: torch.Tensor, conv_module: Union[nn.Conv1d, nn.Conv2d, 
     elif type(conv_module) == torch.nn.Conv3d:
         return conv_forward_func(F.conv3d, _triple)
     else:
-        raise TypeError(f"Only support to use conv1d, conv2d, conv3d to compute, but got {type(conv_module)}")
+        raise TypeError(f"Only support modules in [conv1d, conv2d, conv3d], but got {type(conv_module)}")
 
 
 def get_bias(wrapper, param_dict):
@@ -93,7 +93,7 @@ def fuse_modules(wrapper, *args, **kwargs):
 
     fuse_method = _DEFAULT_OP_LIST_TO_FUSER_METHOD.get(types, None)
     if fuse_method is None:
-        raise NotImplementedError(f"Cannot fuse modules: {types}, please provide a method and register it \
+        raise TypeError(f"{types} is not supported for model fusion, please register it \
                                   in the _DEFAULT_OP_LIST_TO_FUSER_METHOD")
 
     return fuse_method(wrapper, fused_modules, *args, **kwargs)
@@ -104,11 +104,11 @@ def fuse_conv_bn(wrapper, fused_modules, *args, **kwargs):
     bn_module = fused_modules[1]
     conv_module = wrapper.module
 
-    assert bn_module.num_features == conv_module.out_channels, 'The output channel of Conv must match num_features of BatchNorm'
+    assert bn_module.num_features == conv_module.out_channels, \
+        'The output channel of Conv must match num_features of BatchNorm'
 
     if 'weight' not in q_param_dict:
-        raise ValueError(f"during the conv-bn fusion process, \
-                         the weight in the module {wrapper.name} need to be quanted, but here is not")
+        raise ValueError(f"In the fusion process of conv_bn, the weight of {wrapper.name} needs to be quantized")
 
     with torch.no_grad():
         #compute bias
@@ -156,10 +156,10 @@ def fuse_linear_bn(wrapper, fused_modules, *args, **kwargs):
     linear_module = wrapper.module
 
     if 'weight' not in q_param_dict:
-        raise ValueError(f"during the conv-bn fusion process, \
-                         the weight in the module {wrapper.name} need to be quanted, but here is not")
+        raise ValueError(f"In the fusion process of linear_bn, the weight of {wrapper.name} needs to be quantized")
 
-    assert bn_module.num_features == linear_module.out_features, 'the output features of linear must match num_features of BatchNorm'
+    assert bn_module.num_features == linear_module.out_features, \
+        'the output features of Linear must match num_features of BatchNorm'
 
     with torch.no_grad():
         bias = get_bias(wrapper, q_param_dict)
