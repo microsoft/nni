@@ -15,7 +15,32 @@ from ..utils.evaluator import Evaluator
 
 class DoReFaQuantizer(Quantizer):
     '''
-    Dorefa-Quantizer: https://arxiv.org/pdf/1606.06160.pdf
+    Dorefa-Quantizer, as defined in:
+    `DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients <https://arxiv.org/abs/1606.06160>`__,
+    authors Shuchang Zhou and Yuxin Wu provide an algorithm named DoReFa to quantize the weight, activation and gradients with training.
+
+    Parameters
+    ----------
+    model
+        Model to be quantized.
+    config_list
+        A list of dict, each dict configure which module need to be quantized, and how to quantize.
+        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
+    evaluator
+        TODO: {evaluator_docstring}
+    quant_start_step
+        The steps for warmup training before QAT begin.
+
+    Examples
+    --------
+        >>> from nni.contrib.compression.quantization import DoReFaQuantizer
+        >>> from nni.contrib.compression.utils import TorchEvaluator
+        >>> model = ...
+        >>> optimizer = ...
+        >>> max_steps, max_epochs = ..., ...
+        >>> evaluator = TorchEvaluator(train, optimizer, training_step)
+        >>> quantizer = DoReFaQuantizer(model, configure_list, evaluator)
+        >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
     '''
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, \
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None):

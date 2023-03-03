@@ -305,7 +305,7 @@ class Quantizer(Compressor):
         -------
         Dict[str, Dict[str, Dict[str, torch.Tensor | Any]]]
             The calibration config format is {module_name: {target_name: {info_key: val}}}.
-            By default, info_key contains ['scale', 'zero_point', 'quant_dtype', 'quant_scheme'] and
+            By default, info_key contains ['scale', 'zero_point', 'quant_dtype', 'quant_scheme', 'quant_bits'] and
             ['tracked_max', 'tracked_min'] if it has.
 
             NOTE: The internal key of the calibration config for the target is not stable,

@@ -14,7 +14,36 @@ from ..utils.evaluator import Evaluator
 
 class LsqQuantizer(Quantizer):
     '''
-    LsqQuantizer: https://arxiv.org/pdf/1902.08153.pdf
+    LsqQuantizer, as defined in: `LEARNED STEP SIZE QUANTIZATION <https://arxiv.org/pdf/1902.08153.pdf>`__,
+    authors Steven K. Esser and Jeffrey L. McKinstry provide an algorithm to train the scales with gradients.
+
+    ..
+
+        The authors introduce a novel means to estimate and scale the task loss gradient at each weight and activation
+        layer's quantizer step size, such that it can be learned in conjunction with other network parameters.
+
+    Parameters
+    ----------
+    model
+        Model to be quantized.
+    config_list
+        A list of dict, each dict configure which module need to be quantized, and how to quantize.
+        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
+    evaluator
+        TODO: {evaluator_docstring}
+    quant_start_step
+        The steps for warmup training before QAT begin.
+
+    Examples
+    --------
+        >>> from nni.contrib.compression.quantization import LsqQuantizer
+        >>> from nni.contrib.compression.utils import TorchEvaluator
+        >>> model = ...
+        >>> optimizer = ...
+        >>> max_steps, max_epochs = ..., ...
+        >>> evaluator = TorchEvaluator(train, optimizer, training_step)
+        >>> quantizer = LsqQuantizer(model, configure_list, evaluator)
+        >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
     '''
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, \
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None):

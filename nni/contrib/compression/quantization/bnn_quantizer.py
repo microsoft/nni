@@ -14,9 +14,41 @@ from ..utils.evaluator import Evaluator
 
 
 class BNNQuantizer(Quantizer):
-    '''
-    BinaryNet Quantization: https://arxiv.org/pdf/1602.02830.pdf
-    '''
+    """
+    BinaryNet Quantization, as defined in:
+    `Binarized Neural Networks: Training Deep Neural Networks with Weights and
+    Activations Constrained to +1 or -1 <https://arxiv.org/abs/1602.02830>`__,
+
+    ..
+
+        We introduce a method to train Binarized Neural Networks (BNNs) - neural networks with binary weights and activations at run-time.
+        At training-time the binary weights and activations are used for computing the parameters gradients. During the forward pass,
+        BNNs drastically reduce memory size and accesses, and replace most arithmetic operations with bit-wise operations,
+        which is expected to substantially improve power-efficiency.
+
+    Parameters
+    ----------
+    model
+        Model to be quantized.
+    config_list
+        A list of dict, each dict configure which module need to be quantized, and how to quantize.
+        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
+    evaluator
+        TODO: {evaluator_docstring}
+    quant_start_step
+        The steps for warmup training before QAT begin.
+
+    Examples
+    --------
+        >>> from nni.contrib.compression.quantization import BNNQuantizer
+        >>> from nni.contrib.compression.utils import TorchEvaluator
+        >>> model = ...
+        >>> optimizer = ...
+        >>> max_steps, max_epochs = ..., ...
+        >>> evaluator = TorchEvaluator(train, optimizer, training_step)
+        >>> quantizer = BNNQuantizer(model, configure_list, evaluator)
+        >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
+    """
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, \
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         super().__init__(model, config_list, evaluator, existed_wrappers=existed_wrappers)
@@ -66,5 +98,3 @@ class BNNQuantizer(Quantizer):
 
     def _fuse_postprocess(self, evaluator: Evaluator) -> None:
         pass
-
-

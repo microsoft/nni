@@ -50,7 +50,14 @@ class QATQuantizer(Quantizer):
 
     Examples
     --------
-        TODO
+        >>> from nni.contrib.compression.quantization import QATQuantizer
+        >>> from nni.contrib.compression.utils import TorchEvaluator
+        >>> model = ...
+        >>> optimizer = ...
+        >>> max_steps, max_epochs = ..., ...
+        >>> evaluator = TorchEvaluator(train, optimizer, training_step)
+        >>> quantizer = QATQuantizer(model, configure_list, evaluator)
+        >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
     """
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
