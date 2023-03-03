@@ -34,12 +34,14 @@ def test_bnn_forward_with_torch_model():
     configure_list = [{
         'target_names':['_input_', 'weight', '_output_'],
         'op_names': ['fc1', 'fc2'],
+        'quant_dtype': None,
         'quant_scheme': 'affine',
         'granularity': 'default',
     },
     {
         'target_names':['_input_', 'weight', '_output_'],
         'op_names': ['conv1', 'conv2', 'conv3'],
+        'quant_dtype': None,
         'quant_scheme': 'affine',
         'granularity': 'default',
         'fuse_names': [("conv1", "bn1"), ('conv2', 'bn2'), ('conv3', 'bn3')]
@@ -54,12 +56,14 @@ def test_bnn_forward_with_lighting_model():
     configure_list = [{
         'target_names':['_input_', 'weight', '_output_'],
         'op_names': ['model.fc1', 'model.fc2'],
+        'quant_dtype': None,
         'quant_scheme': 'affine',
         'granularity': 'default',
     },
     {
         'target_names':['_input_', 'weight', '_output_'],
         'op_names': ['model.conv1', 'model.conv2', 'model.conv3'],
+        'quant_dtype': None,
         'quant_scheme': 'affine',
         'granularity': 'default',
         'fuse_names': [("model.conv1", "model.bn1"), ('model.conv2', 'model.bn2'), ('model.conv3', 'model.bn3')]

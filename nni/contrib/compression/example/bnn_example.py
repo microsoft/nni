@@ -147,13 +147,13 @@ def main():
     configure_list = [{
         'op_names': ['features.3', 'features.7', 'features.10', 'features.14', 'classifier.0', 'classifier.3'],
         'target_names': ['weight'],
-        'quant_dtype': 'int1',
+        'quant_dtype': None,
         'quant_scheme': "affine",
         'granularity': 'default',
     },
     {
         'op_names': ['features.6', 'features.9', 'features.13', 'features.16', 'features.20', 'classifier.2', 'classifier.5'],
-        'quant_dtype': 'int1',
+        'quant_dtype': None,
         'target_names': ['_output_'],
         'quant_scheme': "affine",
         'granularity': 'default',
