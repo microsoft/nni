@@ -37,8 +37,6 @@ What should you do when your experiment has error
 
 
 .. image:: ../../../img/webui-img/experimentError.gif
-   :width: 50%
-
 
 
 What should you do when your trial fails
