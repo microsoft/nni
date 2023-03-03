@@ -42,6 +42,7 @@ class QATQuantizer(Quantizer):
         Model to be quantized.
     config_list
         A list of dict, each dict configure which module need to be quantized, and how to quantize.
+        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
         TODO: {evaluator_docstring}
     quant_start_step
@@ -77,10 +78,12 @@ class QATQuantizer(Quantizer):
             for _, ts in self._target_spaces.items():
                 for _, target_space in ts.items():
                     target_space.apply_method = 'bypass'
-        else:
+        elif self.current_step == self.quant_start_step:
             for _, ts in self._target_spaces.items():
                 for _, target_space in ts.items():
                     target_space.apply_method = 'qat_clamp_round'
+        else:
+            pass
 
     def register_track_func(self):
         # NOTE: tracked min max value will be registered as buffer after the first forward during training,
@@ -150,30 +153,14 @@ class QATQuantizer(Quantizer):
 
         evaluator.patch_optimizer_step(before_step_tasks=[], after_step_tasks=[optimizer_task])
 
-    def compress(self, max_steps: int | None = None, max_epochs: int | None = None):
-        """
-        Start quantization aware training.
+    def _single_compress(self, max_steps: int | None, max_epochs: int | None):
+        self._fusion_compress(max_steps, max_epochs)
 
-        Parameters
-        ----------
-        max_steps
-            The max training step.
-        max_epochs
-            The max training epochs.
+    def _fuse_preprocess(self, evaluator: Evaluator) -> None:
+        self.register_trigger(evaluator)
 
-        Return
-        ------
-        torch.nn.Module
-            A simulated quantized model.
-        Dict[str, Dict[str, Tensor | Any]]
-            The calibration config, the format is {module_name: {target_name: {key: val}}},
-            contains keys ['scale', 'zero_point', 'quant_dtype', 'quant_scheme'].
-        """
-        self.evaluator.bind_model(self.bound_model, self._get_param_names_map())
-        self.register_trigger(self.evaluator)
-        self.evaluator.train(max_steps, max_epochs)
-        self.evaluator.unbind_model()
-        return self.bound_model, self.get_calibration_config()
+    def _fuse_postprocess(self, evaluator: Evaluator) -> None:
+        pass
 
 
 def track_min_max_val(wrapper: ModuleWrapper, target_name: str, target: Tensor):
