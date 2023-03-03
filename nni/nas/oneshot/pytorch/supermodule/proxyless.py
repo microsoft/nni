@@ -196,14 +196,14 @@ class _ProxylessFunction(torch.autograd.Function):
         )
 
 
-def suppress_already_mutated(module, name, memo, mutate_kwargs) -> bool:
+def suppress_already_mutated(module, name, memo, mutate_kwargs) -> bool | None:
     # ProxylessMixedRepeat will create MixedLayer on its own.
     # The created layer should NOT be mutated again.
 
     if isinstance(module, (ProxylessMixedLayer, ProxylessMixedInput, ProxylessMixedRepeat)):
         return True
 
-    return None
+    return None  # Skip this hook.
 
 
 class ProxylessMixedLayer(DifferentiableMixedLayer):
