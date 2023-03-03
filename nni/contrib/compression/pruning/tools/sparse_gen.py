@@ -269,12 +269,12 @@ def _global_threshold_generate(metrics: _METRICS,
 def _nested_multiply_update_masks(default_dict: _MASKS, update_dict: _MASKS):
     # if a target already has a mask, the old one will multiply the new one as the target mask,
     # that means the mask in default dict will more and more sparse.
-    for key, value in update_dict.items():
-        for k, v in value.items():
-            if k in default_dict[key] and isinstance(default_dict[key][k], torch.Tensor):
-                default_dict[key][k] = (default_dict[key][k] * v).bool().float()
+    for module_name, target_tensors in update_dict.items():
+        for target_name, target_tensor in target_tensors.items():
+            if target_name in default_dict[module_name] and isinstance(default_dict[module_name][target_name], torch.Tensor):
+                default_dict[module_name][target_name] = (default_dict[module_name][target_name] * target_tensor).bool().float()
             else:
-                default_dict[key][k] = v
+                default_dict[module_name][target_name] = target_tensor
 
 
 def _metric_fuse(metrics: _METRICS) -> torch.Tensor:

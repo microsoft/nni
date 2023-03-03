@@ -1,20 +1,36 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT license.
+#
+# SPDX-FileCopyrightText: Copyright (c) 1993-2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# NOTE: this file copies partial content of https://github.com/NVIDIA/TensorRT/blob/main/samples/python/common.py
 
 import pycuda.driver as cuda
 import pycuda.autoinit        # pylint: disable=unused-import
 import tensorrt as trt
 
-EXPLICIT_BATCH = 1
+def explicit_batch():
+    return 1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
 
 def GiB(val):
     return val * 1 << 30
 
-# Simple helper data class that's a little nicer to use than a 2-tuple.
 class HostDeviceMem(object):
     def __init__(self, host_mem, device_mem):
         """
-        This function builds an engine from an onnx model with calibration process.
+        Simple helper data class that's a little nicer to use than a 2-tuple.
 
         Parameters
         ----------
@@ -35,6 +51,7 @@ class HostDeviceMem(object):
 def allocate_buffers(engine):
     """
     Allocates all buffers required for an engine, i.e. host/device inputs/outputs.
+    NOTE: currently this function only supports NetworkDefinitionCreationFlag::kEXPLICIT_BATCH flag.
 
     Parameters
     ----------
@@ -57,7 +74,7 @@ def allocate_buffers(engine):
     bindings = []
     stream = cuda.Stream()
     for binding in engine:
-        size = trt.volume(engine.get_binding_shape(binding)) * engine.max_batch_size
+        size = trt.volume(engine.get_binding_shape(binding)) # * engine.max_batch_size, batch size already in
         dtype = trt.nptype(engine.get_binding_dtype(binding))
         # Allocate host and device buffers
         host_mem = cuda.pagelocked_empty(size, dtype)

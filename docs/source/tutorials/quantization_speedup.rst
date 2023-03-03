@@ -18,96 +18,96 @@
 .. _sphx_glr_tutorials_quantization_speedup.py:
 
 
-SpeedUp Model with Calibration Config
+Speed Up Quantized Model with TensorRT
 ======================================
 
+Quantization algorithms quantize a deep learning model usually in a simulated way. That is, to simulate the effect of low-bit computation with float32 operators, the tensors are quantized to the targeted bit number and dequantized back to float32. Such a quantized model does not have any latency reduction. Thus, there should be a speedup stage to make the quantized model really accelerated with low-bit operators. 
+This tutorial demonstrates how to accelerate a quantized model with `TensorRT <https://developer.nvidia.com/tensorrt>`_ as the inference engine in NNI. More inference engines will be supported in future release.
 
-Introduction
-------------
+The process of speeding up a quantized model in NNI is that 1) the model with quantized weights and configuration is converted into onnx format, 2) the onnx model is fed into TensorRT to generate an inference engine. The engine is used for low latency model inference.
 
-Deep learning network has been computational intensive and memory intensive 
-which increases the difficulty of deploying deep neural network model. Quantization is a 
-fundamental technology which is widely used to reduce memory footprint and speedup inference 
-process. Many frameworks begin to support quantization, but few of them support mixed precision 
-quantization and get real speedup. Frameworks like `HAQ: Hardware-Aware Automated Quantization with Mixed Precision <https://arxiv.org/pdf/1811.08886.pdf>`__\, only support simulated mixed precision quantization which will 
-not speedup the inference process. To get real speedup of mixed precision quantization and 
-help people get the real feedback from hardware, we design a general framework with simple interface to allow NNI quantization algorithms to connect different 
-DL model optimization backends (e.g., TensorRT, NNFusion), which gives users an end-to-end experience that after quantizing their model 
-with quantization algorithms, the quantized model can be directly speeded up with the connected optimization backend. NNI connects 
-TensorRT at this stage, and will support more backends in the future.
-
-
-Design and Implementation
--------------------------
-
-To support speeding up mixed precision quantization, we divide framework into two part, frontend and backend.  
-Frontend could be popular training frameworks such as PyTorch, TensorFlow etc. Backend could be inference 
-framework for different hardwares, such as TensorRT. At present, we support PyTorch as frontend and 
-TensorRT as backend. To convert PyTorch model to TensorRT engine, we leverage onnx as intermediate graph 
-representation. In this way, we convert PyTorch model to onnx model, then TensorRT parse onnx 
-model to generate inference engine. 
-
-
-Quantization aware training combines NNI quantization algorithm 'QAT' and NNI quantization speedup tool.
-Users should set config to train quantized model using QAT algorithm(please refer to :doc:`NNI Quantization Algorithms <../compression/quantizer>`  ).
-After quantization aware training, users can get new config with calibration parameters and model with quantized weight. By passing new config and model to quantization speedup tool, users can get real mixed precision speedup engine to do inference.
-
-
-After getting mixed precision engine, users can do inference with input data.
-
-
-Note
-
-
-* Recommend using "cpu"(host) as data device(for both inference data and calibration data) since data should be on host initially and it will be transposed to device before inference. If data type is not "cpu"(host), this tool will transpose it to "cpu" which may increases unnecessary overhead.
-* User can also do post-training quantization leveraging TensorRT directly(need to provide calibration dataset).
-* Not all op types are supported right now. At present, NNI supports Conv, Linear, Relu and MaxPool. More op types will be supported in the following release.
-
+There are two modes of the speedup: 1) leveraging post-training quantization of TensorRT, 2) using TensorRT as a pure acceleration backend. The two modes will be explained in the usage section below.
 
 Prerequisite
 ------------
-CUDA version >= 11.0
+When using TensorRT to speed up a quantized model, you are highly recommended to use the PyTorch docker image provided by NVIDIA.
+Users can refer to `this web page <https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch>`__ for detailed usage of the docker image.
+The docker image "nvcr.io/nvidia/pytorch:22.09-py3" has been tested for the quantization speedup in NNI.
 
-TensorRT version >= 7.2
-
-Note
-
-* If you haven't installed TensorRT before or use the old version, please refer to `TensorRT Installation Guide <https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html>`__\  
+An example command to launch the docker container is `nvidia-docker run -it nvcr.io/nvidia/pytorch:22.09-py3`.
+In the docker image, users should install nni>=3.0, pytorch_lightning, pycuda.
 
 Usage
 -----
 
-.. GENERATED FROM PYTHON SOURCE LINES 64-92
+Mode #1: Leveraging post-training quantization of TensorRT
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As TensorRT has supported post-training quantization, directly leveraging this functionality is a natural way to use TensorRT. This mode is called "with calibration data". In this mode, the quantization-aware training algorithms (e.g., `QAT <https://nni.readthedocs.io/en/stable/reference/compression/quantizer.html#qat-quantizer>`_, `LSQ <https://nni.readthedocs.io/en/stable/reference/compression/quantizer.html#lsq-quantizer>`_) only take charge of adjusting model weights to be more quantization friendly, and leave the last-step quantization to the post-training quantization of TensorRT.
+
+.. GENERATED FROM PYTHON SOURCE LINES 32-33
+
+Prepare the calibration data with 128 samples
+
+.. GENERATED FROM PYTHON SOURCE LINES 33-65
 
 .. code-block:: default
 
     import torch
-    import torch.nn.functional as F
-    from torch.optim import SGD
-    from nni_assets.compression.mnist_model import TorchModel, device, trainer, evaluator, test_trt
+    import torchvision
+    import torchvision.transforms as transforms
+    def prepare_data_loaders(data_path, batch_size):
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+        dataset = torchvision.datasets.ImageNet(
+            data_path, split="train",
+            transform=transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                normalize,
+            ]))
 
-    config_list = [{
-        'quant_types': ['input', 'weight'],
-        'quant_bits': {'input': 8, 'weight': 8},
-        'op_types': ['Conv2d']
-    }, {
-        'quant_types': ['output'],
-        'quant_bits': {'output': 8},
-        'op_types': ['ReLU']
-    }, {
-        'quant_types': ['input', 'weight'],
-        'quant_bits': {'input': 8, 'weight': 8},
-        'op_names': ['fc1', 'fc2']
-    }]
+        sampler = torch.utils.data.SequentialSampler(dataset)
+        data_loader = torch.utils.data.DataLoader(
+            dataset, batch_size=batch_size,
+            sampler=sampler)
+        return data_loader
 
-    model = TorchModel().to(device)
-    optimizer = SGD(model.parameters(), lr=0.01, momentum=0.5)
-    criterion = F.nll_loss
-    dummy_input = torch.rand(32, 1, 28, 28).to(device)
+    data_path = '/data' # replace it with your path of ImageNet dataset
+    data_loader = prepare_data_loaders(data_path, batch_size=128)
+    calib_data = None
+    for image, target in data_loader:
+        calib_data = image.numpy()
+        break
 
-    from nni.compression.pytorch.quantization import QAT_Quantizer
-    quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input)
-    quantizer.compress()
+    from nni.compression.pytorch.quantization_speedup.calibrator import Calibrator
+    # TensorRT processes the calibration data in the batch size of 64
+    calib = Calibrator(calib_data, 'data/calib_cache_file.cache', batch_size=64)
+
+
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 66-67
+
+Prepare the float32 model MobileNetV2
+
+.. GENERATED FROM PYTHON SOURCE LINES 67-76
+
+.. code-block:: default
+
+    from nni_assets.compression.mobilenetv2 import MobileNetV2
+    model = MobileNetV2()
+    # a checkpoint of MobileNetV2 can be found here
+    # https://download.pytorch.org/models/mobilenet_v2-b0353104.pth
+    float_model_file = 'mobilenet_pretrained_float.pth'
+    state_dict = torch.load(float_model_file)
+    model.load_state_dict(state_dict)
+    model.eval()
 
 
 
@@ -115,117 +115,364 @@ Usage
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
 
-    TorchModel(
-      (conv1): QuantizerModuleWrapper(
-        (module): Conv2d(1, 6, kernel_size=(5, 5), stride=(1, 1))
+    MobileNetV2(
+      (features): Sequential(
+        (0): ConvBNReLU(
+          (0): Conv2d(3, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU()
+        )
+        (1): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=32, bias=False)
+              (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): Conv2d(32, 16, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (2): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (2): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(16, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(96, 96, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=96, bias=False)
+              (1): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(96, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (3): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(24, 144, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(144, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(144, 144, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=144, bias=False)
+              (1): BatchNorm2d(144, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(144, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (4): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(24, 144, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(144, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(144, 144, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=144, bias=False)
+              (1): BatchNorm2d(144, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(144, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (5): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(32, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+              (1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(192, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (6): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(32, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+              (1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(192, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (7): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(32, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(192, 192, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=192, bias=False)
+              (1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(192, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (8): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(64, 384, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384, bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(384, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (9): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(64, 384, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384, bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(384, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (10): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(64, 384, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384, bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(384, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (11): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(64, 384, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384, bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(384, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (12): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(576, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(576, 576, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=576, bias=False)
+              (1): BatchNorm2d(576, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(576, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (13): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(576, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(576, 576, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=576, bias=False)
+              (1): BatchNorm2d(576, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(576, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (14): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(576, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(576, 576, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=576, bias=False)
+              (1): BatchNorm2d(576, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(576, 160, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (15): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(160, 960, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(960, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(960, 960, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=960, bias=False)
+              (1): BatchNorm2d(960, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(960, 160, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (16): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(160, 960, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(960, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(960, 960, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=960, bias=False)
+              (1): BatchNorm2d(960, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(960, 160, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (17): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(160, 960, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(960, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(960, 960, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=960, bias=False)
+              (1): BatchNorm2d(960, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(960, 320, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (18): ConvBNReLU(
+          (0): Conv2d(320, 1280, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (1): BatchNorm2d(1280, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU()
+        )
       )
-      (conv2): QuantizerModuleWrapper(
-        (module): Conv2d(6, 16, kernel_size=(5, 5), stride=(1, 1))
+      (classifier): Sequential(
+        (0): Dropout(p=0.2, inplace=False)
+        (1): Linear(in_features=1280, out_features=1000, bias=True)
       )
-      (fc1): QuantizerModuleWrapper(
-        (module): Linear(in_features=256, out_features=120, bias=True)
-      )
-      (fc2): QuantizerModuleWrapper(
-        (module): Linear(in_features=120, out_features=84, bias=True)
-      )
-      (fc3): Linear(in_features=84, out_features=10, bias=True)
-      (relu1): QuantizerModuleWrapper(
-        (module): ReLU()
-      )
-      (relu2): QuantizerModuleWrapper(
-        (module): ReLU()
-      )
-      (relu3): QuantizerModuleWrapper(
-        (module): ReLU()
-      )
-      (relu4): QuantizerModuleWrapper(
-        (module): ReLU()
-      )
-      (pool1): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
-      (pool2): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), padding=0, dilation=1, ceil_mode=False)
     )
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 93-94
+.. GENERATED FROM PYTHON SOURCE LINES 77-78
 
-finetuning the model by using QAT
+Speed up the model with TensorRT
 
-.. GENERATED FROM PYTHON SOURCE LINES 94-98
-
-.. code-block:: default
-
-    for epoch in range(3):
-        trainer(model, optimizer, criterion)
-        evaluator(model)
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    Average test loss: 0.3398, Accuracy: 8982/10000 (90%)
-    Average test loss: 0.1530, Accuracy: 9532/10000 (95%)
-    Average test loss: 0.1065, Accuracy: 9673/10000 (97%)
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 99-100
-
-export model and get calibration_config
-
-.. GENERATED FROM PYTHON SOURCE LINES 100-108
+.. GENERATED FROM PYTHON SOURCE LINES 78-83
 
 .. code-block:: default
-
-    import os
-    os.makedirs('log', exist_ok=True)
-    model_path = "./log/mnist_model.pth"
-    calibration_path = "./log/mnist_calibration.pth"
-    calibration_config = quantizer.export_model(model_path, calibration_path)
-
-    print("calibration_config: ", calibration_config)
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    calibration_config:  {'conv1': {'weight_bits': 8, 'weight_scale': tensor([0.0031], device='cuda:0'), 'weight_zero_point': tensor([120.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': -0.4242129623889923, 'tracked_max_input': 2.821486711502075}, 'conv2': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0'), 'weight_zero_point': tensor([112.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 10.270780563354492}, 'fc1': {'weight_bits': 8, 'weight_scale': tensor([0.0010], device='cuda:0'), 'weight_zero_point': tensor([131.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 14.321571350097656}, 'fc2': {'weight_bits': 8, 'weight_scale': tensor([0.0014], device='cuda:0'), 'weight_zero_point': tensor([112.], device='cuda:0'), 'input_bits': 8, 'tracked_min_input': 0.0, 'tracked_max_input': 14.133180618286133}, 'relu1': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 10.405377388000488}, 'relu2': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 14.843622207641602}, 'relu3': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 14.523283004760742}, 'relu4': {'output_bits': 8, 'tracked_min_output': 0.0, 'tracked_max_output': 12.40306568145752}}
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 109-110
-
-build tensorRT engine to make a real speedup
-
-.. GENERATED FROM PYTHON SOURCE LINES 110-117
-
-.. code-block:: default
-
 
     from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
-    input_shape = (32, 1, 28, 28)
-    engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=32)
-    engine.compress()
-    test_trt(engine)
+    # input shape is used for converting to onnx
+    engine = ModelSpeedupTensorRT(model, input_shape=(64, 3, 224, 224))
+    engine.compress_with_calibrator(calib)
+
+
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 84-85
+
+Test the accuracy of the accelerated model
+
+.. GENERATED FROM PYTHON SOURCE LINES 85-125
+
+.. code-block:: default
+
+    from nni_assets.compression.mobilenetv2 import AverageMeter, accuracy
+    import time
+    def test_accelerated_model(engine, data_loader, neval_batches):
+        top1 = AverageMeter('Acc@1', ':6.2f')
+        top5 = AverageMeter('Acc@5', ':6.2f')
+        cnt = 0
+        total_time = 0
+        for image, target in data_loader:
+            start_time = time.time()
+            output, time_span = engine.inference(image)
+            infer_time = time.time() - start_time
+            print('time: ', time_span, infer_time)
+            total_time += time_span
+
+            start_time = time.time()
+            output = output.view(-1, 1000)
+            cnt += 1
+            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+            top1.update(acc1[0], image.size(0))
+            top5.update(acc5[0], image.size(0))
+            rest_time = time.time() - start_time
+            print('rest time: ', rest_time)
+            if cnt >= neval_batches:
+                break
+        print('inference time: ', total_time / neval_batches)
+        return top1, top5
+
+    data_loader = prepare_data_loaders(data_path, batch_size=64)
+    top1, top5 = test_accelerated_model(engine, data_loader, neval_batches=32)
+    print('Accuracy of mode #1: ', top1, top5)
+
+    """
+
+    Mode #2: Using TensorRT as a pure acceleration backend
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    In this mode, the post-training quantization within TensorRT is not used, instead, the quantization bit-width and the range of tensor values are fed into TensorRT for speedup (i.e., with `trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS` configured).
+
+    """
 
 
 
@@ -233,95 +480,892 @@ build tensorRT engine to make a real speedup
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
+ .. code-block:: none
+
+    time:  0.007371187210083008 0.0755157470703125
+    rest time:  0.007226467132568359
+    time:  0.008255243301391602 0.014445781707763672
+    rest time:  0.004409313201904297
+    time:  0.011122465133666992 0.022064685821533203
+    rest time:  0.0039637088775634766
+    time:  0.00662541389465332 0.032051801681518555
+    rest time:  0.01301717758178711
+    time:  0.015038251876831055 0.021012067794799805
+    rest time:  0.010489225387573242
+    time:  0.014427900314331055 0.02040863037109375
+    rest time:  0.004745006561279297
+    time:  0.015397071838378906 0.021099328994750977
+    rest time:  0.007930994033813477
+    time:  0.01590561866760254 0.021413326263427734
+    rest time:  0.0041942596435546875
+    time:  0.013051271438598633 0.018629074096679688
+    rest time:  0.0015153884887695312
+    time:  0.014502286911010742 0.020158052444458008
+    rest time:  0.005063295364379883
+    time:  0.015403985977172852 0.02086186408996582
+    rest time:  0.004670619964599609
+    time:  0.0065364837646484375 0.020153284072875977
+    rest time:  0.008569002151489258
+    time:  0.013626575469970703 0.01917243003845215
+    rest time:  0.0031440258026123047
+    time:  0.0064771175384521484 0.013679742813110352
+    rest time:  0.00655364990234375
+    time:  0.014115571975708008 0.019948244094848633
+    rest time:  0.008743524551391602
+    time:  0.006500959396362305 0.012232303619384766
+    rest time:  0.013003110885620117
+    time:  0.012592792510986328 0.03718090057373047
+    rest time:  0.0038595199584960938
+    time:  0.014433145523071289 0.02013683319091797
+    rest time:  0.005038261413574219
+    time:  0.006524801254272461 0.012169599533081055
+    rest time:  0.009010553359985352
+    time:  0.013537883758544922 0.030646085739135742
+    rest time:  0.006685495376586914
+    time:  0.01633906364440918 0.035025596618652344
+    rest time:  0.004217863082885742
+    time:  0.016054630279541016 0.021522998809814453
+    rest time:  0.004320859909057617
+    time:  0.014492988586425781 0.02134084701538086
+    rest time:  0.004892110824584961
+    time:  0.015976905822753906 0.021486759185791016
+    rest time:  0.0040585994720458984
+    time:  0.01585698127746582 0.02131342887878418
+    rest time:  0.004300594329833984
+    time:  0.006479740142822266 0.020430803298950195
+    rest time:  0.007807731628417969
+    time:  0.01425313949584961 0.01970529556274414
+    rest time:  0.009683847427368164
+    time:  0.016760826110839844 0.021848440170288086
+    rest time:  0.005599498748779297
+    time:  0.016245365142822266 0.021628856658935547
+    rest time:  0.004263162612915039
+    time:  0.016093730926513672 0.02156829833984375
+    rest time:  0.008071184158325195
+    time:  0.015858173370361328 0.021581172943115234
+    rest time:  0.004274606704711914
+    time:  0.006439208984375 0.013753652572631836
+    rest time:  0.0034856796264648438
+    inference time:  0.012571774423122406
+    Accuracy of mode #1:  Acc@1  92.19 ( 94.09) Acc@5  95.31 ( 98.19)
+
+    '\n\nMode #2: Using TensorRT as a pure acceleration backend\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nIn this mode, the post-training quantization within TensorRT is not used, instead, the quantization bit-width and the range of tensor values are fed into TensorRT for speedup (i.e., with `trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS` configured).\n\n'
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 126-127
+
+re-instantiate the MobileNetV2 model
+
+.. GENERATED FROM PYTHON SOURCE LINES 127-134
+
+.. code-block:: default
+
+    model = MobileNetV2()
+    state_dict = torch.load(float_model_file)
+    model.load_state_dict(state_dict)
+    model.eval()
+    device = torch.device('cuda')
+    model.to(device)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
 
  .. code-block:: none
 
-    Loss: 0.10724755859375  Accuracy: 96.64%
-    Inference elapsed_time (whole dataset): 0.03695106506347656s
+
+    MobileNetV2(
+      (features): Sequential(
+        (0): ConvBNReLU(
+          (0): Conv2d(3, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU()
+        )
+        (1): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=32, bias=False)
+              (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): Conv2d(32, 16, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (2): BatchNorm2d(16, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (2): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(16, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(96, 96, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=96, bias=False)
+              (1): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(96, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (3): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(24, 144, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(144, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(144, 144, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=144, bias=False)
+              (1): BatchNorm2d(144, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(144, 24, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (4): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(24, 144, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(144, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(144, 144, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=144, bias=False)
+              (1): BatchNorm2d(144, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(144, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (5): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(32, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+              (1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(192, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (6): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(32, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192, bias=False)
+              (1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(192, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (7): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(32, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(192, 192, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=192, bias=False)
+              (1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(192, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (8): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(64, 384, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384, bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(384, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (9): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(64, 384, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384, bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(384, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (10): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(64, 384, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384, bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(384, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (11): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(64, 384, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384, bias=False)
+              (1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(384, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (12): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(576, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(576, 576, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=576, bias=False)
+              (1): BatchNorm2d(576, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(576, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (13): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(576, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(576, 576, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=576, bias=False)
+              (1): BatchNorm2d(576, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(576, 96, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (14): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(96, 576, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(576, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(576, 576, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=576, bias=False)
+              (1): BatchNorm2d(576, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(576, 160, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (15): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(160, 960, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(960, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(960, 960, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=960, bias=False)
+              (1): BatchNorm2d(960, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(960, 160, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (16): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(160, 960, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(960, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(960, 960, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=960, bias=False)
+              (1): BatchNorm2d(960, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(960, 160, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(160, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (17): InvertedResidual(
+          (conv): Sequential(
+            (0): ConvBNReLU(
+              (0): Conv2d(160, 960, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (1): BatchNorm2d(960, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (1): ConvBNReLU(
+              (0): Conv2d(960, 960, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=960, bias=False)
+              (1): BatchNorm2d(960, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+              (2): ReLU()
+            )
+            (2): Conv2d(960, 320, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (3): BatchNorm2d(320, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (18): ConvBNReLU(
+          (0): Conv2d(320, 1280, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (1): BatchNorm2d(1280, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU()
+        )
+      )
+      (classifier): Sequential(
+        (0): Dropout(p=0.2, inplace=False)
+        (1): Linear(in_features=1280, out_features=1000, bias=True)
+      )
+    )
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 135-138
+
+Prepare Evaluator for PtqQuantizer
+PtqQuantizer uses eval_for_calibration to collect calibration data 
+in the current setting, it handles 128 samples
+
+.. GENERATED FROM PYTHON SOURCE LINES 138-148
+
+.. code-block:: default
+
+    from nni_assets.compression.mobilenetv2 import evaluate
+    from nni.compression.pytorch.utils import TorchEvaluator
+    data_loader = prepare_data_loaders(data_path, batch_size=128)
+    def eval_for_calibration(model):
+        evaluate(model, data_loader,
+                    neval_batches=1, device=device)
+
+    dummy_input = torch.Tensor(64, 3, 224, 224).to(device)
+    predict_func = TorchEvaluator(predicting_func=eval_for_calibration, dummy_input=dummy_input)
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 118-169
 
-Note that NNI also supports post-training quantization directly, please refer to complete examples for detail.
 
-For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
 
-For more parameters about the class 'TensorRTModelSpeedUp', you can refer to :doc:`Model Compression API Reference <../reference/compression/quantization_speedup>`.
 
-Mnist test
-^^^^^^^^^^
+.. GENERATED FROM PYTHON SOURCE LINES 149-150
 
-on one GTX2080 GPU,
-input tensor: ``torch.randn(128, 1, 28, 28)``
+Use PtqQuantizer to quantize the model
 
-.. list-table::
-   :header-rows: 1
-   :widths: auto
+.. GENERATED FROM PYTHON SOURCE LINES 150-163
 
-   * - quantization strategy
-     - Latency
-     - accuracy
-   * - all in 32bit
-     - 0.001199961
-     - 96%
-   * - mixed precision(average bit 20.4)
-     - 0.000753688
-     - 96%
-   * - all in 8bit
-     - 0.000229869
-     - 93.7%
+.. code-block:: default
 
-Cifar10 resnet18 test (train one epoch)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    from nni.compression.pytorch.quantization import PtqQuantizer
+    config_list = [{
+        'quant_types': ['input', 'weight', 'output'],
+        'quant_bits': {'input': 8, 'weight': 8, 'output': 8},
+        'quant_dtype': 'int',
+        'quant_scheme': 'per_tensor_symmetric',
+        'op_types': ['default']
+    }]
+    quantizer = PtqQuantizer(model, config_list, predict_func, True)
+    quantizer.compress()
+    calibration_config = quantizer.export_model()
+    print('quant result config: ', calibration_config)
 
-on one GTX2080 GPU,
-input tensor: ``torch.randn(128, 3, 32, 32)``
 
-.. list-table::
-   :header-rows: 1
-   :widths: auto
 
-   * - quantization strategy
-     - Latency
-     - accuracy
-   * - all in 32bit
-     - 0.003286268
-     - 54.21%
-   * - mixed precision(average bit 11.55)
-     - 0.001358022
-     - 54.78%
-   * - all in 8bit
-     - 0.000859139
-     - 52.81%
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    has batchnorm layer name:  features.0.0
+    has batchnorm layer name:  features.1.conv.0.0
+    has batchnorm layer name:  features.1.conv.1
+    has batchnorm layer name:  features.2.conv.0.0
+    has batchnorm layer name:  features.2.conv.1.0
+    has batchnorm layer name:  features.2.conv.2
+    has batchnorm layer name:  features.3.conv.0.0
+    has batchnorm layer name:  features.3.conv.1.0
+    has batchnorm layer name:  features.3.conv.2
+    has batchnorm layer name:  features.4.conv.0.0
+    has batchnorm layer name:  features.4.conv.1.0
+    has batchnorm layer name:  features.4.conv.2
+    has batchnorm layer name:  features.5.conv.0.0
+    has batchnorm layer name:  features.5.conv.1.0
+    has batchnorm layer name:  features.5.conv.2
+    has batchnorm layer name:  features.6.conv.0.0
+    has batchnorm layer name:  features.6.conv.1.0
+    has batchnorm layer name:  features.6.conv.2
+    has batchnorm layer name:  features.7.conv.0.0
+    has batchnorm layer name:  features.7.conv.1.0
+    has batchnorm layer name:  features.7.conv.2
+    has batchnorm layer name:  features.8.conv.0.0
+    has batchnorm layer name:  features.8.conv.1.0
+    has batchnorm layer name:  features.8.conv.2
+    has batchnorm layer name:  features.9.conv.0.0
+    has batchnorm layer name:  features.9.conv.1.0
+    has batchnorm layer name:  features.9.conv.2
+    has batchnorm layer name:  features.10.conv.0.0
+    has batchnorm layer name:  features.10.conv.1.0
+    has batchnorm layer name:  features.10.conv.2
+    has batchnorm layer name:  features.11.conv.0.0
+    has batchnorm layer name:  features.11.conv.1.0
+    has batchnorm layer name:  features.11.conv.2
+    has batchnorm layer name:  features.12.conv.0.0
+    has batchnorm layer name:  features.12.conv.1.0
+    has batchnorm layer name:  features.12.conv.2
+    has batchnorm layer name:  features.13.conv.0.0
+    has batchnorm layer name:  features.13.conv.1.0
+    has batchnorm layer name:  features.13.conv.2
+    has batchnorm layer name:  features.14.conv.0.0
+    has batchnorm layer name:  features.14.conv.1.0
+    has batchnorm layer name:  features.14.conv.2
+    has batchnorm layer name:  features.15.conv.0.0
+    has batchnorm layer name:  features.15.conv.1.0
+    has batchnorm layer name:  features.15.conv.2
+    has batchnorm layer name:  features.16.conv.0.0
+    has batchnorm layer name:  features.16.conv.1.0
+    has batchnorm layer name:  features.16.conv.2
+    has batchnorm layer name:  features.17.conv.0.0
+    has batchnorm layer name:  features.17.conv.1.0
+    has batchnorm layer name:  features.17.conv.2
+    has batchnorm layer name:  features.18.0
+    layer name and layer type:  features.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.1.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.1.conv.1 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.2.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.2.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.2.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.3.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.3.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.3.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.4.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.4.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.4.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.5.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.5.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.5.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.6.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.6.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.6.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.7.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.7.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.7.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.8.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.8.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.8.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.9.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.9.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.9.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.10.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.10.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.10.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.11.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.11.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.11.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.12.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.12.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.12.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.13.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.13.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.13.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.14.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.14.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.14.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.15.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.15.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.15.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.16.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.16.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.16.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.17.conv.0.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.17.conv.1.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.17.conv.2 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  features.18.0 <class 'torch.nn.modules.conv.Conv2d'>
+    layer name and layer type:  classifier.1 <class 'torch.nn.modules.linear.Linear'>
+    collected data:  {'features.0.0': {'input_output': [tensor(-2.1179, device='cuda:0'), tensor(2.6400, device='cuda:0'), tensor(-4.0508, device='cuda:0'), tensor(3.5382, device='cuda:0')]}, 'features.1.conv.0.0': {'input_output': [tensor(0., device='cuda:0'), tensor(3.5382, device='cuda:0'), tensor(-8.9310, device='cuda:0'), tensor(17.8514, device='cuda:0')]}, 'features.1.conv.1': {'input_output': [tensor(0., device='cuda:0'), tensor(17.8514, device='cuda:0'), tensor(-9.9938, device='cuda:0'), tensor(9.2802, device='cuda:0')]}, 'features.2.conv.0.0': {'input_output': [tensor(-9.9938, device='cuda:0'), tensor(9.2802, device='cuda:0'), tensor(-8.8805, device='cuda:0'), tensor(11.0148, device='cuda:0')]}, 'features.2.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(11.0148, device='cuda:0'), tensor(-9.2212, device='cuda:0'), tensor(9.9697, device='cuda:0')]}, 'features.2.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(9.9697, device='cuda:0'), tensor(-4.3244, device='cuda:0'), tensor(6.6904, device='cuda:0')]}, 'features.3.conv.0.0': {'input_output': [tensor(-4.3244, device='cuda:0'), tensor(6.6904, device='cuda:0'), tensor(-6.5639, device='cuda:0'), tensor(2.4381, device='cuda:0')]}, 'features.3.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(2.4381, device='cuda:0'), tensor(-5.0002, device='cuda:0'), tensor(6.8038, device='cuda:0')]}, 'features.3.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(6.8038, device='cuda:0'), tensor(-5.4667, device='cuda:0'), tensor(6.1576, device='cuda:0')]}, 'features.4.conv.0.0': {'input_output': [tensor(-8.2105, device='cuda:0'), tensor(10.4625, device='cuda:0'), tensor(-5.5820, device='cuda:0'), tensor(2.8383, device='cuda:0')]}, 'features.4.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(2.8383, device='cuda:0'), tensor(-4.3612, device='cuda:0'), tensor(3.0908, device='cuda:0')]}, 'features.4.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(3.0908, device='cuda:0'), tensor(-4.1957, device='cuda:0'), tensor(3.5121, device='cuda:0')]}, 'features.5.conv.0.0': {'input_output': [tensor(-4.1957, device='cuda:0'), tensor(3.5121, device='cuda:0'), tensor(-1.7672, device='cuda:0'), tensor(1.6071, device='cuda:0')]}, 'features.5.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(1.6071, device='cuda:0'), tensor(-4.4242, device='cuda:0'), tensor(2.1809, device='cuda:0')]}, 'features.5.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(2.1809, device='cuda:0'), tensor(-3.7384, device='cuda:0'), tensor(3.0113, device='cuda:0')]}, 'features.6.conv.0.0': {'input_output': [tensor(-5.4580, device='cuda:0'), tensor(4.8125, device='cuda:0'), tensor(-1.2080, device='cuda:0'), tensor(1.5199, device='cuda:0')]}, 'features.6.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(1.5199, device='cuda:0'), tensor(-2.2817, device='cuda:0'), tensor(2.7188, device='cuda:0')]}, 'features.6.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(2.7188, device='cuda:0'), tensor(-3.7342, device='cuda:0'), tensor(3.3996, device='cuda:0')]}, 'features.7.conv.0.0': {'input_output': [tensor(-6.0502, device='cuda:0'), tensor(5.4080, device='cuda:0'), tensor(-2.1406, device='cuda:0'), tensor(2.4132, device='cuda:0')]}, 'features.7.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(2.4132, device='cuda:0'), tensor(-2.2789, device='cuda:0'), tensor(3.1562, device='cuda:0')]}, 'features.7.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(3.1562, device='cuda:0'), tensor(-3.3592, device='cuda:0'), tensor(3.3580, device='cuda:0')]}, 'features.8.conv.0.0': {'input_output': [tensor(-3.3592, device='cuda:0'), tensor(3.3580, device='cuda:0'), tensor(-0.9104, device='cuda:0'), tensor(1.2551, device='cuda:0')]}, 'features.8.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(1.2551, device='cuda:0'), tensor(-2.1406, device='cuda:0'), tensor(1.8775, device='cuda:0')]}, 'features.8.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(1.8775, device='cuda:0'), tensor(-2.5593, device='cuda:0'), tensor(2.2768, device='cuda:0')]}, 'features.9.conv.0.0': {'input_output': [tensor(-3.3156, device='cuda:0'), tensor(3.6217, device='cuda:0'), tensor(-0.8969, device='cuda:0'), tensor(0.9045, device='cuda:0')]}, 'features.9.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(0.9045, device='cuda:0'), tensor(-2.4514, device='cuda:0'), tensor(1.7025, device='cuda:0')]}, 'features.9.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(1.7025, device='cuda:0'), tensor(-2.1501, device='cuda:0'), tensor(1.7318, device='cuda:0')]}, 'features.10.conv.0.0': {'input_output': [tensor(-3.6207, device='cuda:0'), tensor(3.5440, device='cuda:0'), tensor(-1.1216, device='cuda:0'), tensor(1.0151, device='cuda:0')]}, 'features.10.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(1.0151, device='cuda:0'), tensor(-2.1086, device='cuda:0'), tensor(4.9800, device='cuda:0')]}, 'features.10.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(4.9800, device='cuda:0'), tensor(-4.9967, device='cuda:0'), tensor(3.0488, device='cuda:0')]}, 'features.11.conv.0.0': {'input_output': [tensor(-4.7700, device='cuda:0'), tensor(4.1481, device='cuda:0'), tensor(-1.4204, device='cuda:0'), tensor(1.7411, device='cuda:0')]}, 'features.11.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(1.7411, device='cuda:0'), tensor(-2.4601, device='cuda:0'), tensor(3.1571, device='cuda:0')]}, 'features.11.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(3.1571, device='cuda:0'), tensor(-2.9079, device='cuda:0'), tensor(3.0321, device='cuda:0')]}, 'features.12.conv.0.0': {'input_output': [tensor(-2.9079, device='cuda:0'), tensor(3.0321, device='cuda:0'), tensor(-1.6301, device='cuda:0'), tensor(1.6505, device='cuda:0')]}, 'features.12.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(1.6505, device='cuda:0'), tensor(-9.1749, device='cuda:0'), tensor(7.5615, device='cuda:0')]}, 'features.12.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(7.5615, device='cuda:0'), tensor(-3.7960, device='cuda:0'), tensor(4.0899, device='cuda:0')]}, 'features.13.conv.0.0': {'input_output': [tensor(-3.9207, device='cuda:0'), tensor(4.8680, device='cuda:0'), tensor(-2.2418, device='cuda:0'), tensor(5.4677, device='cuda:0')]}, 'features.13.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(5.4677, device='cuda:0'), tensor(-5.2036, device='cuda:0'), tensor(6.8076, device='cuda:0')]}, 'features.13.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(6.8076, device='cuda:0'), tensor(-10.5456, device='cuda:0'), tensor(7.9099, device='cuda:0')]}, 'features.14.conv.0.0': {'input_output': [tensor(-10.0774, device='cuda:0'), tensor(9.9551, device='cuda:0'), tensor(-1.9473, device='cuda:0'), tensor(4.1514, device='cuda:0')]}, 'features.14.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(4.1514, device='cuda:0'), tensor(-3.5458, device='cuda:0'), tensor(6.5503, device='cuda:0')]}, 'features.14.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(6.5503, device='cuda:0'), tensor(-11.4795, device='cuda:0'), tensor(7.9077, device='cuda:0')]}, 'features.15.conv.0.0': {'input_output': [tensor(-11.4795, device='cuda:0'), tensor(7.9077, device='cuda:0'), tensor(-4.0950, device='cuda:0'), tensor(5.9189, device='cuda:0')]}, 'features.15.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(5.9189, device='cuda:0'), tensor(-6.5621, device='cuda:0'), tensor(6.4248, device='cuda:0')]}, 'features.15.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(6.4248, device='cuda:0'), tensor(-7.5125, device='cuda:0'), tensor(10.6610, device='cuda:0')]}, 'features.16.conv.0.0': {'input_output': [tensor(-16.1794, device='cuda:0'), tensor(18.4018, device='cuda:0'), tensor(-4.2519, device='cuda:0'), tensor(5.4586, device='cuda:0')]}, 'features.16.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(5.4586, device='cuda:0'), tensor(-6.3320, device='cuda:0'), tensor(11.1398, device='cuda:0')]}, 'features.16.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(11.1398, device='cuda:0'), tensor(-21.6895, device='cuda:0'), tensor(21.6065, device='cuda:0')]}, 'features.17.conv.0.0': {'input_output': [tensor(-29.9382, device='cuda:0'), tensor(40.0082, device='cuda:0'), tensor(-11.4350, device='cuda:0'), tensor(4.5680, device='cuda:0')]}, 'features.17.conv.1.0': {'input_output': [tensor(0., device='cuda:0'), tensor(4.5680, device='cuda:0'), tensor(-5.5903, device='cuda:0'), tensor(1.8426, device='cuda:0')]}, 'features.17.conv.2': {'input_output': [tensor(0., device='cuda:0'), tensor(1.8426, device='cuda:0'), tensor(-2.0500, device='cuda:0'), tensor(2.3234, device='cuda:0')]}, 'features.18.0': {'input_output': [tensor(-2.0500, device='cuda:0'), tensor(2.3234, device='cuda:0'), tensor(-11.7358, device='cuda:0'), tensor(19.1881, device='cuda:0')]}, 'classifier.1': {'input_output': [tensor(0., device='cuda:0'), tensor(6.0339, device='cuda:0'), tensor(-13.5361, device='cuda:0'), tensor(38.4366, device='cuda:0')]}}
+    quant resulting config:  {'features.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0029], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0208], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0319], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.1.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.1187], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0279], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.1406], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.1.conv.1': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0082], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.1406], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0787], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.2.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0047], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0787], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0867], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.2.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0501], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0867], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0785], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.2.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0059], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0785], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0527], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.3.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0026], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0527], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0517], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.3.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0378], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0192], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0536], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.3.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0095], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0536], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0485], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.4.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0025], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0824], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0440], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.4.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0465], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0223], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0343], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.4.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0068], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0243], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0330], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.5.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0015], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0330], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0139], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.5.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0517], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0127], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0348], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.5.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0065], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0172], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0294], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.6.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0012], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0430], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0120], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.6.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0397], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0120], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0214], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.6.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0074], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0214], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0294], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.7.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0017], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0476], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0190], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.7.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0193], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0190], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0249], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.7.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0054], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0249], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0265], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.8.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0011], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0265], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0099], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.8.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0435], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0099], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0169], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.8.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0055], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0148], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0202], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.9.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0008], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0285], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0071], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.9.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0890], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0071], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0193], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.9.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0055], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0134], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0169], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.10.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0008], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0285], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0088], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.10.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0400], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0080], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0392], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.10.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0063], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0392], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0393], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.11.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0011], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0376], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0137], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.11.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0513], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0137], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0249], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.11.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0049], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0249], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0239], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.12.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0013], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0239], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0130], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.12.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0778], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0130], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0722], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.12.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0040], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0595], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0322], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.13.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0017], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0383], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0431], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.13.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0675], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0431], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0536], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.13.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0098], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0536], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0830], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.14.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0014], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0793], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0327], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.14.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0182], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0327], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0516], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.14.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0025], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0516], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0904], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.15.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0029], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0904], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0466], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.15.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0785], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0466], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0517], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.15.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0026], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0506], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0839], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.16.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0017], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.1449], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0430], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.16.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0577], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0430], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0877], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.16.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0048], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0877], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.1708], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.17.conv.0.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0010], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.3150], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0900], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.17.conv.1.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0704], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0360], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0440], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.17.conv.2': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0051], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0145], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0183], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'features.18.0': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0138], device='cuda:0', grad_fn=<MaximumBackward0>), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0183], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.1511], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}, 'classifier.1': {'weight': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0026], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'input': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.0475], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}, 'output': {'qmin': tensor(-127, device='cuda:0'), 'qmax': tensor(127, device='cuda:0'), 'scale': tensor([0.3027], device='cuda:0'), 'zero_point': tensor(0, device='cuda:0')}}}
+    quant result config:  {'features.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0029], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.36266663670539856, 'max_weight': 0.36266663670539856, 'input_bits': 8, 'tracked_min_input': -2.640000104904175, 'tracked_max_input': 2.640000104904175, 'output_bits': 8, 'tracked_min_output': -4.050797939300537, 'tracked_max_output': 4.050797939300537}, 'features.1.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.1187], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -15.07282829284668, 'max_weight': 15.07282829284668, 'input_bits': 8, 'tracked_min_input': -3.538238286972046, 'tracked_max_input': 3.538238286972046, 'output_bits': 8, 'tracked_min_output': -17.851360321044922, 'tracked_max_output': 17.851360321044922}, 'features.1.conv.1': {'weight_bits': 8, 'weight_scale': tensor([0.0082], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -1.0354350805282593, 'max_weight': 1.0354350805282593, 'input_bits': 8, 'tracked_min_input': -17.851360321044922, 'tracked_max_input': 17.851360321044922, 'output_bits': 8, 'tracked_min_output': -9.993816375732422, 'tracked_max_output': 9.993816375732422}, 'features.2.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0047], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.6026560664176941, 'max_weight': 0.6026560664176941, 'input_bits': 8, 'tracked_min_input': -9.993816375732422, 'tracked_max_input': 9.993816375732422, 'output_bits': 8, 'tracked_min_output': -11.01476764678955, 'tracked_max_output': 11.01476764678955}, 'features.2.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0501], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -6.358054161071777, 'max_weight': 6.358054161071777, 'input_bits': 8, 'tracked_min_input': -11.01476764678955, 'tracked_max_input': 11.01476764678955, 'output_bits': 8, 'tracked_min_output': -9.969712257385254, 'tracked_max_output': 9.969712257385254}, 'features.2.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0059], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.7551608085632324, 'max_weight': 0.7551608085632324, 'input_bits': 8, 'tracked_min_input': -9.969712257385254, 'tracked_max_input': 9.969712257385254, 'output_bits': 8, 'tracked_min_output': -6.690392017364502, 'tracked_max_output': 6.690392017364502}, 'features.3.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0026], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.33447539806365967, 'max_weight': 0.33447539806365967, 'input_bits': 8, 'tracked_min_input': -6.690392017364502, 'tracked_max_input': 6.690392017364502, 'output_bits': 8, 'tracked_min_output': -6.563872814178467, 'tracked_max_output': 6.563872814178467}, 'features.3.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0378], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -4.804723262786865, 'max_weight': 4.804723262786865, 'input_bits': 8, 'tracked_min_input': -2.4381327629089355, 'tracked_max_input': 2.4381327629089355, 'output_bits': 8, 'tracked_min_output': -6.803829669952393, 'tracked_max_output': 6.803829669952393}, 'features.3.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0095], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -1.2118691205978394, 'max_weight': 1.2118691205978394, 'input_bits': 8, 'tracked_min_input': -6.803829669952393, 'tracked_max_input': 6.803829669952393, 'output_bits': 8, 'tracked_min_output': -6.157611846923828, 'tracked_max_output': 6.157611846923828}, 'features.4.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0025], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.3149816393852234, 'max_weight': 0.3149816393852234, 'input_bits': 8, 'tracked_min_input': -10.462467193603516, 'tracked_max_input': 10.462467193603516, 'output_bits': 8, 'tracked_min_output': -5.581991195678711, 'tracked_max_output': 5.581991195678711}, 'features.4.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0465], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -5.905412197113037, 'max_weight': 5.905412197113037, 'input_bits': 8, 'tracked_min_input': -2.8382911682128906, 'tracked_max_input': 2.8382911682128906, 'output_bits': 8, 'tracked_min_output': -4.361239910125732, 'tracked_max_output': 4.361239910125732}, 'features.4.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0068], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.8680574893951416, 'max_weight': 0.8680574893951416, 'input_bits': 8, 'tracked_min_input': -3.0907554626464844, 'tracked_max_input': 3.0907554626464844, 'output_bits': 8, 'tracked_min_output': -4.195687294006348, 'tracked_max_output': 4.195687294006348}, 'features.5.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0015], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.19222861528396606, 'max_weight': 0.19222861528396606, 'input_bits': 8, 'tracked_min_input': -4.195687294006348, 'tracked_max_input': 4.195687294006348, 'output_bits': 8, 'tracked_min_output': -1.767191767692566, 'tracked_max_output': 1.767191767692566}, 'features.5.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0517], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -6.568227767944336, 'max_weight': 6.568227767944336, 'input_bits': 8, 'tracked_min_input': -1.6070947647094727, 'tracked_max_input': 1.6070947647094727, 'output_bits': 8, 'tracked_min_output': -4.42418909072876, 'tracked_max_output': 4.42418909072876}, 'features.5.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0065], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.8278949856758118, 'max_weight': 0.8278949856758118, 'input_bits': 8, 'tracked_min_input': -2.180938243865967, 'tracked_max_input': 2.180938243865967, 'output_bits': 8, 'tracked_min_output': -3.738431215286255, 'tracked_max_output': 3.738431215286255}, 'features.6.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0012], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.15454857051372528, 'max_weight': 0.15454857051372528, 'input_bits': 8, 'tracked_min_input': -5.457993984222412, 'tracked_max_input': 5.457993984222412, 'output_bits': 8, 'tracked_min_output': -1.519903540611267, 'tracked_max_output': 1.519903540611267}, 'features.6.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0397], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -5.043152809143066, 'max_weight': 5.043152809143066, 'input_bits': 8, 'tracked_min_input': -1.519903540611267, 'tracked_max_input': 1.519903540611267, 'output_bits': 8, 'tracked_min_output': -2.7188143730163574, 'tracked_max_output': 2.7188143730163574}, 'features.6.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0074], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.9450240731239319, 'max_weight': 0.9450240731239319, 'input_bits': 8, 'tracked_min_input': -2.7188143730163574, 'tracked_max_input': 2.7188143730163574, 'output_bits': 8, 'tracked_min_output': -3.7341811656951904, 'tracked_max_output': 3.7341811656951904}, 'features.7.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.21757330000400543, 'max_weight': 0.21757330000400543, 'input_bits': 8, 'tracked_min_input': -6.050246715545654, 'tracked_max_input': 6.050246715545654, 'output_bits': 8, 'tracked_min_output': -2.4132139682769775, 'tracked_max_output': 2.4132139682769775}, 'features.7.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0193], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -2.4507267475128174, 'max_weight': 2.4507267475128174, 'input_bits': 8, 'tracked_min_input': -2.4132139682769775, 'tracked_max_input': 2.4132139682769775, 'output_bits': 8, 'tracked_min_output': -3.1562447547912598, 'tracked_max_output': 3.1562447547912598}, 'features.7.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0054], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.6912793517112732, 'max_weight': 0.6912793517112732, 'input_bits': 8, 'tracked_min_input': -3.1562447547912598, 'tracked_max_input': 3.1562447547912598, 'output_bits': 8, 'tracked_min_output': -3.3592474460601807, 'tracked_max_output': 3.3592474460601807}, 'features.8.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0011], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.141907200217247, 'max_weight': 0.141907200217247, 'input_bits': 8, 'tracked_min_input': -3.3592474460601807, 'tracked_max_input': 3.3592474460601807, 'output_bits': 8, 'tracked_min_output': -1.2550666332244873, 'tracked_max_output': 1.2550666332244873}, 'features.8.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0435], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -5.529731273651123, 'max_weight': 5.529731273651123, 'input_bits': 8, 'tracked_min_input': -1.2550666332244873, 'tracked_max_input': 1.2550666332244873, 'output_bits': 8, 'tracked_min_output': -2.140577554702759, 'tracked_max_output': 2.140577554702759}, 'features.8.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0055], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.6971542239189148, 'max_weight': 0.6971542239189148, 'input_bits': 8, 'tracked_min_input': -1.877524495124817, 'tracked_max_input': 1.877524495124817, 'output_bits': 8, 'tracked_min_output': -2.5593035221099854, 'tracked_max_output': 2.5593035221099854}, 'features.9.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0008], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.10785093903541565, 'max_weight': 0.10785093903541565, 'input_bits': 8, 'tracked_min_input': -3.6217410564422607, 'tracked_max_input': 3.6217410564422607, 'output_bits': 8, 'tracked_min_output': -0.9045455455780029, 'tracked_max_output': 0.9045455455780029}, 'features.9.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0890], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -11.299402236938477, 'max_weight': 11.299402236938477, 'input_bits': 8, 'tracked_min_input': -0.9045455455780029, 'tracked_max_input': 0.9045455455780029, 'output_bits': 8, 'tracked_min_output': -2.451416492462158, 'tracked_max_output': 2.451416492462158}, 'features.9.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0055], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.7022929787635803, 'max_weight': 0.7022929787635803, 'input_bits': 8, 'tracked_min_input': -1.702526569366455, 'tracked_max_input': 1.702526569366455, 'output_bits': 8, 'tracked_min_output': -2.1500535011291504, 'tracked_max_output': 2.1500535011291504}, 'features.10.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0008], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.1053239107131958, 'max_weight': 0.1053239107131958, 'input_bits': 8, 'tracked_min_input': -3.62065052986145, 'tracked_max_input': 3.62065052986145, 'output_bits': 8, 'tracked_min_output': -1.1215729713439941, 'tracked_max_output': 1.1215729713439941}, 'features.10.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0400], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -5.076955795288086, 'max_weight': 5.076955795288086, 'input_bits': 8, 'tracked_min_input': -1.0150971412658691, 'tracked_max_input': 1.0150971412658691, 'output_bits': 8, 'tracked_min_output': -4.98004150390625, 'tracked_max_output': 4.98004150390625}, 'features.10.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0063], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.8048611879348755, 'max_weight': 0.8048611879348755, 'input_bits': 8, 'tracked_min_input': -4.98004150390625, 'tracked_max_input': 4.98004150390625, 'output_bits': 8, 'tracked_min_output': -4.996731281280518, 'tracked_max_output': 4.996731281280518}, 'features.11.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0011], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.14117886126041412, 'max_weight': 0.14117886126041412, 'input_bits': 8, 'tracked_min_input': -4.769983291625977, 'tracked_max_input': 4.769983291625977, 'output_bits': 8, 'tracked_min_output': -1.7410753965377808, 'tracked_max_output': 1.7410753965377808}, 'features.11.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0513], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -6.516174793243408, 'max_weight': 6.516174793243408, 'input_bits': 8, 'tracked_min_input': -1.7410753965377808, 'tracked_max_input': 1.7410753965377808, 'output_bits': 8, 'tracked_min_output': -3.1571362018585205, 'tracked_max_output': 3.1571362018585205}, 'features.11.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0049], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.6196380853652954, 'max_weight': 0.6196380853652954, 'input_bits': 8, 'tracked_min_input': -3.1571362018585205, 'tracked_max_input': 3.1571362018585205, 'output_bits': 8, 'tracked_min_output': -3.032080888748169, 'tracked_max_output': 3.032080888748169}, 'features.12.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0013], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.1669272482395172, 'max_weight': 0.1669272482395172, 'input_bits': 8, 'tracked_min_input': -3.032080888748169, 'tracked_max_input': 3.032080888748169, 'output_bits': 8, 'tracked_min_output': -1.6505376100540161, 'tracked_max_output': 1.6505376100540161}, 'features.12.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0778], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -9.877069473266602, 'max_weight': 9.877069473266602, 'input_bits': 8, 'tracked_min_input': -1.6505376100540161, 'tracked_max_input': 1.6505376100540161, 'output_bits': 8, 'tracked_min_output': -9.174896240234375, 'tracked_max_output': 9.174896240234375}, 'features.12.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0040], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.5022607445716858, 'max_weight': 0.5022607445716858, 'input_bits': 8, 'tracked_min_input': -7.561463356018066, 'tracked_max_input': 7.561463356018066, 'output_bits': 8, 'tracked_min_output': -4.089927673339844, 'tracked_max_output': 4.089927673339844}, 'features.13.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.21749301254749298, 'max_weight': 0.21749301254749298, 'input_bits': 8, 'tracked_min_input': -4.86796236038208, 'tracked_max_input': 4.86796236038208, 'output_bits': 8, 'tracked_min_output': -5.467739582061768, 'tracked_max_output': 5.467739582061768}, 'features.13.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0675], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -8.572569847106934, 'max_weight': 8.572569847106934, 'input_bits': 8, 'tracked_min_input': -5.467739582061768, 'tracked_max_input': 5.467739582061768, 'output_bits': 8, 'tracked_min_output': -6.807587623596191, 'tracked_max_output': 6.807587623596191}, 'features.13.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0098], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -1.2497553825378418, 'max_weight': 1.2497553825378418, 'input_bits': 8, 'tracked_min_input': -6.807587623596191, 'tracked_max_input': 6.807587623596191, 'output_bits': 8, 'tracked_min_output': -10.545598030090332, 'tracked_max_output': 10.545598030090332}, 'features.14.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0014], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.18012934923171997, 'max_weight': 0.18012934923171997, 'input_bits': 8, 'tracked_min_input': -10.077431678771973, 'tracked_max_input': 10.077431678771973, 'output_bits': 8, 'tracked_min_output': -4.151403903961182, 'tracked_max_output': 4.151403903961182}, 'features.14.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0182], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -2.3091678619384766, 'max_weight': 2.3091678619384766, 'input_bits': 8, 'tracked_min_input': -4.151403903961182, 'tracked_max_input': 4.151403903961182, 'output_bits': 8, 'tracked_min_output': -6.550267219543457, 'tracked_max_output': 6.550267219543457}, 'features.14.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0025], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.31851401925086975, 'max_weight': 0.31851401925086975, 'input_bits': 8, 'tracked_min_input': -6.550267219543457, 'tracked_max_input': 6.550267219543457, 'output_bits': 8, 'tracked_min_output': -11.479488372802734, 'tracked_max_output': 11.479488372802734}, 'features.15.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0029], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.36989086866378784, 'max_weight': 0.36989086866378784, 'input_bits': 8, 'tracked_min_input': -11.479488372802734, 'tracked_max_input': 11.479488372802734, 'output_bits': 8, 'tracked_min_output': -5.918876647949219, 'tracked_max_output': 5.918876647949219}, 'features.15.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0785], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -9.969770431518555, 'max_weight': 9.969770431518555, 'input_bits': 8, 'tracked_min_input': -5.918876647949219, 'tracked_max_input': 5.918876647949219, 'output_bits': 8, 'tracked_min_output': -6.562051773071289, 'tracked_max_output': 6.562051773071289}, 'features.15.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0026], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.3269575536251068, 'max_weight': 0.3269575536251068, 'input_bits': 8, 'tracked_min_input': -6.424753665924072, 'tracked_max_input': 6.424753665924072, 'output_bits': 8, 'tracked_min_output': -10.660987854003906, 'tracked_max_output': 10.660987854003906}, 'features.16.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0017], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.21382243931293488, 'max_weight': 0.21382243931293488, 'input_bits': 8, 'tracked_min_input': -18.401779174804688, 'tracked_max_input': 18.401779174804688, 'output_bits': 8, 'tracked_min_output': -5.458646774291992, 'tracked_max_output': 5.458646774291992}, 'features.16.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0577], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -7.328582286834717, 'max_weight': 7.328582286834717, 'input_bits': 8, 'tracked_min_input': -5.458646774291992, 'tracked_max_input': 5.458646774291992, 'output_bits': 8, 'tracked_min_output': -11.139803886413574, 'tracked_max_output': 11.139803886413574}, 'features.16.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0048], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.6098713278770447, 'max_weight': 0.6098713278770447, 'input_bits': 8, 'tracked_min_input': -11.139803886413574, 'tracked_max_input': 11.139803886413574, 'output_bits': 8, 'tracked_min_output': -21.689517974853516, 'tracked_max_output': 21.689517974853516}, 'features.17.conv.0.0': {'weight_bits': 8, 'weight_scale': tensor([0.0010], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.13185124099254608, 'max_weight': 0.13185124099254608, 'input_bits': 8, 'tracked_min_input': -40.00823974609375, 'tracked_max_input': 40.00823974609375, 'output_bits': 8, 'tracked_min_output': -11.434979438781738, 'tracked_max_output': 11.434979438781738}, 'features.17.conv.1.0': {'weight_bits': 8, 'weight_scale': tensor([0.0704], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -8.944679260253906, 'max_weight': 8.944679260253906, 'input_bits': 8, 'tracked_min_input': -4.5680413246154785, 'tracked_max_input': 4.5680413246154785, 'output_bits': 8, 'tracked_min_output': -5.590261459350586, 'tracked_max_output': 5.590261459350586}, 'features.17.conv.2': {'weight_bits': 8, 'weight_scale': tensor([0.0051], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.6446481943130493, 'max_weight': 0.6446481943130493, 'input_bits': 8, 'tracked_min_input': -1.8426393270492554, 'tracked_max_input': 1.8426393270492554, 'output_bits': 8, 'tracked_min_output': -2.323444128036499, 'tracked_max_output': 2.323444128036499}, 'features.18.0': {'weight_bits': 8, 'weight_scale': tensor([0.0138], device='cuda:0', grad_fn=<CopyBackwards>), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -1.754465103149414, 'max_weight': 1.754465103149414, 'input_bits': 8, 'tracked_min_input': -2.323444128036499, 'tracked_max_input': 2.323444128036499, 'output_bits': 8, 'tracked_min_output': -19.188068389892578, 'tracked_max_output': 19.188068389892578}, 'classifier.1': {'weight_bits': 8, 'weight_scale': tensor([0.0026], device='cuda:0'), 'weight_zero_point': tensor([0.], device='cuda:0'), 'min_weight': -0.3308314383029938, 'max_weight': 0.3308314383029938, 'input_bits': 8, 'tracked_min_input': -6.0339131355285645, 'tracked_max_input': 6.0339131355285645, 'output_bits': 8, 'tracked_min_output': -38.4366455078125, 'tracked_max_output': 38.4366455078125}}
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 164-169
+
+Speed up the quantized model following the generated calibration_config
+re-instantiate the MobileNetV2 model, because the calibration config is obtained
+after applying bn folding. bn folding changes the models structure and weights.
+As TensorRT does bn folding by itself, we should input an original model to it.
+For simplicity, we re-instantiate a new model.
+
+.. GENERATED FROM PYTHON SOURCE LINES 169-179
+
+.. code-block:: default
+
+    model = MobileNetV2()
+    state_dict = torch.load(float_model_file)
+    model.load_state_dict(state_dict)
+    model.eval()
+
+    engine = ModelSpeedupTensorRT(model, input_shape=(64, 3, 224, 224), config=calibration_config)
+    engine.compress()
+    data_loader = prepare_data_loaders(data_path, batch_size=64)
+    top1, top5 = test_accelerated_model(engine, data_loader, neval_batches=32)
+    print('Accuracy of mode #2: ', top1, top5)
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    the layer name in config:  Conv_2
+    the layer name out of config:  Relu_5
+    the layer name in config:  Conv_8
+    the layer name out of config:  Relu_11
+    the layer name in config:  Conv_14
+    the layer name in config:  Conv_17
+    the layer name out of config:  Relu_20
+    the layer name in config:  Conv_23
+    the layer name out of config:  Relu_26
+    the layer name in config:  Conv_29
+    the layer name in config:  Conv_32
+    the layer name out of config:  Relu_35
+    the layer name in config:  Conv_38
+    the layer name out of config:  Relu_41
+    the layer name in config:  Conv_44
+    the layer name out of config:  Add_45
+    the layer name in config:  Conv_48
+    the layer name out of config:  Relu_51
+    the layer name in config:  Conv_54
+    the layer name out of config:  Relu_57
+    the layer name in config:  Conv_60
+    the layer name in config:  Conv_63
+    the layer name out of config:  Relu_66
+    the layer name in config:  Conv_69
+    the layer name out of config:  Relu_72
+    the layer name in config:  Conv_75
+    the layer name out of config:  Add_76
+    the layer name in config:  Conv_79
+    the layer name out of config:  Relu_82
+    the layer name in config:  Conv_85
+    the layer name out of config:  Relu_88
+    the layer name in config:  Conv_91
+    the layer name out of config:  Add_92
+    the layer name in config:  Conv_95
+    the layer name out of config:  Relu_98
+    the layer name in config:  Conv_101
+    the layer name out of config:  Relu_104
+    the layer name in config:  Conv_107
+    the layer name in config:  Conv_110
+    the layer name out of config:  Relu_113
+    the layer name in config:  Conv_116
+    the layer name out of config:  Relu_119
+    the layer name in config:  Conv_122
+    the layer name out of config:  Add_123
+    the layer name in config:  Conv_126
+    the layer name out of config:  Relu_129
+    the layer name in config:  Conv_132
+    the layer name out of config:  Relu_135
+    the layer name in config:  Conv_138
+    the layer name out of config:  Add_139
+    the layer name in config:  Conv_142
+    the layer name out of config:  Relu_145
+    the layer name in config:  Conv_148
+    the layer name out of config:  Relu_151
+    the layer name in config:  Conv_154
+    the layer name out of config:  Add_155
+    the layer name in config:  Conv_158
+    the layer name out of config:  Relu_161
+    the layer name in config:  Conv_164
+    the layer name out of config:  Relu_167
+    the layer name in config:  Conv_170
+    the layer name in config:  Conv_173
+    the layer name out of config:  Relu_176
+    the layer name in config:  Conv_179
+    the layer name out of config:  Relu_182
+    the layer name in config:  Conv_185
+    the layer name out of config:  Add_186
+    the layer name in config:  Conv_189
+    the layer name out of config:  Relu_192
+    the layer name in config:  Conv_195
+    the layer name out of config:  Relu_198
+    the layer name in config:  Conv_201
+    the layer name out of config:  Add_202
+    the layer name in config:  Conv_205
+    the layer name out of config:  Relu_208
+    the layer name in config:  Conv_211
+    the layer name out of config:  Relu_214
+    the layer name in config:  Conv_217
+    the layer name in config:  Conv_220
+    the layer name out of config:  Relu_223
+    the layer name in config:  Conv_226
+    the layer name out of config:  Relu_229
+    the layer name in config:  Conv_232
+    the layer name out of config:  Add_233
+    the layer name in config:  Conv_236
+    the layer name out of config:  Relu_239
+    the layer name in config:  Conv_242
+    the layer name out of config:  Relu_245
+    the layer name in config:  Conv_248
+    the layer name out of config:  Add_249
+    the layer name in config:  Conv_252
+    the layer name out of config:  Relu_255
+    the layer name in config:  Conv_258
+    the layer name out of config:  Relu_261
+    the layer name in config:  Conv_264
+    the layer name in config:  Conv_267
+    the layer name out of config:  Relu_270
+    the layer name out of config:  ReduceMean_271
+    set op ReduceMean_271 to default precision DataType.HALF
+    the layer name out of config:  classifier.1.module.weight
+    set op classifier.1.module.weight to default precision DataType.HALF
+    the layer name in config:  Gemm_274
+    special gemm:  (-0.3308314383029938, 0.3308314383029938)
+    the layer name out of config:  classifier.1.module.bias
+    set op classifier.1.module.bias to default precision DataType.HALF
+    the layer name out of config:  (Unnamed Layer* 101) [Shuffle]
+    set op (Unnamed Layer* 101) [Shuffle] to default precision DataType.HALF
+    the layer name out of config:  (Unnamed Layer* 102) [ElementWise]
+    set op (Unnamed Layer* 102) [ElementWise] to default precision DataType.HALF
+    The layer precisions and dynamic ranges are:
+    Conv_2 DataType.INT8 (-4.050797939300537, 4.050797939300537)
+    Relu_5 DataType.INT8 (-3.538238286972046, 3.538238286972046)
+    Conv_8 DataType.INT8 (-17.851360321044922, 17.851360321044922)
+    Relu_11 DataType.INT8 (-17.851360321044922, 17.851360321044922)
+    Conv_14 DataType.INT8 (-9.993816375732422, 9.993816375732422)
+    Conv_17 DataType.INT8 (-11.01476764678955, 11.01476764678955)
+    Relu_20 DataType.INT8 (-11.01476764678955, 11.01476764678955)
+    Conv_23 DataType.INT8 (-9.969712257385254, 9.969712257385254)
+    Relu_26 DataType.INT8 (-9.969712257385254, 9.969712257385254)
+    Conv_29 DataType.INT8 (-6.690392017364502, 6.690392017364502)
+    Conv_32 DataType.INT8 (-6.563872814178467, 6.563872814178467)
+    Relu_35 DataType.INT8 (-2.4381327629089355, 2.4381327629089355)
+    Conv_38 DataType.INT8 (-6.803829669952393, 6.803829669952393)
+    Relu_41 DataType.INT8 (-6.803829669952393, 6.803829669952393)
+    Conv_44 DataType.INT8 (-6.157611846923828, 6.157611846923828)
+    Add_45 DataType.INT32 (-10.462467193603516, 10.462467193603516)
+    Conv_48 DataType.INT8 (-5.581991195678711, 5.581991195678711)
+    Relu_51 DataType.INT8 (-2.8382911682128906, 2.8382911682128906)
+    Conv_54 DataType.INT8 (-4.361239910125732, 4.361239910125732)
+    Relu_57 DataType.INT8 (-3.0907554626464844, 3.0907554626464844)
+    Conv_60 DataType.INT8 (-4.195687294006348, 4.195687294006348)
+    Conv_63 DataType.INT8 (-1.767191767692566, 1.767191767692566)
+    Relu_66 DataType.INT8 (-1.6070947647094727, 1.6070947647094727)
+    Conv_69 DataType.INT8 (-4.42418909072876, 4.42418909072876)
+    Relu_72 DataType.INT8 (-2.180938243865967, 2.180938243865967)
+    Conv_75 DataType.INT8 (-3.738431215286255, 3.738431215286255)
+    Add_76 DataType.INT32 (-5.457993984222412, 5.457993984222412)
+    Conv_79 DataType.INT8 (-1.519903540611267, 1.519903540611267)
+    Relu_82 DataType.INT8 (-1.519903540611267, 1.519903540611267)
+    Conv_85 DataType.INT8 (-2.7188143730163574, 2.7188143730163574)
+    Relu_88 DataType.INT8 (-2.7188143730163574, 2.7188143730163574)
+    Conv_91 DataType.INT8 (-3.7341811656951904, 3.7341811656951904)
+    Add_92 DataType.INT32 (-6.050246715545654, 6.050246715545654)
+    Conv_95 DataType.INT8 (-2.4132139682769775, 2.4132139682769775)
+    Relu_98 DataType.INT8 (-2.4132139682769775, 2.4132139682769775)
+    Conv_101 DataType.INT8 (-3.1562447547912598, 3.1562447547912598)
+    Relu_104 DataType.INT8 (-3.1562447547912598, 3.1562447547912598)
+    Conv_107 DataType.INT8 (-3.3592474460601807, 3.3592474460601807)
+    Conv_110 DataType.INT8 (-1.2550666332244873, 1.2550666332244873)
+    Relu_113 DataType.INT8 (-1.2550666332244873, 1.2550666332244873)
+    Conv_116 DataType.INT8 (-2.140577554702759, 2.140577554702759)
+    Relu_119 DataType.INT8 (-1.877524495124817, 1.877524495124817)
+    Conv_122 DataType.INT8 (-2.5593035221099854, 2.5593035221099854)
+    Add_123 DataType.INT32 (-3.6217410564422607, 3.6217410564422607)
+    Conv_126 DataType.INT8 (-0.9045455455780029, 0.9045455455780029)
+    Relu_129 DataType.INT8 (-0.9045455455780029, 0.9045455455780029)
+    Conv_132 DataType.INT8 (-2.451416492462158, 2.451416492462158)
+    Relu_135 DataType.INT8 (-1.702526569366455, 1.702526569366455)
+    Conv_138 DataType.INT8 (-2.1500535011291504, 2.1500535011291504)
+    Add_139 DataType.INT32 (-3.62065052986145, 3.62065052986145)
+    Conv_142 DataType.INT8 (-1.1215729713439941, 1.1215729713439941)
+    Relu_145 DataType.INT8 (-1.0150971412658691, 1.0150971412658691)
+    Conv_148 DataType.INT8 (-4.98004150390625, 4.98004150390625)
+    Relu_151 DataType.INT8 (-4.98004150390625, 4.98004150390625)
+    Conv_154 DataType.INT8 (-4.996731281280518, 4.996731281280518)
+    Add_155 DataType.INT32 (-4.769983291625977, 4.769983291625977)
+    Conv_158 DataType.INT8 (-1.7410753965377808, 1.7410753965377808)
+    Relu_161 DataType.INT8 (-1.7410753965377808, 1.7410753965377808)
+    Conv_164 DataType.INT8 (-3.1571362018585205, 3.1571362018585205)
+    Relu_167 DataType.INT8 (-3.1571362018585205, 3.1571362018585205)
+    Conv_170 DataType.INT8 (-3.032080888748169, 3.032080888748169)
+    Conv_173 DataType.INT8 (-1.6505376100540161, 1.6505376100540161)
+    Relu_176 DataType.INT8 (-1.6505376100540161, 1.6505376100540161)
+    Conv_179 DataType.INT8 (-9.174896240234375, 9.174896240234375)
+    Relu_182 DataType.INT8 (-7.561463356018066, 7.561463356018066)
+    Conv_185 DataType.INT8 (-4.089927673339844, 4.089927673339844)
+    Add_186 DataType.INT32 (-4.86796236038208, 4.86796236038208)
+    Conv_189 DataType.INT8 (-5.467739582061768, 5.467739582061768)
+    Relu_192 DataType.INT8 (-5.467739582061768, 5.467739582061768)
+    Conv_195 DataType.INT8 (-6.807587623596191, 6.807587623596191)
+    Relu_198 DataType.INT8 (-6.807587623596191, 6.807587623596191)
+    Conv_201 DataType.INT8 (-10.545598030090332, 10.545598030090332)
+    Add_202 DataType.INT32 (-10.077431678771973, 10.077431678771973)
+    Conv_205 DataType.INT8 (-4.151403903961182, 4.151403903961182)
+    Relu_208 DataType.INT8 (-4.151403903961182, 4.151403903961182)
+    Conv_211 DataType.INT8 (-6.550267219543457, 6.550267219543457)
+    Relu_214 DataType.INT8 (-6.550267219543457, 6.550267219543457)
+    Conv_217 DataType.INT8 (-11.479488372802734, 11.479488372802734)
+    Conv_220 DataType.INT8 (-5.918876647949219, 5.918876647949219)
+    Relu_223 DataType.INT8 (-5.918876647949219, 5.918876647949219)
+    Conv_226 DataType.INT8 (-6.562051773071289, 6.562051773071289)
+    Relu_229 DataType.INT8 (-6.424753665924072, 6.424753665924072)
+    Conv_232 DataType.INT8 (-10.660987854003906, 10.660987854003906)
+    Add_233 DataType.INT32 (-18.401779174804688, 18.401779174804688)
+    Conv_236 DataType.INT8 (-5.458646774291992, 5.458646774291992)
+    Relu_239 DataType.INT8 (-5.458646774291992, 5.458646774291992)
+    Conv_242 DataType.INT8 (-11.139803886413574, 11.139803886413574)
+    Relu_245 DataType.INT8 (-11.139803886413574, 11.139803886413574)
+    Conv_248 DataType.INT8 (-21.689517974853516, 21.689517974853516)
+    Add_249 DataType.INT32 (-40.00823974609375, 40.00823974609375)
+    Conv_252 DataType.INT8 (-11.434979438781738, 11.434979438781738)
+    Relu_255 DataType.INT8 (-4.5680413246154785, 4.5680413246154785)
+    Conv_258 DataType.INT8 (-5.590261459350586, 5.590261459350586)
+    Relu_261 DataType.INT8 (-1.8426393270492554, 1.8426393270492554)
+    Conv_264 DataType.INT8 (-2.323444128036499, 2.323444128036499)
+    Conv_267 DataType.INT8 (-19.188068389892578, 19.188068389892578)
+    Relu_270 DataType.INT8 (0.0, 19.188068389892578)
+    ReduceMean_271 DataType.HALF (-6.0339131355285645, 6.0339131355285645)
+    classifier.1.module.weight DataType.INT8 (-0.3308314383029938, 0.3308314383029938)
+    Gemm_274 DataType.INT8 (-38.4366455078125, 38.4366455078125)
+    classifier.1.module.bias DataType.HALF None
+    (Unnamed Layer* 101) [Shuffle] DataType.HALF None
+    (Unnamed Layer* 102) [ElementWise] DataType.HALF None
+    time:  0.019862890243530273 0.09724259376525879
+    rest time:  0.002070903778076172
+    time:  0.016774892807006836 0.022150516510009766
+    rest time:  0.005423069000244141
+    time:  0.014068603515625 0.018938302993774414
+    rest time:  0.008792638778686523
+    time:  0.021909713745117188 0.027726411819458008
+    rest time:  0.00406646728515625
+    time:  0.006607770919799805 0.01197361946105957
+    rest time:  0.007802724838256836
+    time:  0.006595611572265625 0.01165628433227539
+    rest time:  0.008078336715698242
+    time:  0.014976978302001953 0.020185232162475586
+    rest time:  0.003164052963256836
+    time:  0.014391899108886719 0.026686668395996094
+    rest time:  0.004617929458618164
+    time:  0.021555423736572266 0.040373802185058594
+    rest time:  0.0031206607818603516
+    time:  0.014498472213745117 0.023696422576904297
+    rest time:  0.007858991622924805
+    time:  0.008269548416137695 0.013467073440551758
+    rest time:  0.004114627838134766
+    time:  0.01500844955444336 0.0199892520904541
+    rest time:  0.00600743293762207
+    time:  0.015131711959838867 0.024124622344970703
+    rest time:  0.0035059452056884766
+    time:  0.01324319839477539 0.018131017684936523
+    rest time:  0.009509563446044922
+    time:  0.0145111083984375 0.03973984718322754
+    rest time:  0.004076957702636719
+    time:  0.007669925689697266 0.015666723251342773
+    rest time:  0.001054525375366211
+    time:  0.009240150451660156 0.014026880264282227
+    rest time:  0.005780458450317383
+    time:  0.016506671905517578 0.021305084228515625
+    rest time:  0.0053632259368896484
+    time:  0.015325307846069336 0.020295143127441406
+    rest time:  0.0056209564208984375
+    time:  0.013258934020996094 0.018117666244506836
+    rest time:  0.005226850509643555
+    time:  0.006574153900146484 0.011497974395751953
+    rest time:  0.005121707916259766
+    time:  0.006554841995239258 0.011632680892944336
+    rest time:  0.0030269622802734375
+    time:  0.00825047492980957 0.013535499572753906
+    rest time:  0.004082202911376953
+    time:  0.006531238555908203 0.011127233505249023
+    rest time:  0.0066070556640625
+    time:  0.014076709747314453 0.018843889236450195
+    rest time:  0.0009963512420654297
+    time:  0.015123844146728516 0.0198514461517334
+    rest time:  0.0021390914916992188
+    time:  0.006520986557006836 0.012980937957763672
+    rest time:  0.011328935623168945
+    time:  0.011857271194458008 0.01658797264099121
+    rest time:  0.0037300586700439453
+    time:  0.015050172805786133 0.019971847534179688
+    rest time:  0.0020771026611328125
+    time:  0.015550851821899414 0.02037358283996582
+    rest time:  0.004470348358154297
+    time:  0.006510496139526367 0.011296272277832031
+    rest time:  0.012509822845458984
+    time:  0.006524324417114258 0.020049095153808594
+    rest time:  0.017112016677856445
+    inference time:  0.012454144656658173
+    Accuracy of mode #2:  Acc@1  87.50 ( 92.04) Acc@5  93.75 ( 97.22)
+
+
+
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  4.471 seconds)
+   **Total running time of the script:** ( 6 minutes  12.568 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_speedup.py:
 
+.. only:: html
 
-.. only :: html
-
- .. container:: sphx-glr-footer
-    :class: sphx-glr-footer-example
+  .. container:: sphx-glr-footer sphx-glr-footer-example
 
 
+    .. container:: sphx-glr-download sphx-glr-download-python
 
-  .. container:: sphx-glr-download sphx-glr-download-python
+      :download:`Download Python source code: quantization_speedup.py <quantization_speedup.py>`
 
-     :download:`Download Python source code: quantization_speedup.py <quantization_speedup.py>`
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
-
-  .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-     :download:`Download Jupyter notebook: quantization_speedup.ipynb <quantization_speedup.ipynb>`
+      :download:`Download Jupyter notebook: quantization_speedup.ipynb <quantization_speedup.ipynb>`
 
 
 .. only:: html
