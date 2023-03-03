@@ -8,25 +8,20 @@ import numpy as np
 import torch
 
 from . import frontend_to_onnx as fonnx
-from . import calibrator as calibrator
-from . import trt_pycuda as common
+from . import trt_pycuda as common # NOTE pycuda becomes a dependency, consider adding it to dependencies
 from .backend import BaseModelSpeedup
 
 TRT8 = 8
-TRT7 = 7
 TRT_LOGGER = trt.Logger()
 logger = logging.getLogger(__name__)
-
-class CalibrateType:
-    LEGACY = trt.CalibrationAlgoType.LEGACY_CALIBRATION
-    ENTROPY = trt.CalibrationAlgoType.ENTROPY_CALIBRATION
-    ENTROPY2 = trt.CalibrationAlgoType.ENTROPY_CALIBRATION_2
-    MINMAX = trt.CalibrationAlgoType.MINMAX_CALIBRATION
 
 Precision_Dict = {
     8: trt.int8,
     16: trt.float16,
-    32: trt.float32
+    # NOTE: uncomment them or refactor when they are required
+    # 'f32': trt.float32,
+    # 'i32': trt.int32
+    # trt.bool
 }
 
 def valid_config(config=None):
@@ -44,346 +39,324 @@ def valid_config(config=None):
             a_bits = config[name]['output_bits']
             assert a_bits in support_bits, "output bits should be 8, 16, 32"
 
-def handle_gemm(network, layer_idx, config):
-    """
-    This function handles special gemm operation due to layer numbers of gemm changed during pytorch->onnx model convertion.
+def print_layer_precisions(network):
+    print('The layer precisions and dynamic ranges are:')
+    for layer_idx in range(network.num_layers):
+        layer = network.get_layer(layer_idx)
+        out = layer.get_output(0)
+        print(layer.name, layer.precision, out.dynamic_range)
 
-    Parameters
-    ----------
-    network : tensorrt.INetworkDefinition
-        Represents a TensorRT Network from which the Builder can build an Engine
-    layer_idx : int
-        layer index of gemm
-    config : dict
-        Config recording bits number and name of layers
+def _handle_gemm(layer, config, out2layer, in2layer):
     """
-    layer = network.get_layer(layer_idx)
-    pre_layer = network.get_layer(layer_idx-1)
-    next_layer = network.get_layer(layer_idx+1)
-    # if weight bits exists, set three layers' precision,
-    # input tensor range and the first two layers' output type
-    if 'weight_bits' in config[layer.name]:
-        assert 'tracked_min_input' in config[layer.name]
-        assert 'tracked_max_input' in config[layer.name]
-        w_bits = config[layer.name]['weight_bits']
-        tracked_min_input = config[layer.name]['tracked_min_input']
-        tracked_max_input = config[layer.name]['tracked_max_input']
-        # set three layers the same precision
+    Gemm is special case. the following is the graph structure of Gemm in trt's graph
+    input                       ->| Gemm  ->| ElementWise
+    LayerType.Constant (weight) ->|
+    LayerType.Constant (bias) -> Shuffle  ->|
+    assume quantize input, output, and weight
+    """
+    w_bits = config['weight_bits']
+    layer.precision = Precision_Dict[w_bits]
+    # handle the input tensor
+    in_tensor = layer.get_input(0)
+    in_tensor.dynamic_range = (config['tracked_min_input'], config['tracked_max_input'])
+    # handle the output tensor
+    out_tensor = layer.get_output(0)
+    out_tensor.dynamic_range = (config['tracked_min_output'], config['tracked_max_output'])
+    # handle weight
+    w_in_tensor = layer.get_input(1)
+    weight_layer = out2layer[w_in_tensor.name]
+    assert weight_layer.type == trt.LayerType.CONSTANT
+    weight_layer.precision = Precision_Dict[w_bits]
+    weight_layer.set_output_type(0, Precision_Dict[w_bits])
+    w_out_tensor = weight_layer.get_output(0)
+    w_out_tensor.dynamic_range = (config['min_weight'], config['max_weight'])
+    print('special gemm: ', w_out_tensor.dynamic_range)
+    # TODO: handle sum & bias
+    # NOTE: a feasible way is setting bias to 0 in quantization algorithm size
+    # and track the dynamic range without bias.
+    return weight_layer.name
+
+def apply_precision_to_layer(layer, config):
+    if 'weight_bits' in config:
+        w_bits = config['weight_bits']
         layer.precision = Precision_Dict[w_bits]
-        pre_layer.precision = Precision_Dict[w_bits]
-        next_layer.precision = Precision_Dict[w_bits]
-        # set the first two layers' output type
-        pre_layer.set_output_type(0, Precision_Dict[w_bits])
-        layer.set_output_type(0, Precision_Dict[w_bits])
-        pre_in_tensor = pre_layer.get_input(0)
+    if 'input_bits' in config:
+        assert 'tracked_min_input' in config
+        assert 'tracked_max_input' in config
+        tracked_min_input = config['tracked_min_input']
+        tracked_max_input = config['tracked_max_input']
+        # NOTE: only support one input tensor for now
         in_tensor = layer.get_input(0)
-        next_in_tensor = next_layer.get_input(0)
-        # set three layers' input tensor range
-        pre_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
         in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
-        next_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+    if 'output_bits' in config:
+        assert 'tracked_min_output' in config
+        assert 'tracked_max_output' in config
+        act_bits = config['output_bits']
+        tracked_min_output = config['tracked_min_output']
+        tracked_max_output = config['tracked_max_output']
+        layer.set_output_type(0, Precision_Dict[act_bits])
+        out_tensor = layer.get_output(0)
+        out_tensor.dynamic_range = (tracked_min_output, tracked_max_output)
 
-    # if output bits exists, set the last layer's output type output tensor range
-    if 'output_bits' in config[layer.name]:
-        assert 'tracked_min_output' in config[layer.name]
-        assert 'tracked_max_output' in config[layer.name]
-        a_bits = config[layer.name]['output_bits']
-        tracked_min_output = config[layer.name]['tracked_min_output']
-        tracked_max_output = config[layer.name]['tracked_max_output']
-        # set the last layer's output type
-        next_layer.set_output_type(0, Precision_Dict[a_bits])
-        next_out_tensor = next_layer.get_output(0)
-        # set the last layer's output tensor range
-        next_out_tensor.dynamic_range = (tracked_min_output, tracked_max_output)
-
-def build_engine(model_file, config=None, extra_layer_bits=32, strict_datatype=False, calib=None):
+def propagate_from_low_bit_predecessor(layer, out2layer, default_precision=trt.float16):
     """
-    This function builds an engine from an onnx model with calibration process.
+    Returns
+    -------
+    layer precision
+        current layer's precision
+    (min, max)
+        dynamic range of current layer's output tensor
+    """
+    dynamic_range = None
+    tensor = layer.get_input(0)
+    if tensor is not None:
+        predecessor = out2layer[tensor.name]
+        # NOTE: only support int8 for now
+        if predecessor.get_output_type(0) == trt.int8:
+            dynamic_range = tensor.dynamic_range
+
+    if layer.name[0:4] == 'Relu':
+        assert dynamic_range is not None
+        return trt.int8, (0, dynamic_range[1])
+    elif layer.name[0:3] == 'Add':
+        #assert dynamic_range is not None
+        return trt.int32, None
+    else:
+        logger.warning(f'set op {layer.name} to default precision {default_precision}')
+        return default_precision, None
+
+def config_network_precision(network, config):
+    """
+    The idea here is that ...
+    TODO: make sure the weights are the ones after quantize and dequantize.
+    In the network, bn has been folded by trt OnnxParser
+    """
+    # build two auxiliary indices
+    out2layer = {}
+    in2layer = {}
+    for layer_idx in range(network.num_layers):
+        layer = network.get_layer(layer_idx)
+        for i in range(layer.num_outputs):
+            output = layer.get_output(i)
+            out2layer[output.name] = layer
+        for i in range(layer.num_inputs):
+            _input = layer.get_input(i)
+            if _input.name in in2layer:
+                in2layer[_input.name].append(layer)
+            else:
+                in2layer[_input.name] = [layer]
+
+    net_input = network.get_input(0)
+    assert net_input.name in in2layer
+
+    # traverse the network/graph and specify precision and dynamic range
+    for layer_idx in range(network.num_layers):
+        # assume the traverse order is topological
+        layer = network.get_layer(layer_idx)
+        if layer.name in config:
+            if layer.name[0:4] == 'Gemm':
+                _handle_gemm(layer, config[layer.name], out2layer, in2layer)
+            else:
+                apply_precision_to_layer(layer, config[layer.name])
+        else:
+            precision, dynamic_range = propagate_from_low_bit_predecessor(layer, out2layer)
+            if precision:
+                layer.precision = precision
+                layer.set_output_type(0, precision)
+            if dynamic_range:
+                out_tensor = layer.get_output(0)
+                out_tensor.dynamic_range = dynamic_range
+
+    print_layer_precisions(network)
+
+def build_engine_without_calib(onnx_model_file, config):
+    """
+    This function builds an engine from an onnx model following the precisions
+    and dynamic range in config without calibrator.
 
     Parameters
     ----------
-    model_file : str
+    onnx_model_file : str
         The path of onnx model
     config : dict
         Config recording bits number and name of layers
-    extra_layer_bits : int
-        Other layers which are not in config will be quantized to corresponding bits number
-    strict_datatype : bool
-        Whether constrain layer bits to the number given in config or not. If true, all the layer
-        will be set to given bits strictly. Otherwise, these layers will be set automatically by
-        tensorrt
-    calib : numpy array
-        The data using to calibrate quantization model
 
     Returns
     -------
     tensorrt.ICudaEngine
         An ICudaEngine for executing inference on a built network
     """
-    with trt.Builder(TRT_LOGGER) as builder, builder.create_network(common.EXPLICIT_BATCH) as network, \
-        trt.OnnxParser(network, TRT_LOGGER) as parser, builder.create_builder_config() as trt_config:
-        # Attention that, builder should be set to 1 because of the implementation of allocate_buffer
-        trt_version = int(trt.__version__[0])
-        assert trt_version == TRT8 or trt_version == TRT7, "Version of TensorRT is too old, please \
-            update TensorRT to version >= 7.0"
-        if trt_version == TRT7:
-            logger.warning("TensorRT7 is deprecated and may be removed in the following release.")
+    builder = trt.Builder(TRT_LOGGER)
+    network = builder.create_network(common.explicit_batch())
+    trt_config = builder.create_builder_config()
+    parser = trt.OnnxParser(network, TRT_LOGGER)
 
-        builder.max_batch_size = 1
-        if trt_version == TRT8:
-            trt_config.max_workspace_size = common.GiB(4)
-        else:
-            builder.max_workspace_size = common.GiB(4)
+    builder.max_batch_size = 1 # TODO: check whether it is necessary
 
-        if extra_layer_bits == 32 and config is None:
-            pass
-        elif extra_layer_bits == 16 and config is None:
-            if trt_version == TRT8:
-                trt_config.set_flag(trt.BuilderFlag.FP16)
-            else:
-                builder.fp16_mode = True
-        elif extra_layer_bits == 8 and config is None:
-            # entire model in 8bit mode
-            if trt_version == TRT8:
-                trt_config.set_flag(trt.BuilderFlag.INT8)
-            else:
-                builder.int8_mode = True
-        else:
-            if trt_version == TRT8:
-                trt_config.set_flag(trt.BuilderFlag.INT8)
-                trt_config.set_flag(trt.BuilderFlag.FP16)
-                if strict_datatype:
-                    trt_config.set_flag(trt.BuilderFlag.STRICT_TYPES)
-            else:
-                builder.int8_mode = True
-                builder.fp16_mode = True
-                builder.strict_type_constraints = strict_datatype
+    trt_config.max_workspace_size = common.GiB(4)
 
-        valid_config(config)
+    trt_config.set_flag(trt.BuilderFlag.INT8)
+    trt_config.set_flag(trt.BuilderFlag.FP16)
+    trt_config.set_flag(trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS)
 
-        # Parse onnx model
-        with open(model_file, 'rb') as model:
-            if not parser.parse(model.read()):
-                logger.error('ERROR: Fail to parse the ONNX file.')
-                for error in range(parser.num_errors):
-                    logger.error(parser.get_error(error))
-                return None
+    # Parse onnx model
+    with open(onnx_model_file, 'rb') as model:
+        if not parser.parse(model.read()):
+            logger.error('ERROR: Fail to parse the ONNX file.')
+            for error in range(parser.num_errors):
+                logger.error(parser.get_error(error))
+            raise ValueError('Failed to parse the ONNX file.')
 
-        if calib is not None:
-            if trt_version == TRT8:
-                trt_config.int8_calibrator = calib
-            else:
-                builder.int8_calibrator = calib
-            # This design may not be correct if output more than one
-            for i in range(network.num_layers):
-                if config is None:
-                    break
-                layer = network.get_layer(i)
-                if layer.name in config:
-                    w_bits = config[layer.name]['weight_bits']
-                    a_bits = config[layer.name]['output_bits']
-                    layer.precision = Precision_Dict[w_bits]
-                    layer.set_output_type(0, Precision_Dict[a_bits])
-        else:
-            # This implementation may be incorrect when output number > 1
-            for i in range(network.num_layers):
-                if config is None:
-                    # no low bits layer need to be set, keep original model
-                    break
-                layer = network.get_layer(i)
-                if layer.name not in config:
-                    continue
-                # layer numbers of gemm changed during pytorch->onnx model convertion, need special handle
-                if layer.name[0:4] == "Gemm":
-                    handle_gemm(network, i, config)
-                    continue
+    config_network_precision(network, config)
 
-                # If weight_bits exists in config, set layer precision and layer's input tensor dynamic range.
-                if 'weight_bits' in config[layer.name]:
-                    assert 'tracked_min_input' in config[layer.name]
-                    assert 'tracked_max_input' in config[layer.name]
-                    w_bits = config[layer.name]['weight_bits']
-                    tracked_min_input = config[layer.name]['tracked_min_input']
-                    tracked_max_input = config[layer.name]['tracked_max_input']
-                    layer.precision = Precision_Dict[w_bits]
-                    in_tensor = layer.get_input(0)
-                    in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+    # Build engine and do int8 calibration.
+    engine = builder.build_engine(network, trt_config)
+    return engine
 
-                # If output exists in config, set layer output type and layer's output tensor dynamic range.
-                if 'output_bits' in config[layer.name]:
-                    assert 'tracked_min_output' in config[layer.name]
-                    assert 'tracked_max_output' in config[layer.name]
-                    a_bits = config[layer.name]['output_bits']
-                    tracked_min_output = config[layer.name]['tracked_min_output']
-                    tracked_max_output = config[layer.name]['tracked_max_output']
-                    layer.set_output_type(0, Precision_Dict[a_bits])
-                    out_tensor = layer.get_output(0)
-                    out_tensor.dynamic_range = (tracked_min_output, tracked_max_output)
+def config_network_to_int8(network):
+    for layer_idx in range(network.num_layers):
+        layer = network.get_layer(layer_idx)
+        layer.precision = trt.int8
 
-        # Build engine and do int8 calibration.
-        if trt_version == TRT8:
-            engine = builder.build_engine(network, trt_config)
-        else:
-            engine = builder.build_cuda_engine(network)
-        return engine
+def build_engine_with_calib(onnx_model_file, calib, input_shape):
+    """
+    Parameters
+    ----------
+    """
+    builder = trt.Builder(TRT_LOGGER)
+    network = builder.create_network(common.explicit_batch())
+    trt_config = builder.create_builder_config()
+    parser = trt.OnnxParser(network, TRT_LOGGER)
+
+    builder.max_batch_size = input_shape[0]
+    trt_config.max_workspace_size = common.GiB(8)
+    trt_config.set_flag(trt.BuilderFlag.INT8)
+    trt_config.set_flag(trt.BuilderFlag.FP16)
+    trt_config.set_flag(trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS)
+    trt_config.int8_calibrator = calib
+
+    with open(onnx_model_file, 'rb') as model:
+        if not parser.parse(model.read()):
+            for error in range(parser.num_errors):
+                TRT_LOGGER.log(TRT_LOGGER.ERROR, parser.get_error(error))
+            raise ValueError('Failed to parse the ONNX file.')
+
+    TRT_LOGGER.log(TRT_LOGGER.INFO, f'input number: {network.num_inputs}')
+    TRT_LOGGER.log(TRT_LOGGER.INFO, f'output number: {network.num_outputs}')
+
+    profile = builder.create_optimization_profile()
+    input_name = network.get_input(0).name
+    profile.set_shape(input_name, min=input_shape, opt=input_shape, max=input_shape)
+    trt_config.add_optimization_profile(profile)
+
+    config_network_to_int8(network) # not sure whether it is necessary because trt.BuilderFlag.INT8 is set.
+
+    engine = builder.build_engine(network, trt_config)
+    return engine
 
 class ModelSpeedupTensorRT(BaseModelSpeedup):
-    r"""
+    """
     Parameters
     ----------
     model : pytorch model
         The model to speedup by quantization.
     input_shape : tuple
-        The input shape of model, shall pass it to torch.onnx.export.
+        The input shape of the model, shall pass it to torch.onnx.export.
+        Note, the batch size of input_shape is the inference batch of the created trt engine,
+        it should be equal to the batch size of running test with the engine.
     config : dict
         Config recording bits number and name of layers.
     onnx_path : str
         The path user want to store onnx model which is converted from pytorch model.
-    extra_layer_bits : int
-        Other layers which are not in config will be quantized to corresponding bits number.
-    strict_datatype : bool
-        Whether constrain layer bits to the number given in config or not. If true, all the layer
-        will be set to given bits strictly. Otherwise, these layers will be set automatically by
-        tensorrt.
-    calibrate_type : tensorrt.tensorrt.CalibrationAlgoType
-        The algorithm of calibrating. Please refer to https://docs.nvidia.com/deeplearning/
-        tensorrt/api/python_api/infer/Int8/Calibrator.html for detail
-    calibrate_data : numpy array
-        The data using to calibrate quantization model
-    calibration_cache : str
-        The path user want to store calibrate cache file
-    batchsize : int
-        The batch size of calibration and inference
-    input_names : list
-        Input name of onnx model providing for torch.onnx.export to generate onnx model
-    output_name : list
-        Output name of onnx model providing for torch.onnx.export to generate onnx model
     """
 
-    def __init__(self, model, input_shape, config=None, onnx_path="default_model.onnx", extra_layer_bits=32, strict_datatype=True,
-        calibrate_type=CalibrateType.ENTROPY2, calib_data_loader=None, calibration_cache = "calibration.cache", batchsize=1,
-        input_names=["actual_input_1"], output_names=["output1"]):
+    def __init__(self, model, input_shape, config=None, onnx_path="default_model.onnx"):
         super().__init__(model, config)
         self.model = model
-        self.onnx_path = onnx_path
         self.input_shape = input_shape
         self.config = config
-        self.extra_layer_bits = extra_layer_bits
-        self.strict_datatype = strict_datatype
-        self.calibrate_type = calibrate_type
-        self.calib_data_loader = calib_data_loader
-        self.calibration_cache = calibration_cache
-        self.batchsize = batchsize
-        self.input_names = input_names
-        self.output_names = output_names
+        self.onnx_path = onnx_path
+        # Input name of onnx model providing for torch.onnx.export to generate onnx model
+        # Output name of onnx model providing for torch.onnx.export to generate onnx model
+        self.input_names = ["actual_input_1"]
+        self.output_names = ["output1"]
+
+        self.engine = None
         self.context = None
-        self.onnx_config = {}
+        self.inputs = None
+        self.outputs = None
+        self.bindings = None
+        self.stream = None
+
+        trt_version = int(trt.__version__[0])
+        assert trt_version >= TRT8, "Version of TensorRT is too old, please \
+            update TensorRT to version >= 8.0"
 
     def compress(self):
         """
-        Get onnx config and build tensorrt engine.
+        This speedup approach uses ```trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS``` mode of trt engine,
+        which means it would faithfully enforce the precisions and dynamic ranges
+        in user passed-in config i.e., self.config.
+        Thus, users must provide dynamic range for all tensors that are not Int32 or Bool.
         """
-        assert self.model is not None
-        assert self.onnx_path is not None
-        assert self.input_shape is not None
-
+        assert self.config is not None
         # Convert pytorch model to onnx model and save onnx model in onnx_path
-        _, self.onnx_config = fonnx.torch_to_onnx(self.model, self.config, input_shape=self.input_shape,
+        _, onnx_config = fonnx.torch_to_onnx(self.model, self.config, input_shape=self.input_shape,
             model_path=self.onnx_path, input_names=self.input_names, output_names=self.output_names)
+        valid_config(onnx_config)
+        self.engine = build_engine_without_calib(self.onnx_path, onnx_config)
 
-        if self.calib_data_loader is not None:
-            assert self.calibrate_type is not None
-            context = self._tensorrt_build_withcalib(self.onnx_path)
-        else:
-            context = self._tensorrt_build_withoutcalib(self.onnx_path)
-        self.context = context
-
-    def _tensorrt_build_withcalib(self, onnx_path):
+    def compress_with_calibrator(self, calib):
         """
-        Convert pytorch tensor to numpy darray
-
-        Parameters
-        ----------
-        onnx_path : str
-            The path of onnx model
-
-        Returns
-        -------
-        tensorrt.IExecutionContext
-            Context for executing inference using an ICudaEngine
+        This speedup approach leverages calibrator
         """
-        calib_data = None
-        if type(self.calib_data_loader) == torch.utils.data.dataloader.DataLoader:
-            calib_data_set = []
-            for data, _ in self.calib_data_loader:
-                calib_data_set.append(data)
-            calib_data = np.concatenate(calib_data_set)
-        elif type(self.calib_data_loader) == torch.Tensor:
-            # trt need numpy as calibration data, only cpu data can convert to numpy directly
-            if self.calib_data_loader.device != torch.device("cpu"):
-                self.calib_data_loader = self.calib_data_loader.to("cpu")
-            calib_data = self.calib_data_loader.numpy()
-        else:
-            raise ValueError("Not support calibration datatype")
-        calib = calibrator.Calibrator(calib_data, self.calibration_cache, self.batchsize, self.calibrate_type)
+        # convert model to onnx
+        device = torch.device('cpu')
+        dummy_input = torch.randn(self.input_shape).to(device)
+        self.model.to(device)
+        torch.onnx.export(self.model, dummy_input, self.onnx_path, verbose=False,
+            input_names=self.input_names, output_names=self.output_names, export_params=True)
+        # build endine
+        self.engine = build_engine_with_calib(self.onnx_path, calib, self.input_shape)
 
-        # build inference engine with calibration
-        engine = build_engine(onnx_path, self.onnx_config, self.extra_layer_bits, self.strict_datatype, calib)
-        return engine.create_execution_context()
-
-    def _tensorrt_build_withoutcalib(self, onnx_path):
-        """
-        Build inference engine without calibration
-
-        Parameters
-        ----------
-        onnx_path : str
-            The path of onnx model
-
-        Returns
-        -------
-        tensorrt.IExecutionContext
-            Context for executing inference using an ICudaEngine
-        """
-        engine = build_engine(onnx_path, self.onnx_config, self.extra_layer_bits, self.strict_datatype)
-        return engine.create_execution_context()
-
-    def inference(self, test_data):
+    def inference(self, test_data, reset_context=False):
         """
         Do inference by tensorrt builded engine.
+        Note, the batch size of test_data should be equal to the batch size used in building the engine.
 
         Parameters
         ----------
         test_data : pytorch tensor
-            Model input tensor
-        """
-        # convert pytorch tensor to numpy darray
-        if test_data.device != torch.device("cpu"):
-            test_data = test_data.to("cpu")
-        test_data = test_data.numpy()
-        # Numpy dtype should be float32
-        assert test_data.dtype == np.float32
-        elapsed_time = 0
-        inputs, outputs, bindings, stream = common.allocate_buffers(self.context.engine)
-        result = []
-        for start_idx in range(0, test_data.shape[0], self.batchsize):
-            # If the number of images in the test set is not divisible by the batch size, the last batch will be smaller.
-            # This logic is used for handling that case.
-            end_idx = min(start_idx + self.batchsize, test_data.shape[0])
-            effective_batch_size = end_idx - start_idx
+            Model input tensor, the first dimension should be batch dimension.
+        reset_context : bool
+            whether reset the engine context.
 
-            # Do inference for every batch.
-            inputs[0].host = test_data[start_idx:start_idx + effective_batch_size]
-            t1 = time.time()
-            [output] = common.do_inference_v2(self.context, bindings=bindings, inputs=inputs, outputs=outputs, stream=stream)
-            elapsed_time += time.time() - t1
-            shape = output.shape[0]
-            output = output[0:int(shape * effective_batch_size / self.batchsize)].reshape(effective_batch_size, -1)
-            result.append(output.copy())
-            # Use argmax to get predictions and then check accuracy
-        # convert numpy darray to pytorch tensor
-        result = torch.Tensor(np.concatenate(result))
-        return result, elapsed_time
+        Returns
+        -------
+        torch.Tensor
+            the flattened tensor (Note, this value may be changed after the next inference).
+        float
+            the time span of the inference
+        """
+        if self.context is None or reset_context:
+            self.context = self.engine.create_execution_context()
+            self.inputs, self.outputs, self.bindings, self.stream = common.allocate_buffers(self.engine)
+            self.context.set_optimization_profile_async(0, self.stream.handle)
+
+        engine_input_shape = self.engine.get_binding_shape(0)
+        assert engine_input_shape[0] == test_data.size()[0]
+        if test_data.device != torch.device('cpu'):
+            logger.warning('test_data should be placed on CPU.')
+            test_data = test_data.to(torch.device('cpu'))
+        test_data = test_data.numpy()
+        assert test_data.dtype == np.float32
+
+        np.copyto(self.inputs[0].host, test_data.ravel())
+        start_time = time.time()
+        trt_outputs = common.do_inference_v2(self.context, bindings=self.bindings, inputs=self.inputs,
+                                                outputs=self.outputs, stream=self.stream)
+        time_span = time.time() - start_time
+        return torch.as_tensor(trt_outputs[0]), time_span
 
     def export_quantized_model(self, path):
         """
@@ -394,10 +367,7 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         path : str
             The path of export model
         """
-        assert path is not None
-        with open(path, "wb") as f:
-            f.write(self.context.engine.serialize())
-            logger.info("TensorRT engine has been saved to %s", path)
+        pass
 
     def load_quantized_model(self, path):
         """
