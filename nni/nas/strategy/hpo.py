@@ -3,7 +3,7 @@
 
 """Wrappers of HPO tuners as NAS strategy."""
 
-__all__ = ['HPOTunerWrapper', 'TPE']
+__all__ = ['HPOTunerStrategy', 'TPE']
 
 import logging
 import time
