@@ -112,9 +112,16 @@ class TPE(HPOTunerStrategy):
 
     SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements,
     and then subsequently choose new hyperparameters to test based on this model.
+
+    Parameters
+    ----------
+    *args
+        Optional positional arguments passed to :class:`~nni.algorithms.hpo.tpe_tuner.TpeTuner`.
+    **kwargs
+        Optional keyboard arguments passed to :class:`~nni.algorithms.hpo.tpe_tuner.TpeTuner`.
     """
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         from nni.algorithms.hpo.tpe_tuner import TpeTuner
         super().__init__(TpeTuner())
 
