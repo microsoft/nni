@@ -73,7 +73,7 @@ For example, consider a model has two ``Linear`` module (linear module names are
 
     standard_config = {
         'op_names': ['fc1', 'fc2'],
-        'target_names': ['weight', 'bias']
+        'target_names': ['weight', 'bias'],
         'target_settings': {
             'weight': {
                 'sparse_ratio': 0.8,
