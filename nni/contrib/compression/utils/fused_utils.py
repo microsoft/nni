@@ -11,34 +11,36 @@ from ..base.setting import OUTPUT_PREFIX
 
 FUSED_MODULES_TYPES_LIST = [nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d, nn.ConvTranspose1d, \
         nn.ConvTranspose2d, nn.ConvTranspose3d, nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d]
+ACTIVATION_MODULES_TYPE_LIST = [torch.nn.ReLU]
 
 
 def validate_fused_modules_config(fuse_module_names: List[Tuple[str]], model: nn.Module, config: Dict[str, Any]):
     # check the type and length
     if not isinstance(fuse_module_names, List) or not all(isinstance(_, tuple) for _ in fuse_module_names) \
         or not all(isinstance(_, str) for fused_pair in fuse_module_names for _ in fused_pair):
-        raise ValueError(f"Expected fused_modules type is List[Tuple[str]], but got {type(fuse_module_names)}")
+        raise ValueError(f"Expected the type of fused_modules is List[Tuple[str]], but got {type(fuse_module_names)}")
     name2module = {}
     for module_name, module in model.named_modules(remove_duplicate=False):
         name2module[module_name] = module
     # check the validation of operations
     for fused_pair in fuse_module_names:
         assert len(fused_pair) >=2 and len(fused_pair) <= 3, \
-            f"Only support fuse two or three modules, but got {len(fused_pair)} modules"
+            f"Only 2 or 3 modules are supported for fusion, but got {len(fused_pair)}"
         for i, module_name in enumerate(fused_pair):
             assert module_name in name2module, \
-                f"{module_name} should be defined in the model"
+                f"{module_name} doesn\'t exist in the model"
             module = name2module[module_name]
             if i == 0 and type(module) not in FUSED_MODULES_TYPES_LIST:
-                raise ValueError(f"{module_name} is not supported to fuse, please register it in FUSED_MODULES_TYPES_LIST")
-            if i != 0 and type(module) == torch.nn.ReLU:
+                raise ValueError(f"{module_name} is not supported for module fusion, \
+                                 please register it in the FUSED_MODULES_TYPES_LIST")
+            if i != 0 and type(module) in ACTIVATION_MODULES_TYPE_LIST:
                 assert OUTPUT_PREFIX in config.get('target_names', []), \
-                    "Please provide the quant setting of the output in the config_list"
+                    "If you need to fuse activation functions, a quantization setting for the output in the config_list should be provided"
 
 
 def get_fused_module_list(module_name: str, mode: str, fused_module_names: List[Tuple[str]]) -> Tuple:
     if mode != 'quantization' and len(fused_module_names) > 0:
-        raise ValueError("module fusion is only supported for quantization, please check it")
+        raise ValueError(f"Only quantization supports model fusion, but got {mode}")
     elif len(fused_module_names) == 0:
         return ()
     for fuse_pair in fused_module_names:

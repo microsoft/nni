@@ -92,7 +92,7 @@ class ModuleWrapper(torch.nn.Module):
         if len(self.fused_modules) > 0:
             self.is_bias = check_bias(self.module) # used for fold_bn
             assert self.is_bias in ['Tensor', 'None'], \
-                f'Only support mode Tensor or None, but got {self.is_bias}'
+                f'For bias only Tensor and None are supported, but got {self.is_bias}'
             self.register_bias()
 
     def register_bias(self):
@@ -111,7 +111,7 @@ class ModuleWrapper(torch.nn.Module):
                 delattr(self.module, 'bias')
                 self.module.register_buffer('bias', bias.detach().clone())
             else:
-                raise ValueError(f"module:{self.name}\'bias is None, no need to register it.")
+                raise ValueError(f"The bias of the {self.name} is None, no need to register it.")
 
     def extra_repr(self) -> str:
         return f'module={self.module.__class__.__name__}({self.module.extra_repr()}), module_name={self.name}'
@@ -456,7 +456,7 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
         if len(fuse_module_names) > 0:
             raise ValueError(f'{fuse_module_names} can\'t be fused with {modules.keys()}')
     if module_set.intersection(identity_module_set):
-        raise ValueError(f"don't provide quantization configuration for identity module:{module_set.intersection(identity_module_set)}")
+        raise ValueError(f"Don't provide quantization settings for identity modules:{module_set.intersection(identity_module_set)}")
     for module_name, module in model.named_modules():
         if module_name in identity_module_set:
             if module_name in module_wrappers and not isinstance(module_wrappers[module_name], IdentityModuleWrapper):
@@ -465,7 +465,7 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
             module_wrappers[module_name] = IdentityModuleWrapper(module, module_name, None, None)
             identity_module_set.remove(module_name)
 
-    assert len(identity_module_set) == 0, f"modules:{identity_module_set} are not in the model"
+    assert len(identity_module_set) == 0, f"{identity_module_set} do not exist in the model"
 
     return module_wrappers, configured_target_spaces
 
@@ -474,16 +474,16 @@ def create_module_wrapper(model:nn.Module, module: nn.Module, module_name: str, 
         config: Dict[str, Any], wrapper: ModuleWrapper | None = None, fused_modules_pair: List[str] | None = None):
     fused_modules_pair = fused_modules_pair if fused_modules_pair is not None else []
     if mode != 'quantization' and len(fused_modules_pair) > 0:
-        raise ValueError("Module fusion only happens during the quantization process")
+        raise ValueError(f"Only quantization supports model fusion, but got {mode} and {fused_modules_pair}")
     if isinstance(wrapper, IdentityModuleWrapper):
-        raise ValueError('can\'t use other compression methods in the IdentityWrapper')
+        raise ValueError('Using other compression methods on the fused module with IdentityWrapper is not supportted')
 
     fused_modules = [get_nested_attr(model, f_module_name) for f_module_name in fused_modules_pair] \
         if len(fused_modules_pair) > 0 else []
 
     if wrapper is not None:
         if len(wrapper.fused_modules) > 0 and len(fused_modules_pair) > 0:
-            raise ValueError(f'can\'t use two quantization wrappers to process the module:{module_name}')
+            raise ValueError(f'Using two fused_modules_pair for {module_name} is not supported')
         wrapper.unfreeze()
         target_spaces = wrapper.extend_target_spaces(config, mode)
         wrapper.config = update_config(wrapper.config, {mode: config})
