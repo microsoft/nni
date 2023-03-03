@@ -36,8 +36,8 @@ What should you do when your experiment has error
 
 
 
-.. image:: ../../../img/webui-img/experimentError.png
-   :width: 80%
+.. image:: ../../../img/webui-img/experimentError.gif
+   :width: 50%
 
 
 
@@ -92,7 +92,7 @@ Experiments management page could manage many experiments on your machine.
 
 
 .. image:: ../../../img/webui-img/managerExperimentList/experimentListNav.png
-   :width: 100%
+   :width: 36%
 
 
 
@@ -182,8 +182,8 @@ View overview page
 
 
 
-.. image:: ../../../img/webui-img/edit-experiment-param.png
-   :width: 80%
+.. image:: ../../../img/webui-img/edit-experiment-param.gif
+   :width: 50%
 
 
 
