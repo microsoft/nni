@@ -560,17 +560,7 @@ class ConcreteTracer(TracerBase):
             fn = root
 
         tracer_cls = getattr(self, '__class__', None)
-        self.graph = Graph(tracer_cls=tracer_cls, tracer_extras={
-            'autowrap_modules': autowrap_modules,
-            'autowrap_leaf_function': autowrap_leaf_function,
-            'autowrap_leaf_class': autowrap_leaf_class,
-            'leaf_module': leaf_module,
-            'fake_middle_class': fake_middle_class,
-            'concrete_args': concrete_args,
-            'use_operator_patch': use_operator_patch,
-            'operator_patch_backlist': operator_patch_backlist,
-            'forwrad_function_name': 'forward',
-        })
+        self.graph = Graph(tracer_cls=tracer_cls)
 
         # When we encounter a Tensor value that's not a parameter, we look if it
         # is some other attribute on the model. Construct a dict mapping Tensor
