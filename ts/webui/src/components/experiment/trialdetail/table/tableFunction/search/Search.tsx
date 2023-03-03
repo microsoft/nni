@@ -294,22 +294,20 @@ function Search(props: SearchProps): any {
     }
 
     return (
-        <div>
-            <Stack horizontal>
-                <DefaultButton text='Filter' menuProps={searchMenuProps} />
-                {/* search input: store filter conditons, also, user could input filter conditions, could search */}
-                <SearchBox
-                    styles={{ root: { width: 400 } }}
-                    placeholder='Search'
-                    onChange={updateSearchText}
-                    value={searchInputVal}
-                    onSearch={startFilter}
-                    onEscape={clearFliter}
-                    onClear={clearFliter}
-                />
-                <PrimaryButton text='Search' onClick={startFilter} />
-            </Stack>
-        </div>
+        <Stack horizontal>
+            <DefaultButton text='Filter' menuProps={searchMenuProps} />
+            {/* search input: store filter conditons, also, user could input filter conditions, could search */}
+            <SearchBox
+                styles={{ root: { width: 400 } }}
+                placeholder='Search'
+                onChange={updateSearchText}
+                value={searchInputVal}
+                onSearch={startFilter}
+                onEscape={clearFliter}
+                onClear={clearFliter}
+            />
+            <PrimaryButton text='Search' onClick={startFilter} />
+        </Stack>
     );
 }
 
