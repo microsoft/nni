@@ -28,7 +28,7 @@ from ..assets.simple_mnist import (
 from ..assets.device import device
 
 
-def test_lsq_forward_with_torch_model():
+def test_qat_forward_with_torch_model():
     torch.manual_seed(0)
     model = SimpleTorchModel().to(device)
     configure_list = [{
@@ -51,7 +51,7 @@ def test_lsq_forward_with_torch_model():
     quantizer.compress(None, 20)
 
 
-def test_lsq_forward_with_lighting_model():
+def test_qat_forward_with_lighting_model():
     torch.manual_seed(0)
     configure_list = [{
         'target_names':['_input_', 'weight', '_output_'],
