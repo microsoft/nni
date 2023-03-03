@@ -12,7 +12,7 @@ from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.algorithms.compression.v2.pytorch.utils.constructor_helper import OptimizerConstructHelper
+from nni.compression.pytorch.utils.constructor_helper import OptimizerConstructHelper
 from nni.common import dump, load
 from nni.experiment.config.base import ConfigBase
 

@@ -118,7 +118,7 @@ describe('fileUtility', () => {
         try {
             await validateCodeDir(sourceDir);
         } catch (error) {
-            chai.expect(error.message).to.contains('many files');
+            chai.expect((error as any).message).to.contains('many files');
             return;
         }
         chai.expect.fail(null, null, 'Did not fail.');

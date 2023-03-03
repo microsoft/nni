@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+from nni.compression.pytorch.quantization import QAT_Quantizer
 from nni.compression.pytorch.quantization.settings import set_quant_scheme_dtype
 
 import sys

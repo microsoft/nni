@@ -5,14 +5,32 @@
     background: #f2f2f2;
 }
 
-.header {
+.nav-slider {
     position: fixed;
     left: 0;
     top: 0;
-    width: 100%;
-    height: 56px;
-    background: #0071bc;
-    border-right: 1px solid #ccc;
+    width: 56px;
+    height: 100%;
+    min-height: 400px;
+    background: #fff;
+    z-index: 1000;
+
+    .bottom {
+        position: absolute;
+        bottom: 0;
+    }
+}
+
+.nav-main {
+    position: fixed;
+    left: 56px;
+    top: 0;
+    width: calc(100vw - 56px);
+
+    /* fix nav position to avoid overlap */
+    min-width: 725px;
+    height: 64px;
+    background-color: #fff;
     z-index: 1000;
 }
 
@@ -24,18 +42,21 @@
 }
 
 .contentBox {
-    width: 100%;
+    width: calc(100vw - 73px);
+    margin: 0 auto;
+    margin-left: 56px;
 }
 
 .content {
-    width: 87%;
+    width: calc(100vw - 114px);
     min-height: calc(100vh - 80px);
-    margin: 0 auto;
-    min-width: 1200px;
-    max-width: 1490px;
+    min-width: 1116px;
 
-    /* nav bar: 56 + marginTop: 24 */
-    margin-top: 80px;
+    /* including right scroll bar auto */
+    margin: 0 auto;
+
+    /* nav bar: 64 + marginTop: 20 */
+    margin-top: 84px;
 }
 
 .bottomDiv {

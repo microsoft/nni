@@ -4,11 +4,11 @@
 import * as ioc from 'typescript-ioc';
 
 const Inject: (...args: any[]) => any = ioc.Inject;
-const Singleton: (target: Function) => void = ioc.Singleton;
+const Singleton: (target: any) => void = ioc.Singleton;
 const Container = ioc.Container;
 const Provides = ioc.Provides;
 
-function get<T>(source: Function): T {
+function get<T>(source: any): T {
     return ioc.Container.get(source) as T;
 }
 

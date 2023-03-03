@@ -195,7 +195,7 @@ class PAITrainingService implements TrainingService {
             await this.paiJobRestServer.stop();
             this.log.info('PAI Training service rest server stopped successfully.');
         } catch (error) {
-            this.log.error(`PAI Training service rest server stopped failed, error: ${error.message}`);
+            this.log.error(`PAI Training service rest server stopped failed, error: ${(error as any).message}`);
         }
     }
 
