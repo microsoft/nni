@@ -4,14 +4,6 @@ Compression Config Specification
 Common Keys in Config
 ---------------------
 
-op_types
-^^^^^^^^
-
-A list of type names of classes that inherit from ``torch.nn.Module``.
-Only module types in this list can be selected to be compressed.
-If this key is not set, all module types can be selected.
-If neither ``op_names`` or ``op_names_re`` are set, all modules satisfied the ``op_types`` are selected.
-
 op_names
 ^^^^^^^^
 
@@ -24,11 +16,13 @@ op_names_re
 A list of regular expressions for matching module names by python standard library ``re``.
 The matched modules will be selected to be compressed.
 
-exclude_op_types
-^^^^^^^^^^^^^^^^
+op_types
+^^^^^^^^
 
 A list of type names of classes that inherit from ``torch.nn.Module``.
-The module types in this list are excluded from compression.
+Only module types in this list can be selected to be compressed.
+If this key is not set, all module types can be selected.
+If neither ``op_names`` or ``op_names_re`` are set, all modules satisfied the ``op_types`` are selected.
 
 exclude_op_names
 ^^^^^^^^^^^^^^^^
@@ -41,12 +35,18 @@ exclude_op_names_re
 A list of regular expressions for matching module names.
 The matched modules will be removed from the modules that need to be compressed.
 
+exclude_op_types
+^^^^^^^^^^^^^^^^
+
+A list of type names of classes that inherit from ``torch.nn.Module``.
+The module types in this list are excluded from compression.
+
 target_names
 ^^^^^^^^^^^^
 
 A list of legal compression target name, i.e., usually ``_input_``, ``weight``, ``bias``, ``_output_`` are support to be compressed.
 
-Two kinds of target are supported by design, module inputs/outputs(should be a tensor), module parameters/buffers:
+Two kinds of target are supported by design, module inputs/outputs(should be a tensor), module parameters:
 
 - Inputs/Outputs: If the module inputs or outputs is a singal tensor, directly set ``_input_`` for input and ``_output_`` for output.
   ``_input_{position_index}`` or ``_input_{arg_name}`` can be used to specify the input target,
@@ -99,8 +99,8 @@ For example, consider a model has two ``Linear`` module (linear module names are
 
 .. Note:: Each compression target can only be configure once, re-configuration will not take effect.
 
-Pruning Setting Keys
---------------------
+Pruning Specific Configuration Keys
+-----------------------------------
 
 sparse_ratio
 ^^^^^^^^^^^^
@@ -111,11 +111,15 @@ For example, if the sparse ratio is 0.8, and the pruning target is a Linear modu
 max_sparse_ratio
 ^^^^^^^^^^^^^^^^
 
+This key is usually used in combination with ``sparse_threshold`` and ``global_group_id``, limit the maximum sparse ratio of each target.
+
 A float number between 0. ~ 1., for each single pruning target, the sparse ratio after pruning will not be larger than this number,
 that means at most masked ``max_sparse_ratio`` pruning target value.
 
 min_sparse_ratio
 ^^^^^^^^^^^^^^^^
+
+This key is usually used in combination with ``sparse_threshold`` and ``global_group_id``, limit the minimum sparse ratio of each target.
 
 A float number between 0. ~ 1., for each single pruning target, the sparse ratio after pruning will not be lower than this number,
 that means at least masked ``min_sparse_ratio`` pruning target value.
@@ -143,11 +147,15 @@ and the expected total sparse ratio of these three modules is 0.5, then the conf
 
 .. code-block:: python
 
-    config = {
-        'op_names': ['fc1', 'fc2', 'fc3'],
+    config_list = [{
+        'op_names': ['fc1', 'fc2'],
         'sparse_ratio': 0.5,
         'global_group_id': 'linear_group_1'
-    }
+    }, {
+        'op_names': ['fc3'],
+        'sparse_ratio': 0.5,
+        'global_group_id': 'linear_group_1'
+    }]
 
 
 dependency_group_id
@@ -197,8 +205,8 @@ By default, ``mul``. ``mul`` and ``add`` is supported to apply mask on pruning t
 ``add`` means the pruning target will be masked by add a mask metrix contains -1000 and 0, -1000 represents masked position, 0 represents unmasked position.
 Note that -1000 can be configured in the future. ``add`` usually be used to mask activation module such as Softmax.
 
-Quantization Setting Keys
--------------------------
+Quantization Specific Configuration Keys
+----------------------------------------
 
 quant_dtype
 ^^^^^^^^^^^
@@ -224,8 +232,8 @@ Used to control the granularity of the target quantization, by default the whole
 Each sub-config in the config list is a dict, and the scope of each setting (key) is only internal to each sub-config.
 If multiple sub-configs are configured for the same layer, the later ones will overwrite the previous ones.
 
-Distillation Setting Keys
--------------------------
+Distillation Specific Configuration Keys
+----------------------------------------
 
 lambda
 ^^^^^^
