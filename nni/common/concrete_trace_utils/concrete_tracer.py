@@ -1243,7 +1243,8 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    autowrap_leaf_function = None,
                    autowrap_leaf_class = None,
                    leaf_module = None,
-                   fake_middle_class = None) -> GraphModule:
+                   fake_middle_class = None,
+                   dce = False) -> GraphModule:
     """
     Concrete tracing API
 
@@ -1418,6 +1419,30 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
 
     # before returning the traced GraphModule, store module path info
     setattr(traced, 'module_path', tracer.node_to_originating_module.copy())
+
+    # apply dead code elimination according to the switch param `dce`
+    if dce:
+        def recursively_check_node(n: torch.fx.Node) -> bool:
+            # !pay attention that the `output` node should be ignored for users checking
+            if n.op == 'output':
+                return False
+            if n.users:
+                users = list(n.users)
+                for user in users:
+                    user_deleted = recursively_check_node(user)
+                    if not user_deleted:
+                        return False
+            if not n.users:
+                for input_node in n.all_input_nodes:
+                    input_node.users.pop(n)
+                n._remove_from_list()
+                return True
+            else:
+                return False
+            
+        for node in traced.graph.nodes:
+            recursively_check_node(node)  
+        traced.recompile()
 
     # return traced, tracer
     return traced
