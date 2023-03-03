@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pytest
+from typing import Any
 
 import torch
 
@@ -34,7 +35,7 @@ def optimizer_after_step_patch():
     global optimizer_after_step_flag
     optimizer_after_step_flag = True
 
-def loss_patch(t: torch.Tensor):
+def loss_patch(t: torch.Tensor, batch: Any):
     global loss_flag
     loss_flag = True
     return t
