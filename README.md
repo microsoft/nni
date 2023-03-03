@@ -202,7 +202,7 @@ To update NNI to the latest version, add `--upgrade` flag to the above commands.
 </td>
 </tbody>
 </table>
-
+<!-- tool screenToGif in github -->
 <img src="docs/static/img/webui.gif" alt="webui" width="100%"/>
 
 ## Resources
