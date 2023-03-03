@@ -7,10 +7,13 @@
  **/
 
 import express, { Request, Response, Router } from 'express';
+import type { Router as WsRouter } from 'express-ws';
+import type { WebSocket } from 'ws';
 
 type HttpMethod = 'GET' | 'PUT';
 
 type ExpressCallback = (req: Request, res: Response) => void;
+type WebSocketCallback = (ws: WebSocket, req: Request) => void;
 
 export class RestManager {
     private router: Router;
@@ -33,6 +36,11 @@ export class RestManager {
         } else {
             throw new Error(`RestManager: Bad method ${method}`);
         }
+    }
+
+    public registerWebSocketHandler(path: string, callback: WebSocketCallback): void {
+        const p = '/' + trimSlash(path);
+        (this.router as WsRouter).ws(p, callback);
     }
 
     public registerExpressRouter(path: string, router: Router): void {
