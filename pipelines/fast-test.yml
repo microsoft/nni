@@ -222,9 +222,10 @@ stages:
       displayName: Python unit test
 
     # temporarily disable this test, add it back after bug fixed
-    # - script: |
-    #     npm --prefix ts/nni_manager run test
-    #   displayName: TypeScript unit test
+    - script: |
+        npm --prefix ts/nni_manager run test -- --exclude test/core/nnimanager.test.ts
+        npm --prefix ts/nni_manager run test_nnimanager
+      displayName: TypeScript unit test
 
     - script: |
         cd test
