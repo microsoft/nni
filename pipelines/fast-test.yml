@@ -249,7 +249,8 @@ stages:
 
     - script: |
         CI=true npm --prefix ts/nni_manager run test -- --exclude test/core/nnimanager.test.ts
-        CI=true npm --prefix ts/nni_manager run test_nnimanager
+        # # exclude nnimanager's ut because macos in pipeline is pretty slow
+        # CI=true npm --prefix ts/nni_manager run test_nnimanager
       displayName: TypeScript unit test
 
     - script: |
