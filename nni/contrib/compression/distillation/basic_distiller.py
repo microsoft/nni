@@ -200,7 +200,7 @@ class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
                             loss_list.append(target_space.lambda_ * F.mse_loss(stu_hs, tea_hs))
                         elif target_space.apply_method == 'kl':
                             loss_list.append(target_space.lambda_ * \
-                                F.kl_div(stu_hs.log_softmax(dim=-1) / 2, tea_hs.softmax(dim=-1) / 2, reduction='batchmean') * (2 ** 2))
+                                F.kl_div((stu_hs / 2).log_softmax(dim=-1), (tea_hs / 2).softmax(dim=-1), reduction='batchmean') * (2 ** 2))
                 if loss_list:
                     distill_loss += min(loss_list)
         for _, ts in self._target_spaces.items():
@@ -313,7 +313,7 @@ class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
                         distill_loss += target_space.lambda_ * F.mse_loss(stu_hs, tea_hs)
                     elif target_space.apply_method == 'kl':
                         distill_loss += target_space.lambda_ * \
-                            F.kl_div(stu_hs.log_softmax(dim=-1) / 2, tea_hs.softmax(dim=-1) / 2, reduction='batchmean') * (2 ** 2)
+                            F.kl_div((stu_hs / 2).log_softmax(dim=-1), (tea_hs / 2).softmax(dim=-1), reduction='batchmean') * (2 ** 2)
         for _, ts in self._target_spaces.items():
             for _, target_space in ts.items():
                 target_space.clean()
