@@ -6,7 +6,7 @@ import itertools
 import warnings
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import Any, List, Dict, cast
+from typing import Any, List, cast
 from pathlib import Path
 
 __all__ = [

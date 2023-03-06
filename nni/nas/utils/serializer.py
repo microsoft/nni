@@ -25,6 +25,7 @@ from typing import Any, ClassVar, Type, cast
 
 _logger = logging.getLogger(__name__)
 
+
 class Serializer:
     """Save data to a file, or load data from a file."""
 
@@ -39,16 +40,18 @@ class Serializer:
 
     def load(self, path: Path) -> Any:
         """Load the data from the given path.
-        
+
         Raises
         ------
         FileNotFoundError
             If the file (suffixed with :attr:`suffix`) is not found.
-        
+
         """
         raise NotImplementedError()
 
+
 _default_serializer: Serializer | None = None
+
 
 def set_default_serializer(serializer: Serializer) -> None:
     """Set the default serializer.
@@ -61,6 +64,7 @@ def set_default_serializer(serializer: Serializer) -> None:
     global _default_serializer
     _default_serializer = serializer
 
+
 def get_default_serializer() -> Serializer:
     """Get the default serializer.
 
@@ -72,9 +76,10 @@ def get_default_serializer() -> Serializer:
         set_default_serializer(TorchSerializer())
     return cast(Serializer, _default_serializer)
 
+
 def _find_path_with_prefix(path: Path, expected_suffix: str) -> Path:
     """Find a file that is prefixed with the given path.
-    
+
     Parameters
     ----------
     path
@@ -105,6 +110,7 @@ def _find_path_with_prefix(path: Path, expected_suffix: str) -> Path:
                                 p, expected_suffix)
 
     raise FileNotFoundError(f'No file found with prefix {path} and suffix {expected_suffix}.')
+
 
 class TorchSerializer(Serializer):
     """The serializer that utilizes :func:`torch.save` and :func:`torch.load` to save and load data.
