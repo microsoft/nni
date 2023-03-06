@@ -25,7 +25,7 @@ export interface NniManagerArgs {
     readonly experimentId: string;
     readonly action: 'create' | 'resume' | 'view';
     readonly experimentsDirectory: string;  // renamed "config.experiment_working_directory", must be absolute
-    readonly logLevel: 'critical' | 'error' | 'warning' | 'info' | 'debug';
+    readonly logLevel: 'critical' | 'error' | 'warning' | 'info' | 'debug' | 'trace';
     readonly foreground: boolean;
     readonly urlPrefix: string;  // leading and trailing "/" must be stripped
     readonly tunerCommandChannel: string | null;

@@ -84,53 +84,49 @@ class TorchModel(torch.nn.Module):
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
-# class InitMaskTestCase(unittest.TestCase):
-#     def the_test_with_annotations(self, relu):
-#         torch.manual_seed(100)
-#         model = TorchModel(relu)
-#         dummy_input = torch.rand(3, 1, 28, 28)
+class InitMaskTestCase(unittest.TestCase):
+    def the_test_with_annotations(self, relu):
+        torch.manual_seed(100)
+        model = TorchModel(relu)
+        dummy_input = torch.rand(3, 1, 28, 28)
 
-#         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.5}]
-#         pruner = L1NormPruner(model=model, config_list=config_list)
-#         _, masks = pruner.compress()
-#         pruner.show_pruned_weights()
-#         pruner._unwrap_model()  # unwrap all modules to normal state
+        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.5}]
+        pruner = L1NormPruner(model=model, config_list=config_list)
+        _, masks = pruner.compress()
+        pruner.show_pruned_weights()
+        pruner._unwrap_model()  # unwrap all modules to normal state
 
-#         masks['relu1'] = {
-#             '_input_': {
-#                 'input': torch.ones((8, 20, 24, 24)),
-#                 1: torch.ones((8, 20, 24, 24))
-#             },
-#             '_output_': torch.ones((8, 20, 24, 24)),
-#         }
-#         masks['conv1']['_output_'] = torch.ones((8, 20, 24, 24))
+        masks['relu1'] = {
+            '_input_input': torch.ones((8, 20, 24, 24)),
+            '_output_0': torch.ones((8, 20, 24, 24)),
+        }
+        masks['conv1']['_output_0'] = torch.ones((8, 20, 24, 24))
 
-#         traced_model = concrete_trace(model, {'x': dummy_input}, leaf_module=(WithAnno1, WithAnno2, WithAnno3))
-#         ModelSpeedup(traced_model, customized_replace_func = {'WithAnno1': no_replace, 'WithAnno2': no_replace, 'WithAnno3': no_replace}
-#             ).run(args=[dummy_input], masks_file=masks)
-#         traced_model(dummy_input)
+        traced_model = concrete_trace(model, {'x': dummy_input}, leaf_module=(WithAnno1, WithAnno2, WithAnno3))
+        ModelSpeedup(traced_model, (dummy_input,), masks).speedup_model()
+        traced_model(dummy_input)
 
-#         print('model before speedup', repr(model))
-#         # 125.49 M, 0.85M, 93.29, 1.1012
-#         flops, params, _ = count_flops_params(model, dummy_input, verbose=False)
-#         print(f'Pretrained model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M')
+        print('model before speedup', repr(model))
+        # 125.49 M, 0.85M, 93.29, 1.1012
+        flops, params, _ = count_flops_params(model, dummy_input, verbose=False)
+        print(f'Pretrained model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M')
 
-#         print('model after speedup', repr(traced_model))
-#         flops, params, _ = count_flops_params(traced_model, dummy_input, verbose=False)
-#         print(f'Pruned model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M')
+        print('model after speedup', repr(traced_model))
+        flops, params, _ = count_flops_params(traced_model, dummy_input, verbose=False)
+        print(f'Pruned model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M')
 
-#     def test_with_annotation0(self):
-#         return self.the_test_with_annotations(torch.nn.ReLU6())
+    def test_with_annotation0(self):
+        return self.the_test_with_annotations(torch.nn.ReLU6())
 
-#     def test_with_annotation1(self):
-#         return self.the_test_with_annotations(WithAnno1())
+    def test_with_annotation1(self):
+        return self.the_test_with_annotations(WithAnno1())
 
-#     def test_with_annotation2(self):
-#         return self.the_test_with_annotations(WithAnno2())
+    def test_with_annotation2(self):
+        return self.the_test_with_annotations(WithAnno2())
 
-#     def test_with_annotation3(self):
-#         return self.the_test_with_annotations(WithAnno3())
+    def test_with_annotation3(self):
+        return self.the_test_with_annotations(WithAnno3())
 
-# if __name__ == '__main__':
-#     # unittest.main()
-#     InitMaskTestCase().test_with_annotation1()
+if __name__ == '__main__':
+    # unittest.main()
+    InitMaskTestCase().test_with_annotation1()

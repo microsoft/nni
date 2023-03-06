@@ -12,7 +12,10 @@ import torch
 from ..base.compressor import Pruner
 from ..base.wrapper import ModuleWrapper
 from ..utils import Evaluator
-from . import LevelPruner, L1NormPruner, L2NormPruner, SlimPruner, TaylorPruner
+
+from .basic_pruner import LevelPruner, L1NormPruner, L2NormPruner
+from .slim_pruner import SlimPruner
+from .taylor_pruner import TaylorPruner
 
 _logger = logging.getLogger(__name__)
 
@@ -108,7 +111,7 @@ class _ComboPruner(ScheduledPruner):
     def _fuse_preprocess(self, evaluator: Evaluator) -> None:
         self._initialize_state()
         self._register_trigger(evaluator)
-        self.bound_pruner._fuse_postprocess(evaluator)
+        self.bound_pruner._fuse_preprocess(evaluator)
 
     def _fuse_postprocess(self, evaluator: Evaluator) -> None:
         self.bound_pruner._fuse_postprocess(evaluator)
