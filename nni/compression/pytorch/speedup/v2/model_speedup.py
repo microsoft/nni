@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import inspect
 import logging
 from pathlib import Path
 import tempfile
@@ -34,7 +35,7 @@ from .utils import tree_map_zip
 @compatibility(is_backward_compatible=True)
 class ModelSpeedup(torch.fx.Interpreter):
     """
-    This class is to speedup the model with provided weight mask.
+    This class is to speedup the model with provided masks.
 
     Parameters
     ----------
@@ -211,6 +212,8 @@ class ModelSpeedup(torch.fx.Interpreter):
             self.node_infos[node].output_origin = output
             self.node_infos[node].output_inplace = \
                 tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else deepcopy(t), output)
+            self.node_infos[node].output_masks = \
+                tree_map_zip(lambda t: torch.ones_like(t).clone().detach() if isinstance(t, torch.Tensor) else None, output)
 
             if self.garbage_collect_values:
                 # do memory collect to reduce memory usage
@@ -309,84 +312,48 @@ class ModelSpeedup(torch.fx.Interpreter):
                     self.node_infos[node].mask_updater = mask_updater
                     break
 
-        # The following code is related to preset input/output mask...
+        for node_info in self.node_infos.values():
+            if node_info.module is None:
+                continue
+            masks = self.masks_file.get(node_info.node.target, {})
 
-        # node_to_masks = defaultdict(list)
-        # for node in (node for node in self.node_infos if self.node_infos[node].module is not None):
-        #     # some 'call_module's has no 'module' such as 'log_softmax'
-        #     param_masks = self.masks_file.get(node.target, {})
-        #     if '_output_' in param_masks:
-        #         node_to_masks[node].append(param_masks['_output_'])
-        #     if '_input_' in param_masks:
-        #         func = self.fetch_attr(node.target).forward
-        #         while hasattr(func, '__wrapped__'):
-        #             func = func.__wrapped__
-        #         arg_list = inspect.getfullargspec(func).args
-        #         kw_to_posi = dict(zip(arg_list[1:], range(len(arg_list))[1:]))
-        #         node_kw = {
-        #             **dict(zip(range(len(arg_list))[1:], node.args)),
-        #             **dict(zip(arg_list[1:], node.args)),
-        #             **{kw_to_posi[k]: v for k, v in node.kwargs.items()},
-        #             **node.kwargs,
-        #         }
-        #         for key, mask in param_masks['_input_'].items():
-        #             node_to_masks[node_kw[key]].append(mask)
+            output_masks = {name: masks[name] for name in filter(lambda name: name.startswith('_output_'), masks.keys())}
+            if output_masks:
+                if isinstance(node_info.output_masks, torch.Tensor):
+                    node_info.output_masks *= list(output_masks.values())[0]
+                elif isinstance(node_info.output_masks, (list, tuple)):
+                    for key, mask in output_masks.items():
+                        key = key.split('_output_')[1]
+                        assert key.isnumeric()
+                        if mask is not None:
+                            node_info.output_masks[int(key)] *= mask
+                elif isinstance(node_info.output_masks, dict):
+                    for key, mask in output_masks.items():
+                        if mask is not None:
+                            key = key.split('_output_')[1]
+                            node_info.output_masks[key] *= mask
+                else:
+                    raise RuntimeError(f'Unsupported output type {type(node_info.output_masks)}.')
 
-        # def check_equal(a, b):
-        #     if type(a) != type(b):
-        #         return False
-        #     if isinstance(a, (list, tuple)):
-        #         if len(a) != len(b):
-        #             return False
-        #         for sub_a, sub_b in zip(a, b):
-        #             if not check_equal(sub_a, sub_b):
-        #                 return False
-        #         return True
-        #     elif isinstance(a, dict):
-        #         if len(set(a.keys()).symmetric_difference(b.keys())) != 0:
-        #             return False
-        #         for key in a.keys():
-        #             if not check_equal(a[key], b[key]):
-        #                 return False
-        #         return True
-        #     else:
-        #         assert isinstance(a, torch.Tensor), f'contents in masks can only be (list, tuple, dict, Tensor), not ({type(a)})'
-        #         return torch.equal(a, b) # totally equal, no bias
-
-        # def check_valid(a, b):
-        #     if isinstance(a, (list, tuple)):
-        #         if not isinstance(b, (list, tuple)):
-        #             return False
-        #         if len(a) != len(b):
-        #             return False
-        #         for sub_a, sub_b in zip(a, b):
-        #             if not check_equal(sub_a, sub_b):
-        #                 return False
-        #         return True
-        #     elif isinstance(a, dict):
-        #         if not isinstance(b, dict):
-        #             return False
-        #         if len(set(a.keys()).symmetric_difference(b.keys())) != 0:
-        #             return False
-        #         for key in a.keys():
-        #             if not check_equal(a[key], b[key]):
-        #                 return False
-        #         return True
-        #     elif isinstance(a, torch.Tensor):
-        #         if not isinstance(b, torch.Tensor):
-        #             return False
-        #         return a.shape == b.shape
-        #     else:
-        #         return b is None
-
-        # for node, masks in node_to_masks.items():
-        #     if len(masks) >= 1:
-        #         mask = masks[0]
-        #         for mask_next in masks[1:]:
-        #             assert check_equal(mask, mask_next), f'preset-masks of "{node}" are not euqal!'
-        #         assert check_valid(self.node_infos[node].output_origin, mask),\
-        #             f'structure of preset-mask and value of slot "{node}" are not euqal!'
-        #         self.node_infos[node].output_masks = mask
+            input_masks = {name: masks[name] for name in filter(lambda name: name.startswith('_input_'), masks.keys())}
+            if input_masks:
+                func = self.fetch_attr(node_info.node.target).forward
+                while hasattr(func, '__wrapped__'):
+                    func = func.__wrapped__
+                arg_list = inspect.getfullargspec(func).args
+                kw_to_posi = dict(zip(arg_list[1:], range(len(arg_list) - 1)))
+                node_kw = {
+                    **dict(zip(range(len(arg_list) - 1), node_info.node.args)),
+                    **dict(zip(arg_list[1:], node_info.node.args)),
+                    **{kw_to_posi[k]: v for k, v in node.kwargs.items()},
+                    **node_info.node.kwargs,
+                }
+                for key, mask in input_masks.items():
+                    key = key.split('_input_')[1]
+                    key = int(key) if key.isnumeric() else key
+                    if isinstance(mask, torch.Tensor):
+                        assert isinstance(self.node_infos[node_kw[key]].output_masks, torch.Tensor)
+                        self.node_infos[node_kw[key]].output_masks *= mask.detach().clone()
 
     def speedup_model(self) -> GraphModule:
         try:
