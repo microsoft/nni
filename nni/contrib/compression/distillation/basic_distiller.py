@@ -67,7 +67,7 @@ class TeacherModelBasedDistiller(Distiller):
         self.teacher_model = teacher_model
         self.teacher_predict = teacher_predict
         self.origin_loss_lambda = origin_loss_lambda
-        self._teacher_module_wrappers, target_spaces = register_wrappers(self.teacher_model, self.config_list, self.mode) 
+        self._teacher_module_wrappers, target_spaces = register_wrappers(self.teacher_model, self.config_list, self.mode)
         self._teacher_target_spaces: _DISTILLATION_TARGET_SPACES = target_spaces  # type: ignore
         self._teacher_is_wrapped = False
         self.wrap_teacher_model()
