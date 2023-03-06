@@ -133,7 +133,10 @@ def _generate_align_sparsity(masks: _MASKS, target_spaces: _PRUNING_TARGET_SPACE
     align_masks = defaultdict(dict)
     for module_name, ts in target_spaces.items():
         for target_name, target_space in ts.items():
-            src_mask = masks[module_name][target_space.align['target_name']]  # type: ignore
+            align_module_name = module_name if target_space.align['module_name'] is None \
+                else target_space.align['module_name']  # type: ignore
+            assert align_module_name in masks
+            src_mask = masks[align_module_name][target_space.align['target_name']]  # type: ignore
             align_dims: List[int] = target_space.align['dims']  # type: ignore
             reduce_dims = [d for d in range(len(src_mask.shape)) if d not in align_dims and d - len(src_mask.shape) not in align_dims]
             align_masks[module_name][target_name] = src_mask.sum(reduce_dims).bool().float()
@@ -269,12 +272,12 @@ def _global_threshold_generate(metrics: _METRICS,
 def _nested_multiply_update_masks(default_dict: _MASKS, update_dict: _MASKS):
     # if a target already has a mask, the old one will multiply the new one as the target mask,
     # that means the mask in default dict will more and more sparse.
-    for key, value in update_dict.items():
-        for k, v in value.items():
-            if k in default_dict[key] and isinstance(default_dict[key][k], torch.Tensor):
-                default_dict[key][k] = (default_dict[key][k] * v).bool().float()
+    for module_name, target_tensors in update_dict.items():
+        for target_name, target_tensor in target_tensors.items():
+            if target_name in default_dict[module_name] and isinstance(default_dict[module_name][target_name], torch.Tensor):
+                default_dict[module_name][target_name] = (default_dict[module_name][target_name] * target_tensor).bool().float()
             else:
-                default_dict[key][k] = v
+                default_dict[module_name][target_name] = target_tensor
 
 
 def _metric_fuse(metrics: _METRICS) -> torch.Tensor:

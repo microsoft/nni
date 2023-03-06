@@ -488,7 +488,7 @@ class ModelSpeedup:
         self.infer_modules_masks()
         _logger.info('resolve the mask conflict')
         # sometimes, mask conflict will happen during infer masks
-        fix_mask_conflict(self.masks, self.bound_model, self.dummy_input)
+        # fix_mask_conflict(self.masks, self.bound_model, self.dummy_input)
 
         # load the original stat dict before replace the model
         self.bound_model.load_state_dict(self.ori_state_dict)

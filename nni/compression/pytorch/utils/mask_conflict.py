@@ -128,7 +128,7 @@ class GroupMaskConflict(MaskFix):
         for layername in depens:
             group_max = depens[layername]
             group_min = min_groups[layername]
-            if layername not in self.masks:
+            if layername not in self.masks or 'weight' not in self.masks[layername]:
                 # this layer not pruned
                 continue
             w_mask = self.masks[layername]['weight']
@@ -223,7 +223,7 @@ class ChannelMaskConflict(MaskFix):
         sum_idx = (1, 2, 3) if self.conv_prune_dim == 0 else (0, 2, 3)
 
         (_tmp_name, _tmp_tensor) = list(self.masks.items())[0]
-        device = _tmp_tensor['weight'].device
+        device = list(_tmp_tensor.values())[0].device
 
         for dset in depen_sets:
             if len(dset) <= 1:
@@ -234,7 +234,7 @@ class ChannelMaskConflict(MaskFix):
             channel_masks = []
             fine_grained = False
             for name in dset:
-                if name in self.masks:
+                if name in self.masks and 'weight' in self.masks[name]:
                     _, m = get_module_by_name(self.model, name)
                     assert m is not None
                     mask = self.masks[name]['weight']
@@ -299,7 +299,7 @@ class ChannelMaskConflict(MaskFix):
             merged_index = torch.nonzero(merged_channel_mask, as_tuple=True)[0]
 
             for name in dset:
-                if name not in self.masks:
+                if name not in self.masks or 'weight' not in self.masks[name]:
                     assert all(merged_channel_mask)
                     continue
                 orig_mask = self.masks[name]['weight']
@@ -387,6 +387,9 @@ def detect_mask_prune_dim(masks, model):
     dim0_preserved, dim1_preserved = 0., 0.
     dim0_num, dim1_num = 0., 0.
     for module_name in masks:
+        if 'weight' not in masks[module_name]:
+            continue
+
         _, m = get_module_by_name(model, module_name)
         if m is None or type(m).__name__ != 'Conv2d':
             continue

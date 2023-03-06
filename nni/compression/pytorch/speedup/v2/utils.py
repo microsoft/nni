@@ -70,4 +70,5 @@ def tree_map_zip(fn: Any, *pytrees):
             flat_args, spec = tree_flatten(pytree)
             flat_args_list.append(flat_args)
             spec_list.append(spec)
+        assert all(len(args) == len(flat_args_list[0]) for args in flat_args_list), 'Inconsistent tree nodes length.'
         return tree_unflatten([fn(*args) for args in zip(*flat_args_list)], spec_list[0])
