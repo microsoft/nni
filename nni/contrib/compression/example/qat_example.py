@@ -128,7 +128,7 @@ real_input = next(iter(train_dataloader))[0].to(device)
 quantizer.track_forward(real_input)
 
 start = time.time()
-_, calibration_config = quantizer.compress(max_epochs=5)
+_, calibration_config = quantizer.compress(None, max_epochs=5)
 print(f'pure training 5 epochs: {time.time() - start}s')
 
 print(calibration_config)
