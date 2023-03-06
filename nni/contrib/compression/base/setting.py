@@ -120,9 +120,8 @@ class PruningSetting(ModuleSetting):
             'apply_method': 'mul',
         },
         'bias': {
-            # should support granularity in the future
-            # module_name should also be supported
             'align': {
+                'module_name': None,
                 'target_name': 'weight',
                 'dims': [0],
             },
