@@ -128,7 +128,7 @@ class TorchSerializer(Serializer):
 
     def __init__(self, map_location: Any = None):
         try:
-            import torch
+            import torch  # pylint: disable=unused-import
         except ImportError:
             raise RuntimeError(
                 'TorchSerializer requires torch to be installed. '
