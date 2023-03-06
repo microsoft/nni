@@ -493,14 +493,14 @@ class ConcreteTracer(TracerBase):
 
     @compatibility(is_backward_compatible=True)
     def trace(self, root: Union[torch.nn.Module, Callable[..., Any]], *,
-              autowrap_modules: Tuple[str] = None,
+              autowrap_modules: Tuple[str] | None = None,
               autowrap_leaf_function = None,
               autowrap_leaf_class = None,
               leaf_module = None,
               fake_middle_class = None,
               concrete_args: Union[Dict[str, Any], Tuple],
               use_operator_patch: bool = True,
-              operator_patch_backlist: List[str] = None,
+              operator_patch_backlist: List[str] | None = None,
               forwrad_function_name: str = 'forward') -> Graph:
         """
         similar to _symbolic_trace.Tracer.trace
@@ -523,7 +523,7 @@ class ConcreteTracer(TracerBase):
                 always needed.
         """
         # preprocess arguments
-        autowrap_modules = autowrap_modules if autowrap_modules is not None else ()
+        autowrap_modules = autowrap_modules if autowrap_modules is not None else tuple()
         autowrap_leaf_function = autowrap_leaf_function if autowrap_leaf_function is not None else {}
         autowrap_leaf_class = autowrap_leaf_class if autowrap_leaf_class is not None else {}
         leaf_module = leaf_module if leaf_module is not None else ()
@@ -1086,7 +1086,7 @@ class MagicMethodPatcher:
     @staticmethod
     def format_import_statement_new(name: str, obj: Any, importer) -> str:
         if isinstance(obj, BuiltinMethodType) and getattr(obj, '__name__', None) == 'apply'\
-            and isinstance(getattr(obj, '__self__', None), Type) and issubclass(obj.__self__, torch.autograd.Function):
+            and isinstance(getattr(obj, '__self__', None), Type) and issubclass(obj.__self__, torch.autograd.Function):  # type: ignore
             # torch.autograd.function
             return MagicMethodPatcher.format_import_statement_ori(name, obj.__self__, importer) + f'\n{name} = {name}.apply'
         return MagicMethodPatcher.format_import_statement_ori(name, obj, importer)
@@ -1237,7 +1237,7 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    concrete_args: Union[Dict[str, Any], Tuple],
                    *,
                    use_operator_patch: bool = True,
-                   operator_patch_backlist: List[str] = None,
+                   operator_patch_backlist: List[str] | None = None,
                    forwrad_function_name: str = 'forward',
                    check_args: Optional[Dict[str, Any]] = None,
                    autowrap_leaf_function = None,
