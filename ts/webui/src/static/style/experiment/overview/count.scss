@@ -26,16 +26,18 @@ $margin: 20px;
 .time {
     width: 80%;
     margin: 0 auto;
-    margin-top: 16px;
+    margin-top: 18px;
 
-    >div {
-        margin-bottom: 17px;
-        line-height: 21px;
+    .startMargin {
+        margin-bottom: 18px;
     }
 
     .bg {
         padding: 0 6px;
+        margin-top: 1px;
+        line-height: 21px;
         background: #f3f5f7;
+        text-align: center;
         box-sizing: border-box;
     }
 
@@ -248,6 +250,7 @@ div.maxExperimentDuration {
     }
 
     .title {
+        color: #81868f;
         border-right: 1px solid #ccc;
     }
 
@@ -261,7 +264,6 @@ div.maxExperimentDuration {
         line-height: 28px;
         text-align: center;
         background-color: #f3f5f7;
-        border-radius: 5px;
         position: absolute;
         right: 2px;
         top: 2px;
@@ -277,7 +279,6 @@ div.maxExperimentDuration {
     padding: 0 10px;
     box-sizing: border-box;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    border-radius: 4px;
     position: absolute;
     top: -60px;
 
@@ -285,7 +286,6 @@ div.maxExperimentDuration {
         width: 48px;
         height: 28px;
         border: 1px solid #3582ec;
-        border-radius: 4px;
         margin-top: 10px;
         padding-left: 4px;
         outline: none;
@@ -299,7 +299,6 @@ div.maxExperimentDuration {
         width: 70px;
         height: 32px;
         background: #f3f5f7;
-        border-radius: 4px;
         margin-top: 10px;
     }
 
@@ -314,7 +313,7 @@ div.maxExperimentDuration {
             line-height: 32px;
             text-align: center;
             background: #f9fafb;
-            border-radius: 6px;
+            border-radius: 4px;
         }
     }
 }

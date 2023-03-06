@@ -6,8 +6,9 @@ from __future__ import annotations
 from collections import defaultdict
 from copy import deepcopy
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Literal, Tuple
 
+from schema import Schema, Optional, Or
 import torch
 
 from .setting import INPUT_PREFIX, OUTPUT_PREFIX
@@ -73,7 +74,7 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
                     'sparse_ratio': sparse_ratio,
                     'max_sparse_ratio': max_sparse_ratio,
                     'global_group_id': group_id,
-                    'sparse_granularity': 'default',
+                    'granularity': 'default',
                 }
             }
 
@@ -161,7 +162,10 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
         selected_by_op_types = set()
         for op_type in op_types:
             selected_by_op_types.update(type2names.get(op_type, set()))
-        op_names.intersection_update(selected_by_op_types)
+        if op_names:
+            op_names.intersection_update(selected_by_op_types)
+        else:
+            op_names.update(selected_by_op_types)
 
     op_names.difference_update(exclude_op_names)
 
@@ -174,3 +178,42 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
         op_names.difference_update(type2names.get(op_type, set()))
 
     return {module_name: name2module[module_name] for module_name in op_names}, config
+
+
+# a temporary verification function, need a wider coverage, customizable, and easy-to-extend implementation.
+def default_config_schema(mode: Literal['pruning', 'quantization', 'distillation']) -> Schema:
+    assert mode in ['pruning', 'quantization', 'distillation']
+    if mode == 'pruning':
+        setting_schema = {
+            Or('sparse_ratio', 'sparse_threshold', only_one=True): float,
+            Optional('max_sparse_ratio'): lambda x: 0 < x <= 1,
+            Optional('min_sparse_ratio'): lambda x: 0 <= x < 1,
+            Optional('global_group_id'): Or(int, str),
+            Optional('dependency_group_id'): Or(int, str),
+            Optional('internal_metric_block'): int,
+            Optional('granularity'): Or('default', 'in_channel', 'out_channel', 'per_channel', list),
+            Optional('apply_method'): Or('bypass', 'mul', 'add')
+        }
+    elif mode == 'quantization':
+        setting_schema = {
+            'quant_dtype': str,
+            Optional('quant_scheme'): Or('affine', 'symmetric'),
+            Optional('granularity'): Or('default', 'in_channel', 'out_channel', 'per_channel', list),
+            Optional('apply_method'): Or('bypass', 'clamp_round', 'qat_clamp_round')
+        }
+    else:
+        setting_schema = {
+            Optional('apply_method'): Or('mse', 'kl')
+        }
+
+    schema = Schema({
+        Or('op_types', 'op_names', 'op_names_re'): [str],
+        Optional('exclude_op_names'): [str],
+        Optional('exclude_op_types'): [str],
+        Optional('exclude_op_names_re'): [str],
+        Optional('target_names'): [str],
+        Optional('target_settings'): setting_schema,
+        **setting_schema
+    })
+
+    return schema

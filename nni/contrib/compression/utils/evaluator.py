@@ -781,7 +781,7 @@ class TorchEvaluator(Evaluator):
         assert self._optimizers is not None
         assert self._training_step is not None
         optimizers = self._optimizers[0] if self._train_with_single_optimizer else self._optimizers
-        lr_schedulers = None if self._lr_schedulers is None else self._lr_schedulers[0] \
+        lr_schedulers = None if not self._lr_schedulers else self._lr_schedulers[0] \
             if self._train_with_single_scheduler else self._lr_schedulers
         self.training_func(self.model, optimizers, self._training_step, lr_schedulers, max_steps, max_epochs)
 
@@ -976,7 +976,7 @@ class TransformersEvaluator(Evaluator):
         self.train()
 
     def evaluate(self) -> Tuple[float | None, Dict[str, Any]]:
-        metric =  self.trainer.evaluate()
+        metric = self.trainer.evaluate()
         nni_used_metric = metric.get('default', None)
         if nni_used_metric is None:
             warn_msg = f'Evaluation function returns a dict metric without key `default`,' + \
