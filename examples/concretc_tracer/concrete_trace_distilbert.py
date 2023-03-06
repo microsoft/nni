@@ -37,7 +37,6 @@ model = AutoModelForSequenceClassification.from_pretrained(model_name)
 traced_model = concrete_trace(
     model,
     dummy_input,
-    use_function_patch=True,
     autowrap_leaf_class={
         torch.finfo:                                ((), False),
         modeling_outputs.SequenceClassifierOutput:  ((), False),

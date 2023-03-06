@@ -238,28 +238,28 @@ def test_mmdetection(config_file: str):
             torch_fx.proxy.base_types = (*torch_fx.proxy.base_types, intc, int64)
 
         traced_model = concrete_trace(model, {'img': img_tensor},
-                                        use_function_patch = False, forwrad_function_name='forward_dummy',
-                                        autowrap_leaf_function = {
-            **ConcreteTracer.default_autowrap_leaf_function,
-            all:                                                                    ((), False, None),
-            min:                                                                    ((), False, None),
-            max:                                                                    ((), False, None),
-        }, autowrap_leaf_class = {
-            **ConcreteTracer.default_autowrap_leaf_class,
-            int:        ((), False),
-            reversed:   ((), False),
-            torch.Size: ((), False),
-        }, leaf_module = (
-            *leaf_module_append,
-            mmcv_cnn.bricks.wrappers.Conv2d,
-            mmcv_cnn.bricks.wrappers.Conv3d,
-            mmcv_cnn.bricks.wrappers.ConvTranspose2d,
-            mmcv_cnn.bricks.wrappers.ConvTranspose3d,
-            mmcv_cnn.bricks.wrappers.Linear,
-            mmcv_cnn.bricks.wrappers.MaxPool2d,
-            mmcv_cnn.bricks.wrappers.MaxPool3d,
-        ), fake_middle_class = (
-            mmdet_core.anchor.anchor_generator.AnchorGenerator,
+                                      forwrad_function_name='forward_dummy',
+                                      autowrap_leaf_function = {
+                                        **ConcreteTracer.default_autowrap_leaf_function,
+                                        all:  ((), False, None),
+                                        min:  ((), False, None),
+                                        max:  ((), False, None),
+                                      }, autowrap_leaf_class = {
+                                        **ConcreteTracer.default_autowrap_leaf_class,
+                                        int:        ((), False),
+                                        reversed:   ((), False),
+                                        torch.Size: ((), False),
+                                      }, leaf_module = (
+                                        *leaf_module_append,
+                                        mmcv_cnn.bricks.wrappers.Conv2d,
+                                        mmcv_cnn.bricks.wrappers.Conv3d,
+                                        mmcv_cnn.bricks.wrappers.ConvTranspose2d,
+                                        mmcv_cnn.bricks.wrappers.ConvTranspose3d,
+                                        mmcv_cnn.bricks.wrappers.Linear,
+                                        mmcv_cnn.bricks.wrappers.MaxPool2d,
+                                        mmcv_cnn.bricks.wrappers.MaxPool3d,
+                                      ), fake_middle_class = (
+                                        mmdet_core.anchor.anchor_generator.AnchorGenerator,
         ))
 
         if config_file == 'pvt/retinanet_pvt-l_fpn_1x_coco':

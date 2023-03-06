@@ -640,15 +640,15 @@ class ConcreteTracer(TracerBase):
                     self.current_module_qualified_name = self.path_of_module(mod)
                     module_qualified_name = self.path_of_module(mod)
                     if not self.is_leaf_module(mod, module_qualified_name):
-                        _autowrap_check(self, 
-                                        mod.forward.__globals__, 
-                                        self._autowrap_function_ids, 
-                                        self.autowrap_leaf_pairs, 
+                        _autowrap_check(self,
+                                        mod.forward.__globals__,
+                                        self._autowrap_function_ids,
+                                        self.autowrap_leaf_pairs,
                                         self.agfunc_dict)
-                        _autowrap_check(self, 
-                                        mod.__dict__, 
-                                        self._autowrap_function_ids, 
-                                        self.autowrap_leaf_pairs, 
+                        _autowrap_check(self,
+                                        mod.__dict__,
+                                        self._autowrap_function_ids,
+                                        self.autowrap_leaf_pairs,
                                         self.agfunc_dict)
                         return _orig_module_call(mod, *args, **kwargs)
                     else:
@@ -1439,10 +1439,9 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                 return True
             else:
                 return False
-            
+
         for node in traced.graph.nodes:
-            recursively_check_node(node)  
+            recursively_check_node(node)
         traced.recompile()
 
-    # return traced, tracer
     return traced

@@ -49,7 +49,7 @@ class DefaultReplacer(Replacer):
             if node.op == 'call_module':
                 # module = speedup.fetch_attr(node.target)
                 # module_type = module._get_name()
-                module = get_nested_attr(speedup.module, node.target)
+                module = get_nested_attr(speedup.bound_model, node.target)
                 module_type = type(module).__name__
                 replace_function = self.replace_module_func_dict.get(module_type, None)
                 if replace_function:
@@ -58,7 +58,7 @@ class DefaultReplacer(Replacer):
                     in_masks = tree_map(lambda n: speedup.node_infos[n].output_masks, node.args)
                     compressed_module = replace_function(module, (in_masks, node_info.output_masks, node_info.param_masks))
                     # speedup.store_attr(node.target, compressed_module)
-                    set_nested_attr(speedup.module, node.target, compressed_module)
+                    set_nested_attr(speedup.bound_model, node.target, compressed_module)
                     # prevent secondary replacement
                     replaced_nodes.append(node)
             else:

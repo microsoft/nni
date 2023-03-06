@@ -190,7 +190,7 @@ class LeafModuleMaskUpdater(DefaultMaskUpdater):
         """
         if node.op == 'call_module':
             module: torch.nn.Module = model_speedup.fetch_attr(node.target)
-            param_masks = model_speedup.masks_file.get(node.target, {})
+            param_masks = model_speedup.masks.get(node.target, {})
             for k, v in module.named_parameters():
                 if k not in param_masks:
                     param_masks[k] = torch.ones_like(v)
