@@ -89,12 +89,13 @@ class TransformersAttentionReplacer(Replacer):
                     _logger.info(info_msg)
                     if _endwith(name, self.parser.QKV):
                         _, out_masks, _ = auto_inferences[name].get_masks()
-                        flatten_head_mask = torch.sum(out_masks, dim=[_ for _ in range(len(out_masks.shape) - 1)]).detach()
+                        flatten_head_mask = (torch.sum(out_masks, dim=[_ for _ in range(len(out_masks.shape) - 1)]).detach() > 0.).float()
                     else:
                         in_masks, _, _ = auto_inferences[name].get_masks()
-                        flatten_head_mask = torch.sum(in_masks[0], dim=[_ for _ in range(len(in_masks[0].shape) - 1)]).detach()
+                        flatten_head_mask = (torch.sum(in_masks[0],
+                            dim=[_ for _ in range(len(in_masks[0].shape) - 1)]).detach() > 0.).float()
                     if qkvo_flatten_head_mask is not None:
-                        qkvo_flatten_head_mask += flatten_head_mask
+                        qkvo_flatten_head_mask *= flatten_head_mask
                     else:
                         qkvo_flatten_head_mask = flatten_head_mask
             if qkvo_flatten_head_mask is not None:
