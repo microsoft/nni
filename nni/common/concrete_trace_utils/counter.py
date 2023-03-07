@@ -1,17 +1,19 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Callable, Dict, List, Tuple, Optional, Union
 from dataclasses import dataclass, field
 
 
 import torch
 import torch.fx
 from torch.fx import Interpreter
-from torch.fx.node import Argument, Node, Target
+from torch.fx.node import Argument, Node
 
 from .flop_utils import flop_count
 
+
+Target = Union[Callable[..., Any], str]
 
 def _format_flops(flops: float) -> str:
     """Returns a formatted flops string"""
@@ -146,11 +148,11 @@ class GraphCounter(Interpreter):
             NInfo(node)
         return rst
 
-    def call_function(self, target: 'Target', args: Tuple[Argument, ...], kwargs: Dict[str, Any]) -> Any:
+    def call_function(self, target: Callable, args: Tuple[Argument, ...], kwargs: Dict[str, Any]) -> Any:
         rst = super().call_function(target, args, kwargs)
         return rst, flop_count(target, *args, **kwargs), {}   # FIXME: call_function might also have flops
 
-    def call_module(self, target: 'Target', args: Tuple[Argument, ...], kwargs: Dict[str, Any]) -> Any:
+    def call_module(self, target: Target, args: Tuple[Argument, ...], kwargs: Dict[str, Any]) -> Any:
         # Execute the method and return the result
         assert isinstance(target, str)
         submod = self.fetch_attr(target)
@@ -162,7 +164,7 @@ class GraphCounter(Interpreter):
             }
         )
 
-    def get_attr(self, target: 'Target', args: Tuple[Argument, ...], kwargs: Dict[str, Any]) -> Any:
+    def get_attr(self, target: Target, args: Tuple[Argument, ...], kwargs: Dict[str, Any]) -> Any:
         assert isinstance(target, str)
         rst = self.fetch_attr(target)
         if isinstance(rst, torch.nn.Parameter):
@@ -173,7 +175,7 @@ class GraphCounter(Interpreter):
             )
         return rst, 0, {}
 
-    def summarize(self) -> Dict[str, NInfo]:
+    def summarize(self) -> str:
         """
         Summarizes the profiled statistics of the `GraphModule` in
         tabular format. Note that this API requires the ``tabulate`` module
@@ -184,7 +186,7 @@ class GraphCounter(Interpreter):
         """
         # https://github.com/pytorch/pytorch/blob/master/torch/fx/graph.py
         try:
-            from tabulate import tabulate
+            from tabulate import tabulate   # pyright: reportUnboundVariable=false
         except ImportError:
             print("`summary` relies on the library `tabulate`, "
                   "which could not be found on this machine. Run `pip "
@@ -200,7 +202,7 @@ class GraphCounter(Interpreter):
                 node.op,
                 str(node),
                 _format_memory(n_info.param_size),
-                _format_flops(n_info.flops),
+                _format_flops(n_info.flops),    # type: ignore
             ])
 
         # Use the ``tabulate`` library to create a well-formatted table

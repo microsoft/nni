@@ -424,6 +424,7 @@ def zero_flop_jit(*args):
     return 0
 
 
+# pyright: reportGeneralTypeIssues=false
 flop_mapping = {
     # gemm
     aten.mm.default: matmul_flop_jit,
