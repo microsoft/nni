@@ -42,7 +42,7 @@ def _fill_one_on_dims(mask: torch.Tensor, dims: int | List[int]) -> torch.Tensor
             continue
         dim_mask = (mask.sum([_ for _ in range(len(mask.shape)) if _ != i]) == 0.)
         new_mask = new_mask.transpose(0, i)
-        new_mask[torch.arange(len(dim_mask))[dim_mask].long().tolist()] = 0.
+        new_mask[torch.arange(len(dim_mask), device=new_mask.device)[dim_mask].long().tolist()] = 0.
         new_mask = new_mask.transpose(0, i)
     return new_mask
 
