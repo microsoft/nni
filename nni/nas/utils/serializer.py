@@ -1,183 +1,169 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import inspect
-import os
-import warnings
-from typing import Any, TypeVar, Type
+"""This module does what
+`CheckpointIO <https://pytorch-lightning.readthedocs.io/en/stable/api/pytorch_lightning.plugins.io.CheckpointIO.html>`__
+does in PyTorch-Lightning, but with a simpler implementation and a wider range of backend supports.
 
-from nni.common.serializer import is_traceable, is_wrapped_with_trace, trace, _copy_class_wrapper_attributes
-from .misc import ModelNamespace
+The default implementation is :class:`TorchSerializer`, which uses :func:`torch.save` and :func:`torch.load`
+to save and load the data. But it can't be used in some cases, e.g., when torch is not installed,
+or when the data requires special handling that are not supported by torch.
 
-__all__ = ['get_init_parameters_or_fail', 'serialize', 'serialize_cls', 'basic_unit', 'model_wrapper',
-           'is_basic_unit', 'is_model_wrapped']
+There are several alternatives, which can be switched via :func:`set_default_serializer`.
+The serializer defined in :mod:`nni.common.serializer` happened to be one of the alternatives.
 
-T = TypeVar('T')
+NOTE: The file is placed in NAS experimentally. It might be merged with the global serializer in near future.
+"""
 
+from __future__ import annotations
 
-def get_init_parameters_or_fail(obj: Any):
-    if is_traceable(obj):
-        return obj.trace_kwargs
-    raise ValueError(f'Object {obj} needs to be serializable but `trace_kwargs` is not available. '
-                     'If it is a built-in module (like Conv2d), please import it from retiarii.nn. '
-                     'If it is a customized module, please to decorate it with @basic_unit. '
-                     'For other complex objects (e.g., trainer, optimizer, dataset, dataloader), '
-                     'try to use @nni.trace.')
+__all__ = ['Serializer', 'set_default_serializer', 'get_default_serializer', 'TorchSerializer', 'JsonSerializer']
 
+import logging
+from pathlib import Path
+from typing import Any, ClassVar, Type, cast
 
-def serialize(cls, *args, **kwargs):
-    """
-    To create an serializable instance inline without decorator. For example,
-
-    .. code-block:: python
-
-        self.op = serialize(MyCustomOp, hidden_units=128)
-    """
-    warnings.warn('nni.retiarii.serialize is deprecated and will be removed in future release. ' +
-                  'Try to use nni.trace, e.g., nni.trace(torch.optim.Adam)(learning_rate=1e-4) instead.',
-                  category=DeprecationWarning)
-    return trace(cls)(*args, **kwargs)
+_logger = logging.getLogger(__name__)
 
 
-def serialize_cls(cls):
-    """
-    To create an serializable class.
-    """
-    warnings.warn('nni.retiarii.serialize is deprecated and will be removed in future release. ' +
-                  'Try to use nni.trace instead.', category=DeprecationWarning)
-    return trace(cls)
+class Serializer:
+    """Save data to a file, or load data from a file."""
 
-
-def basic_unit(cls: T, basic_unit_tag: bool = True) -> T:
-    """
-    To wrap a module as a basic unit, is to make it a primitive and stop the engine from digging deeper into it.
-
-    ``basic_unit_tag`` is true by default. If set to false, it will not be explicitly mark as a basic unit, and
-    graph parser will continue to parse. Currently, this is to handle a special case in ``nn.Sequential``.
-
-    Although ``basic_unit`` calls ``trace`` in its implementation, it is not for serialization. Rather, it is meant
-    to capture the initialization arguments for mutation. Also, graph execution engine will stop digging into the inner
-    modules when it reaches a module that is decorated with ``basic_unit``.
-
-    .. code-block:: python
-
-        @basic_unit
-        class PrimitiveOp(nn.Module):
-            ...
+    suffix: ClassVar[str] = ''
+    """All serializers should save the file with a suffix,
+    which is used to validate the serializer type when loading data.
     """
 
-    # Internal flag. See nni.trace
-    nni_trace_flag = os.environ.get('NNI_TRACE_FLAG', '')
-    if nni_trace_flag.lower() == 'disable':
-        return cls
+    def save(self, data: Any, path: Path):
+        """Save the data to a given path. The path might be suffixed with :attr:`suffix`."""
+        raise NotImplementedError()
 
-    if _check_wrapped(cls, 'basic_unit'):
-        return cls
+    def load(self, path: Path) -> Any:
+        """Load the data from the given path.
 
-    import torch.nn as nn
-    assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'  # type: ignore
+        Raises
+        ------
+        FileNotFoundError
+            If the file (suffixed with :attr:`suffix`) is not found.
 
-    cls = trace(cls)
-    cls._nni_basic_unit = basic_unit_tag  # type: ignore
-
-    _torchscript_patch(cls)
-
-    return cls
+        """
+        raise NotImplementedError()
 
 
-def model_wrapper(cls: T) -> T:
+_default_serializer: Serializer | None = None
+
+
+def set_default_serializer(serializer: Serializer) -> None:
+    """Set the default serializer.
+
+    Parameters
+    ----------
+    serializer
+        The serializer to be used as default.
     """
-    Wrap the base model (search space). For example,
+    global _default_serializer
+    _default_serializer = serializer
 
-    .. code-block:: python
 
-        @model_wrapper
-        class MyModel(nn.Module):
-            ...
+def get_default_serializer() -> Serializer:
+    """Get the default serializer.
 
-    The wrapper serves two purposes:
+    Returns
+    -------
+    The default serializer.
+    """
+    if _default_serializer is None:
+        set_default_serializer(TorchSerializer())
+    return cast(Serializer, _default_serializer)
 
-    1. Capture the init parameters of python class so that it can be re-instantiated in another process.
-    2. Reset uid in namespace so that the auto label counting in each model stably starts from zero.
 
-    Currently, NNI might not complain in simple cases where ``@model_wrapper`` is actually not needed.
-    But in future, we might enforce ``@model_wrapper`` to be required for base model.
+def _find_path_with_prefix(path: Path, expected_suffix: str) -> Path:
+    """Find a file that is prefixed with the given path.
+
+    Parameters
+    ----------
+    path
+        The path to be searched.
+    expected_suffix
+        The suffix of the file we want.
+    """
+    if path.exists():
+        return path
+
+    for p in path.parent.iterdir():
+        if p.name.startswith(path.name) and p.name == path.name + expected_suffix:
+            return p
+
+    # Iter again to give a warning.
+    for p in path.parent.iterdir():
+        if p.name.startswith(path.name):
+            # Try to find the serializer type that can load this file.
+            guessed_serializer_type: Type[Serializer] | None = None
+            for serializer in Serializer.__subclasses__():
+                if p.name == path.name + serializer.suffix:
+                    guessed_serializer_type = serializer
+            if guessed_serializer_type is not None:
+                _logger.warning('Found file %s, which could be loaded by %s, but suffix %s is expected.',
+                                p, guessed_serializer_type, expected_suffix)
+            else:
+                _logger.warning('Found file %s, which does not match any serializer registered. Suffix %s is expected.',
+                                p, expected_suffix)
+
+    raise FileNotFoundError(f'No file found with prefix {path} and suffix {expected_suffix}.')
+
+
+class TorchSerializer(Serializer):
+    """The serializer that utilizes :func:`torch.save` and :func:`torch.load` to save and load data.
+
+    This serializer should work in most scenarios, including cases when strategies have some tensors in their states (e.g., DRL).
+    The downside is that it relies on torch to be installed.
+
+    Parameters
+    ----------
+    map_location
+        The ``map_location`` argument to be passed to :func:`torch.load`.
     """
 
-    # Internal flag. See nni.trace
-    nni_trace_flag = os.environ.get('NNI_TRACE_FLAG', '')
-    if nni_trace_flag.lower() == 'disable':
-        return cls
+    suffix: ClassVar[str] = '.torch'
 
-    if _check_wrapped(cls, 'model_wrapper'):
-        return cls
-
-    import torch.nn as nn
-    assert issubclass(cls, nn.Module)  # type: ignore
-
-    # subclass can still use trace info
-    wrapper = trace(cls, inheritable=True)
-
-    class reset_wrapper(wrapper):
-        def __init__(self, *args, **kwargs):
-            self._model_namespace = ModelNamespace()
-            with self._model_namespace:
-                super().__init__(*args, **kwargs)
-
-    _copy_class_wrapper_attributes(wrapper, reset_wrapper)
-    reset_wrapper.__wrapped__ = getattr(wrapper, '__wrapped__', wrapper)
-    reset_wrapper._nni_model_wrapper = True
-    reset_wrapper._traced = True
-
-    _torchscript_patch(cls)
-
-    return reset_wrapper
-
-
-def is_basic_unit(cls_or_instance) -> bool:
-    if not inspect.isclass(cls_or_instance):
-        cls_or_instance = cls_or_instance.__class__
-    return getattr(cls_or_instance, '_nni_basic_unit', False)
-
-
-def is_model_wrapped(cls_or_instance) -> bool:
-    if not inspect.isclass(cls_or_instance):
-        cls_or_instance = cls_or_instance.__class__
-    return getattr(cls_or_instance, '_nni_model_wrapper', False)
-
-
-def _check_wrapped(cls: Type, rewrap: str) -> bool:
-    wrapped = None
-    if is_model_wrapped(cls):
-        wrapped = 'model_wrapper'
-    elif is_basic_unit(cls):
-        wrapped = 'basic_unit'
-    elif is_wrapped_with_trace(cls):
-        wrapped = 'nni.trace'
-    if wrapped:
-        if wrapped != rewrap:
-            raise TypeError(f'{cls} is already wrapped with {wrapped}. Cannot rewrap with {rewrap}.')
-        return True
-    return False
-
-
-def _torchscript_patch(cls) -> None:
-    # HACK: for torch script
-    # https://github.com/pytorch/pytorch/pull/45261
-    # https://github.com/pytorch/pytorch/issues/54688
-    # I'm not sure whether there will be potential issues
-    import torch
-    if hasattr(cls, '_get_nni_attr'):  # could not exist on non-linux
-        cls._get_nni_attr = torch.jit.ignore(cls._get_nni_attr)
-    if hasattr(cls, 'trace_symbol'):
-        # these must all exist or all non-exist
+    def __init__(self, map_location: Any = None):
         try:
-            cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
-            cls.trace_args = torch.jit.unused(cls.trace_args)
-            cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
-            cls.trace_copy = torch.jit.ignore(cls.trace_copy)
-        except AttributeError as e:
-            if 'property' in str(e):
-                raise RuntimeError('Trace on PyTorch module failed. Your PyTorch version might be outdated. '
-                                   'Please try to upgrade PyTorch.')
-            raise
+            import torch  # pylint: disable=unused-import
+        except ImportError:
+            raise RuntimeError(
+                'TorchSerializer requires torch to be installed. '
+                'Either install torch or set a different serializer. '
+                'For example, `nni.nas.serializer.set_default_serializer(nni.nas.serializer.JsonSerializer())`.'
+            )
+
+        self._map_location = map_location
+
+    def save(self, checkpoint: Any, path: Path):
+        import torch
+        torch.save(checkpoint, str(path) + self.suffix)
+
+    def load(self, path: Path):
+        path = _find_path_with_prefix(path, self.suffix)
+        import torch
+        return torch.load(str(path), map_location=self._map_location)
+
+
+class JsonSerializer(Serializer):
+    """The serializer that utilizes :func:`nni.dump` and :func:`nni.load` to save and load data.
+
+    This serializer should work in cases where strategies have no complex objects in their states.
+    Since it uses :func:`nni.dump`, it resorts to binary format when some part of the data is not JSON-serializable.
+    """
+
+    suffix: ClassVar[str] = '.json'
+
+    def save(self, checkpoint: Any, path: Path):
+        import nni
+        with (path.parent / (path.name + self.suffix)).open('w') as f:
+            nni.dump(checkpoint, fp=f, indent=2)
+
+    def load(self, path: Path):
+        import nni
+        path = _find_path_with_prefix(path, self.suffix)
+        with path.open() as f:
+            return nni.load(fp=f)
