@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from copy import deepcopy
 import logging
 from typing import Any, Callable, Dict, List, overload
 
@@ -67,13 +68,12 @@ class TeacherModelBasedDistiller(Distiller):
         self.teacher_model = teacher_model
         self.teacher_predict = teacher_predict
         self.origin_loss_lambda = origin_loss_lambda
-        self._teacher_module_wrappers, target_spaces = register_wrappers(self.teacher_model, self.config_list, self.mode)
+        self._set_default_link()
+        self._set_default_lambda()
+        self._teacher_module_wrappers, target_spaces = self._register_teacher_wrappers()
         self._teacher_target_spaces: _DISTILLATION_TARGET_SPACES = target_spaces  # type: ignore
         self._teacher_is_wrapped = False
         self.wrap_teacher_model()
-
-        self._set_default_link()
-        self._set_default_lambda()
 
     @classmethod
     def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], teacher_model: torch.nn.Module,
@@ -88,13 +88,27 @@ class TeacherModelBasedDistiller(Distiller):
                 link = target_space.link if target_space.link is not None else 'auto'
                 link = module_name if link == 'auto' else link
                 link = [link] if isinstance(link, str) else link
-                assert all(l in self._teacher_target_spaces for l in link), '`link` should be a module name in teacher model.'
+                # assert all(l in self._teacher_target_spaces for l in link), '`link` should be a module name in teacher model.'
                 target_space.link = link
 
     def _set_default_lambda(self):
         for _, ts in self._target_spaces.items():
             for _, target_space in ts.items():
                 target_space.lambda_ = target_space.lambda_ if target_space.lambda_ is not None else 1.
+
+    def _register_teacher_wrappers(self):
+        teacher_config_list = []
+        for _, ts in self._target_spaces.items():
+            for target_name, target_space in ts.items():
+                for link in target_space.link:
+                    teacher_config_list.append({
+                        'op_names': [link],
+                        'target_names': [target_name],
+                        'target_settings': {
+                            target_name: deepcopy(target_space.setting)
+                        }
+                    })
+        return register_wrappers(self.teacher_model, teacher_config_list, mode=self.mode)
 
     def wrap_teacher_model(self):
         """
