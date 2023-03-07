@@ -135,10 +135,15 @@ class ModelSpeedup:
             device = dummy_input[0].device
             for _, t_input in enumerate(dummy_input):
                 assert isinstance(t_input, torch.Tensor), input_errmsg
-                assert t_input.size(0) == old_batchsize, 'The first dimension should be batchsize\
-                    and the batchsize of all inputs should be the same!'
+                # This check is too strict...
+                # assert t_input.size(0) == old_batchsize, 'The first dimension should be batchsize\
+                #     and the batchsize of all inputs should be the same!'
                 input_shape = list(t_input.size())
-                input_shape[batch_dim] = confidence
+                if t_input.size(0) == old_batchsize:
+                    input_shape[batch_dim] = confidence
+                else:
+                    assert confidence == old_batchsize, 'Input tensor first dimension is not batchsize, \
+                        in this situation, confidence should equal to dummy input fisrt tensor first dimension size.'
                 # rand_func = torch.randint if t_input.dtype
                 new_dummy_input.append(
                     rand_like_with_shape(input_shape, t_input))
@@ -149,10 +154,15 @@ class ModelSpeedup:
             device = dummy_input[tmp_key].device
             for in_name, t_input in dummy_input.items():
                 assert isinstance(t_input, torch.Tensor), input_errmsg
-                assert old_batchsize == t_input.size(0), 'The first dimension should be batchsize\
-                and the batchsize of all inputs should be the same!'
+                # This check is too strict...
+                # assert old_batchsize == t_input.size(0), 'The first dimension should be batchsize\
+                # and the batchsize of all inputs should be the same!'
                 input_shape = list(t_input.size())
-                input_shape[batch_dim] = confidence
+                if t_input.size(0) == old_batchsize:
+                    input_shape[batch_dim] = confidence
+                else:
+                    assert confidence == old_batchsize, 'Input tensor first dimension is not batchsize, \
+                        in this situation, confidence should equal to dummy input fisrt tensor first dimension size.'
                 new_dummy_input[in_name] = rand_like_with_shape(
                     input_shape, t_input)
         else:
@@ -477,6 +487,8 @@ class ModelSpeedup:
         _logger.info("infer module masks...")
         self.infer_modules_masks()
         _logger.info('resolve the mask conflict')
+        # sometimes, mask conflict will happen during infer masks
+        # fix_mask_conflict(self.masks, self.bound_model, self.dummy_input)
 
         # load the original stat dict before replace the model
         self.bound_model.load_state_dict(self.ori_state_dict)
