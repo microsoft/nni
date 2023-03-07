@@ -42,11 +42,11 @@ def _format_memory(nbytes) -> str:
     else:
         return str(nbytes) + ' b'
 
-def compute_size_in_bytes(elem: torch.Tensor | Dict | List | Tuple | int) -> int:
+def compute_size_in_bytes(elem: Union[torch.Tensor, Dict, List, Tuple, int]) -> int:
     """Compute the size of a tensor or a collection of tensors in bytes.
 
     Args:
-        elem (torch.Tensor | Dict | List | Tuple | int): Arbitrary nested ``torch.Tensor`` data structure.
+        elem (Union[torch.Tensor, Dict, List, Tuple, int])): Arbitrary nested ``torch.Tensor`` data structure.
 
     Returns:
         int: The size of the tensor or the collection of tensors in bytes.
