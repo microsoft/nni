@@ -94,6 +94,9 @@ $errorseriscolor: #fc615c;
     box-shadow: 0 4px 16px rgba(78, 97, 123, 0.2);
     background-color: #fff;
 
+    /* error model has the highest priority */
+    z-index: 10000000;
+
     .head {
         height: 27px;
         line-height: 27px;

@@ -133,13 +133,15 @@ class PruningTargetSpace(TargetSpace):
     def mask(self, val: Tensor | None):
         self._tensor_setter_helper(self._mask_name, val)
 
-    # don't support setter
     @property
     def apply_method(self) -> str:
         _method = self.setting.get('apply_method', None)
         _method = _method if _method else 'mul'
-        assert _method in ['mul', 'add']
         return _method
+
+    @apply_method.setter
+    def apply_method(self, val: str):
+        self._setting['apply_method'] = val
 
     @property
     def sparse_ratio(self) -> float | None:
@@ -183,7 +185,7 @@ class PruningTargetSpace(TargetSpace):
 
     @granularity.setter
     def granularity(self, val: List[int] | Tuple[List[int], str, int] | str | None):
-        if isinstance(val, abc.Sequence):
+        if isinstance(val, abc.Sequence) and not isinstance(val, str):
             assert all(isinstance(v, int) for v in val) or \
                    (all(isinstance(v, int) for v in val[0]) and  # type: ignore
                     isinstance(val[1], str) if len(val) > 1 else True and \
@@ -289,11 +291,11 @@ class QuantizationTargetSpace(TargetSpace):
         self._tensor_setter_helper(self._zero_point_name, val)
 
     @property
-    def qmax(self) -> int | None:
+    def qmax(self) -> int:
         return self._get_wrapper_attr(self._qmax_name)
 
     @property
-    def qmin(self) -> int | None:
+    def qmin(self) -> int:
         return self._get_wrapper_attr(self._qmin_name)
 
     @property
@@ -318,7 +320,7 @@ class QuantizationTargetSpace(TargetSpace):
 
     @granularity.setter
     def granularity(self, val: List[int] | Tuple[List[int], str, int] | str | None):
-        if isinstance(val, abc.Sequence):
+        if isinstance(val, abc.Sequence) and not isinstance(val, str):
             assert all(isinstance(v, int) for v in val) or \
                    (all(isinstance(v, int) for v in val[0]) and  # type: ignore
                     isinstance(val[1], str) if len(val) > 1 else True and \

@@ -66,7 +66,7 @@ HAS_VARSTUFF = inspect.CO_VARARGS | inspect.CO_VARKEYWORDS
 @compatibility(is_backward_compatible=True)
 class ConcreteTracer(TracerBase):
     """
-    A model tracer similar to _symbolic_trace.Tracer, but with concrete execution and real value so we can pass complecate conditions
+    A model tracer similar to _symbolic_trace.Tracer, but with concrete execution and real value so we can pass complex conditions
     and go into correct brunches.
     """
 
