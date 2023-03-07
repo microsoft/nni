@@ -12,47 +12,14 @@ import { TrialKeeper } from 'common/trial_keeper/keeper';
 import { WsChannelServer } from 'common/command_channel/websocket/server';
 import { WsChannelClient } from 'common/command_channel/websocket/client';
 import { WsChannel } from 'common/command_channel/websocket/channel';
-import { RpcHelper, getRpcHelper, RemoteTrialKeeper } from 'common/command_channel/rpc_util';
 
-class DebugRpc {
-    private a: string;
-
-    constructor(a: string) {
-        this.a = a;
-    }
-
-    public foo(b: string): string {
-        return this.a + b;
-    }
-}
-
-class DebugRpc2 {
-    private args: any[];
-    private id!: number;
-    private rpc: RpcHelper;
-
-    constructor(channel: WsChannel, a: string) {
-        this.rpc = getRpcHelper(channel);
-        this.rpc.registerClass('DebugRpc', DebugRpc);
-        this.args = [ a ];
-    }
-
-    public async init(): Promise<void> {
-        this.id = await this.rpc.construct('DebugRpc', this.args);
-    }
-
-    public async foo(b: string): Promise<string> {
-        return await this.rpc.call(this.id, 'foo', [ b ]);
-    }
-}
+import { RemoteTrialKeeper, registerForChannel } from 'common/trial_keeper/rpc';
 
 export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     private config: LocalConfig;
     private env: EnvironmentInfo;
     private log: Logger;
-    //private trialKeeper: TrialKeeper;
-    private trialKeeper!: RemoteTrialKeeper;
-    private waitTrialKeeper: Deferred<RemoteTrialKeeper> = new Deferred();
+    private trialKeeper: RemoteTrialKeeper;
 
     private server: WsChannelServer;
     private client: WsChannelClient;
@@ -63,27 +30,12 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
 
         this.config = config as LocalConfig;
         this.env = { id: `${trainingServiceId}-env` };
-        //this.trialKeeper = new TrialKeeper(this.env.id, 'local', Boolean(config.trialGpuNumber));
+        this.trialKeeper = new RemoteTrialKeeper(this.env.id, 'local', Boolean(config.trialGpuNumber));
 
         this.server = new WsChannelServer('remote_trialkeeper', `platform/${trainingServiceId}`);
         this.server.on('connection', (channelId: string, channel: WsChannel) => {
             this.log.warning('Connection:', channelId);
-            console.info('## Connection:', channelId);
-
-            setTimeout(1000).then(() => {
-                this.trialKeeper = new RemoteTrialKeeper(channel, this.env.id, 'local', Boolean(this.config.trialGpuNumber));
-                this.trialKeeper.init().then(() => {
-                    this.waitTrialKeeper.resolve(this.trialKeeper);
-                });
-            });
-
-            //const obj = new DebugRpc2(channel, 'server-A');
-            //obj.init().then(() => {
-            //    obj.foo('server-B').then(s => {
-            //        this.log.warning('RPC response:', s);
-            //        console.log('## RPC response:', s);
-            //    });
-            //});
+            this.trialKeeper.setChannel(channel);
         });
 
         this.client = new WsChannelClient(`ws://localhost:8080/platform/${trainingServiceId}/env`, 'client');
@@ -96,12 +48,10 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     public async start(): Promise<EnvironmentInfo[]> {
         this.log.info('Start');
         await this.server.start();
+
+        registerForChannel(this.client);
         await this.client.connect();
 
-        getRpcHelper(this.client).registerClass('TrialKeeper', TrialKeeper);
-        //const obj = new DebugRpc2(this.client, 'client-A');  // register
-
-        await setTimeout(2000);
         await this.trialKeeper.start();
         return [ this.env ];
     }
@@ -165,30 +115,22 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     }
 
     public onTrialStart(callback: (trialId: string, timestamp: number) => Promise<void>): void {
-        this.waitTrialKeeper.promise.then(trialKeeper => {
-            trialKeeper.onTrialStart(callback);
-        });
+        this.trialKeeper.onTrialStart(callback);
     }
 
     public onTrialEnd(callback: (trialId: string, timestamp: number, exitCode: number | null) => Promise<void>): void {
-        this.waitTrialKeeper.promise.then(trialKeeper => {
-            trialKeeper.onTrialStop(callback);
-        });
+        this.trialKeeper.onTrialStop(callback);
     }
 
     public onRequestParameter(callback: (trialId: string) => Promise<void>): void {
-        this.waitTrialKeeper.promise.then(trialKeeper => {
-            trialKeeper.onReceiveCommand('request_parameter', (trialId, _command) => {
-                callback(trialId);
-            });
+        this.trialKeeper.onReceiveCommand('request_parameter', (trialId, _command) => {
+            callback(trialId);
         });
     }
 
     public onMetric(callback: (trialId: string, metric: Metric) => Promise<void>): void {
-        this.waitTrialKeeper.promise.then(trialKeeper => {
-            trialKeeper.onReceiveCommand('metric', (trialId, command) => {
-                callback(trialId, (command as any)['metric']);
-            });
+        this.trialKeeper.onReceiveCommand('metric', (trialId, command) => {
+            callback(trialId, (command as any)['metric']);
         });
     }
 

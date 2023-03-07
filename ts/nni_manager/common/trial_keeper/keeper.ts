@@ -159,11 +159,22 @@ export class TrialKeeper {
         this.emitter.on('trial-stop', callback);
     }
 
-    public onReceiveCommand(commandType: string, callback: (trialId: string, command: Command) => void): void {
-        this.emitter.on('command', (trialId, command) => {
-            if (command.type === commandType) {
-                callback(trialId, command);
-            }
-        });
+    public onReceiveAnyCommand(callback: (trialId: string, command: Command) => void): void {
+        this.emitter.on('command', callback);
+    }
+
+    public onReceiveCommand(callback: (trialId: string, command: Command) => void): void;
+    public onReceiveCommand(commandType: string, callback: (trialId: string, command: Command) => void): void;
+
+    public onReceiveCommand(commandTypeOrCallback: any, callbackOrNone?: any): void {
+        if (callbackOrNone) {
+            this.emitter.on('command', (trialId, command) => {
+                if (command.type === commandTypeOrCallback) {
+                    callbackOrNone(trialId, command);
+                }
+            });
+        } else {
+            this.emitter.on('command', commandTypeOrCallback);
+        }
     }
 }

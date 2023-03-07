@@ -1,3 +1,89 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import { EventEmitter } from 'node:events';
+import util from 'node:util';
+
+import type { Command } from 'common/command_channel/interface';
+import { RpcHelper, getRpcHelper } from 'common/command_channel/rpc_util';
+import type { WsChannel } from 'common/command_channel/websocket/channel';
+import { Deferred } from 'common/deferred';
+import { TrialKeeper } from './keeper';
+
+export function registerForChannel(channel: WsChannel): void {
+    getRpcHelper(channel).registerClass('TrialKeeper', TrialKeeper);
+}
+
+export class RemoteTrialKeeper {
+    private args: any[];
+    private emitter: EventEmitter = new EventEmitter();
+    private id!: number;
+    private initialized: Deferred<void> = new Deferred();
+    private rpc!: RpcHelper;
+
+    constructor(environmentId: string, platform: string, enableGpuScheduling: boolean) {
+        this.args = [ environmentId, platform, enableGpuScheduling ];
+    }
+
+    public async setChannel(channel: WsChannel): Promise<void> {
+        this.rpc = getRpcHelper(channel);
+        this.id = await this.rpc.construct('TrialKeeper', this.args);
+
+        await Promise.all([
+            this.rpc.call(this.id, 'onTrialStart', undefined, [ this.emitTrialStart.bind(this) ]),
+            this.rpc.call(this.id, 'onTrialStop', undefined, [ this.emitTrialStop.bind(this) ]),
+            this.rpc.call(this.id, 'onReceiveCommand', undefined, [ this.emitCommand.bind(this) ]),
+        ]);
+
+        this.initialized.resolve();
+    }
+
+    public async start(): Promise<void> {
+        await this.initialized.promise;
+        await this.rpc.call(this.id, 'start');
+    }
+
+    public async shutdown(): Promise<void> {
+        await this.rpc.call(this.id, 'shutdown');
+    }
+
+    public async registerDirectory(name: string, path: string): Promise<void> {
+        await this.rpc.call(this.id, 'registerDirectory', [ name, path ]);
+    }
+
+    public async createTrial(options: TrialKeeper.TrialOptions): Promise<boolean> {
+        return await this.rpc.call(this.id, 'createTrial', [ options ]);
+    }
+
+    public async stopTrial(trialId: string): Promise<void> {
+        await this.rpc.call(this.id, 'stopTrial', [ trialId ]);
+    }
+
+    public async sendCommand(trialId: string, command: Command): Promise<void> {
+        await this.rpc.call(this.id, 'sendCommand', [ trialId, command ]);
+    }
+
+    public onTrialStart(callback: (trialId: string, timestamp: number) => void): void {
+        this.emitter.on('__trial_start', callback);
+    }
+
+    private emitTrialStart(trialId: string, timestamp: number): void {
+        this.emitter.emit('__trial_start', trialId, timestamp);
+    }
+
+    public onTrialStop(callback: (trialId: string, timestamp: number, exitCode: number | null) => void): void {
+        this.emitter.on('__trial_stop', callback);
+    }
+
+    private emitTrialStop(trialId: string, timestamp: number, exitCode: number | null): void {
+        this.emitter.emit('__trial_stop', trialId, timestamp, exitCode);
+    }
+
+    public onReceiveCommand(commandType: string, callback: (trialId: string, command: Command) => void): void {
+        this.emitter.on(commandType, callback);
+    }
+
+    private emitCommand(trialId: string, command: Command): void {
+        this.emitter.emit(command.type, trialId, command);
+    }
+}
