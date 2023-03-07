@@ -218,7 +218,7 @@ def diff(config1: ConfigBase, config2: ConfigBase, from_: str = '', to_: str = '
 
     return '\n'.join(difflib.unified_diff(str1.splitlines(), str2.splitlines(), from_, to_, lineterm=''))
 
-def load_experiment_config(config_json: dict) -> ExperimentConfig | NasExperimentConfig:  
+def load_experiment_config(config_json: dict) -> ExperimentConfig | NasExperimentConfig:
     _, exp_conf_cls = get_experiment_cls_using_config(config_json)
     return exp_conf_cls(**config_json)
 
