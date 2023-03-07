@@ -37,9 +37,11 @@ class _NormPruner(Pruner):
         # `skip_first_step` controls if generating masks at the first step.
         # `interval_steps` is the optimize step interval for generating masks.
         # `total_times` is the total generation times of masks.
-        self.first_step_gen = False
         self.interval_steps = -1
         self.total_times: int | Literal['unlimited'] = 1
+        # here is a reserved interface for potential iterative pruning needs,
+        # first_step_gen controls if the masks generated on the first step.
+        self.first_step_gen = False
 
     @classmethod
     def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], evaluator: Evaluator | None = None):
