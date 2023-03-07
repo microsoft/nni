@@ -478,7 +478,7 @@ class NNIManager implements Manager {
         if (reuseMode) {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
-        } else if (platform === 'local') {
+        } else if (platform === 'local' || platform === 'remote') {
             const module_ = await import('../training_service/v3/compat');
             return new module_.V3asV1(config.trainingService as TrainingServiceConfig);
         } else if (platform === 'kubeflow') {

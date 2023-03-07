@@ -86,21 +86,29 @@ class NNIRestHandler {
     }
 
     private handleError(err: Error, res: Response, isFatal: boolean = false, errorCode: number = 500): void {
+        console.log('### E ###');
         if (err instanceof NNIError && err.name === NNIErrorNames.NOT_FOUND) {
+            console.log('### F ###');
             res.status(404);
         } else {
+            console.log('### G ###');
             res.status(errorCode);
         }
         res.send({
             error: err.message
         });
+        console.log('### H ###');
 
         // If it's a fatal error, exit process
         if (isFatal) {
+            console.log('### I ###');
             this.log.critical(err);
+            console.log('### J ###');
             process.exit(1);
         } else {
+            console.log('### K ###');
             this.log.error(err);
+            console.log('### L ###');
         }
     }
 
@@ -168,12 +176,16 @@ class NNIRestHandler {
 
     private startExperiment(router: Router): void {
         router.post('/experiment', (req: Request, res: Response) => {
+            console.log('### A ###');
             if (isNewExperiment()) {
+                console.log('### B ###');
                 this.nniManager.startExperiment(req.body).then((eid: string) => {
+                    console.log('### C ###');
                     res.send({
                         experiment_id: eid
                     });
                 }).catch((err: Error) => {
+                    console.log('### D ###');
                     // Start experiment is a step of initialization, so any exception thrown is a fatal
                     this.handleError(err, res);
                 });
