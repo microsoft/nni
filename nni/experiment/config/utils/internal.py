@@ -36,7 +36,7 @@ from .public import is_missing
 
 if TYPE_CHECKING:
     from nni.nas.experiment.pytorch import RetiariiExperiment
-    from nni.nas.experiment.config import RetiariiExeConfig
+    from nni.nas.experiment.config import NasExperimentConfig
     from ...experiment import Experiment
     from ..base import ConfigBase
     from ..experiment_config import ExperimentConfig
@@ -218,12 +218,12 @@ def diff(config1: ConfigBase, config2: ConfigBase, from_: str = '', to_: str = '
 
     return '\n'.join(difflib.unified_diff(str1.splitlines(), str2.splitlines(), from_, to_, lineterm=''))
 
-def load_experiment_config(config_json: dict) -> ExperimentConfig | RetiariiExeConfig:
+def load_experiment_config(config_json: dict) -> ExperimentConfig | NasExperimentConfig:  
     _, exp_conf_cls = get_experiment_cls_using_config(config_json)
     return exp_conf_cls(**config_json)
 
 def get_experiment_cls_using_config(config_json: dict) -> Tuple[type[Experiment] | type[RetiariiExperiment],
-                                                                type[ExperimentConfig] | type[RetiariiExeConfig]]:
+                                                                type[ExperimentConfig] | type[NasExperimentConfig]]:
     # avoid circular import and unnecessary dependency on pytorch
     if 'experimentType' in config_json:
         if config_json['experimentType'] == 'hpo':
@@ -232,15 +232,15 @@ def get_experiment_cls_using_config(config_json: dict) -> Tuple[type[Experiment]
             return Experiment, ExperimentConfig
         elif config_json['experimentType'] == 'nas':
             from nni.nas.experiment.pytorch import RetiariiExperiment
-            from nni.nas.experiment.config import RetiariiExeConfig
-            return RetiariiExperiment, RetiariiExeConfig
+            from nni.nas.experiment.config import NasExperimentConfig
+            return RetiariiExperiment, NasExperimentConfig
         else:
             raise ValueError(f'Unknown experiment_type: {config_json["experimentType"]}')
     else:
         if 'executionEngine' in config_json:
             from nni.nas.experiment.pytorch import RetiariiExperiment
-            from nni.nas.experiment.config import RetiariiExeConfig
-            return RetiariiExperiment, RetiariiExeConfig
+            from nni.nas.experiment.config import NasExperimentConfig
+            return RetiariiExperiment, NasExperimentConfig
         else:
             from ...experiment import Experiment
             from ..experiment_config import ExperimentConfig
