@@ -102,7 +102,7 @@ class _NormPruner(Pruner):
 
 class LevelPruner(_NormPruner):
     """
-    This is a basic pruner, and in some papers called it magnitude pruning or fine-grained pruning.
+    This is a basic pruner, and in some papers it is called magnitude pruning or fine-grained pruning.
     It will mask the smallest magnitude weights in each specified layer by a saprsity ratio configured in the config list.
 
     Parameters
