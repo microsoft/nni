@@ -4,7 +4,7 @@
 import { EventEmitter } from 'node:events';
 
 import { Logger, getLogger } from 'common/log';
-import type { LocalConfig, TrainingServiceConfig } from 'common/experimentConfig';
+import type { RemoteConfig, RemoteMachineConfig, TrainingServiceConfig } from 'common/experimentConfig';
 import type { EnvironmentInfo, Metric, Parameter, TrainingServiceV3 } from 'common/training_service_v3';
 import type { TrialKeeper } from 'common/trial_keeper/keeper';
 
@@ -17,7 +17,7 @@ import { Worker } from './worker';
 
 export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     private id: string;
-    private config: LocalConfig;
+    private config: RemoteConfig;
     private log: Logger;
 
     private emitter: EventEmitter = new EventEmitter();
@@ -32,7 +32,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
 
     constructor(trainingServiceId: string, config: TrainingServiceConfig) {
         this.id = trainingServiceId;
-        this.config = config as LocalConfig;
+        this.config = config as RemoteConfig;
 
         this.log = getLogger(`RemoteV3.${this.id}`);
         this.log.debug('Training sevice config:', config);
@@ -56,14 +56,22 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     public async start(): Promise<EnvironmentInfo[]> {
         this.log.info('Start');
         await this.server.start();
-        const worker = await this.launchWorker();
-        return [ worker.getEnv() ];
+        for (const workerConfig of this.config.machineList) {
+            const worker = await this.launchWorker(workerConfig);
+        }
+        return this.workers.map(worker => worker.getEnv());
     }
 
-    private async launchWorker(): Promise<Worker> {
+    private async launchWorker(config: RemoteMachineConfig): Promise<Worker> {
         this.lastWorkerIndex += 1;
         const channelId = String(this.lastWorkerIndex);
-        const worker = new Worker(this.id, channelId, this.server.getChannelUrl(channelId));
+        const worker = new Worker(
+            this.id,
+            channelId,
+            this.server.getChannelUrl(channelId),
+            config,
+            Boolean(this.config.trialGpuNumber)
+        );
 
         this.workers.push(worker);
         this.workersByChannel.set(worker.channelId, worker);
@@ -105,7 +113,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
 
         let gpuNumber = this.config.trialGpuNumber;
         if (gpuNumber) {
-            gpuNumber /= this.config.maxTrialNumberPerGpu;
+            gpuNumber /= worker.config.maxTrialNumberPerGpu;
         }
 
         const opts: TrialKeeper.TrialOptions = {
@@ -115,8 +123,8 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
             sequenceId,
             gpuNumber,
             gpuRestrictions: {
-                onlyUseIndices: this.config.gpuIndices,
-                rejectActive: !this.config.useActiveGpu,
+                onlyUseIndices: worker.config.gpuIndices,
+                rejectActive: !worker.config.useActiveGpu,
             },
         };
 

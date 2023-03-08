@@ -1,9 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import fs from 'node:fs'; 
 import path from 'node:path';
 
+import type { ConnectConfig } from 'ssh2';
+
 import type { WsChannel } from 'common/command_channel/websocket/channel';
+import type { RemoteMachineConfig } from 'common/experimentConfig';
 import { globals } from 'common/globals';
 import { Logger, getLogger } from 'common/log';
 import type { EnvironmentInfo } from 'common/training_service_v3';
@@ -18,29 +22,32 @@ export class Worker {
     ssh: Ssh;
     launchResult!: any;
     log: Logger;
-    config: any;
+    config: RemoteMachineConfig;
 
     public get envId(): string {
         return `${this.trainingServiceId}-worker${this.channelId}`;
     }
 
-    constructor(trainingServiceId: string, channelId: string, channelUrl: string) {
+    constructor(trainingServiceId: string, channelId: string, channelUrl: string, config: RemoteMachineConfig, enableGpu: boolean) {
         this.log = getLogger('Worker.TODO');
         this.trainingServiceId = trainingServiceId;
         this.channelId = channelId;
         this.channelUrl = channelUrl;
-        this.trialKeeper = new RemoteTrialKeeper(this.envId, 'remote', false);  // false <- Boolean(config.trialGpuNumber)
-        this.ssh = new Ssh({
-            host: 'localhost',
-            password: 'cffbk',
-            port: 22,
-            //privateKey: key,
-            username: 'lz',
-        });
+        this.trialKeeper = new RemoteTrialKeeper(this.envId, 'remote', enableGpu);
+        this.config = config;
 
-        this.config = {
-            host: 'localhost',
+        const sshConfig: ConnectConfig = {
+            host: config.host,
+            port: config.port,
+            username: config.user,
+            password: config.password,
         };
+        if (config.sshKeyFile) {
+            sshConfig.privateKey = fs.readFileSync(config.sshKeyFile, { encoding: 'utf8' });
+            sshConfig.passphrase = config.sshPassphrase;
+        }
+
+        this.ssh = new Ssh(sshConfig);
     }
 
     getEnv(): EnvironmentInfo {
