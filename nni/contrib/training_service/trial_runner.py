@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import atexit
 import argparse
 import json
 import logging
@@ -141,16 +142,29 @@ class TrialRunner:
         if self._checkpoint_path.exists():
             self.load_checkpoint()
 
-        self._server_thread = threading.Thread(target=self._server, daemon=True)
+        self._server = self._server_start()
+        atexit.register(self._server_stop)
 
     @property
     def _checkpoint_path(self) -> Path:
         return self._runner_dir / 'trial_runner.json'
 
-    def _server(self) -> None:
+    def _server_start(self) -> HTTPServer:
+        _logger.info('Starting trial server at %s.', TrialServerHandler.ADDRESS)
+        atexit.register(self._server_stop)
         server_address = ('', TrialServerHandler.PORT)
         httpd = HTTPServer(server_address, partial(TrialServerHandler, self._processing_trials, self._on_metric))
-        httpd.serve_forever()
+
+        def _start() -> None:
+            httpd.serve_forever()
+
+        threading.Thread(target=_start, daemon=True).start()
+        return httpd
+
+    def _server_stop(self) -> None:
+        _logger.info('Stopping trial server.')
+        atexit.unregister(self._server_stop)
+        self._server.shutdown()
 
     def _on_metric(self, command: MetricCommand) -> None:
         self._channel.send(json.dumps(command))
@@ -165,11 +179,9 @@ class TrialRunner:
                     self._processing_trials.append(t)
                 else:
                     _logger.error('Ignored when loading checkpoint as it appears not a valid trial: %s', t)
-            if isinstance(checkpoint_data['parameters'], dict):
-                self._parameters = checkpoint_data['parameters']
             _logger.info('Checkpoint loaded. Processing trials: %s', self._processing_trials)
         except:
-            _logger.exception('Checkpoint loaded failed: %s', self._checkpoint_path)
+            _logger.exception('Checkpoint loading failed: %s', self._checkpoint_path)
 
         self._refresh_queue()
 
@@ -177,13 +189,12 @@ class TrialRunner:
         try:
             checkpoint_data = {
                 'queued_trials': list(self._processing_trials),
-                'parameters': self._parameters
             }
             self._checkpoint_path.parent.mkdir(exist_ok=True, parents=True)
             with self._checkpoint_path.open('w') as f:
                 json.dump(checkpoint_data, f)
         except:
-            _logger.exception('Checkpoint saved failed: %s', self._checkpoint_path)
+            _logger.exception('Checkpoint saving failed: %s', self._checkpoint_path)
 
     def check_status(self) -> list[Trial]:
         """
@@ -253,6 +264,7 @@ class TrialRunner:
                 else:
                     status: Status = 'failed'
                 trial = self._processing_trials.popleft()
+                _logger.info('Trial %s ended with status: %s', trial['id'], status)
                 self._emit_status_change(trial['id'], status)
                 self._running_process = None
 
@@ -265,7 +277,8 @@ class TrialRunner:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 bufsize=self._log_buffer_size,
-                shell=True
+                shell=True,
+                env=self._environ(trial)
             )
             self._start_stdout_logging(self._trial_log_dir / (trial['id'] + '.txt'))
             self._emit_status_change(trial['id'], 'running')
@@ -279,9 +292,10 @@ class TrialRunner:
             NNI_PLATFORM='amlt',
             NNI_EXP_ID=trial['experiment'],
             NNI_TRIAL_JOB_ID=trial['id'],
-            NNI_SYS_DIR=output_dir,
-            NNI_OUTPUT_DIR=output_dir,
-            NNI_TRIAL_SEQ_ID=trial['sequence'],
+            NNI_SYS_DIR=str(output_dir),
+            NNI_OUTPUT_DIR=str(output_dir),
+            NNI_TRIAL_SEQ_ID=str(trial['sequence']),
+            NNI_TRIAL_COMMAND_CHANNEL='import://nni_amlt.trial_client.TrialClient'
         )
 
         return {
@@ -337,10 +351,10 @@ def trial_runner_loop(
     _logger.info('Saving trial runner states to: %s', runner_dir)
 
     file_channel = FileChannel(channel, f'worker-{rank}', 'manager')
-    _logger.info('Using channel %s to communicate with NNI manager', file_channel)
+    _logger.info('Using channel %s to communicate with NNI manager.', file_channel)
 
     log_buffer_size = log_buffer_size
-    _logger.info('Buffer size for trial stodut: %d', log_buffer_size)
+    _logger.info('Buffer size for trial stdout: %d', log_buffer_size)
 
     trial_runner = TrialRunner(file_channel, runner_dir, output_dir, trial_log_dir, log_buffer_size)
 
@@ -390,7 +404,7 @@ def trial_runner_loop(
 
         else:
             elapsed = time.time() - last_good
-            _logger.info('No command received. Patience: %f / %f', elapsed, patience)
+            _logger.info('No command received. Since last receiving: %f seconds (%f maximum).', elapsed, patience)
 
             if elapsed > patience:
                 _logger.warning('No command received for too long. Quit the runner.')

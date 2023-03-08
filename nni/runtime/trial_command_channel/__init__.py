@@ -46,10 +46,10 @@ def set_default_trial_command_channel(channel: Optional[TrialCommandChannel] = N
         channel_url = trial_env_vars.NNI_TRIAL_COMMAND_CHANNEL
         if isinstance(channel_url, str) and channel_url.startswith('import://'):
             _, channel_class_name = channel_url.split('://', 1)
-            module_name, class_name = channel_class_name.rsplit('.', 1)
-            module = __import__(module_name)
-            channel_class = getattr(module, class_name)
-            _channel = channel_class()
+            path, identifier = channel_class_name.rsplit('.', 1)
+            module = __import__(path, globals(), locals(), [identifier])
+            class_ = getattr(module, identifier)
+            _channel = class_()
             if not isinstance(_channel, TrialCommandChannel):
                 raise TypeError(f'{_channel} is not an instance of TrialCommandChannel')
         elif channel_url:
