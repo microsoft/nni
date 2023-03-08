@@ -28,7 +28,7 @@ class TeacherModelBasedDistiller(Distiller):
     model
         The student model to be distilled.
     config_list
-        A list of dict, each dict configure which module need to be distilled, and how to distil.
+        A list of dict, each dict configure which module need to be distilled, and how to distill.
         Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
         Please refer TODO.
