@@ -517,6 +517,36 @@ class LightningEvaluator(Evaluator):
         assert isinstance(self.model, pl.LightningModule)
         if self._opt_returned_dicts:
             def new_configure_optimizers(_):  # type: ignore
+                optimizers_lr_schedulers: Any = self.model.configure_optimizers() # type: ignore
+                optimizers = [opt_lrs_dict['optimizer'] for opt_lrs_dict in optimizers_lr_schedulers]
+                # add param group
+                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers) # type: ignore
+
+                return optimizers_lr_schedulers
+
+        elif self._lr_scheduler_helpers:
+            def new_configure_optimizers(_):  # type: ignore
+                optimizers_lr_schedulers: Any = self.model.configure_optimizers() # type: ignore
+                optimizers, lr_schedulers = optimizers_lr_schedulers
+                # add param_group
+                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers) # type: ignore
+
+                return optimizers, lr_schedulers
+
+        else:
+            def new_configure_optimizers(_):
+                optimizers_lr_schedulers: Any = self.model.configure_optimizers() # type: ignore
+                # add param_group
+                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers_lr_schedulers) # type: ignore
+
+                return optimizers_lr_schedulers
+
+        self.model.configure_optimizers = types.MethodType(new_configure_optimizers, self.model)
+
+    def _patch_configure_optimizers(self):
+        assert isinstance(self.model, pl.LightningModule)
+        if self._opt_returned_dicts:
+            def new_configure_optimizers(_):  # type: ignore
                 optimizers = [opt_helper.call(self.model, self._param_names_map) for opt_helper in self._optimizer_helpers]  # type: ignore
                 lr_schedulers = [lrs_helper.call(optimizers[self._lrs_opt_map[i]])
                                  for i, lrs_helper in enumerate(self._lr_scheduler_helpers)]
