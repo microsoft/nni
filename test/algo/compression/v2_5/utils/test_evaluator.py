@@ -4,8 +4,6 @@
 from __future__ import annotations
 
 import pytest
-from typing import Any
-
 import torch
 
 from nni.contrib.compression.utils.evaluator import (
@@ -35,11 +33,7 @@ def optimizer_after_step_patch():
     global optimizer_after_step_flag
     optimizer_after_step_flag = True
 
-<<<<<<< HEAD
-def loss_patch(t: torch.Tensor, batch: Any):
-=======
 def loss_patch(t: torch.Tensor, batch):
->>>>>>> fuse_module
     global loss_flag
     loss_flag = True
     return t
