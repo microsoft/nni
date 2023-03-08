@@ -208,6 +208,8 @@ def default_config_schema(mode: Literal['pruning', 'quantization', 'distillation
         }
     else:
         setting_schema = {
+            Optional('lambda'): Or(int, float),
+            Optional('link'): Or(str, [str], (str,)),
             Optional('apply_method'): Or('mse', 'kl')
         }
 
