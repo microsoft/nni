@@ -10,8 +10,6 @@ import nni_node
 Config = Dict[str, str]
 
 def main() -> None:
-    print('## stdout debug', flush=True)
-    print('## stderr debug', file=sys.stderr, flush=True)
     init_dir = Path(sys.argv[1])
     config = load_config(init_dir)
     output_dir = create_output_dir(config)
@@ -64,6 +62,7 @@ def save_result(init_dir: Path, output_dir: Path, proc: Popen) -> None:
     result_json = json.dumps(result, ensure_ascii=False, indent=4)
     (init_dir / 'launch.json').write_text(result_json, 'utf_8')
     (output_dir / 'launch.json').write_text(result_json, 'utf_8')
+    print(json.dumps(result, ensure_ascii=False), flush=True)
 
 if __name__ == '__main__':
     main()

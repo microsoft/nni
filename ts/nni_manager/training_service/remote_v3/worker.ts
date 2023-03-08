@@ -1,41 +1,31 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import child_process from 'node:child_process';
-import { EventEmitter, once } from 'node:events';
-import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import { Deferred } from 'common/deferred';
+import type { WsChannel } from 'common/command_channel/websocket/channel';
 import { globals } from 'common/globals';
 import { Logger, getLogger } from 'common/log';
-import type { LocalConfig, TrainingServiceConfig } from 'common/experimentConfig';
-import type { EnvironmentInfo, Metric, Parameter, TrainingServiceV3 } from 'common/training_service_v3';
-import { TrialKeeper } from 'common/trial_keeper/keeper';
-
-import { WsChannelServer } from 'common/command_channel/websocket/server';
-import { WsChannelClient } from 'common/command_channel/websocket/client';
-import { WsChannel } from 'common/command_channel/websocket/channel';
-
-import { RemoteTrialKeeper, registerForChannel } from 'common/trial_keeper/rpc';
-
-import { createTarball } from 'common/tarball';
-
+import type { EnvironmentInfo } from 'common/training_service_v3';
+import { RemoteTrialKeeper } from 'common/trial_keeper/rpc';
 import { Ssh } from './ssh';
 
-class Worker {
+export class Worker {
     trainingServiceId: string;
     channelId: string;
     channelUrl: string;
     trialKeeper: RemoteTrialKeeper;
     ssh: Ssh;
     launchResult!: any;
+    log: Logger;
+    config: any;
 
     public get envId(): string {
         return `${this.trainingServiceId}-worker${this.channelId}`;
     }
 
     constructor(trainingServiceId: string, channelId: string, channelUrl: string) {
+        this.log = getLogger('Worker.TODO');
         this.trainingServiceId = trainingServiceId;
         this.channelId = channelId;
         this.channelUrl = channelUrl;
@@ -47,6 +37,10 @@ class Worker {
             //privateKey: key,
             username: 'lz',
         });
+
+        this.config = {
+            host: 'localhost',
+        };
     }
 
     getEnv(): EnvironmentInfo {
@@ -57,7 +51,95 @@ class Worker {
         this.trialKeeper.setChannel(channel);
     }
 
+    private async findPython(): Promise<string> {
+        const candidates = [];
+        if (this.config.pythonPath) {
+            if (!this.config.pythonPath.includes('\\')) {
+                candidates.push(this.config.pythonPath + '/python');
+                candidates.push(this.config.pythonPath + '/python3');
+            }
+            if (!this.config.pythonPath.includes('/')) {
+                candidates.push(this.config.pythonPath + '\\python');
+            }
+            candidates.push(this.config.pythonPath);  // in case the user makes mistake
+        }
+        candidates.push('python');
+        candidates.push('python3');
+
+        let python2;
+
+        for (const python of candidates) {
+            const result = await this.ssh.exec(python + ' --version');
+            if (result.code === 0) {
+                if (result.stdout.startsWith('Python 2.')) {
+                    python2 = python;
+                } else {
+                    this.log.debug('Python command chosen for initializing:', python);
+                    return python;
+                }
+            }
+        }
+
+        if (this.config.pythonPath && python2) {
+            this.log.warning('Cannot find python 3, using python 2 for initializing:', python2);
+            return python2;
+        }
+
+        this.log.error('Cannot find python on SSH server');
+        throw new Error(`Cannot find python on server ${this.config.host}`);
+    }
+
+    private async setPythonPath(python: string): Promise<string> {
+        if (python === this.config.pythonPath) {
+            this.log.error('python_path should be the directory rather than the executable, please check your config');
+            return python;
+        }
+
+        const osCmd = `${python} -c "import sys ; print(sys.platform)"`;
+        const osResult = await this.ssh.exec(osCmd);
+        if (!osResult.stdout) {
+            this.log.error('Failed to detect OS', osResult);
+            throw new Error(`Failed to detect OS for server ${this.config.host}`);
+        }
+        const os = osResult.stdout.trim();
+
+        const envCmd = `${python} -c "import json,os ; print(json.dumps(dict(os.environ)))"`
+        const envResult = await this.ssh.exec(envCmd);
+        if (!envResult.stdout) {
+            this.log.error('Failed to get env', envResult);
+            throw new Error(`Failed to get environment variables for server ${this.config.host}`);
+        }
+        const env = JSON.parse(envResult.stdout);
+
+        const delimiter = (os === 'win32' ? ';' : ':');
+        env['PATH'] = this.config.pythonPath + delimiter + env['PATH'];
+        this.ssh.setEnv(env);
+
+        for (const newPython of ['python', 'python3']) {
+            const result = await this.ssh.exec(newPython + ' --version');
+            if (result.code === 0 && !result.stdout.startsWith('Python 2.')) {
+                return python;
+            }
+        }
+        this.log.error('Cannot find python after setting pythonPath');
+        throw new Error(`Cannot find python after adding ${this.config.pythonPath} to PATH`);
+    }
+
     public async start(): Promise<void> {
+        await this.ssh.connect();
+
+        let python = await this.findPython();
+        if (this.config.pythonPath) {
+            python = await this.setPythonPath(python);
+        }
+
+        await this.ssh.run(`${python} -m pip install nni --upgrade`);  // FIXME: upgrade???
+
+        // todo: check version
+
+        const cmd = `${python} -m nni.tools.nni_manager_scripts.create_tmp_dir ${globals.args.experimentId} ${this.envId}`;
+        const tmpDir = await this.ssh.run(cmd);
+
         const config = {
             experimentId: globals.args.experimentId,
             logLevel: globals.args.logLevel,
@@ -65,23 +147,10 @@ class Worker {
             environmentId: this.envId,
             managerCommandChannel: this.channelUrl,
         };
+        await this.ssh.writeFile(path.join(tmpDir, 'config.json'), JSON.stringify(config));
 
-        const initDir = '/tmp/nni-debug2'
-        await fs.mkdir(initDir, { recursive: true });
-        await fs.writeFile(path.join(initDir, 'config.json'), JSON.stringify(config));
-
-        const cmd = `python -m nni.tools.nni_manager_scripts.launch_trial_keeper ${initDir}`;
-
-        const deferred = new Deferred<void>();
-
-        await this.ssh.connect();
-        const result = await this.ssh.exec(cmd);
-
-        await this.ssh.download(path.join(initDir, 'launch.json'), '/tmp/launch.json');
-
-        const output = await fs.readFile('/tmp/launch.json', { encoding: 'utf8' });
-        console.log('## launch trial keeper result:', output);
-        this.launchResult = JSON.parse(output);
+        const result = await this.ssh.run(`${python} -m nni.tools.nni_manager_scripts.launch_trial_keeper ${tmpDir}`);
+        this.launchResult = JSON.parse(result);
 
         await this.trialKeeper.start();
     }
@@ -95,162 +164,4 @@ class Worker {
         await this.ssh.upload(tar, remotePath);
         await this.trialKeeper.unpackDirectory(name, remotePath);
     }
-}
-
-export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
-    private id: string;
-    private config: LocalConfig;
-    private log: Logger;
-
-    private emitter: EventEmitter = new EventEmitter();
-
-    private lastWorkerIndex: number = 0;
-    private workers: Worker[] = [];
-    private workersByChannel: Map<string, Worker> = new Map();
-    private workersByEnv: Map<string, Worker> = new Map();
-    private workersByTrial: Map<string, Worker> = new Map();
-
-    private server: WsChannelServer;
-
-    constructor(trainingServiceId: string, config: TrainingServiceConfig) {
-        this.id = trainingServiceId;
-        this.config = config as LocalConfig;
-
-        this.log = getLogger(`RemoteV3.${this.id}`);
-        this.log.debug('Training sevice config:', config);
-
-        this.server = new WsChannelServer('remote_trialkeeper', `platform/${this.id}`);
-
-        this.server.on('connection', (channelId: string, channel: WsChannel) => {
-            const worker = this.workersByChannel.get(channelId);
-            if (worker) {
-                worker.setChannel(channel);
-            } else {
-                this.log.error('Incoming connection from unexpected worker', channelId);
-            }
-        });
-    }
-
-    public async init(): Promise<void> {
-        return;
-    }
-
-    public async start(): Promise<EnvironmentInfo[]> {
-        this.log.info('Start');
-        await this.server.start();
-        const worker = await this.launchWorker();
-        return [ worker.getEnv() ];
-    }
-
-    private async launchWorker(): Promise<Worker> {
-        this.lastWorkerIndex += 1;
-        const channelId = String(this.lastWorkerIndex);
-        const worker = new Worker(this.id, channelId, this.server.getChannelUrl(channelId));
-
-        this.workers.push(worker);
-        this.workersByChannel.set(worker.channelId, worker);
-        this.workersByEnv.set(worker.envId, worker);
-
-        worker.trialKeeper.onTrialStart((...args) => {
-            this.emitter.emit('trial_start', ...args);
-        });
-        worker.trialKeeper.onTrialStop((...args) => {
-            this.emitter.emit('trial_stop', ...args);
-        });
-        worker.trialKeeper.onReceiveCommand('request_parameter', (trialId, _command) => {
-            this.emitter.emit('request_parameter', trialId);
-        });
-        worker.trialKeeper.onReceiveCommand('metric', (trialId, command) => {
-            this.emitter.emit('metric', trialId, command['metric']);
-        });
-
-        await worker.start();
-        return worker;
-    }
-
-    public async stop(): Promise<void> {
-        await Promise.all(this.workers.map(worker => worker.stop()));
-        this.log.info('All workers stopped');
-    }
-
-    public async uploadDirectory(name: string, path: string): Promise<void> {
-        this.log.info(`Upload directory ${name} = ${path}`);
-        const tar = await createTarball(name, path);
-        await Promise.all(this.workers.map(worker => worker.upload(name, tar)));
-    }
-
-    public async createTrial(envId: string, trialCommand: string, directoryName: string, sequenceId?: number):
-            Promise<string | null> {
-
-        const worker = this.workersByEnv.get(envId)!;
-        const trialId = uuid();
-
-        let gpuNumber = this.config.trialGpuNumber;
-        if (gpuNumber) {
-            gpuNumber /= this.config.maxTrialNumberPerGpu;
-        }
-
-        const opts: TrialKeeper.TrialOptions = {
-            id: trialId,
-            command: trialCommand,
-            codeDirectoryName: directoryName,
-            sequenceId,
-            gpuNumber,
-            gpuRestrictions: {
-                onlyUseIndices: this.config.gpuIndices,
-                rejectActive: !this.config.useActiveGpu,
-            },
-        };
-
-        const success = await worker.trialKeeper.createTrial(opts);
-        if (success) {
-            this.log.info(`Created trial ${trialId} on worker ${worker.channelId}`);
-            this.workersByTrial.set(trialId, worker);
-            return trialId;
-        } else {
-            this.log.warning('Failed to create trial');
-            return null;
-        }
-    }
-
-    public async stopTrial(trialId: string): Promise<void> {
-        this.log.info('Stop trial', trialId);
-        const worker = this.workersByTrial.get(trialId)!;
-        await worker.trialKeeper.stopTrial(trialId);
-    }
-
-    public async sendParameter(trialId: string, parameter: Parameter): Promise<void> {
-        this.log.info('Trial parameter:', trialId, parameter);
-        const worker = this.workersByTrial.get(trialId)!;
-        const command = { type: 'parameter', parameter };
-        await worker.trialKeeper.sendCommand(trialId, command);
-    }
-
-    public onTrialStart(callback: (trialId: string, timestamp: number) => Promise<void>): void {
-        this.emitter.on('trial_start', callback);
-    }
-
-    public onTrialEnd(callback: (trialId: string, timestamp: number, exitCode: number | null) => Promise<void>): void {
-        this.emitter.on('trial_stop', callback);
-    }
-
-    public onRequestParameter(callback: (trialId: string) => Promise<void>): void {
-        this.emitter.on('request_parameter', callback);
-    }
-
-    public onMetric(callback: (trialId: string, metric: Metric) => Promise<void>): void {
-        this.emitter.on('metric', callback);
-    }
-
-    public onEnvironmentUpdate(_callback: (environments: EnvironmentInfo[]) => Promise<void>): void {
-        // never
-    }
-}
-
-// Temporary helpers, will be moved later
-
-import { uniqueString } from 'common/utils';
-
-function uuid(): string {
-    return uniqueString(5);
 }
