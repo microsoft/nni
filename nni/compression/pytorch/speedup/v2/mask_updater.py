@@ -224,8 +224,9 @@ class LeafModuleMaskUpdater(DefaultMaskUpdater):
         # update the sparsity of the paramters
         node_info: 'NodeInfo' = model_speedup.node_infos[node]
         for k, v in node_info.module.named_parameters():
-            grad_zero = v.grad.data == 0
-            node_info.param_masks[k][grad_zero] = 0
+            if isinstance(v, torch.Tensor) and model_speedup.tensor_propagate_check(v) and v.dtype in torch_float_dtype:
+                grad_zero = v.grad.data == 0
+                node_info.param_masks[k][grad_zero] = 0
 
 
 class NoMaskUpdater(DefaultMaskUpdater):

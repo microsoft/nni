@@ -69,13 +69,16 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
             group_id_candidate += 1
         if sparse_ratio is not None:
             config['target_names'] = ['weight', 'bias']
+            weight_setting = {
+                'sparse_ratio': sparse_ratio,
+                'granularity': 'default',
+            }
+            if max_sparse_ratio is not None:
+                weight_setting['max_sparse_ratio'] = max_sparse_ratio
+            if group_id is not None:
+                weight_setting['group_id'] = group_id
             config['target_settings'] = {
-                'weight': {
-                    'sparse_ratio': sparse_ratio,
-                    'max_sparse_ratio': max_sparse_ratio,
-                    'global_group_id': group_id,
-                    'granularity': 'default',
-                }
+                'weight': weight_setting
             }
 
     # trans quantization part
