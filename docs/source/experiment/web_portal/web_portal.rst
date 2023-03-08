@@ -218,7 +218,7 @@ Click the tab ``Hyper-parameter`` to see the parallel chart.
 
 
 
-.. image:: ../../../img/webui_img/hyper-parameter.png
+.. image:: ../../../img/webui_img/hyper_parameter.png
    :width: 100%
 
 
