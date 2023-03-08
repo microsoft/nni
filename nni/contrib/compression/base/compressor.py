@@ -111,7 +111,7 @@ class Compressor:
         Traverse all wrappers and execute ModuleWrapper.unwrap()
         """
         if self._is_wrapped is False:
-            warn_msg = 'The bounde model is not wrapped, can not unwrap it.'
+            warn_msg = 'The bound model is not wrapped, can not unwrap it.'
             _logger.warning(warn_msg)
         for _, wrapper in self._module_wrappers.items():
             wrapper.unwrap()
@@ -186,6 +186,7 @@ class Compressor:
             self._single_compress(max_steps, max_epochs)
         else:
             self._fusion_compress(max_steps, max_epochs)
+        return self.bound_model
 
 
 class Pruner(Compressor):
@@ -277,8 +278,7 @@ class Pruner(Compressor):
         return self._generate_sparsity(metrics)
 
     def compress(self, max_steps: int | None, max_epochs: int | None):
-        super().compress(max_steps, max_epochs)
-        return self.bound_model, self.get_masks()
+        return super().compress(max_steps, max_epochs), self.get_masks()
 
 
 class Quantizer(Compressor):
@@ -348,8 +348,7 @@ class Quantizer(Compressor):
         return module_name_param_dict if len(module_name_param_dict) > 0 else None
 
     def compress(self, max_steps: int | None, max_epochs: int | None):
-        super().compress(max_steps, max_epochs)
-        return self.bound_model, self.get_calibration_config()
+        return super().compress(max_steps, max_epochs), self.get_calibration_config()
 
 
 class Distiller(Compressor):
