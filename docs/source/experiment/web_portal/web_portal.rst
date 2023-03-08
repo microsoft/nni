@@ -23,7 +23,7 @@ What should you do when you think the chart is strange, such as ``Default metric
 
 
 
-.. image:: ../../../img/webui-img/summary.png
+.. image:: ../../../img/webui_img/summary.png
    :width: 80%
 
 
@@ -36,7 +36,7 @@ What should you do when your experiment has error
 
 
 
-.. image:: ../../../img/webui-img/experimentError.gif
+.. image:: ../../../img/webui_img/experiment_error.gif
 
 
 What should you do when your trial fails
@@ -46,11 +46,11 @@ What should you do when your trial fails
 
 
 
-.. image:: ../../../img/webui-img/detail/customizedTrialButton.png
+.. image:: ../../../img/webui_img/detail/customized_trial_button.png
    :width: 25%
 
 
-.. image:: ../../../img/webui-img/detail/customizedTrial.png
+.. image:: ../../../img/webui_img/detail/customized_trial.png
    :width: 40%
 
 
@@ -62,7 +62,7 @@ What should you do when your trial fails
 
 
 
-   .. image:: ../../../img/webui-img/detail/log-local.png
+   .. image:: ../../../img/webui_img/detail/log_local.png
       :width: 100%
 
 
@@ -70,7 +70,7 @@ What should you do when your trial fails
 
 
 
-   .. image:: ../../../img/webui-img/detail-pai.png
+   .. image:: ../../../img/webui_img/detail_pai.png
       :width: 100%
 
 
@@ -89,7 +89,7 @@ Experiments management page could manage many experiments on your machine.
 
 
 
-.. image:: ../../../img/webui-img/managerExperimentList/experimentListNav.png
+.. image:: ../../../img/webui_img/manage_experiment_list/nav.png
    :width: 36%
 
 
@@ -98,7 +98,7 @@ Experiments management page could manage many experiments on your machine.
 
 
 
-.. image:: ../../../img/webui-img/managerExperimentList/expList.png
+.. image:: ../../../img/webui_img/manage_experiment_list/list.png
    :width: 100%
 
 
@@ -107,7 +107,7 @@ Experiments management page could manage many experiments on your machine.
 
 
 
-.. image:: ../../../img/webui-img/managerExperimentList/toAnotherExp.png
+.. image:: ../../../img/webui_img/manage_experiment_list/to_another_exp.png
    :width: 100%
 
 
@@ -116,7 +116,7 @@ Experiments management page could manage many experiments on your machine.
 
 
 
-.. image:: ../../../img/webui-img/managerExperimentList/expFilter.png
+.. image:: ../../../img/webui_img/manage_experiment_list/filter.png
    :width: 100%
 
 
@@ -133,7 +133,7 @@ View overview page
 
 
 
-.. image:: ../../../img/webui-img/full-oview.png
+.. image:: ../../../img/webui_img/full_oview.png
    :width: 100%
 
 
@@ -144,7 +144,7 @@ View overview page
 
 
 
-   .. image:: ../../../img/webui-img/searchSpace.png
+   .. image:: ../../../img/webui_img/search_space.png
       :width: 80%
 
 
@@ -153,7 +153,7 @@ View overview page
 
 
 
-   .. image:: ../../../img/webui-img/config.png
+   .. image:: ../../../img/webui_img/config.png
       :width: 80%
 
 
@@ -162,7 +162,7 @@ View overview page
 
 
 
-.. image:: ../../../img/webui-img/review-log.png
+.. image:: ../../../img/webui_img/review_log.png
    :width: 80%
 
 
@@ -171,7 +171,7 @@ View overview page
 
 
 
-.. image:: ../../../img/webui-img/refresh-interval.png
+.. image:: ../../../img/webui_img/refresh_interval.png
    :width: 100%
 
 
@@ -180,7 +180,7 @@ View overview page
 
 
 
-.. image:: ../../../img/webui-img/edit-experiment-param.gif
+.. image:: ../../../img/webui_img/edit_experiment_param.gif
    :width: 50%
 
 
@@ -192,7 +192,7 @@ View job default metric
 
 
 
-.. image:: ../../../img/webui-img/default-metric.png
+.. image:: ../../../img/webui_img/default_metric.png
    :width: 100%
 
 
@@ -201,7 +201,7 @@ View job default metric
 
 
 
-.. image:: ../../../img/webui-img/best-curve.png
+.. image:: ../../../img/webui_img/best_curve.png
    :width: 100%
 
 
@@ -218,7 +218,7 @@ Click the tab ``Hyper-parameter`` to see the parallel chart.
 
 
 
-.. image:: ../../../img/webui-img/hyperPara.png
+.. image:: ../../../img/webui_img/hyper-parameter.png
    :width: 100%
 
 
@@ -230,7 +230,7 @@ Click the tab ``Trial Duration`` to see the bar chart.
 
 
 
-.. image:: ../../../img/webui-img/trial_duration.png
+.. image:: ../../../img/webui_img/trial_duration.png
    :width: 100%
 
 
@@ -242,7 +242,7 @@ Click the tab ``Intermediate Result`` to see the line chart.
 
 
 
-.. image:: ../../../img/webui-img/trials_intermeidate.png
+.. image:: ../../../img/webui_img/trials_intermeidate.png
    :width: 100%
 
 
@@ -253,7 +253,7 @@ You may find that these trials will get better or worse at an intermediate resul
 
 
 
-.. image:: ../../../img/webui-img/filter-intermediate.png
+.. image:: ../../../img/webui_img/filter_intermediate.png
    :width: 100%
 
 
@@ -268,7 +268,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-.. image:: ../../../img/webui-img/detail-local.png
+.. image:: ../../../img/webui_img/detail_local.png
    :width: 100%
 
 
@@ -279,7 +279,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
    
 
 
-   .. image:: ../../../img/webui-img/detail/searchId.png
+   .. image:: ../../../img/webui_img/detail/search_id.png
       :width: 80%
 
 
@@ -288,7 +288,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-   .. image:: ../../../img/webui-img/detail/searchNo.png
+   .. image:: ../../../img/webui_img/detail/search_No.png
       :width: 80%
 
 
@@ -297,7 +297,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-   .. image:: ../../../img/webui-img/detail/searchStatus.png
+   .. image:: ../../../img/webui_img/detail/search_status.png
       :width: 80%
 
 
@@ -308,7 +308,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
       
 
 
-      .. image:: ../../../img/webui-img/detail/searchParameterChoice.png
+      .. image:: ../../../img/webui_img/detail/search_parameter_choice.png
          :width: 80%
 
 
@@ -317,7 +317,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
       
 
 
-      .. image:: ../../../img/webui-img/detail/searchParameterRange.png
+      .. image:: ../../../img/webui_img/detail/search_parameter_range.png
          :width: 80%
 
 
@@ -326,7 +326,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-.. image:: ../../../img/webui-img/addColumn.png
+.. image:: ../../../img/webui_img/add_column.png
    :width: 40%
 
 
@@ -335,12 +335,12 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-.. image:: ../../../img/webui-img/select-trial.png
+.. image:: ../../../img/webui_img/select_trial.png
    :width: 100%
 
 
 
-.. image:: ../../../img/webui-img/compare.png
+.. image:: ../../../img/webui_img/compare.png
    :width: 80%
 
 
@@ -350,7 +350,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-.. image:: ../../../img/webui-img/copyParameter.png
+.. image:: ../../../img/webui_img/copy_parameter.png
    :width: 100%
 
 
@@ -360,7 +360,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-.. image:: ../../../img/webui-img/intermediate.png
+.. image:: ../../../img/webui_img/intermediate.png
    :width: 100%
 
 
@@ -370,7 +370,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-.. image:: ../../../img/webui-img/kill-running.png
+.. image:: ../../../img/webui_img/kill_running.png
    :width: 100%
 
 
