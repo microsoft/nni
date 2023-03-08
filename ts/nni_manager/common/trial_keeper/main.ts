@@ -1,6 +1,6 @@
 import 'app-module-path/cwd';
 
-import fs from 'node:fs';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import yargs from 'yargs/yargs';
@@ -8,33 +8,12 @@ import yargs from 'yargs/yargs';
 import { NniManagerArgs, globals, initGlobalsCustom } from 'common/globals';
 import { Logger, getRobustLogger } from 'common/log';
 
+import { WsChannelClient } from 'common/command_channel/websocket/client';
+import { RemoteTrialKeeper, registerForChannel } from './rpc';
+
+import { RestServerCore } from 'rest_server/core';
+
 const logger: Logger = getRobustLogger('TrialKeeper.main');
-
-function main() {
-    process.on('SIGTERM', () => { globals.shutdown.initiate('SIGTERM'); });
-    process.on('SIGBREAK', () => { globals.shutdown.initiate('SIGBREAK'); });
-    process.on('SIGINT', () => { globals.shutdown.initiate('SIGINT'); });
-
-    const args = parseArgs();
-
-    const logPath = path.join(
-        args.experimentsDirectory,
-        args.experimentId,
-        'env',
-        args.environmentId,
-        'trialkeeper.log'
-    )
-    fs.mkdirSync(path.dirname(logPath), { recursive: true });
-
-    initGlobalsCustom(args, logPath);
-
-    logger.info('Trial keeper start');
-    logger.debug('Arguments:', args);
-
-    //const daemon = new TrialKeeperDaemon(args.config);
-    //globals.shutdown.notifyInitializeComplete();
-    //keeper.start();
-}
 
 interface TrialKeeperArgs {
     readonly experimentId: string;
@@ -46,12 +25,46 @@ interface TrialKeeperArgs {
     readonly managerCommandChannel: string;
 }
 
+async function main(): Promise<void> {
+    console.log('Start trial keeper:', process.argv);
+
+    process.on('SIGTERM', () => { globals.shutdown.initiate('SIGTERM'); });
+    process.on('SIGBREAK', () => { globals.shutdown.initiate('SIGBREAK'); });
+    process.on('SIGINT', () => { globals.shutdown.initiate('SIGINT'); });
+
+    const args = await parseArgs();
+
+    const logPath = path.join(
+        args.experimentsDirectory,
+        args.experimentId,
+        'environments',
+        args.environmentId,
+        'trial_keeper.log'
+    )
+    await fs.mkdir(path.dirname(logPath), { recursive: true });
+
+    initGlobalsCustom(args, logPath);
+    logger.info('Start');
+    logger.info('    args:', process.argv);
+    logger.info('    config:', args);
+
+    const restServer = new RestServerCore(8081);
+    await restServer.start();
+
+    const client = new WsChannelClient(args.managerCommandChannel);
+    registerForChannel(client);
+    await client.connect();
+
+    logger.info('Initialized');
+    globals.shutdown.notifyInitializeComplete();
+}
+
 interface MergedArgs extends NniManagerArgs, TrialKeeperArgs { }
 
-function parseArgs(): MergedArgs {
-    const rawArgs = process.argv.slice(2);
-    const parser = yargs(rawArgs).options(yargsOptions).strict().fail(false);
-    const args: TrialKeeperArgs = parser.parseSync();
+async function parseArgs(): Promise<MergedArgs> {
+    const configPath = process.argv[2];
+    const configJson = await fs.readFile(configPath, { encoding: 'utf8' });
+    const args: TrialKeeperArgs = JSON.parse(configJson);
     return {
         // shared args
         experimentId: args.experimentId,
@@ -65,7 +78,7 @@ function parseArgs(): MergedArgs {
         managerCommandChannel: args.managerCommandChannel,
 
         // unused nni manager args
-        port: 0,
+        port: 8081,
         action: 'create',
         foreground: false,
         urlPrefix: '',
@@ -73,37 +86,5 @@ function parseArgs(): MergedArgs {
         mode: '',
     };
 }
-
-const yargsOptions = {
-    experimentId: {
-        demandOption: true,
-        type: 'string'
-    },
-    experimentsDirectory: {
-        demandOption: true,
-        type: 'string'
-    },
-    logLevel: {
-        choices: [ 'critical', 'error', 'warning', 'info', 'debug' ] as const,
-        demandOption: true
-    },
-    pythonInterpreter: {
-        demandOption: true,
-        type: 'string'
-    },
-
-    platform: {
-        demandOption: true,
-        type: 'string'
-    },
-    environmentId: {
-        demandOption: true,
-        type: 'string'
-    },
-    managerCommandChannel: {
-        demandOption: true,
-        type: 'string'
-    }
-} as const;
 
 main();

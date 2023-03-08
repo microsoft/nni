@@ -1,9 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { setTimeout } from 'node:timers/promises';
+import child_process from 'node:child_process';
+import { EventEmitter } from 'node:events';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 import { Deferred } from 'common/deferred';
+import { globals } from 'common/globals';
 import { Logger, getLogger } from 'common/log';
 import type { LocalConfig, TrainingServiceConfig } from 'common/experimentConfig';
 import type { EnvironmentInfo, Metric, Parameter, TrainingServiceV3 } from 'common/training_service_v3';
@@ -15,30 +19,94 @@ import { WsChannel } from 'common/command_channel/websocket/channel';
 
 import { RemoteTrialKeeper, registerForChannel } from 'common/trial_keeper/rpc';
 
+class Worker {
+    trainingServiceId: string;
+    channelId: string;
+    trialKeeper: RemoteTrialKeeper;
+
+    constructor(trainingServiceId: string, channelId: string) {
+        this.trainingServiceId = trainingServiceId;
+        this.channelId = channelId;
+        this.trialKeeper = new RemoteTrialKeeper(this.envId, 'remote', false);  // false <- Boolean(config.trialGpuNumber)
+    }
+
+    get envId(): string {
+        return `${this.trainingServiceId}-worker${this.channelId}`;
+    }
+
+    getEnv(): EnvironmentInfo {
+        return { id: this.envId };
+    }
+
+    setChannel(channel: WsChannel): void {
+        this.trialKeeper.setChannel(channel);
+    }
+
+    async start(): Promise<void> {
+        const config = {
+            experimentId: globals.args.experimentId,
+            experimentsDirectory: '/home/lz/nni-experiments',
+            logLevel: 'trace',
+            pythonInterpreter: '/usr/bin/python',
+            platform: 'remote',
+            environmentId: this.envId,
+            managerCommandChannel: `ws://localhost:8080/platform/${this.trainingServiceId}/${this.channelId}`,
+        };
+        const configPath = path.join(globals.paths.experimentRoot, 'environments', this.envId, 'trial_keeper_config.json');
+        await fs.mkdir(path.dirname(configPath), { recursive: true });
+        await fs.writeFile(configPath, JSON.stringify(config));
+
+        const proc = child_process.spawn('python', ['-m', 'nni.tools.nni_manager_scripts.launch_trial_keeper', configPath]);
+        // fixme: windows to linux path
+
+        //const client = new WsChannelClient(`ws://localhost:8080/platform/${this.trainingServiceId}/${this.channelId}`);
+        //registerForChannel(client);
+        //await client.connect();
+
+        await this.trialKeeper.start();
+    }
+
+    async stop(): Promise<void> {
+        await this.trialKeeper.shutdown();
+    }
+
+    async uploadDirectory(name: string, path: string): Promise<void> {
+        await this.trialKeeper.registerDirectory(name, path);
+    }
+}
+
 export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
+    private id: string;
     private config: LocalConfig;
-    private env: EnvironmentInfo;
     private log: Logger;
-    private trialKeeper: RemoteTrialKeeper;
+
+    private emitter: EventEmitter = new EventEmitter();
+
+    private lastWorkerIndex: number = 0;
+    private workers: Worker[] = [];
+    private workersByChannel: Map<string, Worker> = new Map();
+    private workersByEnv: Map<string, Worker> = new Map();
+    private workersByTrial: Map<string, Worker> = new Map();
 
     private server: WsChannelServer;
-    private client: WsChannelClient;
 
     constructor(trainingServiceId: string, config: TrainingServiceConfig) {
-        this.log = getLogger(`RemoteV3.${trainingServiceId}`);
+        this.id = trainingServiceId;
+        this.config = config as LocalConfig;
+
+        this.log = getLogger(`RemoteV3.${this.id}`);
         this.log.debug('Training sevice config:', config);
 
-        this.config = config as LocalConfig;
-        this.env = { id: `${trainingServiceId}-env` };
-        this.trialKeeper = new RemoteTrialKeeper(this.env.id, 'local', Boolean(config.trialGpuNumber));
+        this.server = new WsChannelServer('remote_trialkeeper', `platform/${this.id}`);
 
-        this.server = new WsChannelServer('remote_trialkeeper', `platform/${trainingServiceId}`);
         this.server.on('connection', (channelId: string, channel: WsChannel) => {
-            this.log.warning('Connection:', channelId);
-            this.trialKeeper.setChannel(channel);
+            const worker = this.workersByChannel.get(channelId);
+            if (worker) {
+                worker.setChannel(channel);
+            } else {
+                this.log.error('Incoming connection from unexpected worker', channelId);
+            }
         });
-
-        this.client = new WsChannelClient(`ws://localhost:8080/platform/${trainingServiceId}/env`, 'client');
     }
 
     public async init(): Promise<void> {
@@ -48,32 +116,49 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     public async start(): Promise<EnvironmentInfo[]> {
         this.log.info('Start');
         await this.server.start();
+        const worker = await this.launchWorker();
+        return [ worker.getEnv() ];
+    }
 
-        registerForChannel(this.client);
-        await this.client.connect();
+    private async launchWorker(): Promise<Worker> {
+        this.lastWorkerIndex += 1;
+        const worker = new Worker(this.id, String(this.lastWorkerIndex));
 
-        await this.trialKeeper.start();
-        return [ this.env ];
+        this.workers.push(worker);
+        this.workersByChannel.set(worker.channelId, worker);
+        this.workersByEnv.set(worker.envId, worker);
+
+        worker.trialKeeper.onTrialStart((...args) => {
+            this.emitter.emit('trial_start', ...args);
+        });
+        worker.trialKeeper.onTrialStop((...args) => {
+            this.emitter.emit('trial_stop', ...args);
+        });
+        worker.trialKeeper.onReceiveCommand('request_parameter', (trialId, _command) => {
+            this.emitter.emit('request_parameter', trialId);
+        });
+        worker.trialKeeper.onReceiveCommand('metric', (trialId, command) => {
+            this.emitter.emit('metric', trialId, command['metric']);
+        });
+
+        await worker.start();
+        return worker;
     }
 
     public async stop(): Promise<void> {
-        await this.trialKeeper.shutdown();
-        this.log.info('All trials stopped');
+        await Promise.all(this.workers.map(worker => worker.stop()));
+        this.log.info('All workers stopped');
     }
 
-    /**
-     *  Note:
-     *  The directory is not copied, so changes in code directory will affect new trials.
-     *  This is different from all other training services.
-     **/
-    public async uploadDirectory(directoryName: string, path: string): Promise<void> {
-        this.log.info(`Register directory ${directoryName} = ${path}`);
-        await this.trialKeeper.registerDirectory(directoryName, path);
+    public async uploadDirectory(name: string, path: string): Promise<void> {
+        this.log.info(`Upload directory ${name} = ${path}`);
+        await Promise.all(this.workers.map(worker => worker.uploadDirectory(name, path)));
     }
 
-    public async createTrial(_envId: string, trialCommand: string, directoryName: string, sequenceId?: number):
+    public async createTrial(envId: string, trialCommand: string, directoryName: string, sequenceId?: number):
             Promise<string | null> {
 
+        const worker = this.workersByEnv.get(envId)!;
         const trialId = uuid();
 
         let gpuNumber = this.config.trialGpuNumber;
@@ -93,9 +178,10 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
             },
         };
 
-        const success = await this.trialKeeper.createTrial(opts);
+        const success = await worker.trialKeeper.createTrial(opts);
         if (success) {
-            this.log.info('Created trial', trialId);
+            this.log.info(`Created trial ${trialId} on worker ${worker.channelId}`);
+            this.workersByTrial.set(trialId, worker);
             return trialId;
         } else {
             this.log.warning('Failed to create trial');
@@ -105,33 +191,31 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
 
     public async stopTrial(trialId: string): Promise<void> {
         this.log.info('Stop trial', trialId);
-        await this.trialKeeper.stopTrial(trialId);
+        const worker = this.workersByTrial.get(trialId)!;
+        await worker.trialKeeper.stopTrial(trialId);
     }
 
     public async sendParameter(trialId: string, parameter: Parameter): Promise<void> {
         this.log.info('Trial parameter:', trialId, parameter);
+        const worker = this.workersByTrial.get(trialId)!;
         const command = { type: 'parameter', parameter };
-        await this.trialKeeper.sendCommand(trialId, command);
+        await worker.trialKeeper.sendCommand(trialId, command);
     }
 
     public onTrialStart(callback: (trialId: string, timestamp: number) => Promise<void>): void {
-        this.trialKeeper.onTrialStart(callback);
+        this.emitter.on('trial_start', callback);
     }
 
     public onTrialEnd(callback: (trialId: string, timestamp: number, exitCode: number | null) => Promise<void>): void {
-        this.trialKeeper.onTrialStop(callback);
+        this.emitter.on('trial_end', callback);
     }
 
     public onRequestParameter(callback: (trialId: string) => Promise<void>): void {
-        this.trialKeeper.onReceiveCommand('request_parameter', (trialId, _command) => {
-            callback(trialId);
-        });
+        this.emitter.on('request_parameter', callback);
     }
 
     public onMetric(callback: (trialId: string, metric: Metric) => Promise<void>): void {
-        this.trialKeeper.onReceiveCommand('metric', (trialId, command) => {
-            callback(trialId, (command as any)['metric']);
-        });
+        this.emitter.on('metric', callback);
     }
 
     public onEnvironmentUpdate(_callback: (environments: EnvironmentInfo[]) => Promise<void>): void {
