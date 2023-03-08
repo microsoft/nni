@@ -185,14 +185,15 @@ def default_config_schema(mode: Literal['pruning', 'quantization', 'distillation
     assert mode in ['pruning', 'quantization', 'distillation']
     if mode == 'pruning':
         setting_schema = {
-            Or('sparse_ratio', 'sparse_threshold', only_one=True): float,
+            Optional(Or('sparse_ratio', 'sparse_threshold', only_one=True)): float,
             Optional('max_sparse_ratio'): lambda x: 0 < x <= 1,
             Optional('min_sparse_ratio'): lambda x: 0 <= x < 1,
             Optional('global_group_id'): Or(int, str),
             Optional('dependency_group_id'): Or(int, str),
             Optional('internal_metric_block'): int,
             Optional('granularity'): Or('default', 'in_channel', 'out_channel', 'per_channel', list),
-            Optional('apply_method'): Or('bypass', 'mul', 'add')
+            Optional('apply_method'): Or('bypass', 'mul', 'add'),
+            Optional('align'): {'module_name': Or(str, None), 'target_name': str, 'dims': list}
         }
     elif mode == 'quantization':
         setting_schema = {
@@ -203,6 +204,8 @@ def default_config_schema(mode: Literal['pruning', 'quantization', 'distillation
         }
     else:
         setting_schema = {
+            Optional('lambda'): Or(int, float),
+            Optional('link'): Or(str, [str], (str,)),
             Optional('apply_method'): Or('mse', 'kl')
         }
 
@@ -212,7 +215,7 @@ def default_config_schema(mode: Literal['pruning', 'quantization', 'distillation
         Optional('exclude_op_types'): [str],
         Optional('exclude_op_names_re'): [str],
         Optional('target_names'): [str],
-        Optional('target_settings'): setting_schema,
+        Optional('target_settings'): {str: setting_schema},
         **setting_schema
     })
 

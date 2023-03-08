@@ -3,7 +3,7 @@
 
 import logging
 
-from typing import TypedDict, Any, Type, TypeVar, Optional, get_origin
+from typing import TypedDict, Any, Type, TypeVar, get_origin
 from typing_extensions import Literal, TypeGuard
 
 _logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class Trial(TypedDict):
     sequence: int
     experiment: str
     command: str
-    parameter: Optional[str]   # Serialized JSON string.
+    parameter: str   # Serialized JSON string. If empty, the trial will receive no parameter.
     # time_limit: float
 
 # Command types are as few as possible.
