@@ -19,7 +19,7 @@ export async function createTarball(tarName: string, sourcePath: string): Promis
     let ignorePatterns;
     try {
         ignorePatterns = await fs.readFile(path.join(sourcePath, '.nniignore'), { encoding: 'utf8' });
-    } catch { }
+    } catch { /* make lint happy */ }
     const ig = ignorePatterns ? ignore().add(ignorePatterns) : undefined;
 
     let countNum = 0;

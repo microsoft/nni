@@ -65,9 +65,7 @@ export class Logger {
     }
 
     public error(...args: any[]): void {
-        console.log('## error:', util.inspect(args));
         this.log(levelNameToValue.error, 'ERROR', args);
-        console.log('## log done');
     }
 
     public critical(...args: any[]): void {

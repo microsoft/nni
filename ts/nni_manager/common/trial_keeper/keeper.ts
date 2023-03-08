@@ -175,10 +175,6 @@ export class TrialKeeper {
         this.emitter.on('trial-stop', callback);
     }
 
-    public onReceiveAnyCommand(callback: (trialId: string, command: Command) => void): void {
-        this.emitter.on('command', callback);
-    }
-
     public onReceiveCommand(callback: (trialId: string, command: Command) => void): void;
     public onReceiveCommand(commandType: string, callback: (trialId: string, command: Command) => void): void;
 

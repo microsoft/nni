@@ -90,4 +90,6 @@ async function parseArgs(): Promise<MergedArgs> {
     };
 }
 
-main();
+if (!process.argv[1].endsWith('mocha')) {
+    main();
+}
