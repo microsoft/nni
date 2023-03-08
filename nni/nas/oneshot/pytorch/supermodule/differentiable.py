@@ -13,15 +13,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from nni.common.hpo_utils import ParameterSpec
-from nni.nas.nn.pytorch import LayerChoice, InputChoice, ChoiceOf, Repeat
-from nni.nas.nn.pytorch.choice import ValueChoiceX
+from nni.mutable import MutableExpression, Mutable, Categorical
+from nni.nas.nn.pytorch import LayerChoice, InputChoice, Repeat
 from nni.nas.nn.pytorch.cell import preprocess_cell_inputs
 
 from .base import BaseSuperNetModule
 from .operation import MixedOperation, MixedOperationSamplingPolicy
 from .sampling import PathSamplingCell
-from ._valuechoice_utils import traverse_all_options, dedup_inner_choices, weighted_sum
+from ._expression_utils import traverse_all_options, weighted_sum
 
 _logger = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ class GumbelSoftmax(nn.Softmax):
         return F.gumbel_softmax(inputs, tau=self.tau, hard=self.hard, dim=self.dim)
 
 
-class DifferentiableMixedLayer(BaseSuperNetModule):
+class DifferentiableMixedLayer(LayerChoice, BaseSuperNetModule):
     """
     Mixed layer, in which fprop is decided by a weighted sum of several layers.
     Proposed in `DARTS: Differentiable Architecture Search <https://arxiv.org/abs/1806.09055>`__.
@@ -66,31 +65,18 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
         Customizable softmax function. Usually ``nn.Softmax(-1)``.
     label : str
         Name of the choice.
-
-    Attributes
-    ----------
-    op_names : str
-        Operator names.
-    label : str
-        Name of the choice.
     """
 
     _arch_parameter_names: list[str] = ['_arch_alpha']
 
     def __init__(self,
-                 paths: list[tuple[str, nn.Module]],
+                 paths: list[nn.Module] | dict[str, nn.Module],
                  alpha: torch.Tensor,
                  softmax: nn.Module,
                  label: str):
-        super().__init__()
-        self.op_names = []
+        super().__init__(paths, label=label)
         if len(alpha) != len(paths):
             raise ValueError(f'The size of alpha ({len(alpha)}) must match number of candidates ({len(paths)}).')
-        for name, module in paths:
-            self.add_module(name, module)
-            self.op_names.append(name)
-        assert self.op_names, 'There has to be at least one op to choose from.'
-        self.label = label
         self._arch_alpha = alpha
         self._softmax = softmax
 
@@ -102,62 +88,41 @@ class DifferentiableMixedLayer(BaseSuperNetModule):
         """Choose the operator with the maximum logit."""
         if self.label in memo:
             return {}  # nothing new to export
-        return {self.label: self.op_names[int(torch.argmax(self._arch_alpha).item())]}
+        return {self.label: self.names[int(torch.argmax(self._arch_alpha).item())]}
 
     def export_probs(self, memo):
-        if any(k.startswith(self.label + '/') for k in memo):
-            return {}  # nothing new
+        if self.label in memo:
+            return {}
         weights = self._softmax(self._arch_alpha).cpu().tolist()
-        ret = {f'{self.label}/{name}': value for name, value in zip(self.op_names, weights)}
-        return ret
-
-    def search_space_spec(self):
-        return {self.label: ParameterSpec(self.label, 'choice', self.op_names, (self.label, ),
-                                          True, size=len(self.op_names))}
+        return {self.label: dict(zip(self.names, weights))}
 
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
-        if isinstance(module, LayerChoice):
-            size = len(module)
-            if module.label in memo:
-                alpha = memo[module.label]
-                if len(alpha) != size:
-                    raise ValueError(f'Architecture parameter size of same label {module.label} conflict: {len(alpha)} vs. {size}')
-            else:
-                alpha = nn.Parameter(torch.randn(size) * 1E-3)  # the numbers in the parameter can be reinitialized later
-                memo[module.label] = alpha
-
+        if type(module) is LayerChoice:  # must be exactly LayerChoice
+            if module.label not in memo:
+                raise KeyError(f'LayerChoice {module.label} not found in memo.')
+            alpha = memo[module.label]
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
-            return cls(list(module.named_children()), alpha, softmax, module.label)
+            return cls(module.candidates, alpha, softmax, module.label)
 
-    def reduction(self, items: list[Any], weights: list[float]) -> Any:
+    def _reduction(self, items: list[Any], weights: list[float]) -> Any:
         """Override this for customized reduction."""
         # Use weighted_sum to handle complex cases where sequential output is not a single tensor
         return weighted_sum(items, weights)
 
     def forward(self, *args, **kwargs):
         """The forward of mixed layer accepts same arguments as its sub-layer."""
-        all_op_results = [getattr(self, op)(*args, **kwargs) for op in self.op_names]
-        return self.reduction(all_op_results, self._softmax(self._arch_alpha))
+        all_op_results = [self[op](*args, **kwargs) for op in self.names]
+        return self._reduction(all_op_results, self._softmax(self._arch_alpha))
 
-    def parameters(self, *args, **kwargs):
-        """Parameters excluding architecture parameters."""
-        for _, p in self.named_parameters(*args, **kwargs):
-            yield p
-
-    def named_parameters(self, *args, **kwargs):
-        """Named parameters excluding architecture parameters."""
-        arch = kwargs.pop('arch', False)
-        for name, p in super().named_parameters(*args, **kwargs):
+    def arch_parameters(self):
+        """Iterate over architecture parameters. Not recursive."""
+        for name, p in self.named_parameters():
             if any(name == par_name for par_name in self._arch_parameter_names):
-                if arch:
-                    yield name, p
-            else:
-                if not arch:
-                    yield name, p
+                yield p
 
 
-class DifferentiableMixedInput(BaseSuperNetModule):
+class DifferentiableMixedInput(InputChoice, BaseSuperNetModule):
     """
     Mixed input. Forward returns a weighted sum of candidates.
     Implementation is very similar to :class:`DifferentiableMixedLayer`.
@@ -174,11 +139,6 @@ class DifferentiableMixedInput(BaseSuperNetModule):
         Customizable softmax function. Usually ``nn.Softmax(-1)``.
     label : str
         Name of the choice.
-
-    Attributes
-    ----------
-    label : str
-        Name of the choice.
     """
 
     _arch_parameter_names: list[str] = ['_arch_alpha']
@@ -189,18 +149,14 @@ class DifferentiableMixedInput(BaseSuperNetModule):
                  alpha: torch.Tensor,
                  softmax: nn.Module,
                  label: str):
-        super().__init__()
-        self.n_candidates = n_candidates
-        if len(alpha) != n_candidates:
-            raise ValueError(f'The size of alpha ({len(alpha)}) must match number of candidates ({n_candidates}).')
         if n_chosen is None:
             warnings.warn('Differentiable architecture search does not support choosing multiple inputs. Assuming one.',
                           RuntimeWarning)
-            self.n_chosen = 1
-        self.n_chosen = n_chosen
-        self.label = label
+            n_chosen = 1
+        super().__init__(n_candidates, n_chosen=n_chosen, label=label)
+        if len(alpha) != n_candidates:
+            raise ValueError(f'The size of alpha ({len(alpha)}) must match number of candidates ({n_candidates}).')
         self._softmax = softmax
-
         self._arch_alpha = alpha
 
     def resample(self, memo):
@@ -212,68 +168,44 @@ class DifferentiableMixedInput(BaseSuperNetModule):
         if self.label in memo:
             return {}  # nothing new to export
         chosen = sorted(torch.argsort(-self._arch_alpha).cpu().numpy().tolist()[:self.n_chosen])
-        if len(chosen) == 1:
-            chosen = chosen[0]
         return {self.label: chosen}
 
     def export_probs(self, memo):
-        if any(k.startswith(self.label + '/') for k in memo):
-            return {}  # nothing new
+        if self.label in memo:
+            return {}
         weights = self._softmax(self._arch_alpha).cpu().tolist()
-        ret = {f'{self.label}/{index}': value for index, value in enumerate(weights)}
-        return ret
-
-    def search_space_spec(self):
-        return {
-            self.label: ParameterSpec(self.label, 'choice', list(range(self.n_candidates)),
-                                      (self.label, ), True, size=self.n_candidates, chosen_size=self.n_chosen)
-        }
+        return {self.label: dict(enumerate(weights))}
 
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
-        if isinstance(module, InputChoice):
+        if type(module) == InputChoice:  # must be exactly InputChoice
+            module = cast(InputChoice, module)
             if module.reduction not in ['sum', 'mean']:
                 raise ValueError('Only input choice of sum/mean reduction is supported.')
-            size = module.n_candidates
-            if module.label in memo:
-                alpha = memo[module.label]
-                if len(alpha) != size:
-                    raise ValueError(f'Architecture parameter size of same label {module.label} conflict: {len(alpha)} vs. {size}')
-            else:
-                alpha = nn.Parameter(torch.randn(size) * 1E-3)  # the numbers in the parameter can be reinitialized later
-                memo[module.label] = alpha
-
+            if module.label not in memo:
+                raise KeyError(f'InputChoice {module.label} not found in memo.')
+            alpha = memo[module.label]
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
             return cls(module.n_candidates, module.n_chosen, alpha, softmax, module.label)
 
-    def reduction(self, items: list[Any], weights: list[float]) -> Any:
+    def _reduction(self, items: list[Any], weights: list[float]) -> Any:
         """Override this for customized reduction."""
         # Use weighted_sum to handle complex cases where sequential output is not a single tensor
         return weighted_sum(items, weights)
 
     def forward(self, inputs):
         """Forward takes a list of input candidates."""
-        return self.reduction(inputs, self._softmax(self._arch_alpha))
+        return self._reduction(inputs, self._softmax(self._arch_alpha))
 
-    def parameters(self, *args, **kwargs):
-        """Parameters excluding architecture parameters."""
-        for _, p in self.named_parameters(*args, **kwargs):
-            yield p
-
-    def named_parameters(self, *args, **kwargs):
-        """Named parameters excluding architecture parameters."""
-        arch = kwargs.pop('arch', False)
-        for name, p in super().named_parameters(*args, **kwargs):
+    def arch_parameters(self):
+        """Iterate over architecture parameters. Not recursive."""
+        for name, p in self.named_parameters():
             if any(name == par_name for par_name in self._arch_parameter_names):
-                if arch:
-                    yield name, p
-            else:
-                if not arch:
-                    yield name, p
+                yield p
 
 
 class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
-    """Implementes the differentiable sampling in mixed operation.
+    """Implements the differentiable sampling in mixed operation.
 
     One mixed operation can have multiple value choices in its arguments.
     Thus the ``_arch_alpha`` here is a parameter dict, and ``named_parameters``
@@ -293,36 +225,21 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
     def __init__(self, operation: MixedOperation, memo: dict[str, Any], mutate_kwargs: dict[str, Any]) -> None:
         # Sampling arguments. This should have the same keys with `operation.mutable_arguments`
         operation._arch_alpha = nn.ParameterDict()
-        for name, spec in operation.search_space_spec().items():
-            if name in memo:
-                alpha = memo[name]
-                if len(alpha) != spec.size:
-                    raise ValueError(f'Architecture parameter size of same label {name} conflict: {len(alpha)} vs. {spec.size}')
-            else:
-                alpha = nn.Parameter(torch.randn(spec.size) * 1E-3)
-                memo[name] = alpha
-            operation._arch_alpha[name] = alpha
+        for name in operation.simplify():
+            if name not in memo:
+                raise KeyError(f'Argument {name} not found in memo.')
+            operation._arch_alpha[str(name)] = memo[name]
 
-        operation.parameters = functools.partial(self.parameters, module=operation)                # bind self
-        operation.named_parameters = functools.partial(self.named_parameters, module=operation)
+        operation.arch_parameters = functools.partial(self.arch_parameters, module=operation)
 
         operation._softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
 
     @staticmethod
-    def parameters(module, *args, **kwargs):
-        for _, p in module.named_parameters(*args, **kwargs):
-            yield p
-
-    @staticmethod
-    def named_parameters(module, *args, **kwargs):
-        arch = kwargs.pop('arch', False)
-        for name, p in super(module.__class__, module).named_parameters(*args, **kwargs):  # pylint: disable=bad-super-call
+    def arch_parameters(module):
+        """Iterate over architecture parameters. Not recursive."""
+        for name, p in module.named_parameters():
             if any(name.startswith(par_name) for par_name in MixedOpDifferentiablePolicy._arch_parameter_names):
-                if arch:
-                    yield name, p
-            else:
-                if not arch:
-                    yield name, p
+                yield p
 
     def resample(self, operation: MixedOperation, memo: dict[str, Any]) -> dict[str, Any]:
         """Differentiable. Do nothing in resample."""
@@ -331,21 +248,21 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
     def export(self, operation: MixedOperation, memo: dict[str, Any]) -> dict[str, Any]:
         """Export is argmax for each leaf value choice."""
         result = {}
-        for name, spec in operation.search_space_spec().items():
+        for name, spec in operation.simplify().items():
             if name in memo:
                 continue
             chosen_index = int(torch.argmax(cast(dict, operation._arch_alpha)[name]).item())
-            result[name] = spec.values[chosen_index]
+            result[name] = cast(Categorical, spec).values[chosen_index]
         return result
 
     def export_probs(self, operation: MixedOperation, memo: dict[str, Any]):
         """Export the weight for every leaf value choice."""
         ret = {}
-        for name, spec in operation.search_space_spec().items():
-            if any(k.startswith(name + '/') for k in memo):
+        for name, spec in operation.simplify().items():
+            if name in memo:
                 continue
             weights = operation._softmax(operation._arch_alpha[name]).cpu().tolist()  # type: ignore
-            ret.update({f'{name}/{value}': weight for value, weight in zip(spec.values, weights)})
+            ret.update({name: dict(zip(cast(Categorical, spec).values, weights))})
         return ret
 
     def forward_argument(self, operation: MixedOperation, name: str) -> dict[Any, float] | Any:
@@ -357,9 +274,9 @@ class MixedOpDifferentiablePolicy(MixedOperationSamplingPolicy):
         return operation.init_arguments[name]
 
 
-class DifferentiableMixedRepeat(BaseSuperNetModule):
+class DifferentiableMixedRepeat(Repeat, BaseSuperNetModule):
     """
-    Implementaion of Repeat in a differentiable supernet.
+    Implementation of Repeat in a differentiable supernet.
     Result is a weighted sum of possible prefixes, sliced by possible depths.
 
     If the output is not a single tensor, it will be summed at every independant dimension.
@@ -368,27 +285,17 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
 
     _arch_parameter_names: list[str] = ['_arch_alpha']
 
+    depth_choice: MutableExpression[int]
+
     def __init__(self,
                  blocks: list[nn.Module],
-                 depth: ChoiceOf[int],
+                 depth: MutableExpression[int],
                  softmax: nn.Module,
-                 memo: dict[str, Any]):
-        super().__init__()
-        self.blocks = blocks
-        self.depth = depth
+                 alphas: dict[str, Any]):
+        assert isinstance(depth, Mutable)
+        super().__init__(blocks, depth)
         self._softmax = softmax
-        self._space_spec: dict[str, ParameterSpec] = dedup_inner_choices([depth])
-        self._arch_alpha = nn.ParameterDict()
-
-        for name, spec in self._space_spec.items():
-            if name in memo:
-                alpha = memo[name]
-                if len(alpha) != spec.size:
-                    raise ValueError(f'Architecture parameter size of same label {name} conflict: {len(alpha)} vs. {spec.size}')
-            else:
-                alpha = nn.Parameter(torch.randn(spec.size) * 1E-3)
-                memo[name] = alpha
-            self._arch_alpha[name] = alpha
+        self._arch_alpha = nn.ParameterDict(alphas)
 
     def resample(self, memo):
         """Do nothing."""
@@ -397,48 +304,43 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
     def export(self, memo):
         """Choose argmax for each leaf value choice."""
         result = {}
-        for name, spec in self._space_spec.items():
+        for name, spec in self.depth_choice.simplify().items():
             if name in memo:
                 continue
             chosen_index = int(torch.argmax(self._arch_alpha[name]).item())
-            result[name] = spec.values[chosen_index]
+            result[name] = cast(Categorical, spec).values[chosen_index]
         return result
 
     def export_probs(self, memo):
         """Export the weight for every leaf value choice."""
         ret = {}
-        for name, spec in self.search_space_spec().items():
-            if any(k.startswith(name + '/') for k in memo):
+        for name, spec in self.depth_choice.simplify().items():
+            if name in memo:
                 continue
             weights = self._softmax(self._arch_alpha[name]).cpu().tolist()
-            ret.update({f'{name}/{value}': weight for value, weight in zip(spec.values, weights)})
+            ret.update({name: dict(zip(cast(Categorical, spec).values, weights))})
         return ret
-
-    def search_space_spec(self):
-        return self._space_spec
 
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
-        if isinstance(module, Repeat) and isinstance(module.depth_choice, ValueChoiceX):
+        if type(module) == Repeat and isinstance(module.depth_choice, Mutable):  # Repeat and depth is mutable
             # Only interesting when depth is mutable
+            module = cast(Repeat, module)
+            alphas = {}
+            for name in cast(Mutable, module.depth_choice).simplify():
+                if name not in memo:
+                    raise KeyError(f'Mutable depth "{name}" not found in memo')
+                alphas[name] = memo[name]
             softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
-            return cls(cast(List[nn.Module], module.blocks), module.depth_choice, softmax, memo)
+            return cls(list(module.blocks), cast(MutableExpression[int], module.depth_choice), softmax, alphas)
 
-    def parameters(self, *args, **kwargs):
-        for _, p in self.named_parameters(*args, **kwargs):
-            yield p
+    def arch_parameters(self):
+        """Iterate over architecture parameters. Not recursive."""
+        for name, p in self.named_parameters():
+            if any(name.startswith(par_name) for par_name in self._arch_parameter_names):
+                yield p
 
-    def named_parameters(self, *args, **kwargs):
-        arch = kwargs.pop('arch', False)
-        for name, p in super().named_parameters(*args, **kwargs):
-            if any(name.startswith(par_name) for par_name in MixedOpDifferentiablePolicy._arch_parameter_names):
-                if arch:
-                    yield name, p
-            else:
-                if not arch:
-                    yield name, p
-
-    def reduction(self, items: list[Any], weights: list[float], depths: list[int]) -> Any:
+    def _reduction(self, items: list[Any], weights: list[float], depths: list[int]) -> Any:
         """Override this for customized reduction."""
         # Use weighted_sum to handle complex cases where sequential output is not a single tensor
         return weighted_sum(items, weights)
@@ -447,7 +349,7 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
         weights: dict[str, torch.Tensor] = {
             label: self._softmax(alpha) for label, alpha in self._arch_alpha.items()
         }
-        depth_weights = dict(cast(List[Tuple[int, float]], traverse_all_options(self.depth, weights=weights)))
+        depth_weights = dict(cast(List[Tuple[int, float]], traverse_all_options(self.depth_choice, weights=weights)))
 
         res: list[torch.Tensor] = []
         weight_list: list[float] = []
@@ -459,7 +361,7 @@ class DifferentiableMixedRepeat(BaseSuperNetModule):
                 res.append(x)
                 depths.append(i)
 
-        return self.reduction(res, weight_list, depths)
+        return self._reduction(res, weight_list, depths)
 
 
 class DifferentiableMixedCell(PathSamplingCell):
@@ -472,6 +374,8 @@ class DifferentiableMixedCell(PathSamplingCell):
 
     # TODO: It inherits :class:`PathSamplingCell` to reduce some duplicated code.
     # Possibly need another refactor here.
+
+    _arch_parameter_names: list[str] = ['_arch_alpha']
 
     def __init__(
         self, op_factory, num_nodes, num_ops_per_node,
@@ -486,10 +390,13 @@ class DifferentiableMixedCell(PathSamplingCell):
         self._arch_alpha = nn.ParameterDict()
         for i in range(self.num_predecessors, self.num_nodes + self.num_predecessors):
             for j in range(i):
-                edge_label = f'{label}/{i}_{j}'
+                edge_label = f'{self.label}/{i}_{j}'
+                # Some parameters still need to be created here inside.
+                # We should avoid conflict with "outside parameters".
+                memo_label = edge_label + '/in_cell'
                 op = cast(List[Dict[str, nn.Module]], self.ops[i - self.num_predecessors])[j]
-                if edge_label in memo:
-                    alpha = memo[edge_label]
+                if memo_label in memo:
+                    alpha = memo[memo_label]
                     if len(alpha) != len(op) + 1:
                         if len(alpha) != len(op):
                             raise ValueError(
@@ -504,7 +411,7 @@ class DifferentiableMixedCell(PathSamplingCell):
                 else:
                     # +1 to emulate the input choice.
                     alpha = nn.Parameter(torch.randn(len(op) + 1) * 1E-3)
-                    memo[edge_label] = alpha
+                    memo[memo_label] = alpha
                 self._arch_alpha[edge_label] = alpha
 
         self._softmax = mutate_kwargs.get('softmax', nn.Softmax(-1))
@@ -517,10 +424,10 @@ class DifferentiableMixedCell(PathSamplingCell):
         """When export probability, we follow the structure in arch alpha."""
         ret = {}
         for name, parameter in self._arch_alpha.items():
-            if any(k.startswith(name + '/') for k in memo):
+            if name in memo:
                 continue
             weights = self._softmax(parameter).cpu().tolist()
-            ret.update({f'{name}/{value}': weight for value, weight in zip(self.op_names, weights)})
+            ret.update({name: dict(zip(self.op_names, weights))})
         return ret
 
     def export(self, memo):
@@ -565,7 +472,7 @@ class DifferentiableMixedCell(PathSamplingCell):
                 # all_weights could be too short in case ``num_ops_per_node`` is too large.
                 _, j, op_name = all_weights[k % len(all_weights)]
                 exported[f'{self.label}/op_{i}_{k}'] = op_name
-                exported[f'{self.label}/input_{i}_{k}'] = j
+                exported[f'{self.label}/input_{i}_{k}'] = [j]
 
         return exported
 
@@ -579,10 +486,10 @@ class DifferentiableMixedCell(PathSamplingCell):
                 op_results = torch.stack([op(states[j]) for op in ops[j].values()])
                 alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)  # (-1, 1, 1, 1, 1, ...)
                 op_weights = self._softmax(self._arch_alpha[f'{self.label}/{i}_{j}'])
-                if len(op_weights) == len(op_results) + 1:
+                if op_weights.size(0) == op_results.size(0) + 1:
                     # concatenate with a zero operation, indicating this path is not chosen at all.
                     op_results = torch.cat((op_results, torch.zeros_like(op_results[:1])), 0)
-                edge_sum = torch.sum(op_results * self._softmax(self._arch_alpha[f'{self.label}/{i}_{j}']).view(*alpha_shape), 0)
+                edge_sum = torch.sum(op_results * op_weights.view(*alpha_shape), 0)
                 current_state.append(edge_sum)
 
             states.append(sum(current_state))  # type: ignore
@@ -591,16 +498,8 @@ class DifferentiableMixedCell(PathSamplingCell):
         this_cell = torch.cat(states[self.num_predecessors:], self.concat_dim)
         return self.postprocessor(this_cell, processed_inputs)
 
-    def parameters(self, *args, **kwargs):
-        for _, p in self.named_parameters(*args, **kwargs):
-            yield p
-
-    def named_parameters(self, *args, **kwargs):
-        arch = kwargs.pop('arch', False)
-        for name, p in super().named_parameters(*args, **kwargs):
-            if any(name.startswith(par_name) for par_name in MixedOpDifferentiablePolicy._arch_parameter_names):
-                if arch:
-                    yield name, p
-            else:
-                if not arch:
-                    yield name, p
+    def arch_parameters(self):
+        """Iterate over architecture parameters. Not recursive."""
+        for name, p in self.named_parameters():
+            if any(name.startswith(par_name) for par_name in self._arch_parameter_names):
+                yield p

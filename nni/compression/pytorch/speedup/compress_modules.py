@@ -730,7 +730,42 @@ def replace_embedding(embedding, masks):
     """
     # currently we donnot support replace the embedding layer
     # because we donnot have the corressponding pruner
-    return embedding
+    in_masks, output_mask, weight_mask = masks
+    assert isinstance(embedding, nn.Embedding)
+    if len(in_masks) != 1:
+        raise InputsNumberError()
+    if not isinstance(output_mask, torch.Tensor):
+        raise OutputTypeError(type(output_mask), torch.Tensor)
+
+    weight_mask = weight_mask['weight']
+
+    # never prune num_embeddings
+    n_remained_in = weight_mask.shape[0]
+    pruned_out, remained_out = convert_to_coarse_mask(output_mask, -1)
+    n_remained_out = weight_mask.size(1) - pruned_out.size(0)
+    # this is a workaround when the input always be a tensor contains same value, often happened in transformer
+    if n_remained_out == 0:
+        _logger.warning("Embedding out masks remained out size is 0, using weight masks remained out instead")
+        pruned_out, remained_out = convert_to_coarse_mask(weight_mask, -1)
+        n_remained_out = weight_mask.size(1) - pruned_out.size(0)
+    remained_out = remained_out.to(embedding.weight.device)
+    _logger.info("replace embedding with new in_features: %d, out_features: %d",
+                 n_remained_in, n_remained_out)
+
+    new_embedding = torch.nn.Embedding(n_remained_in, n_remained_out)
+    new_embedding.padding_idx = embedding.padding_idx
+    new_embedding.max_norm = embedding.max_norm
+    new_embedding.norm_type = embedding.norm_type
+    new_embedding.scale_grad_by_freq = embedding.scale_grad_by_freq
+    new_embedding.sparse = embedding.sparse
+    new_embedding.to(embedding.weight.device)
+
+    # Copy the remained weight from the original module
+    with torch.no_grad():
+        new_embedding.weight.data = torch.index_select(
+            embedding.weight.data, 1, remained_out)
+
+    return new_embedding
 
 
 def replace_pixelshuffle(pixelshuffle, masks):

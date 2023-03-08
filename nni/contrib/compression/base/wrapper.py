@@ -52,6 +52,7 @@ class ModuleWrapper(torch.nn.Module):
         self.module_forward = self.module.forward
         self.name = module_name
         self.config = config if config is not None else {}
+        assert all(k in ['pruning', 'quantization', 'distillation'] for k in self.config)
 
         # the arguments' name of self.module.forward
         self._input_args_spec = inspect.getfullargspec(self.module.forward)
