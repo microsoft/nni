@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pytest
+
 import torch
 
 from nni.contrib.compression.utils.evaluator import (

@@ -133,14 +133,10 @@ def _generate_align_sparsity(masks: _MASKS, target_spaces: _PRUNING_TARGET_SPACE
     align_masks = defaultdict(dict)
     for module_name, ts in target_spaces.items():
         for target_name, target_space in ts.items():
-<<<<<<< HEAD
             align_module_name = target_space.align['module_name']  # type: ignore
             align_module_name = module_name if align_module_name is None else align_module_name
             assert align_module_name in masks
             src_mask = masks[align_module_name][target_space.align['target_name']]  # type: ignore
-=======
-            src_mask = masks[module_name][target_space.align['target_name']]  # type: ignore
->>>>>>> 9a0f47c794cc2407d0d5d52e4c4703f20e2e5fd4
             align_dims: List[int] = target_space.align['dims']  # type: ignore
             reduce_dims = [d for d in range(len(src_mask.shape)) if d not in align_dims and d - len(src_mask.shape) not in align_dims]
             align_masks[module_name][target_name] = src_mask.sum(reduce_dims).bool().float()
