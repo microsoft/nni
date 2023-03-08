@@ -1,23 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import child_process from 'node:child_process';
-import { EventEmitter, once } from 'node:events';
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import { EventEmitter } from 'node:events';
 
-import { Deferred } from 'common/deferred';
-import { globals } from 'common/globals';
 import { Logger, getLogger } from 'common/log';
 import type { LocalConfig, TrainingServiceConfig } from 'common/experimentConfig';
 import type { EnvironmentInfo, Metric, Parameter, TrainingServiceV3 } from 'common/training_service_v3';
-import { TrialKeeper } from 'common/trial_keeper/keeper';
+import type { TrialKeeper } from 'common/trial_keeper/keeper';
 
 import { WsChannelServer } from 'common/command_channel/websocket/server';
-import { WsChannelClient } from 'common/command_channel/websocket/client';
 import { WsChannel } from 'common/command_channel/websocket/channel';
-
-import { RemoteTrialKeeper, registerForChannel } from 'common/trial_keeper/rpc';
 
 import { createTarball } from 'common/tarball';
 
