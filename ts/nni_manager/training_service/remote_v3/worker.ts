@@ -31,6 +31,10 @@ class Worker {
     ssh: Ssh;
     launchResult!: any;
 
+    public get envId(): string {
+        return `${this.trainingServiceId}-worker${this.channelId}`;
+    }
+
     constructor(trainingServiceId: string, channelId: string, channelUrl: string) {
         this.trainingServiceId = trainingServiceId;
         this.channelId = channelId;
@@ -45,19 +49,15 @@ class Worker {
         });
     }
 
-    get envId(): string {
-        return `${this.trainingServiceId}-worker${this.channelId}`;
-    }
-
     getEnv(): EnvironmentInfo {
         return { id: this.envId };
     }
 
-    setChannel(channel: WsChannel): void {
+    public setChannel(channel: WsChannel): void {
         this.trialKeeper.setChannel(channel);
     }
 
-    async start(): Promise<void> {
+    public async start(): Promise<void> {
         const config = {
             experimentId: globals.args.experimentId,
             logLevel: globals.args.logLevel,
