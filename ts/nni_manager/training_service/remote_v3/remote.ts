@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import child_process from 'node:child_process';
-import { EventEmitter } from 'node:events';
+import { EventEmitter, once } from 'node:events';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -19,14 +19,18 @@ import { WsChannel } from 'common/command_channel/websocket/channel';
 
 import { RemoteTrialKeeper, registerForChannel } from 'common/trial_keeper/rpc';
 
+import { Client, ClientChannel } from 'ssh2';
+
 class Worker {
     trainingServiceId: string;
     channelId: string;
+    channelUrl: string;
     trialKeeper: RemoteTrialKeeper;
 
-    constructor(trainingServiceId: string, channelId: string) {
+    constructor(trainingServiceId: string, channelId: string, channelUrl: string) {
         this.trainingServiceId = trainingServiceId;
         this.channelId = channelId;
+        this.channelUrl = channelUrl;
         this.trialKeeper = new RemoteTrialKeeper(this.envId, 'remote', false);  // false <- Boolean(config.trialGpuNumber)
     }
 
@@ -45,23 +49,59 @@ class Worker {
     async start(): Promise<void> {
         const config = {
             experimentId: globals.args.experimentId,
-            experimentsDirectory: '/home/lz/nni-experiments',
-            logLevel: 'trace',
-            pythonInterpreter: '/usr/bin/python',
+            logLevel: globals.args.logLevel,
             platform: 'remote',
             environmentId: this.envId,
-            managerCommandChannel: `ws://localhost:8080/platform/${this.trainingServiceId}/${this.channelId}`,
+            managerCommandChannel: this.channelUrl,
         };
-        const configPath = path.join(globals.paths.experimentRoot, 'environments', this.envId, 'trial_keeper_config.json');
-        await fs.mkdir(path.dirname(configPath), { recursive: true });
-        await fs.writeFile(configPath, JSON.stringify(config));
 
-        const proc = child_process.spawn('python', ['-m', 'nni.tools.nni_manager_scripts.launch_trial_keeper', configPath]);
-        // fixme: windows to linux path
+        const initDir = '/tmp/nni-debug2'
+        await fs.mkdir(initDir, { recursive: true });
+        await fs.writeFile(path.join(initDir, 'config.json'), JSON.stringify(config));
 
-        //const client = new WsChannelClient(`ws://localhost:8080/platform/${this.trainingServiceId}/${this.channelId}`);
-        //registerForChannel(client);
-        //await client.connect();
+        const cmd = `python -m nni.tools.nni_manager_scripts.launch_trial_keeper ${initDir}`;
+
+        const deferred = new Deferred<void>();
+
+        const key = await fs.readFile('/home/lz/.ssh/id_ed25519', { encoding: 'utf8' });
+
+        const ssh = new Client();
+        ssh.connect({
+            host: 'localhost',
+            //password: 'cffbk',
+            port: 22,
+            privateKey: key,
+            username: 'lz',
+        });
+        await once(ssh, 'ready');
+        ssh.exec(cmd, (error, stream) => {
+            if (error) {
+                deferred.reject(error);
+            } else {
+                stream.on('data', (data: any) => { console.log('SSH stdout:', String(data)); });
+                stream.stderr.on('data', (data: any) => { console.log('SSH stderr:', String(data)); });
+                stream.on('close', (code: any, signal: any) => {
+                    console.log('SSH result:', code, signal);
+                    deferred.resolve();
+                });
+            }
+        });
+
+        await deferred.promise;
+
+        //const proc = child_process.exec(cmd, (error, stdout, stderr) => {
+        //    if (error) {
+        //        deferred.reject(error);
+        //    } else {
+        //        deferred.resolve();
+        //    }
+        //    console.log('## launch trial keeper stdout:', stdout);
+        //    console.log('## launch trial keeper stderr:', stderr);
+        //});
+
+        await deferred.promise;
+        const output = await fs.readFile(path.join(initDir, 'launch.json'), { encoding: 'utf8' });
+        console.log('## launch trial keeper result:', output);
 
         await this.trialKeeper.start();
     }
@@ -122,7 +162,8 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
 
     private async launchWorker(): Promise<Worker> {
         this.lastWorkerIndex += 1;
-        const worker = new Worker(this.id, String(this.lastWorkerIndex));
+        const channelId = String(this.lastWorkerIndex);
+        const worker = new Worker(this.id, channelId, this.server.getChannelUrl(channelId));
 
         this.workers.push(worker);
         this.workersByChannel.set(worker.channelId, worker);
@@ -207,7 +248,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     }
 
     public onTrialEnd(callback: (trialId: string, timestamp: number, exitCode: number | null) => Promise<void>): void {
-        this.emitter.on('trial_end', callback);
+        this.emitter.on('trial_stop', callback);
     }
 
     public onRequestParameter(callback: (trialId: string) => Promise<void>): void {

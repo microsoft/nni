@@ -76,10 +76,15 @@ export class WsChannel extends EventEmitter {
         }
     }
 
-    public onCommand(commandType: string, callback: (command: Command) => void): void {
-        this.log.debug('## register command callback', commandType);
-        this.commandEmitter.on(commandType, callback);
-        console.log('## reg:', commandType, this.commandEmitter.listenerCount(commandType));
+    public onCommand(callback: (command: Command) => void): void;
+    public onCommand(commandType: string, callback: (command: Command) => void): void;
+
+    public onCommand(commandTypeOrCallback: any, callbackOrNone?: any): void {
+        if (callbackOrNone) {
+            this.commandEmitter.on(commandTypeOrCallback, callbackOrNone);
+        } else {
+            this.commandEmitter.on('__any', commandTypeOrCallback);
+        }
     }
 
     private configConnection(ws: WebSocket): WsConnection {
@@ -91,9 +96,6 @@ export class WsChannel extends EventEmitter {
             this.heartbeatInterval
         );
 
-        conn.on('command', command => {
-            this.emit('command', command);
-        });
         conn.on('bye', reason => {
             this.connection = null;
             this.epoch += 1;
@@ -237,11 +239,9 @@ class WsConnection extends EventEmitter {
             return;
         }
 
-        const hasEventListener = this.emit('command', command);
-        const hasCommandListener = this.commandEmitter.emit(command.type, command);
-        console.log('## use:', command.type, this.commandEmitter.listenerCount(command.type));
-        this.log.debug('## has listener:', hasEventListener, hasCommandListener);
-        if (!hasEventListener && !hasCommandListener) {
+        const hasAnyListener = this.commandEmitter.emit('__any', command);
+        const hasTypeListener = this.commandEmitter.emit(command.type, command);
+        if (!hasAnyListener && !hasTypeListener) {
             this.log.warning('No listener for command', s);
         }
     }

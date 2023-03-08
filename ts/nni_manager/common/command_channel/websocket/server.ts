@@ -87,10 +87,10 @@ export class WsChannelServer extends EventEmitter {
 
     public onReceive(callback: (channelId: string, command: Command) => void): void {
         // we configure each callback on each channel here,
-        // because this way it can detect and warning if a command is never listened
+        // because by this way it can detect and warning if a command is never listened
         this.receiveCallbacks.push(callback);
         for (const [channelId, channel] of this.channels) {
-            channel.on('command', command => { callback(channelId, command); });
+            channel.onCommand(command => { callback(channelId, command); });
         }
     }
 

@@ -91,16 +91,19 @@ export class RpcHelper {
         this.sendResult(objectId, undefined);
     }
 
-    private async invokeRemoteMethod(objectId: number, methodName: string,
-            parameters: any[], callbacks: any[]): Promise<any> {
+    private async invokeRemoteMethod(
+            objectId: number, methodName: string, parameters: any[], callbacks: any[]): Promise<any> {
+
         const callId = this.generateId();
         const callbackIds = this.generateCallbackIds(callbacks);
         this.channel.send({ type: 'rpc_method', callId, objectId, methodName, parameters, callbackIds });
         return await this.waitResponse(callId);
     }
 
-    private async invokeLocalMethod(callId: number, objectId: number, methodName: string,
+    private async invokeLocalMethod(
+            callId: number, objectId: number, methodName: string,
             parameters: any[], callbackIds: number[]): Promise<void> {
+
         const obj = this.localObjs.get(objectId);
         if (!obj) {
             this.sendRpcError(callId, `Non-exist object ${objectId}`);

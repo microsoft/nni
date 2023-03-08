@@ -42,7 +42,6 @@ import { createRestHandler } from 'rest_server/restHandler';
 const logger: Logger = getLogger('main');
 
 async function start(): Promise<void> {
-    console.error('### start ###');
     logger.info('Start NNI manager');
 
     const restServer = new RestServer(globals.args.port, globals.args.urlPrefix);
