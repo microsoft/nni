@@ -105,7 +105,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.batch_size = batch_size
 
         self.mask_updaters: List[MaskUpdater] = [
-            *(customized_mask_updaters if customized_replacers else []),
+            *(customized_mask_updaters if customized_mask_updaters else []),
             NoChangeMaskUpdater(),
             NoMaskUpdater(),
             LeafModuleMaskUpdater(),
@@ -277,7 +277,7 @@ class ModelSpeedup(torch.fx.Interpreter):
             for replacer in self.replacers:
                 replacer.replace_modules(self)
         for node in self.node_infos:
-            if node.op == 'call_module':
+            if node.op == 'call_module' and not self.node_infos[node].replaced:
                 module = self.fetch_attr(node.target)
                 module_type = module._get_name()
                 err_msg = f"Has not supported replacing module with type: {module_type}, "
@@ -323,7 +323,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         for node_info in self.node_infos.values():
             if node_info.module is None:
                 continue
-            masks = self.masks_file.get(node_info.node.target, {})
+            masks = self.masks.get(node_info.node.target, {})
 
             output_masks = {name: masks[name] for name in filter(lambda name: name.startswith('_output_'), masks.keys())}
             if output_masks:

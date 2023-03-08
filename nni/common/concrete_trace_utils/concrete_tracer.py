@@ -1242,7 +1242,7 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    check_args: Optional[Dict[str, Any]] = None,
                    autowrap_leaf_function = None,
                    autowrap_leaf_class = None,
-                   leaf_module = None,
+                   leaf_module: Tuple | None = None,
                    fake_middle_class = None,
                    dce = False) -> GraphModule:
     """

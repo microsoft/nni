@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import TYPE_CHECKING
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Tuple
 if TYPE_CHECKING:
     from .container import NodeInfo
     from .model_speedup import ModelSpeedup
@@ -347,13 +349,6 @@ no_change_act_module = (
 )
 
 
-try:
-    from torchvision.models.convnext import LayerNorm2d
-    no_change_act_module = no_change_act_module + (LayerNorm2d,)
-except:
-    pass
-
-
 class NoChangeMaskUpdater(DefaultMaskUpdater):
     """
     for some special op that masks will not change when execute
@@ -361,6 +356,13 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
     2. for (softmax, log_softmax) ops, the default process will get a wrong mask. actually we should just copy the mask from input to
         output.
     """
+    def __init__(self, customized_no_change_act_module: Tuple | None = None,
+                 customized_no_change_act_func: Tuple | None = None):
+        self.no_change_act_module = no_change_act_module if not customized_no_change_act_module \
+            else (no_change_act_module + customized_no_change_act_module)
+        self.no_change_act_func = no_change_act_func if not customized_no_change_act_func \
+            else (no_change_act_func + customized_no_change_act_func)
+
     def direct_activation(self, model_speedup: 'ModelSpeedup', node: Node):
         if len(node.args) != 0:
             input_node = node.args[0]
@@ -402,14 +404,14 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
 
     def detect_helper(self, model_speedup: 'ModelSpeedup', node: Node):
         if node.op == 'call_function':
-            if node.target in no_change_act_func:
+            if node.target in self.no_change_act_func:
                 return self.direct_activation, self.indirect_activation
             elif node.target == operator.getitem:
                 if isinstance(node.args[0], Node) and type(model_speedup.node_infos[node.args[0]].output_origin) in (tuple, list, dict):
                     return self.direct_getitem, self.indirect_getitem
         elif node.op == 'call_module':
             module: torch.nn.Module = model_speedup.fetch_attr(node.target)
-            if isinstance(module, no_change_act_module):
+            if isinstance(module, self.no_change_act_module):
                 return self.direct_activation, self.indirect_activation
         return None
 

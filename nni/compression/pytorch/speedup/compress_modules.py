@@ -45,7 +45,6 @@ replace_module = {
     'Dropout3d': lambda module, masks: no_replace(module, masks),
     'Upsample': lambda module, masks: no_replace(module, masks),
     'LayerNorm': lambda module, masks: replace_layernorm(module, masks),
-    'LayerNorm2d': lambda module, masks: replace_layernorm2d(module, masks),  # support for torchvision convnext
     'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks),
     'Embedding': lambda module, masks: replace_embedding(module, masks),
     'PixelShuffle': lambda module, masks: replace_pixelshuffle(module, masks),
@@ -712,36 +711,6 @@ def replace_layernorm(layernorm, masks):
 
     new_layernorm = nn.LayerNorm(tuple(new_normalized_shape), layernorm.eps, layernorm.elementwise_affine)
     _logger.info(f"replace LayerNorm with new normalized_shape: {tuple(new_normalized_shape)}")
-
-    if new_layernorm.elementwise_affine:
-        new_layernorm.to(layernorm.weight.device)
-        # NOTE: should we keep the weight & bias?
-        with torch.no_grad():
-            tmp_weight_data = layernorm.weight.data
-            tmp_bias_data = layernorm.bias.data
-            for i, remained in enumerate(remained_list):
-                tmp_weight_data = torch.index_select(tmp_weight_data, i, remained)
-                tmp_bias_data = torch.index_select(tmp_bias_data, i, remained)
-            new_layernorm.weight.data = tmp_weight_data
-            new_layernorm.bias.data = tmp_bias_data
-    return new_layernorm
-
-
-def replace_layernorm2d(layernorm, masks):
-    from torchvision.models.convnext import LayerNorm2d
-    in_masks, _, _ = masks
-    assert isinstance(layernorm, LayerNorm2d)
-    if len(in_masks) != 1:
-        raise InputsNumberError()
-    in_mask = in_masks[0]
-
-    old_normalized_shape = layernorm.normalized_shape
-    pruned, remained = convert_to_coarse_mask(in_mask, 1)
-    new_normalized_shape = [old_normalized_shape[0] - pruned.size()[0]]
-    remained_list = [remained]
-
-    new_layernorm = LayerNorm2d(tuple(new_normalized_shape), layernorm.eps, layernorm.elementwise_affine)
-    _logger.info(f"replace LayerNorm2d with new normalized_shape: {tuple(new_normalized_shape)}")
 
     if new_layernorm.elementwise_affine:
         new_layernorm.to(layernorm.weight.device)

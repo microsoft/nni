@@ -44,7 +44,6 @@ class DefaultReplacer(Replacer):
         self.replace_module_func_dict = replace_module_func_dict
 
     def replace_modules(self, speedup: 'ModelSpeedup'):
-        replaced_nodes = []
         for node, node_info in speedup.node_infos.items():
             if node.op == 'call_module':
                 # module = speedup.fetch_attr(node.target)
@@ -59,9 +58,6 @@ class DefaultReplacer(Replacer):
                     compressed_module = replace_function(module, (in_masks, node_info.output_masks, node_info.param_masks))
                     # speedup.store_attr(node.target, compressed_module)
                     set_nested_attr(speedup.bound_model, node.target, compressed_module)
-                    # prevent secondary replacement
-                    replaced_nodes.append(node)
+                    node_info.replaced = True
             else:
                 pass
-        for node in replaced_nodes:
-            speedup.node_infos.pop(node)
