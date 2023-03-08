@@ -56,7 +56,11 @@ def launch_trial_keeper(config: Config, output_dir: Path) -> Popen:
         return Popen(cmd, stdout=stdout, stderr=stderr, cwd=node_dir, preexec_fn=os.setpgrp)  # type: ignore
 
 def save_result(init_dir: Path, output_dir: Path, proc: Popen) -> None:
-    result = {'ouputDir': str(output_dir), 'pid': proc.pid}
+    result = {
+        'envDir': str(output_dir.parent),
+        'ouputDir': str(output_dir),
+        'pid': proc.pid
+    }
     result_json = json.dumps(result, ensure_ascii=False, indent=4)
     (init_dir / 'launch.json').write_text(result_json, 'utf_8')
     (output_dir / 'launch.json').write_text(result_json, 'utf_8')

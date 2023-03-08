@@ -26,6 +26,8 @@ import { EventEmitter } from 'events';
 import fs from 'fs/promises';
 import path from 'path';
 
+import tar from 'tar';
+
 import type { Command } from 'common/command_channel/interface';
 import { HttpChannelServer } from 'common/command_channel/http';
 import globals from 'common/globals';
@@ -98,6 +100,20 @@ export class TrialKeeper {
 
     public registerDirectory(name: string, path: string): void {
         this.dirs.set(name, path);
+    }
+
+    public async unpackDirectory(name: string, tarPath: string): Promise<void> {
+        const extractDir = path.join(
+            globals.paths.experimentRoot, 
+            'environments',
+            (globals.args as any).environmentId,
+            'upload',
+            name
+        );
+        await fs.mkdir(extractDir, { recursive: true });
+        await tar.extract({ cwd: extractDir, file: tarPath });
+
+        this.registerDirectory(name, extractDir);
     }
 
     // FIXME: the method name will be changed when we support distributed trials

@@ -34,15 +34,18 @@ async function main(): Promise<void> {
 
     const args = await parseArgs();
 
-    const logPath = path.join(
+    const envDir = path.join(
         args.experimentsDirectory,
         args.experimentId,
         'environments',
-        args.environmentId,
-        'trial_keeper.log'
+        args.environmentId
     )
-    await fs.mkdir(path.dirname(logPath), { recursive: true });
+    //await fs.mkdir(envDir, { recursive: true });
 
+    // SFTP requires the upload dir to exist
+    await fs.mkdir(path.join(envDir, 'upload'), { recursive: true });
+
+    const logPath = path.join(envDir, 'log.txt')
     initGlobalsCustom(args, logPath);
     logger.info('Start');
     logger.info('    args:', process.argv);

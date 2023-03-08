@@ -48,7 +48,11 @@ export class RemoteTrialKeeper {
     }
 
     public async registerDirectory(name: string, path: string): Promise<void> {
-        await this.rpc.call(this.id, 'registerDirectory', [ name, path ]);
+        await this.rpc.call(this.id, 'registerDirectory', [ name, path.replaceAll('\\', '/') ]);
+    }
+
+    public async unpackDirectory(name: string, tarPath: string): Promise<void> {
+        await this.rpc.call(this.id, 'unpackDirectory', [ name, tarPath.replaceAll('\\', '/') ]);
     }
 
     public async createTrial(options: TrialKeeper.TrialOptions): Promise<boolean> {

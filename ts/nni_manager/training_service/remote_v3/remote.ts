@@ -6,6 +6,8 @@ import { EventEmitter, once } from 'node:events';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import tar from 'tar';
+
 import { Deferred } from 'common/deferred';
 import { globals } from 'common/globals';
 import { Logger, getLogger } from 'common/log';
@@ -19,19 +21,22 @@ import { WsChannel } from 'common/command_channel/websocket/channel';
 
 import { RemoteTrialKeeper, registerForChannel } from 'common/trial_keeper/rpc';
 
-import { Client, ClientChannel } from 'ssh2';
+import { Client, ClientChannel, SFTPWrapper } from 'ssh2';
 
 class Worker {
     trainingServiceId: string;
     channelId: string;
     channelUrl: string;
     trialKeeper: RemoteTrialKeeper;
+    ssh: Client;
+    launchResult!: any;
 
     constructor(trainingServiceId: string, channelId: string, channelUrl: string) {
         this.trainingServiceId = trainingServiceId;
         this.channelId = channelId;
         this.channelUrl = channelUrl;
         this.trialKeeper = new RemoteTrialKeeper(this.envId, 'remote', false);  // false <- Boolean(config.trialGpuNumber)
+        this.ssh = new Client();
     }
 
     get envId(): string {
@@ -63,18 +68,17 @@ class Worker {
 
         const deferred = new Deferred<void>();
 
-        const key = await fs.readFile('/home/lz/.ssh/id_ed25519', { encoding: 'utf8' });
+        //const key = await fs.readFile('/home/lz/.ssh/id_ed25519', { encoding: 'utf8' });
 
-        const ssh = new Client();
-        ssh.connect({
+        this.ssh.connect({
             host: 'localhost',
-            //password: 'cffbk',
+            password: 'cffbk',
             port: 22,
-            privateKey: key,
+            //privateKey: key,
             username: 'lz',
         });
-        await once(ssh, 'ready');
-        ssh.exec(cmd, (error, stream) => {
+        await once(this.ssh, 'ready');
+        this.ssh.exec(cmd, (error, stream) => {
             if (error) {
                 deferred.reject(error);
             } else {
@@ -89,19 +93,9 @@ class Worker {
 
         await deferred.promise;
 
-        //const proc = child_process.exec(cmd, (error, stdout, stderr) => {
-        //    if (error) {
-        //        deferred.reject(error);
-        //    } else {
-        //        deferred.resolve();
-        //    }
-        //    console.log('## launch trial keeper stdout:', stdout);
-        //    console.log('## launch trial keeper stderr:', stderr);
-        //});
-
-        await deferred.promise;
         const output = await fs.readFile(path.join(initDir, 'launch.json'), { encoding: 'utf8' });
         console.log('## launch trial keeper result:', output);
+        this.launchResult = JSON.parse(output);
 
         await this.trialKeeper.start();
     }
@@ -110,9 +104,49 @@ class Worker {
         await this.trialKeeper.shutdown();
     }
 
-    async uploadDirectory(name: string, path: string): Promise<void> {
-        await this.trialKeeper.registerDirectory(name, path);
+    async upload(name: string, localTarPath: string): Promise<void> {
+        const deferred = new Deferred<SFTPWrapper>();
+        this.ssh.sftp((error, sftp) => {
+            if (error) {
+                deferred.reject(error);
+            } else {
+                deferred.resolve(sftp);
+            }
+        });
+        const sftp = await deferred.promise;
+
+        const p = path.join(this.launchResult.envDir, 'upload', `${name}.tgz`);
+        const remoteTarPath = p.replaceAll('\\', '/');
+
+        const deferred2 = new Deferred<void>();
+        console.log('## scp', localTarPath, remoteTarPath);
+        sftp.fastPut(localTarPath, remoteTarPath, (error: any) => {
+            if (error) {
+                deferred2.reject(error);
+            } else {
+                deferred2.resolve();
+            }
+        });
+        await deferred2.promise;
+
+        await this.trialKeeper.unpackDirectory(name, remoteTarPath);
     }
+}
+
+async function createTarball(tarName: string, dir: string): Promise<string> {
+    const tarDir = path.join(globals.paths.experimentRoot, 'upload');
+    await fs.mkdir(tarDir, { recursive: true });
+    const tarPath = path.join(tarDir, `${tarName}.tgz`);
+
+    const tarOpts = {
+        file: tarPath,
+        cwd: dir,
+        gzip: true,
+        portable: true,
+    } as const;
+    await tar.create(tarOpts, [ '.' ]);
+
+    return tarPath;
 }
 
 export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
@@ -193,7 +227,8 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
 
     public async uploadDirectory(name: string, path: string): Promise<void> {
         this.log.info(`Upload directory ${name} = ${path}`);
-        await Promise.all(this.workers.map(worker => worker.uploadDirectory(name, path)));
+        const tarPath = await createTarball(name, path);
+        await Promise.all(this.workers.map(worker => worker.upload(name, tarPath)));
     }
 
     public async createTrial(envId: string, trialCommand: string, directoryName: string, sequenceId?: number):
