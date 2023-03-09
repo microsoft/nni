@@ -43,8 +43,8 @@ export class WsChannelClient extends WsChannel {
         this.logger.debug('Connected');
     }
 
-    public disconnect(reason?: string): Promise<void> {
-        return this.close(reason ?? 'client disconnecting');
+    public async disconnect(reason?: string): Promise<void> {
+        this.close(reason ?? 'client disconnecting');
     }
 
     private async reconnect(): Promise<void> {

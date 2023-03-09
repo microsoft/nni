@@ -94,6 +94,10 @@ export class WsChannelServer extends EventEmitter {
         }
     }
 
+    public onConnection(callback: (channelId: string, channel: WsChannel) => void): void {
+        this.on('connection', callback);
+    }
+
     private handleConnection(ws: WebSocket, req: Request): void {
         const channelId = req.params['channel'];
         this.log.debug('Incoming connection', channelId);

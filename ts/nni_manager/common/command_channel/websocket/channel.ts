@@ -1,6 +1,34 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  WebSocket command channel.
+ *
+ *  This is the base class that used by both server and client.
+ *
+ *  For the server, channels can be got with `onConnection()` event listener.
+ *  For the client, a channel can be created with `new WsChannelClient()` subclass.
+ *  Do not use the constructor directly.
+ *
+ *  The channel is fault tolerant to some extend. It has three different types of closing related events:
+ *
+ *   1. "close": The channel is intentionally closed.
+ *
+ *      This is caused either by "close()" or "disconnect()" call, or by receiving a "_bye_" command from the peer.
+ *
+ *   2. "lost": The channel is temporarily unavailable and is trying to recover.
+ *      (The high level class should examine the peer's status out-of-band when receiving this event.)
+ *
+ *      When the underlying socket is dead, this event is emitted.
+ *      The client will try to reconnect in around 15s. If all attempts fail, an "error" event will be emitted.
+ *      The server will wait the client for 30s. If it does not reconnect, an "error" event will be emitted.
+ *      Successful recover will not emit command.
+ *
+ *   3. "error": The channel is dead and cannot recover.
+ *
+ *      A "close" event may or may not follow this event. Do not rely on that.
+ **/
+
 import { EventEmitter } from 'node:events';
 import util from 'node:util';
 
@@ -23,14 +51,16 @@ export declare interface WsChannel {
 }
 
 export class WsChannel extends EventEmitter {
-    private closed: Deferred<void> | null = null;
+    private closing: boolean = false;
     private commandEmitter: EventEmitter = new EventEmitter();
     private connection: WsConnection | null = null;
     private epoch: number = 0;
     private heartbeatInterval: number | null;
     private log: Logger;
-    private name: string;
 
+    public readonly name: string;
+
+    // internal, don't use
     constructor(name: string, ws?: WebSocket, heartbeatInterval?: number) {
         super()
         this.log = getLogger(`WsChannel.${name}`);
@@ -41,25 +71,26 @@ export class WsChannel extends EventEmitter {
         }
     }
 
-    public channelName(): string {
-        return this.name;
-    }
-
+    // internal, don't use
     public setConnection(ws: WebSocket): void {
         if (this.connection) {
+            this.log.debug('Abandon previous connection');
             this.epoch += 1;
         }
+        this.log.debug(`Epoch ${this.epoch} start`);
         this.connection = this.configConnection(ws);
     }
 
-    public close(reason: string): Promise<void> {
-        this.closed = new Deferred<void>();
+    public close(reason: string): void {
+        this.log.debug('Close channel:', reason);
         if (this.connection) {
             this.connection.close(reason);
-        } else {
-            this.closed.resolve();
+            this.endEpoch();
         }
-        return this.closed.promise;
+        if (!this.closing) {
+            this.closing = true;
+            this.emit('close', reason);
+        }
     }
 
     public send(command: Command): void {
@@ -67,19 +98,23 @@ export class WsChannel extends EventEmitter {
             this.connection.send(command);
         } else {
             // TODO: add a queue?
-            this.log.warning('Connection lost; drop command', command);
+            this.log.error('Connection lost. Dropped command', command);
         }
     }
 
+    /**
+     *  Async version of `send()` that (partially) ensures the command is successfully sent to peer.
+     **/
     public sendAsync(command: Command): Promise<void> {
         if (this.connection) {
             return this.connection.sendAsync(command);
         } else {
-            this.log.warning('Connection lost; drop command async', command);
-            return Promise.resolve();
+            this.log.error('Connection lost. Dropped command async', command);
+            return Promise.reject(new Error('Connection is lost and trying to recover, cannot send command now'));
         }
     }
 
+    // the first overload listens to all commands, while the second listens to one command type
     public onCommand(callback: (command: Command) => void): void;
     public onCommand(commandType: string, callback: (command: Command) => void): void;
 
@@ -101,17 +136,18 @@ export class WsChannel extends EventEmitter {
         );
 
         conn.on('bye', reason => {
-            this.connection = null;
-            this.epoch += 1;
-            if (!this.closed) {
-                this.closed = new Deferred<void>();
+            this.log.debug('Peer intentionally close:', reason);
+            this.endEpoch();
+            if (!this.closing) {
+                this.closing = true;
+                this.emit('close', reason);
             }
-            this.closed.resolve();
-            this.emit('close', reason);
         });
+
         conn.on('close', (code, reason) => {
             this.closeConnection(epoch, `Received closing handshake: ${code} ${reason}`);
         });
+
         conn.on('error', error => {
             this.closeConnection(epoch, `Error occurred: ${util.inspect(error)}`);
         });
@@ -120,19 +156,22 @@ export class WsChannel extends EventEmitter {
     }
 
     private closeConnection(epoch: number, reason: string): void {
-        if (this.epoch !== epoch) {
+        if (this.closing) {
+            this.log.debug('Connection cleaned up:', reason);
+            return;
+        }
+        if (this.epoch !== epoch) {  // the connection is already abandoned
             this.log.debug(`Previous connection closed ${epoch}: ${reason}`);
             return;
         }
 
-        if (this.closed) {
-            this.log.debug('Connection closed:', reason);
-            this.closed.resolve();
-        } else {
-            this.log.warning('Connection closed unexpectedly:', reason);
-            this.emit('lost');
-        }
+        this.log.warning('Connection closed unexpectedly:', reason);
+        this.emit('lost');
+        this.endEpoch();
+        // the reconnect logic is in client subclass
+    }
 
+    private endEpoch(): void {
         this.connection = null;
         this.epoch += 1;
     }
@@ -175,18 +214,19 @@ class WsConnection extends EventEmitter {
 
     public close(reason: string): void {
         if (this.closing) {
-            this.log.debug('Closing again:', reason);
-        } else {
-            this.log.debug('Closing:', reason);
-            this.closing = true;
-            if (this.heartbeatTimer) {
-                clearInterval(this.heartbeatTimer);
-                this.heartbeatTimer = null;
-            }
-            this.sendAsync({ type: '_bye_', reason }).finally(() => {
-                this.ws.close(1001, reason);
-            });
+            this.log.debug('Close again:', reason);
+            return;
         }
+
+        this.log.debug('Close:', reason);
+        this.closing = true;
+        if (this.heartbeatTimer) {
+            clearInterval(this.heartbeatTimer);
+            this.heartbeatTimer = null;
+        }
+        this.sendAsync({ type: '_bye_', reason }).finally(() => {
+            this.ws.close(1001, reason);
+        });
     }
 
     public send(command: Command): void {
@@ -259,15 +299,13 @@ class WsConnection extends EventEmitter {
             this.log.warning('Missing pong');
         }
         if (this.missingPongs > 3) {  // TODO: make it configurable?
-            this.sendAsync({ type: '_nop_' }).then(
-                () => {
-                    this.missingPongs = 0;
-                },
-                error => {
-                    this.log.warning('Failed sending command; drop connection');
-                    this.close(`peer lost responsive: ${util.inspect(error)}`);
-                }
-            );
+            // no response for ping, try real command
+            this.sendAsync({ type: '_nop_' }).then(() => {
+                this.missingPongs = 0;
+            }).catch(error => {
+                this.log.error('Failed sending command. Drop connection');
+                this.close(`peer lost responsive: ${util.inspect(error)}`);
+            });
         }
         this.missingPongs += 1;
         this.ws.ping();

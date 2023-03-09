@@ -7,20 +7,20 @@
  *  Suppose you want to run `new Foo(1, 2).on('event', localListener)` on a remote worker,
  *  use the following steps:
  *
- *    0. Create RPC helper on each side of the channel:
+ *   0. Create RPC helper on each side of the channel:
  *
  *          const rpcLocal = getRpcHelper(localChannel);  // at local side
  *          const rpcRemote = getRpcHelper(remoteChannel);  // at remote side
  *
- *    1. Register the class at remote:
+ *   1. Register the class at remote:
  *
  *          rpcRemote.registerClass('Foo', Foo);
  *
- *    2. Construct an object at local:
+ *   2. Construct an object at local:
  *
  *          const obj = await rpcLocal.construct('Foo', [ 1, 2 ]);
  *
- *    3. Call the method at local:
+ *   3. Call the method at local:
  *
  *          const result = await rpcLocal.call(obj, 'on', [ 'event' ], [ listener ]);
  *
@@ -63,6 +63,11 @@ type Class = { new(...args: any[]): any; };
 
 const rpcHelpers: Map<WsChannel, RpcHelper> = new Map();
 
+/**
+ *  Enable RPC on a channel.
+ *
+ *  The channel does not need to be connected for calling this function.
+ **/
 export function getRpcHelper(channel: WsChannel): RpcHelper {
     if (!rpcHelpers.has(channel)) {
         rpcHelpers.set(channel, new RpcHelper(channel));
@@ -75,13 +80,15 @@ export class RpcHelper {
     private lastId: number = 0;
     private localCtors: Map<string, Class> = new Map();
     private localObjs: Map<number, any> = new Map();
-    private localCbs: Map<number, Function> = new Map();
+    private localCbs: Map<number, Function> = new Map();  // eslint-disable-line
     private log: Logger;
     private responses: DefaultMap<number, Deferred<RpcResponseCommand>> = new DefaultMap(() => new Deferred());
 
-    // NOTE: don't use the constructor directly; use getRpcHelper()
+    /**
+     *  NOTE: Don't use this constructor directly. Use `getRpcHelper()`.
+     **/
     constructor(channel: WsChannel) {
-        this.log = getLogger(`RpcHelper.${channel.getName()}`);
+        this.log = getLogger(`RpcHelper.${channel.name}`);
         this.channel = channel;
         this.channel.onCommand('rpc_constructor', command => {
             this.invokeLocalConstructor(command.id, command.className, command.parameters);
@@ -97,15 +104,33 @@ export class RpcHelper {
         });
     }
 
+    /**
+     *  Register a class for RPC use.
+     *
+     *  This method must be called at remote side before calling `construct()` at local side.
+     *  To ensure this, the client can call `getRpcHelper().registerClass()` before calling `connect()`.
+     **/
     public registerClass(className: string, constructor: Class): void {
         this.log.debug('Register class', className);
         this.localCtors.set(className, constructor);
     }
 
+    /**
+     *  Construct a class object remotely.
+     *
+     *  Must be called after `registerClass()` at remote side, or an error will be raised.
+     **/
     public construct(className: string, parameters?: any[]): Promise<number> {
         return this.invokeRemoteConstructor(className, parameters ?? []);
     }
 
+    /**
+     *  Call a method on a remote object.
+     *
+     *  The `objectId` is the return value of `construct()`.
+     *
+     *  If the method returns a promise, `call()` will wait for it to resolve.
+     **/
     public call(objectId: number, methodName: string, parameters?: any[], callbacks?: any[]): Promise<any> {
         return this.invokeRemoteMethod(objectId, methodName, parameters ?? [], callbacks ?? []);
     }
@@ -214,6 +239,13 @@ export class RpcHelper {
     }
 
     private sendResult(id: number, result: any): void {
+        try {
+            JSON.stringify(result);
+        } catch {
+            this.sendRpcError(id, 'method returns non-JSON value ' + util.inspect(result));
+            return;
+        }
+
         this.channel.send({ type: 'rpc_response', id, result });
     }
 
