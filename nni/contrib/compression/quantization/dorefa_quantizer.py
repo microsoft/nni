@@ -11,6 +11,7 @@ from ..base.compressor import Quantizer
 from ..base.wrapper import ModuleWrapper
 from ..base.setting import INPUT_PREFIX, OUTPUT_PREFIX
 from ..utils.evaluator import Evaluator
+from ..base.target_space import TargetType
 
 
 class DoReFaQuantizer(Quantizer):
@@ -52,9 +53,8 @@ class DoReFaQuantizer(Quantizer):
     def register_dorefa_apply_method(self):
         for _, ts in self._target_spaces.items():
             for target_name, target_space in ts.items():
-                if 'weight' in target_name:
+                if target_space.type is TargetType.PARAMETER:
                     target_space.apply_method = 'dofera_clamp_round_weight'
-
                 elif INPUT_PREFIX in target_name:
                     target_space.apply_method = "dofera_clamp_round_input"
                 elif OUTPUT_PREFIX in target_name:
