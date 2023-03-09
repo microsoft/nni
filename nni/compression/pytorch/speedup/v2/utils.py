@@ -5,7 +5,7 @@ from copy import deepcopy
 from typing import Any, Dict, List, Tuple
 
 import torch
-from torch.fx.immutable_collections import immutable_dict
+from torch.fx.immutable_collections import immutable_dict, immutable_list
 from torch.utils._pytree import tree_map, tree_flatten, tree_unflatten, _register_pytree_node, Context
 
 
@@ -21,7 +21,14 @@ def _idict_flatten(d: Dict[Any, Any]) -> Tuple[List[Any], Context]:
 def _idict_unflatten(values: List[Any], context: Context) -> Dict[Any, Any]:
     return immutable_dict((key, value) for key, value in zip(context, values))
 
+def _ilist_flatten(d: Tuple[Any, ...]) -> Tuple[List[Any], Context]:
+    return list(d), None
+
+def _ilist_unflatten(values: List[Any], context: Context) -> Tuple[Any, ...]:
+    return immutable_list(values)
+
 _register_pytree_node(immutable_dict, _idict_flatten, _idict_unflatten)
+_register_pytree_node(immutable_list, _ilist_flatten, _ilist_unflatten)
 
 
 def randomize_tensor_inplace(tensor: torch.Tensor, start=None, end=None):
