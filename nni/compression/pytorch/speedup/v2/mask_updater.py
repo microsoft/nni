@@ -1,14 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import TYPE_CHECKING
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Tuple
 if TYPE_CHECKING:
     from .container import NodeInfo
     from .model_speedup import ModelSpeedup
 
 import operator
 import torch
-from torch import nn
 from torch.nn import functional as F
 from torch.fx.node import Node
 
@@ -190,7 +191,7 @@ class LeafModuleMaskUpdater(DefaultMaskUpdater):
         """
         if node.op == 'call_module':
             module: torch.nn.Module = model_speedup.fetch_attr(node.target)
-            param_masks = model_speedup.masks_file.get(node.target, {})
+            param_masks = model_speedup.masks.get(node.target, {})
             for k, v in module.named_parameters():
                 if k not in param_masks:
                     param_masks[k] = torch.ones_like(v)
@@ -223,8 +224,9 @@ class LeafModuleMaskUpdater(DefaultMaskUpdater):
         # update the sparsity of the paramters
         node_info: 'NodeInfo' = model_speedup.node_infos[node]
         for k, v in node_info.module.named_parameters():
-            grad_zero = v.grad.data == 0
-            node_info.param_masks[k][grad_zero] = 0
+            if isinstance(v, torch.Tensor) and model_speedup.tensor_propagate_check(v) and v.dtype in torch_float_dtype:
+                grad_zero = v.grad.data == 0
+                node_info.param_masks[k][grad_zero] = 0
 
 
 class NoMaskUpdater(DefaultMaskUpdater):
@@ -258,6 +260,96 @@ class NoMaskUpdater(DefaultMaskUpdater):
                 del model_speedup.node_infos[to_delete]._output_randomize
 
 
+# in all the following function, the first arg name is `input`, and don't have other tensor as input args.
+no_change_act_func = (
+    F.relu,
+    F.relu_,
+    F.hardtanh,
+    F.hardtanh_,
+    F.hardswish,
+    F.relu6,
+    F.elu,
+    F.elu_,
+    F.selu,
+    F.celu,
+    F.leaky_relu,
+    F.leaky_relu_,
+    # F.prelu,  \\this need more support
+    F.rrelu,
+    F.rrelu_,
+    # F.glu,  \\this need more support
+    F.gelu,
+    F.logsigmoid,
+    F.hardshrink,
+    F.tanhshrink,
+    F.softsign,
+    F.softplus,
+    F.softmin,
+    F.softmax,
+    F.softshrink,
+    F.gumbel_softmax,
+    F.log_softmax,
+    F.tanh,
+    F.sigmoid,
+    F.hardsigmoid,
+    F.silu,
+    F.mish,
+    # F.batch_norm,  \\this need more support
+    # F.group_norm,  \\this need more support
+    # F.instance_norm,  \\this need more support
+    # F.layer_norm,  \\this need more support
+    # F.local_response_norm,  \\this need more support
+    # F.normalize  \\this need more support
+)
+
+no_change_act_module = (
+    torch.nn.Softmin,
+    torch.nn.Softmax,
+    torch.nn.Softmax2d,
+    torch.nn.LogSoftmax,
+    # torch.nn.AdaptiveLogSoftmaxWithLoss,  \\need test
+    torch.nn.ELU,
+    torch.nn.Hardshrink,
+    torch.nn.Hardsigmoid,
+    torch.nn.Hardtanh,
+    torch.nn.Hardswish,
+    torch.nn.LeakyReLU,
+    torch.nn.LogSigmoid,
+    # torch.nn.MultiheadAttention,  \\this need more support
+    # torch.nn.PReLU,
+    torch.nn.ReLU,
+    torch.nn.ReLU6,
+    torch.nn.RReLU,
+    torch.nn.SELU,
+    torch.nn.CELU,
+    torch.nn.GELU,
+    torch.nn.Sigmoid,
+    torch.nn.SiLU,
+    torch.nn.Mish,
+    torch.nn.Softplus,
+    torch.nn.Softshrink,
+    torch.nn.Softsign,
+    torch.nn.Tanh,
+    torch.nn.Tanhshrink,
+    # torch.nn.GLU  \\this need more support
+    torch.nn.BatchNorm1d,
+    torch.nn.BatchNorm2d,
+    torch.nn.BatchNorm3d,
+    torch.nn.LazyBatchNorm1d,
+    torch.nn.LazyBatchNorm2d,
+    torch.nn.LazyBatchNorm3d,
+    torch.nn.GroupNorm,
+    torch.nn.SyncBatchNorm,
+    torch.nn.InstanceNorm1d,
+    torch.nn.InstanceNorm2d,
+    torch.nn.InstanceNorm3d,
+    torch.nn.LazyInstanceNorm1d,
+    torch.nn.LazyInstanceNorm2d,
+    torch.nn.LazyInstanceNorm3d,
+    torch.nn.LayerNorm,
+)
+
+
 class NoChangeMaskUpdater(DefaultMaskUpdater):
     """
     for some special op that masks will not change when execute
@@ -265,7 +357,14 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
     2. for (softmax, log_softmax) ops, the default process will get a wrong mask. actually we should just copy the mask from input to
         output.
     """
-    def direct_softmax(self, model_speedup: 'ModelSpeedup', node: Node):
+    def __init__(self, customized_no_change_act_module: Tuple | None = None,
+                 customized_no_change_act_func: Tuple | None = None):
+        self.no_change_act_module = no_change_act_module if not customized_no_change_act_module \
+            else (no_change_act_module + customized_no_change_act_module)
+        self.no_change_act_func = no_change_act_func if not customized_no_change_act_func \
+            else (no_change_act_func + customized_no_change_act_func)
+
+    def direct_activation(self, model_speedup: 'ModelSpeedup', node: Node):
         if len(node.args) != 0:
             input_node = node.args[0]
         else:
@@ -274,7 +373,7 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
         model_speedup.node_infos[node].output_masks = \
             tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else t, input_mask)
 
-    def indirect_softmax(self, model_speedup: 'ModelSpeedup', node: Node):
+    def indirect_activation(self, model_speedup: 'ModelSpeedup', node: Node):
         if len(node.args) != 0:
             input_node = node.args[0]
         else:
@@ -282,7 +381,9 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
 
         input_grad = tree_map_zip(lambda t, m: (t * m).type_as(t) if isinstance(m, torch.Tensor) else t, \
             model_speedup.node_infos[node].output_grad, model_speedup.node_infos[node].output_masks)
-        model_speedup.indirect_pass_grad(input_node, input_grad)
+        dummy_input = torch.rand_like(input_grad)
+        dummy_input.grad = input_grad
+        model_speedup.indirect_pass_grad(input_node, dummy_input)
 
     def direct_getitem(self, model_speedup: 'ModelSpeedup', node: Node):
         assert len(node.args) == 2
@@ -304,15 +405,15 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
 
     def detect_helper(self, model_speedup: 'ModelSpeedup', node: Node):
         if node.op == 'call_function':
-            if node.target in (F.log_softmax, F.softmax):
-                return self.direct_softmax, self.indirect_softmax
+            if node.target in self.no_change_act_func:
+                return self.direct_activation, self.indirect_activation
             elif node.target == operator.getitem:
                 if isinstance(node.args[0], Node) and type(model_speedup.node_infos[node.args[0]].output_origin) in (tuple, list, dict):
                     return self.direct_getitem, self.indirect_getitem
         elif node.op == 'call_module':
             module: torch.nn.Module = model_speedup.fetch_attr(node.target)
-            if isinstance(module, (nn.LogSoftmax, nn.Softmax)):
-                return self.direct_softmax, self.indirect_softmax
+            if isinstance(module, self.no_change_act_module):
+                return self.direct_activation, self.indirect_activation
         return None
 
     def direct_update_process(self, model_speedup: 'ModelSpeedup', node: Node):

@@ -20,6 +20,7 @@ class NodeInfo:
         self.node = node
         self.module: torch.nn.Module = None
         self.mask_updater: 'MaskUpdater' = None
+        self.replaced = False
 
         self._output_origin = None
         self._output_inplace = None

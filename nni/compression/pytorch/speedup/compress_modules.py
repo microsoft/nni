@@ -50,6 +50,7 @@ replace_module = {
     'PixelShuffle': lambda module, masks: replace_pixelshuffle(module, masks),
     'Flatten': lambda module, masks: no_replace(module, masks),
     'GroupNorm': lambda module, masks: replace_groupnorm(module, masks),
+    'Hardswish': lambda module, masks: no_replace(module, masks),
 }
 
 
@@ -547,7 +548,7 @@ def replace_conv2d(conv, masks):
             conv.weight[current_output_index], 1, torch.as_tensor(current_input_index, dtype=torch.long).to(conv.weight.device))
         new_groups += 1
 
-    _logger.debug("replace conv2d with in_channels: %d, out_channels: %d",
+    _logger.info("replace conv2d with in_channels: %d, out_channels: %d",
                   n_remained_in, n_remained_out)
 
     # need_bias is a flag that indicates that if a conv layer need
@@ -705,10 +706,11 @@ def replace_layernorm(layernorm, masks):
     remained_list = []
     for i in range(-len(old_normalized_shape), 0):
         pruned, remained = convert_to_coarse_mask(in_mask, i)
-        new_normalized_shape.append(old_normalized_shape[i] - pruned.size()[0])
+        new_normalized_shape.append(old_normalized_shape[i] - pruned.size()[i])
         remained_list.append(remained)
 
     new_layernorm = nn.LayerNorm(tuple(new_normalized_shape), layernorm.eps, layernorm.elementwise_affine)
+    _logger.info(f"replace LayerNorm with new normalized_shape: {tuple(new_normalized_shape)}")
 
     if new_layernorm.elementwise_affine:
         new_layernorm.to(layernorm.weight.device)
@@ -722,6 +724,7 @@ def replace_layernorm(layernorm, masks):
             new_layernorm.weight.data = tmp_weight_data
             new_layernorm.bias.data = tmp_bias_data
     return new_layernorm
+
 
 def replace_embedding(embedding, masks):
     """
