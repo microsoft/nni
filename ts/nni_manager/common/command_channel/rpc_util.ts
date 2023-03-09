@@ -4,7 +4,43 @@
 /**
  *  Add RPC capability to WebSocket command channel.
  *
+ *  Suppose you want to run `new Foo(1, 2).on('event', localListener)` on a remote worker,
+ *  use the following steps:
  *
+ *    0. Create RPC helper on each side of the channel:
+ *
+ *          const rpcLocal = getRpcHelper(localChannel);  // at local side
+ *          const rpcRemote = getRpcHelper(remoteChannel);  // at remote side
+ *
+ *    1. Register the class at remote:
+ *
+ *          rpcRemote.registerClass('Foo', Foo);
+ *
+ *    2. Construct an object at local:
+ *
+ *          const obj = await rpcLocal.construct('Foo', [ 1, 2 ]);
+ *
+ *    3. Call the method at local:
+ *
+ *          const result = await rpcLocal.call(obj, 'on', [ 'event' ], [ listener ]);
+ *
+ *  RPC methods can only have parameters of JSON and function types,
+ *  and all callbacks must appear after JSON parameters.
+ *
+ *  This utility has limited support for exceptions.
+ *  If the remote method throws an Error, `rpc.call()` will throw an Error as well.
+ *  The local error message contains `inspect(remoteError)` and should be sufficient for debugging purpose.
+ *  However, those two errors are totally different objects so don't try to write concrete error handlers.
+ *
+ *  Underlying, it uses a protocal similar to JSON-RPC:
+ *
+ *      ->  { type: 'rpc_constructor', id: 1, className: 'Foo', parameters: [ 1, 2 ] }
+ *      <-  { type: 'rpc_response', id: 1 }
+ *
+ *      ->  { type: 'rpc_method', id: 2, objectId: 1, methodName: 'bar', parameters: [ 'event' ], callbackIds: [ 3 ] }
+ *      <-  { type: 'rpc_response', id: 2, result: 'result' }
+ *
+ *      <-  { type: 'rpc_callback', id: 4, callbackId: 3, parameters: [ 'baz' ] }
  **/
 
 import util from 'node:util';
@@ -23,6 +59,8 @@ interface RpcResponseCommand {
     error?: string;
 }
 
+type Class = { new(...args: any[]): any; };
+
 const rpcHelpers: Map<WsChannel, RpcHelper> = new Map();
 
 export function getRpcHelper(channel: WsChannel): RpcHelper {
@@ -32,21 +70,20 @@ export function getRpcHelper(channel: WsChannel): RpcHelper {
     return rpcHelpers.get(channel)!;
 }
 
-type Class = { new(...args: any[]): any; };
-
 export class RpcHelper {
     private channel: WsChannel;
     private lastId: number = 0;
-    private localCtors: Map<string, any> = new Map();
+    private localCtors: Map<string, Class> = new Map();
     private localObjs: Map<number, any> = new Map();
-    private localCbs: Map<number, any> = new Map();
+    private localCbs: Map<number, Function> = new Map();
+    private log: Logger;
     private responses: DefaultMap<number, Deferred<RpcResponseCommand>> = new DefaultMap(() => new Deferred());
-    private log: Logger = getLogger('RpcHelper.TODO');
 
+    // NOTE: don't use the constructor directly; use getRpcHelper()
     constructor(channel: WsChannel) {
+        this.log = getLogger(`RpcHelper.${channel.getName()}`);
         this.channel = channel;
         this.channel.onCommand('rpc_constructor', command => {
-            this.log.debug('invoke constructor', command);
             this.invokeLocalConstructor(command.id, command.className, command.parameters);
         });
         this.channel.onCommand('rpc_method', command => {
@@ -61,6 +98,7 @@ export class RpcHelper {
     }
 
     public registerClass(className: string, constructor: Class): void {
+        this.log.debug('Register class', className);
         this.localCtors.set(className, constructor);
     }
 
@@ -73,6 +111,7 @@ export class RpcHelper {
     }
 
     private async invokeRemoteConstructor(className: string, parameters: any[]): Promise<number> {
+        this.log.debug('Send constructor command', className, parameters);
         const id = this.generateId();
         this.channel.send({ type: 'rpc_constructor', id, className, parameters });
         await this.waitResponse(id);
@@ -80,6 +119,7 @@ export class RpcHelper {
     }
 
     private invokeLocalConstructor(id: number, className: string, parameters: any[]): void {
+        this.log.debug('Receive constructor command', className, parameters);
         const ctor = this.localCtors.get(className);
         if (!ctor) {
             this.sendRpcError(id, `Unknown class name ${className}`);
@@ -90,19 +130,18 @@ export class RpcHelper {
         try {
             obj = new ctor(...parameters);
         } catch (error) {
-            this.log.debug('ctor error', error);
+            this.log.debug('Constructor throws error', className, error);
             this.sendError(id, error);
             return;
         }
 
         this.localObjs.set(id, obj);
-        this.log.debug('ctor success');
         this.sendResult(id, undefined);
     }
 
     private async invokeRemoteMethod(
             objectId: number, methodName: string, parameters: any[], callbacks: any[]): Promise<any> {
-
+        this.log.debug('Send method command', methodName, parameters);
         const id = this.generateId();
         const callbackIds = this.generateCallbackIds(callbacks);
         this.channel.send({ type: 'rpc_method', id, objectId, methodName, parameters, callbackIds });
@@ -112,6 +151,7 @@ export class RpcHelper {
     private async invokeLocalMethod(
             id: number, objectId: number, methodName: string,
             parameters: any[], callbackIds: number[]): Promise<void> {
+        this.log.debug('Receive method command', methodName, parameters);
 
         const obj = this.localObjs.get(objectId);
         if (!obj) {
@@ -127,19 +167,23 @@ export class RpcHelper {
                 result = await result;
             }
         } catch (error) {
+            this.log.debug('Command throws error', methodName, error);
             this.sendError(id, error);
             return;
         }
 
+        this.log.debug('Command returns', result);
         this.sendResult(id, result);
     }
 
     private invokeRemoteCallback(callbackId: number, parameters: any[]): void {
+        this.log.debug('Send callback command', parameters);
         const id = this.generateId();  // for debug purpose
         this.channel.send({ type: 'rpc_callback', id, callbackId, parameters });
     }
 
     private invokeLocalCallback(_id: number, callbackId: number, parameters: any[]): void {
+        this.log.debug('Receive callback command', parameters);
         const cb = this.localCbs.get(callbackId);
         if (cb) {
             cb(...parameters);
