@@ -41,6 +41,7 @@ export class RestServerCore {
         this.server.on('listening', () => {
             if (this.port === 0) {
                 this.port = (this.server!.address() as AddressInfo).port;
+                (globals.args.port as any) = this.port;  // TODO: too hacky, use globals.rest.port in future
             }
             logger.info('REST server started.');
             deferred.resolve();

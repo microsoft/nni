@@ -85,18 +85,21 @@ export class Ssh {
     }
 
     public async download(remotePath: string, localPath: string): Promise<void> {
+        this.log.debug(`Downloading ${localPath} <- ${remotePath}`);
         const sftp = await this.sftp();
         const fastGet = util.promisify(sftp.fastGet.bind(sftp));
         await fastGet(remotePath.replaceAll('\\', '/'), localPath);
     }
 
     public async upload(localPath: string, remotePath: string): Promise<void> {
+        this.log.debug(`Uploading ${localPath} -> ${remotePath}`);
         const sftp = await this.sftp();
         const fastPut = util.promisify(sftp.fastPut.bind(sftp));
         await fastPut(localPath, remotePath.replaceAll('\\', '/'));
     }
 
     public async writeFile(remotePath: string, data: string): Promise<void> {
+        this.log.debug('Writing remote file', remotePath);
         const sftp = await this.sftp();
         const stream = sftp.createWriteStream(remotePath.replaceAll('\\', '/'));
         const deferred = new Deferred<void>();

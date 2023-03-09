@@ -10,7 +10,7 @@ import type { WsChannel } from 'common/command_channel/websocket/channel';
 import { Deferred } from 'common/deferred';
 import { TrialKeeper } from './keeper';
 
-export function registerForChannel(channel: WsChannel): void {
+export function registerOnChannel(channel: WsChannel): void {
     getRpcHelper(channel).registerClass('TrialKeeper', TrialKeeper);
 }
 

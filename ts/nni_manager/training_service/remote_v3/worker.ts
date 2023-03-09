@@ -20,7 +20,7 @@ export class Worker {
     channelUrl: string;
     trialKeeper: RemoteTrialKeeper;
     ssh: Ssh;
-    launchResult!: any;
+    uploadDir!: string;
     log: Logger;
     config: RemoteMachineConfig;
 
@@ -144,20 +144,30 @@ export class Worker {
 
         // todo: check version
 
-        const cmd = `${python} -m nni.tools.nni_manager_scripts.create_tmp_dir ${globals.args.experimentId} ${this.envId}`;
-        const tmpDir = await this.ssh.run(cmd);
+        const prepareCommand = [
+            python,
+            '-m nni.tools.nni_manager_scripts.create_trial_keeper_dir',
+            globals.args.experimentId,
+            this.envId,
+        ].join(' ');
+        const trialKeeperDir = await this.ssh.run(prepareCommand);
 
-        const config = {
+        const launcherConfig = {
+            environmentId: this.envId,
             experimentId: globals.args.experimentId,
             logLevel: globals.args.logLevel,
-            platform: 'remote',
-            environmentId: this.envId,
             managerCommandChannel: this.channelUrl,
+            platform: 'remote',
         };
-        await this.ssh.writeFile(path.join(tmpDir, 'config.json'), JSON.stringify(config));
+        await this.ssh.writeFile(path.join(trialKeeperDir, 'launcher_config.json'), JSON.stringify(launcherConfig));
 
-        const result = await this.ssh.run(`${python} -m nni.tools.nni_manager_scripts.launch_trial_keeper ${tmpDir}`);
-        this.launchResult = JSON.parse(result);
+        const launchCommand = `${python} -m nni.tools.nni_manager_scripts.launch_trial_keeper ${trialKeeperDir}`;
+        const result = JSON.parse(await this.ssh.run(launchCommand));
+        if (!result.success) {
+            this.log.error('Failed to launch trial keeper daemon:', result);
+            throw new Error('Failed to launch trial keeper daemon');
+        }
+        this.uploadDir = result.uploadDirectory;
 
         await this.trialKeeper.start();
     }
@@ -167,7 +177,7 @@ export class Worker {
     }
 
     async upload(name: string, tar: string): Promise<void> {
-        const remotePath = path.join(this.launchResult.envDir, 'upload', `${name}.tgz`);
+        const remotePath = path.join(this.uploadDir, `${name}.tgz`);
         await this.ssh.upload(tar, remotePath);
         await this.trialKeeper.unpackDirectory(name, remotePath);
     }

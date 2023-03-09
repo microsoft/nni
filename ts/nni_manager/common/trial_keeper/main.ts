@@ -1,21 +1,23 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 import 'app-module-path/cwd';
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import util from 'node:util';
 
-import yargs from 'yargs/yargs';
+// FIXME: reordering imports may cause circular dependency (imported objects become undefined)
 
-import { NniManagerArgs, globals, initGlobalsCustom } from 'common/globals';
+import { globals, initGlobalsCustom } from 'common/globals';
 import { Logger, getRobustLogger } from 'common/log';
-
 import { WsChannelClient } from 'common/command_channel/websocket/client';
-import { RemoteTrialKeeper, registerForChannel } from './rpc';
-
 import { RestServerCore } from 'rest_server/core';
+import { registerOnChannel } from './rpc';
 
 const logger: Logger = getRobustLogger('TrialKeeper.main');
 
-interface TrialKeeperArgs {
+interface TrialKeeperConfig {
     readonly experimentId: string;
     readonly experimentsDirectory: string;
     readonly logLevel: 'critical' | 'error' | 'warning' | 'info' | 'debug' | 'trace';
@@ -26,70 +28,62 @@ interface TrialKeeperArgs {
 }
 
 async function main(): Promise<void> {
-    console.log('Start trial keeper:', process.argv);
-
     process.on('SIGTERM', () => { globals.shutdown.initiate('SIGTERM'); });
     process.on('SIGBREAK', () => { globals.shutdown.initiate('SIGBREAK'); });
     process.on('SIGINT', () => { globals.shutdown.initiate('SIGINT'); });
 
-    const args = await parseArgs();
+    const workDir = process.argv[2];
 
-    const envDir = path.join(
-        args.experimentsDirectory,
-        args.experimentId,
-        'environments',
-        args.environmentId
-    )
-    //await fs.mkdir(envDir, { recursive: true });
-
-    // SFTP requires the upload dir to exist
-    await fs.mkdir(path.join(envDir, 'upload'), { recursive: true });
-
-    const logPath = path.join(envDir, 'log.txt')
-    initGlobalsCustom(args, logPath);
-    logger.info('Start');
-    logger.info('    args:', process.argv);
-    logger.info('    config:', args);
-
-    const restServer = new RestServerCore(8081);
-    await restServer.start();
-
-    const client = new WsChannelClient(args.managerCommandChannel);
-    registerForChannel(client);
-    await client.connect();
-
-    logger.info('Initialized');
-    globals.shutdown.notifyInitializeComplete();
-}
-
-interface MergedArgs extends NniManagerArgs, TrialKeeperArgs { }
-
-async function parseArgs(): Promise<MergedArgs> {
-    const configPath = process.argv[2];
-    const configJson = await fs.readFile(configPath, { encoding: 'utf8' });
-    const args: TrialKeeperArgs = JSON.parse(configJson);
-    return {
+    const configPath = path.join(workDir, 'trial_keeper_config.json');
+    const config: TrialKeeperConfig = JSON.parse(await fs.readFile(configPath, { encoding: 'utf8' }));
+    const args = {
         // shared args
-        experimentId: args.experimentId,
-        experimentsDirectory: args.experimentsDirectory,
-        logLevel: args.logLevel,
-        pythonInterpreter: args.pythonInterpreter,
+        experimentId: config.experimentId,
+        experimentsDirectory: config.experimentsDirectory,
+        logLevel: config.logLevel,
+        pythonInterpreter: config.pythonInterpreter,
 
         // trial keeper args
-        platform: args.platform,
-        environmentId: args.environmentId,
-        managerCommandChannel: args.managerCommandChannel,
+        platform: config.platform,
+        environmentId: config.environmentId,
+        managerCommandChannel: config.managerCommandChannel,
 
         // unused nni manager args
-        port: 8081,
+        port: 0,
         action: 'create',
         foreground: false,
         urlPrefix: '',
         tunerCommandChannel: null,
         mode: '',
-    };
+    } as const;
+
+    const logPath = path.join(workDir, 'trial_keeper.log');
+
+    initGlobalsCustom(args, logPath);
+
+    logger.info('Trial keeper start');
+    logger.debug('command:', process.argv);
+    logger.debug('config:', config);
+
+    const client = new WsChannelClient(args.managerCommandChannel);
+    registerOnChannel(client);
+    await client.connect();
+
+    const restServer = new RestServerCore();
+    await restServer.start();
+    logger.info('Running on port', globals.args.port);
+
+    logger.info('Initialized');
+    globals.shutdown.notifyInitializeComplete();
+
+    // notify launcher
+    await fs.writeFile(path.join(workDir, 'success.flag'), 'ok');
 }
 
-if (!process.argv[1].endsWith('mocha')) {
-    main();
+if (!process.argv[1].endsWith('mocha')) {  // the unit test imports all scripts and will reach here
+    main().catch(error => {
+        logger.critical(error);
+        console.error(util.inspect(error));
+        process.exit(1);
+    });
 }

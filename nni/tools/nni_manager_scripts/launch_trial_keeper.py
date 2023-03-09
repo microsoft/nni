@@ -1,8 +1,35 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+"""
+Launch trial keeper daemon and print some info in JSON format.
+
+Before running this script, you should:
+
+  1. Create the working directory with "create_trial_keeper_dir.py".
+  2. Create "launcher_config.json" in that directory.
+
+Example of "launcher_config.json":
+
+    {
+        "experimentId": "EXP_ID",
+        "environmentId": "ENV_ID",
+        "platform": "remote",
+        "managerCommandChannel": "ws://1.2.3.4/platform/remote0/worker1",
+        "logLevel": "debug"
+    }
+
+Usage:
+
+    python -m nni.tools.nni_manager_scripts.launch_trial_keeper TRIAL_KEEPER_DIR
+"""
+
 import json
 import os
 from pathlib import Path
 from subprocess import Popen
 import sys
+import time
 from typing import Dict
 
 import nni_node
@@ -10,58 +37,64 @@ import nni_node
 Config = Dict[str, str]
 
 def main() -> None:
-    init_dir = Path(sys.argv[1])
-    config = load_config(init_dir)
-    output_dir = create_output_dir(config)
-    proc = launch_trial_keeper(config, output_dir)
-    save_result(init_dir, output_dir, proc)
+    trial_keeper_dir = Path(sys.argv[1])
 
-def load_config(init_dir: Path) -> Config:
-    config_json = (init_dir / 'config.json').read_text('utf_8')
-    config = json.loads(config_json)
-    config['experimentsDirectory'] = str(Path.home() / 'nni-experiments')  # TODO: use global config
+    # create trial_keeper_config.json
+
+    config = json.loads((trial_keeper_dir / 'launcher_config.json').read_text('utf_8'))
+    config['experimentsDirectory'] = str(Path.home() / 'nni-experiments')  # TODO: configurable
     config['pythonInterpreter'] = sys.executable
-    return config
 
-def create_output_dir(config: Config) -> Path:
-    env_dir = Path(config['experimentsDirectory'], config['experimentId'], 'environments', config['environmentId'])
-    output_dir = env_dir / 'trial_keeper'
-    i = 0
-    while output_dir.exists():
-        i += 1
-        output_dir = env_dir / f'trial_keeper_{i}'
-    output_dir.mkdir(parents=True, exist_ok=True)
-    return output_dir
-
-def launch_trial_keeper(config: Config, output_dir: Path) -> Popen:
-    config_path = output_dir / 'config.json'
     config_json = json.dumps(config, ensure_ascii=False, indent=4)
-    config_path.write_text(config_json)
+    (trial_keeper_dir / 'trial_keeper_config.json').write_text(config_json)
 
-    stdout = (output_dir / 'stdout.txt').open('a')
-    stderr = (output_dir / 'stderr.txt').open('a')
+    # prepare upload directory
+
+    upload_dir = Path(
+        config['experimentsDirectory'],
+        config['experimentId'],
+        'environments',
+        config['environmentId'],
+        'upload'
+    )
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    # launch process
+
+    stdout = (trial_keeper_dir / 'trial_keeper.stdout').open('a')
+    stderr = (trial_keeper_dir / 'trial_keeper.stderr').open('a')
 
     node_dir = Path(nni_node.__path__[0])  # type: ignore
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'common/trial_keeper/main.js')
-    cmd = [node, '--max-old-space-size=4096', '--trace-uncaught', main_js, str(config_path)]
+    cmd = [node, '--max-old-space-size=4096', '--trace-uncaught', main_js, str(trial_keeper_dir)]
 
-    # TODO: cwd must be node_dir, or trial_keeper will not work (because of app-module-path/cwd)
+    # NOTE: cwd must be node_dir, or trial keeper will not work (because of app-module-path/cwd)
     if sys.platform == 'win32':
         from subprocess import CREATE_NEW_PROCESS_GROUP
-        return Popen(cmd, stdout=stdout, stderr=stderr, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
+        proc = Popen(cmd, stdout=stdout, stderr=stderr, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
     else:
-        return Popen(cmd, stdout=stdout, stderr=stderr, cwd=node_dir, preexec_fn=os.setpgrp)  # type: ignore
+        proc = Popen(cmd, stdout=stdout, stderr=stderr, cwd=node_dir, preexec_fn=os.setpgrp)  # type: ignore
+    (trial_keeper_dir / 'trial_keeper.pid').write_text(str(proc.pid))
 
-def save_result(init_dir: Path, output_dir: Path, proc: Popen) -> None:
-    result = {
-        'envDir': str(output_dir.parent),
-        'ouputDir': str(output_dir),
-        'pid': proc.pid
-    }
-    result_json = json.dumps(result, ensure_ascii=False, indent=4)
-    (init_dir / 'launch.json').write_text(result_json, 'utf_8')
-    (output_dir / 'launch.json').write_text(result_json, 'utf_8')
+    # wait for result
+
+    while True:
+        if proc.poll() is not None:
+            success = False
+            break
+        if (trial_keeper_dir / 'success.flag').exists():
+            success = True
+            break
+        time.sleep(0.1)
+
+    # save and print result
+
+    if success:
+        result = {'success': True, 'uploadDirectory': str(upload_dir)}
+    else:
+        err = (trial_keeper_dir / 'trial_keeper.stderr').read_text('utf_8')
+        result = {'success': False, 'stderr': err}
     print(json.dumps(result, ensure_ascii=False), flush=True)
 
 if __name__ == '__main__':
