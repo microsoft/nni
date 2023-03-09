@@ -41,6 +41,10 @@ export class WsChannel extends EventEmitter {
         }
     }
 
+    public channelName(): string {
+        return this.name;
+    }
+
     public setConnection(ws: WebSocket): void {
         if (this.connection) {
             this.epoch += 1;

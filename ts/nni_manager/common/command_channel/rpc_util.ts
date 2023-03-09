@@ -3,6 +3,8 @@
 
 /**
  *  Add RPC capability to WebSocket command channel.
+ *
+ *
  **/
 
 import util from 'node:util';
@@ -45,13 +47,13 @@ export class RpcHelper {
         this.channel = channel;
         this.channel.onCommand('rpc_constructor', command => {
             this.log.debug('invoke constructor', command);
-            this.invokeLocalConstructor(command.objectId, command.className, command.parameters);
+            this.invokeLocalConstructor(command.id, command.className, command.parameters);
         });
         this.channel.onCommand('rpc_method', command => {
-            this.invokeLocalMethod(command.callId, command.objectId, command.methodName, command.parameters, command.callbackIds);
+            this.invokeLocalMethod(command.id, command.objectId, command.methodName, command.parameters, command.callbackIds);
         });
         this.channel.onCommand('rpc_callback', command => {
-            this.invokeLocalCallback(command.callId, command.callbackId, command.parameters);
+            this.invokeLocalCallback(command.id, command.callbackId, command.parameters);
         });
         this.channel.onCommand('rpc_response', command => {
             this.responses.get(command.id).resolve(command);
@@ -71,16 +73,16 @@ export class RpcHelper {
     }
 
     private async invokeRemoteConstructor(className: string, parameters: any[]): Promise<number> {
-        const objectId = this.generateId();
-        this.channel.send({ type: 'rpc_constructor', objectId, className, parameters });
-        await this.waitResponse(objectId);
-        return objectId;
+        const id = this.generateId();
+        this.channel.send({ type: 'rpc_constructor', id, className, parameters });
+        await this.waitResponse(id);
+        return id;
     }
 
-    private invokeLocalConstructor(objectId: number, className: string, parameters: any[]): void {
+    private invokeLocalConstructor(id: number, className: string, parameters: any[]): void {
         const ctor = this.localCtors.get(className);
         if (!ctor) {
-            this.sendRpcError(objectId, `Unknown class name ${className}`);
+            this.sendRpcError(id, `Unknown class name ${className}`);
             return;
         }
 
@@ -89,31 +91,31 @@ export class RpcHelper {
             obj = new ctor(...parameters);
         } catch (error) {
             this.log.debug('ctor error', error);
-            this.sendError(objectId, error);
+            this.sendError(id, error);
             return;
         }
 
-        this.localObjs.set(objectId, obj);
+        this.localObjs.set(id, obj);
         this.log.debug('ctor success');
-        this.sendResult(objectId, undefined);
+        this.sendResult(id, undefined);
     }
 
     private async invokeRemoteMethod(
             objectId: number, methodName: string, parameters: any[], callbacks: any[]): Promise<any> {
 
-        const callId = this.generateId();
+        const id = this.generateId();
         const callbackIds = this.generateCallbackIds(callbacks);
-        this.channel.send({ type: 'rpc_method', callId, objectId, methodName, parameters, callbackIds });
-        return await this.waitResponse(callId);
+        this.channel.send({ type: 'rpc_method', id, objectId, methodName, parameters, callbackIds });
+        return await this.waitResponse(id);
     }
 
     private async invokeLocalMethod(
-            callId: number, objectId: number, methodName: string,
+            id: number, objectId: number, methodName: string,
             parameters: any[], callbackIds: number[]): Promise<void> {
 
         const obj = this.localObjs.get(objectId);
         if (!obj) {
-            this.sendRpcError(callId, `Non-exist object ${objectId}`);
+            this.sendRpcError(id, `Non-exist object ${objectId}`);
             return;
         }
         const callbacks = this.createCallbacks(callbackIds);
@@ -125,19 +127,19 @@ export class RpcHelper {
                 result = await result;
             }
         } catch (error) {
-            this.sendError(callId, error);
+            this.sendError(id, error);
             return;
         }
 
-        this.sendResult(callId, result);
+        this.sendResult(id, result);
     }
 
     private invokeRemoteCallback(callbackId: number, parameters: any[]): void {
-        const callId = this.generateId();  // for debug purpose
-        this.channel.send({ type: 'rpc_callback', callId, callbackId, parameters });
+        const id = this.generateId();  // for debug purpose
+        this.channel.send({ type: 'rpc_callback', id, callbackId, parameters });
     }
 
-    private invokeLocalCallback(_callId: number, callbackId: number, parameters: any[]): void {
+    private invokeLocalCallback(_id: number, callbackId: number, parameters: any[]): void {
         const cb = this.localCbs.get(callbackId);
         if (cb) {
             cb(...parameters);
