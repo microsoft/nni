@@ -16,7 +16,7 @@ __all__ = [
     'guess_config_type', 'guess_list_config_type',
     'training_service_config_factory', 'load_training_service_config',
     'load_experiment_config', 'get_experiment_cls_using_config',
-    'get_ipv4_address'
+    'get_ipv4_address', 'diff'
 ]
 
 import copy
@@ -36,7 +36,7 @@ from .public import is_missing
 
 if TYPE_CHECKING:
     from nni.nas.experiment.pytorch import RetiariiExperiment
-    from nni.nas.experiment.config import RetiariiExeConfig
+    from nni.nas.experiment.config import NasExperimentConfig
     from ...experiment import Experiment
     from ..base import ConfigBase
     from ..experiment_config import ExperimentConfig
@@ -144,6 +144,7 @@ def guess_list_config_type(objs, type_hint, _hint_list_item=False) -> list[Confi
         try:
             configs = [cls(**obj) for obj in objs]
         except Exception:
+            # FIXME: The reason why the guess failed is eaten here. We should at least print one of them.
             continue
         candidate_configs.append(configs)
 
@@ -204,12 +205,25 @@ def get_ipv4_address() -> str:
     s.close()
     return addr
 
-def load_experiment_config(config_json: dict) -> ExperimentConfig | RetiariiExeConfig:
+def diff(config1: ConfigBase, config2: ConfigBase, from_: str = '', to_: str = '') -> str:
+    # This method is not to get an accurate diff, but to give users a rough idea of what is changed.
+    import difflib
+    import pprint
+
+    # The ideal diff should directly apply on the pprint of dataclass. However,
+    #  1. pprint of dataclass is not stable. It actually changes from python 3.9 to 3.10.
+    #  2. MISSING doesn't have a stable memory address. It might be different in different objects.
+
+    str1, str2 = pprint.pformat(config1.json()), pprint.pformat(config2.json())
+
+    return '\n'.join(difflib.unified_diff(str1.splitlines(), str2.splitlines(), from_, to_, lineterm=''))
+
+def load_experiment_config(config_json: dict) -> ExperimentConfig | NasExperimentConfig:
     _, exp_conf_cls = get_experiment_cls_using_config(config_json)
     return exp_conf_cls(**config_json)
 
 def get_experiment_cls_using_config(config_json: dict) -> Tuple[type[Experiment] | type[RetiariiExperiment],
-                                                                type[ExperimentConfig] | type[RetiariiExeConfig]]:
+                                                                type[ExperimentConfig] | type[NasExperimentConfig]]:
     # avoid circular import and unnecessary dependency on pytorch
     if 'experimentType' in config_json:
         if config_json['experimentType'] == 'hpo':
@@ -218,15 +232,15 @@ def get_experiment_cls_using_config(config_json: dict) -> Tuple[type[Experiment]
             return Experiment, ExperimentConfig
         elif config_json['experimentType'] == 'nas':
             from nni.nas.experiment.pytorch import RetiariiExperiment
-            from nni.nas.experiment.config import RetiariiExeConfig
-            return RetiariiExperiment, RetiariiExeConfig
+            from nni.nas.experiment.config import NasExperimentConfig
+            return RetiariiExperiment, NasExperimentConfig
         else:
             raise ValueError(f'Unknown experiment_type: {config_json["experimentType"]}')
     else:
         if 'executionEngine' in config_json:
             from nni.nas.experiment.pytorch import RetiariiExperiment
-            from nni.nas.experiment.config import RetiariiExeConfig
-            return RetiariiExperiment, RetiariiExeConfig
+            from nni.nas.experiment.config import NasExperimentConfig
+            return RetiariiExperiment, NasExperimentConfig
         else:
             from ...experiment import Experiment
             from ..experiment_config import ExperimentConfig

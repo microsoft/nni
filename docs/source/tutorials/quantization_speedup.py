@@ -1,168 +1,172 @@
 """
-SpeedUp Model with Calibration Config
+Speed Up Quantized Model with TensorRT
 ======================================
 
+Quantization algorithms quantize a deep learning model usually in a simulated way. That is, to simulate the effect of low-bit computation with float32 operators, the tensors are quantized to the targeted bit number and dequantized back to float32. Such a quantized model does not have any latency reduction. Thus, there should be a speedup stage to make the quantized model really accelerated with low-bit operators. 
+This tutorial demonstrates how to accelerate a quantized model with `TensorRT <https://developer.nvidia.com/tensorrt>`_ as the inference engine in NNI. More inference engines will be supported in future release.
 
-Introduction
-------------
+The process of speeding up a quantized model in NNI is that 1) the model with quantized weights and configuration is converted into onnx format, 2) the onnx model is fed into TensorRT to generate an inference engine. The engine is used for low latency model inference.
 
-Deep learning network has been computational intensive and memory intensive 
-which increases the difficulty of deploying deep neural network model. Quantization is a 
-fundamental technology which is widely used to reduce memory footprint and speedup inference 
-process. Many frameworks begin to support quantization, but few of them support mixed precision 
-quantization and get real speedup. Frameworks like `HAQ: Hardware-Aware Automated Quantization with Mixed Precision <https://arxiv.org/pdf/1811.08886.pdf>`__\, only support simulated mixed precision quantization which will 
-not speedup the inference process. To get real speedup of mixed precision quantization and 
-help people get the real feedback from hardware, we design a general framework with simple interface to allow NNI quantization algorithms to connect different 
-DL model optimization backends (e.g., TensorRT, NNFusion), which gives users an end-to-end experience that after quantizing their model 
-with quantization algorithms, the quantized model can be directly speeded up with the connected optimization backend. NNI connects 
-TensorRT at this stage, and will support more backends in the future.
-
-
-Design and Implementation
--------------------------
-
-To support speeding up mixed precision quantization, we divide framework into two part, frontend and backend.  
-Frontend could be popular training frameworks such as PyTorch, TensorFlow etc. Backend could be inference 
-framework for different hardwares, such as TensorRT. At present, we support PyTorch as frontend and 
-TensorRT as backend. To convert PyTorch model to TensorRT engine, we leverage onnx as intermediate graph 
-representation. In this way, we convert PyTorch model to onnx model, then TensorRT parse onnx 
-model to generate inference engine. 
-
-
-Quantization aware training combines NNI quantization algorithm 'QAT' and NNI quantization speedup tool.
-Users should set config to train quantized model using QAT algorithm(please refer to :doc:`NNI Quantization Algorithms <../compression/quantizer>`  ).
-After quantization aware training, users can get new config with calibration parameters and model with quantized weight. By passing new config and model to quantization speedup tool, users can get real mixed precision speedup engine to do inference.
-
-
-After getting mixed precision engine, users can do inference with input data.
-
-
-Note
-
-
-* Recommend using "cpu"(host) as data device(for both inference data and calibration data) since data should be on host initially and it will be transposed to device before inference. If data type is not "cpu"(host), this tool will transpose it to "cpu" which may increases unnecessary overhead.
-* User can also do post-training quantization leveraging TensorRT directly(need to provide calibration dataset).
-* Not all op types are supported right now. At present, NNI supports Conv, Linear, Relu and MaxPool. More op types will be supported in the following release.
-
+There are two modes of the speedup: 1) leveraging post-training quantization of TensorRT, 2) using TensorRT as a pure acceleration backend. The two modes will be explained in the usage section below.
 
 Prerequisite
 ------------
-CUDA version >= 11.0
+When using TensorRT to speed up a quantized model, you are highly recommended to use the PyTorch docker image provided by NVIDIA.
+Users can refer to `this web page <https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch>`__ for detailed usage of the docker image.
+The docker image "nvcr.io/nvidia/pytorch:22.09-py3" has been tested for the quantization speedup in NNI.
 
-TensorRT version >= 7.2
-
-Note
-
-* If you haven't installed TensorRT before or use the old version, please refer to `TensorRT Installation Guide <https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html>`__\  
+An example command to launch the docker container is `nvidia-docker run -it nvcr.io/nvidia/pytorch:22.09-py3`.
+In the docker image, users should install nni>=3.0, pytorch_lightning, pycuda.
 
 Usage
 -----
 
+Mode #1: Leveraging post-training quantization of TensorRT
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As TensorRT has supported post-training quantization, directly leveraging this functionality is a natural way to use TensorRT. This mode is called "with calibration data". In this mode, the quantization-aware training algorithms (e.g., `QAT <https://nni.readthedocs.io/en/stable/reference/compression/quantizer.html#qat-quantizer>`_, `LSQ <https://nni.readthedocs.io/en/stable/reference/compression/quantizer.html#lsq-quantizer>`_) only take charge of adjusting model weights to be more quantization friendly, and leave the last-step quantization to the post-training quantization of TensorRT.
+
 """
 
 # %%
+# Prepare the calibration data with 128 samples
 import torch
-import torch.nn.functional as F
-from torch.optim import SGD
-from nni_assets.compression.mnist_model import TorchModel, device, trainer, evaluator, test_trt
+import torchvision
+import torchvision.transforms as transforms
+def prepare_data_loaders(data_path, batch_size, datatype='train'):
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+    dataset = torchvision.datasets.ImageNet(
+        data_path, split=datatype,
+        transform=transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize,
+        ]))
 
-config_list = [{
-    'quant_types': ['input', 'weight'],
-    'quant_bits': {'input': 8, 'weight': 8},
-    'op_types': ['Conv2d']
-}, {
-    'quant_types': ['output'],
-    'quant_bits': {'output': 8},
-    'op_types': ['ReLU']
-}, {
-    'quant_types': ['input', 'weight'],
-    'quant_bits': {'input': 8, 'weight': 8},
-    'op_names': ['fc1', 'fc2']
-}]
+    sampler = torch.utils.data.SequentialSampler(dataset)
+    data_loader = torch.utils.data.DataLoader(
+        dataset, batch_size=batch_size,
+        sampler=sampler)
+    return data_loader
 
-model = TorchModel().to(device)
-optimizer = SGD(model.parameters(), lr=0.01, momentum=0.5)
-criterion = F.nll_loss
-dummy_input = torch.rand(32, 1, 28, 28).to(device)
+data_path = '/data' # replace it with your path of ImageNet dataset
+data_loader = prepare_data_loaders(data_path, batch_size=128)
+calib_data = None
+for image, target in data_loader:
+    calib_data = image.numpy()
+    break
 
-from nni.compression.pytorch.quantization import QAT_Quantizer
-quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input)
-quantizer.compress()
-
-# %%
-# finetuning the model by using QAT
-for epoch in range(3):
-    trainer(model, optimizer, criterion)
-    evaluator(model)
+from nni.compression.pytorch.quantization_speedup.calibrator import Calibrator
+# TensorRT processes the calibration data in the batch size of 64
+calib = Calibrator(calib_data, 'data/calib_cache_file.cache', batch_size=64)
 
 # %%
-# export model and get calibration_config
-import os
-os.makedirs('log', exist_ok=True)
-model_path = "./log/mnist_model.pth"
-calibration_path = "./log/mnist_calibration.pth"
-calibration_config = quantizer.export_model(model_path, calibration_path)
-
-print("calibration_config: ", calibration_config)
+# Prepare the float32 model MobileNetV2
+from nni_assets.compression.mobilenetv2 import MobileNetV2
+model = MobileNetV2()
+# a checkpoint of MobileNetV2 can be found here
+# https://download.pytorch.org/models/mobilenet_v2-b0353104.pth
+float_model_file = 'mobilenet_pretrained_float.pth'
+state_dict = torch.load(float_model_file)
+model.load_state_dict(state_dict)
+model.eval()
 
 # %%
-# build tensorRT engine to make a real speedup
-
+# Speed up the model with TensorRT
 from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
-input_shape = (32, 1, 28, 28)
-engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=32)
-engine.compress()
-test_trt(engine)
+# input shape is used for converting to onnx
+engine = ModelSpeedupTensorRT(model, input_shape=(64, 3, 224, 224))
+engine.compress_with_calibrator(calib)
 
 # %%
-# Note that NNI also supports post-training quantization directly, please refer to complete examples for detail.
-#
-# For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
-#
-# For more parameters about the class 'TensorRTModelSpeedUp', you can refer to :doc:`Model Compression API Reference <../reference/compression/quantization_speedup>`.
-#
-# Mnist test
-# ^^^^^^^^^^
-#
-# on one GTX2080 GPU,
-# input tensor: ``torch.randn(128, 1, 28, 28)``
-#
-# .. list-table::
-#    :header-rows: 1
-#    :widths: auto
-#
-#    * - quantization strategy
-#      - Latency
-#      - accuracy
-#    * - all in 32bit
-#      - 0.001199961
-#      - 96%
-#    * - mixed precision(average bit 20.4)
-#      - 0.000753688
-#      - 96%
-#    * - all in 8bit
-#      - 0.000229869
-#      - 93.7%
-#
-# Cifar10 resnet18 test (train one epoch)
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# on one GTX2080 GPU,
-# input tensor: ``torch.randn(128, 3, 32, 32)``
-#
-# .. list-table::
-#    :header-rows: 1
-#    :widths: auto
-#
-#    * - quantization strategy
-#      - Latency
-#      - accuracy
-#    * - all in 32bit
-#      - 0.003286268
-#      - 54.21%
-#    * - mixed precision(average bit 11.55)
-#      - 0.001358022
-#      - 54.78%
-#    * - all in 8bit
-#      - 0.000859139
-#      - 52.81%
+# Test the accuracy of the accelerated model
+from nni_assets.compression.mobilenetv2 import AverageMeter, accuracy
+import time
+def test_accelerated_model(engine, data_loader, neval_batches):
+    top1 = AverageMeter('Acc@1', ':6.2f')
+    top5 = AverageMeter('Acc@5', ':6.2f')
+    cnt = 0
+    total_time = 0
+    for image, target in data_loader:
+        output, time_span = engine.inference(image)
+        print('time: ', time_span)
+        total_time += time_span
+        output = output.view(-1, 1000)
+        cnt += 1
+        acc1, acc5 = accuracy(output, target, topk=(1, 5))
+        top1.update(acc1[0], image.size(0))
+        top5.update(acc5[0], image.size(0))
+        if cnt >= neval_batches:
+            break
+    print('inference time: ', total_time / neval_batches)
+    return top1, top5
+
+data_loader = prepare_data_loaders(data_path, batch_size=64, datatype='test')
+top1, top5 = test_accelerated_model(engine, data_loader, neval_batches=32)
+print('Accuracy of mode #1: ', top1, top5)
+
+"""
+
+Mode #2: Using TensorRT as a pure acceleration backend
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this mode, the post-training quantization within TensorRT is not used, instead, the quantization bit-width and the range of tensor values are fed into TensorRT for speedup (i.e., with `trt.BuilderFlag.PREFER_PRECISION_CONSTRAINTS` configured).
+
+"""
+
+# %%
+# re-instantiate the MobileNetV2 model
+model = MobileNetV2()
+state_dict = torch.load(float_model_file)
+model.load_state_dict(state_dict)
+model.eval()
+device = torch.device('cuda')
+model.to(device)
+
+# %%
+# Prepare Evaluator for PtqQuantizer
+# PtqQuantizer uses eval_for_calibration to collect calibration data 
+# in the current setting, it handles 128 samples
+from nni_assets.compression.mobilenetv2 import evaluate
+from nni.compression.pytorch.utils import TorchEvaluator
+data_loader = prepare_data_loaders(data_path, batch_size=128)
+def eval_for_calibration(model):
+    evaluate(model, data_loader,
+                neval_batches=1, device=device)
+
+dummy_input = torch.Tensor(64, 3, 224, 224).to(device)
+predict_func = TorchEvaluator(predicting_func=eval_for_calibration, dummy_input=dummy_input)
+
+# %%
+# Use PtqQuantizer to quantize the model
+from nni.compression.pytorch.quantization import PtqQuantizer
+config_list = [{
+    'quant_types': ['input', 'weight', 'output'],
+    'quant_bits': {'input': 8, 'weight': 8, 'output': 8},
+    'quant_dtype': 'int',
+    'quant_scheme': 'per_tensor_symmetric',
+    'op_types': ['default']
+}]
+quantizer = PtqQuantizer(model, config_list, predict_func, True)
+quantizer.compress()
+calibration_config = quantizer.export_model()
+print('quant result config: ', calibration_config)
+
+# %%
+# Speed up the quantized model following the generated calibration_config
+# re-instantiate the MobileNetV2 model, because the calibration config is obtained
+# after applying bn folding. bn folding changes the models structure and weights.
+# As TensorRT does bn folding by itself, we should input an original model to it.
+# For simplicity, we re-instantiate a new model.
+model = MobileNetV2()
+state_dict = torch.load(float_model_file)
+model.load_state_dict(state_dict)
+model.eval()
+
+engine = ModelSpeedupTensorRT(model, input_shape=(64, 3, 224, 224), config=calibration_config)
+engine.compress()
+data_loader = prepare_data_loaders(data_path, batch_size=64, datatype='test')
+top1, top5 = test_accelerated_model(engine, data_loader, neval_batches=32)
+print('Accuracy of mode #2: ', top1, top5)

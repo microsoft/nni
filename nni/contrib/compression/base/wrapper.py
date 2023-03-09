@@ -52,6 +52,7 @@ class ModuleWrapper(torch.nn.Module):
         self.module_forward = self.module.forward
         self.name = module_name
         self.config = config if config is not None else {}
+        assert all(k in ['pruning', 'quantization', 'distillation'] for k in self.config)
 
         # the arguments' name of self.module.forward
         self._input_args_spec = inspect.getfullargspec(self.module.forward)
@@ -184,7 +185,14 @@ class ModuleWrapper(torch.nn.Module):
         pos_args_num = len(self._input_args_spec.args) - 1
         pos_args = args[:pos_args_num]
         if len(pos_args) < pos_args_num:
-            pos_args += tuple(kwargs.pop(k) for k in self._input_args_spec.args[len(pos_args) + 1:])
+            default_values = {}
+            # if some positional arguments have default values and do not pass in, append the default value to `pos_args`
+            if self._input_args_spec.defaults:
+                default_kv = {k: v for k, v in \
+                    zip(self._input_args_spec.args[-len(self._input_args_spec.defaults):], self._input_args_spec.defaults)}
+                default_values.update(default_kv)
+            pos_args += tuple(kwargs.pop(k) if k in kwargs else default_values[k] for k in self._input_args_spec.args[len(pos_args) + 1:])
+
         var_args = args[pos_args_num:]
         kwonly_args = {k: kwargs.pop(k) for k in self._input_args_spec.kwonlyargs}
         return pos_args, var_args, kwonly_args, kwargs

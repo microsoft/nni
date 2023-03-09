@@ -140,14 +140,17 @@ class Scaling:
 
         return result
 
-    def _expand(self, target: Tensor, kernel_size: List[int], expand_size: List[int]) -> Tensor:
+    def _expand(self, target: Tensor, kernel_size: List[int], expand_size: List[int], keepdim: bool = False) -> Tensor:
         """
         Main logic about how to expand target to a specific size. Subclass could override this function to customize.
         Repeat each value to reach the kernel size as a simple implementation.
         """
-        # step 1: unsqueeze the target tensor where -1 is located in kernel_size.
-        unsqueezed_dims = [dim for (dim, step) in enumerate(kernel_size) if step == -1]
-        new_target: Tensor = reduce(lambda t, dim: t.unsqueeze(dim), [target] + unsqueezed_dims)  # type: ignore
+        if not keepdim:
+            # step 1: unsqueeze the target tensor where -1 is located in kernel_size.
+            unsqueezed_dims = [dim for (dim, step) in enumerate(kernel_size) if step == -1]
+            new_target: Tensor = reduce(lambda t, dim: t.unsqueeze(dim), [target] + unsqueezed_dims)  # type: ignore
+        else:
+            new_target = target
 
         # step 2: build the _expand_size and unsqueeze target tensor on each dim
         _expand_size = []
@@ -165,7 +168,7 @@ class Scaling:
         # step 3: expanding the new target to _expand_size and reshape to expand_size.
         # Note that we can also give an interface for how to expand the tensor, like `reduce_func` in `_shrink`,
         # currently we don't have that need.
-        result = new_target.expand(_expand_size).reshape(expand_size).clone()
+        result = new_target.expand(_expand_size).reshape(expand_size)
 
         return result
 
@@ -183,7 +186,7 @@ class Scaling:
             raise ValueError(f'Unsupported kernel padding mode: {self.kernel_padding_mode}.')
         return self._shrink(target, kernel_size, reduce_func, keepdim)
 
-    def expand(self, target: Tensor, expand_size: List[int]):
+    def expand(self, target: Tensor, expand_size: List[int], keepdim: bool = False):
         # Similar with `self.shrink`, canonicalize kernel_size to expand_size length at first.
         if self.kernel_padding_mode == 'front':
             kernel_size = self._padding(self.kernel_size, len(expand_size), self.kernel_padding_val, 'front')
@@ -191,7 +194,7 @@ class Scaling:
             kernel_size = self._padding(self.kernel_size, len(expand_size), self.kernel_padding_val, 'back')
         else:
             raise ValueError(f'Unsupported kernel padding mode: {self.kernel_padding_mode}.')
-        return self._expand(target, kernel_size, expand_size)
+        return self._expand(target, kernel_size, expand_size, keepdim)
 
     def validate(self, target: List[int] | Tensor):
         """
