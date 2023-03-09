@@ -1,3 +1,10 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
+/**
+ *  Add RPC capability to WebSocket command channel.
+ **/
+
 import util from 'node:util';
 
 import type { Command } from 'common/command_channel/interface';
