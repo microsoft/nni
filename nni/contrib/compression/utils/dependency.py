@@ -41,7 +41,7 @@ def auto_set_denpendency_group_ids(model: torch.nn.Module, config_list: List[Dic
     config_list = trans_legacy_config_list(config_list)
     new_config_list = []
     for config in config_list:
-        modules, public_config = select_modules_by_config(model, config)
+        modules, public_config, _ = select_modules_by_config(model, config)
         for name in modules.keys():
             sub_config = deepcopy(public_config)
             if name in module2uid:
