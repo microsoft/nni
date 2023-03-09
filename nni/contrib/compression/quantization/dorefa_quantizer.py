@@ -9,7 +9,6 @@ from torch import Tensor
 
 from ..base.compressor import Quantizer
 from ..base.wrapper import ModuleWrapper
-from ..base.setting import INPUT_PREFIX, OUTPUT_PREFIX
 from ..utils.evaluator import Evaluator
 from ..base.target_space import TargetType
 
@@ -52,12 +51,12 @@ class DoReFaQuantizer(Quantizer):
 
     def register_dorefa_apply_method(self):
         for _, ts in self._target_spaces.items():
-            for target_name, target_space in ts.items():
+            for _, target_space in ts.items():
                 if target_space.type is TargetType.PARAMETER:
                     target_space.apply_method = 'dofera_clamp_round_weight'
-                elif INPUT_PREFIX in target_name:
+                elif target_space.type is TargetType.INPUT:
                     target_space.apply_method = "dofera_clamp_round_input"
-                elif OUTPUT_PREFIX in target_name:
+                elif target_space.type is TargetType.OUTPUT:
                     target_space.apply_method = "dofera_clamp_round_output"
 
     def register_track_func(self):
@@ -69,12 +68,12 @@ class DoReFaQuantizer(Quantizer):
         if not wrapper.training or target_name not in wrapper.quantization_target_spaces:
             return
         target_space = wrapper.quantization_target_spaces[target_name]
-        if INPUT_PREFIX in target_name or "weight" in target_name: #zero_point and scale don't change anymore
+        if target_space.type is TargetType.INPUT or "weight" in target_name: #zero_point and scale don't change anymore
             tracked_max = torch.tensor(1.0).to(target.device)
             tracked_min = torch.tensor(0.0).to(target.device)
             scale, zero_point = update_scale_zp(tracked_max, tracked_min, target_space.qmax, \
                                 target_space.qmin, 'affine')
-        elif OUTPUT_PREFIX in target_name:
+        elif target_space.type is TargetType.OUTPUT:
             tracked_max = torch.tensor(1.0 + 0.5 / (2**target_space.quant_bits - 1)).to(target.device)
             tracked_min = torch.tensor(0 - 0.5 / (2**target_space.quant_bits - 1)).to(target.device)
             scale, zero_point = update_scale_zp(tracked_max, tracked_min, target_space.qmax, \
