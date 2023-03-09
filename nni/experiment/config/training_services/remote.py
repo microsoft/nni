@@ -64,7 +64,7 @@ class RemoteMachineConfig(ConfigBase):
 class RemoteConfig(TrainingServiceConfig):
     platform: Literal['remote'] = 'remote'
     machine_list: List[RemoteMachineConfig]
-    #reuse_mode: bool = True
+    reuse_mode: bool = False
 
     def _validate_canonical(self):
         super()._validate_canonical()
