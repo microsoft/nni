@@ -209,6 +209,17 @@ class ChannelDependency(Dependency):
                         break
                 if cat_dim != 1:
                     parent_layers = self._get_parent_layers(node)
+
+            # additional denpendency for (group number == output channel number) depth-wise conv
+            if node.op_type in ['Conv2d', 'ConvTranspose2d', "GroupNorm"]:
+                if node.op_type in ['Conv2d', 'ConvTranspose2d']:
+                    condition = self._conv_condition(node)
+                elif node.op_type == "GroupNorm":
+                    condition = self._group_norm_condition(node)
+                if condition:
+                    parent_layers.append(node.name)
+                    parent_layers.extend(self._depthwise_get_parent(node))
+
             dependency_set = set(parent_layers)
             # merge the dependencies
             for parent in parent_layers:
@@ -217,6 +228,43 @@ class ChannelDependency(Dependency):
             # save the dependencies
             for _node in dependency_set:
                 self.dependency[_node] = dependency_set
+
+    def _conv_condition(self, node_group):
+        node_name = node_group.name
+        _, leaf_module = get_module_by_name(self.model, node_name)
+        if isinstance(leaf_module, (PrunerModuleWrapper, PrunerModuleWrapper_v2)):
+            leaf_module = leaf_module.module
+        assert isinstance(
+            leaf_module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d))
+        group = leaf_module.groups
+        n_filter = leaf_module.out_channels
+        return n_filter == group
+
+    def _group_norm_condition(self, node_group) -> int:
+        node_name = node_group.name
+        _, leaf_module = get_module_by_name(self.model, node_name)
+        if isinstance(leaf_module, (PrunerModuleWrapper, PrunerModuleWrapper_v2)):
+            leaf_module = leaf_module.module
+        assert isinstance(leaf_module, (torch.nn.GroupNorm))
+        return leaf_module.num_groups == leaf_module.num_channels
+
+    def _depthwise_get_parent(self, node):
+        parent_layers = []
+        # the input node is a Conv node
+        predeessors = self.graph.find_predecessors(node.unique_name)
+        predeessors = [self.graph.name_to_node[x] for x in predeessors]
+        queue = predeessors
+        while queue:
+            curnode = queue.pop(0)
+            if curnode.op_type == 'Conv2d' or curnode.op_type == 'ConvTranspose2d' or curnode.op_type == 'Linear':
+                # find the first met conv
+                parent_layers.append(curnode.name)
+                continue
+            parents = self.graph.find_predecessors(curnode.unique_name)
+            parents = [self.graph.name_to_node[name] for name in parents]
+            for parent in parents:
+                queue.append(parent)
+        return parent_layers
 
     def export(self, filepath):
         """
@@ -399,7 +447,7 @@ class GroupDependency(Dependency):
         queue = predeessors
         while queue:
             curnode = queue.pop(0)
-            if curnode.op_type == 'Conv2d' or curnode.op_type == 'ConvTranspose2d':
+            if curnode.op_type == 'Conv2d' or curnode.op_type == 'ConvTranspose2d' or curnode.op_type == 'Linear':
                 # find the first met conv
                 parent_layers.append(curnode.name)
                 continue
