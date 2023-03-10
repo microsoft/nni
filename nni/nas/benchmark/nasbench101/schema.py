@@ -4,7 +4,7 @@
 from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model, Proxy
 from playhouse.sqlite_ext import JSONField
 
-from nni.nas.benchmarks.utils import json_dumps
+from nni.nas.benchmark.utils import json_dumps
 
 proxy = Proxy()
 
