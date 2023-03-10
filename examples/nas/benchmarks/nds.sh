@@ -16,5 +16,5 @@ unzip data.zip
 echo "Generating database..."
 rm -f ${NASBENCHMARK_DIR}/nds.db ${NASBENCHMARK_DIR}/nds.db-journal
 mkdir -p ${NASBENCHMARK_DIR}
-python3 -m nni.nas.benchmarks.nds.db_gen nds_data
+python3 -m nni.nas.benchmark.nds.db_gen nds_data
 rm -rf data.zip nds_data
