@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+import inspect
 import logging
 from pathlib import Path
 import tempfile
@@ -34,7 +35,9 @@ from .utils import tree_map_zip
 @compatibility(is_backward_compatible=True)
 class ModelSpeedup(torch.fx.Interpreter):
     """
-    This class is to speedup the model with provided weight mask.
+    This class is to speedup the model with provided weight mask, the masked module will be replaced by a new dense module.
+    ModelSpeedup use concrete trace based on ``torch.fx`` to get the graph,
+    note that the trace may fail if there is stochastic structure in the model.
 
     Parameters
     ----------
@@ -42,7 +45,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         The model user wants to speedup.
     dummy_input
         A tensor or a tuple, the dummy input to execute the model.
-    masks_file
+    masks_or_file
         The path of user provided masks file, or the masks object.
     map_location
         The device on which masks are placed, same to map_location in ```torch.load```.
@@ -62,6 +65,10 @@ class ModelSpeedup(torch.fx.Interpreter):
         Users can costomized the replacement logic by customized a replacer.
         Before the built-in replacement logic in nni is executed,
         the replacement logic in the customized replacer list will be executed sequentially first.
+    graph_module
+        A torch.fx.GraphModule.
+        If ModelSpeedup default concrete trace cannot meet the needs,
+        users can directly pass in a torch.fx.GraphModule instead.
     garbage_collect_values
         If the garbage_collect_values is True, nni will delete cache information after the cache has none usage.
     logger
@@ -70,25 +77,27 @@ class ModelSpeedup(torch.fx.Interpreter):
     STD_DELTA = 1e-6
 
     def __init__(self,
-                 model: torch.nn.Module | GraphModule,
+                 model: torch.nn.Module,
                  dummy_input: Any,
-                 masks_file: Any,
+                 masks_or_file: Any,
                  map_location: Any = None,
                  batch_dim: int = 0,
                  batch_size: int = 8,
                  customized_mask_updaters: List[MaskUpdater] | None = None,
                  customized_replacers: List[Replacer] | None = None,
+                 graph_module: GraphModule | None = None,
                  garbage_collect_values: bool = True,
                  logger: logging.Logger | None = None):
         self.dummy_input = (dummy_input,) if isinstance(dummy_input, torch.Tensor) else tuple(dummy_input)
-        self.module = model if isinstance(model, GraphModule) else concrete_trace(model, self.dummy_input, use_function_patch=True)
+        self.bound_model = model
+        self.graph_module = graph_module if isinstance(graph_module, GraphModule) else concrete_trace(model, self.dummy_input)
 
-        super().__init__(self.module, garbage_collect_values)
+        super().__init__(self.graph_module, garbage_collect_values)
 
-        if isinstance(masks_file, (str, Path)) and Path(masks_file).exists():
-            self.masks_file = torch.load(masks_file, map_location)
-        elif isinstance(masks_file, dict):
-            self.masks_file = masks_file
+        if isinstance(masks_or_file, (str, Path)) and Path(masks_or_file).exists():
+            self.masks = torch.load(masks_or_file, map_location)
+        elif isinstance(masks_or_file, dict):
+            self.masks = masks_or_file
         else:
             raise Exception('Please provide the mask or the path of the mask file.')
 
@@ -96,7 +105,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.batch_size = batch_size
 
         self.mask_updaters: List[MaskUpdater] = [
-            *(customized_mask_updaters if customized_replacers else []),
+            *(customized_mask_updaters if customized_mask_updaters else []),
             NoChangeMaskUpdater(),
             NoMaskUpdater(),
             LeafModuleMaskUpdater(),
@@ -114,12 +123,12 @@ class ModelSpeedup(torch.fx.Interpreter):
             self.logger = logger
 
         self.node_infos: Dict[Node, NodeInfo] = {}
-        for node in self.module.graph.nodes:
+        for node in self.graph_module.graph.nodes:
             self.node_infos[node] = NodeInfo(node)
 
     @compatibility(is_backward_compatible=True)
     def store_attr(self, path: str, obj: Any):
-        set_nested_attr(self.module, path, obj)
+        set_nested_attr(self.graph_module, path, obj)
 
     @compatibility(is_backward_compatible=True)
     def placeholder(self, target: Target, args, kwargs) -> Any:
@@ -199,7 +208,7 @@ class ModelSpeedup(torch.fx.Interpreter):
                 and node_info.output_inplace(intermediate variables after in-place ops)
         """
         self.logger.info("Propagate original variables")
-        for node in self.module.graph.nodes:
+        for node in self.graph_module.graph.nodes:
             node: Node
             self.logger.info('Propagate variables for %s: %s', node.op, node.name)
 
@@ -211,6 +220,8 @@ class ModelSpeedup(torch.fx.Interpreter):
             self.node_infos[node].output_origin = output
             self.node_infos[node].output_inplace = \
                 tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else deepcopy(t), output)
+            self.node_infos[node].output_masks = \
+                tree_map_zip(lambda t: torch.ones_like(t).clone().detach() if isinstance(t, torch.Tensor) else None, output)
 
             if self.garbage_collect_values:
                 # do memory collect to reduce memory usage
@@ -221,16 +232,16 @@ class ModelSpeedup(torch.fx.Interpreter):
         # update direct out mask
         self.logger.info("Update direct sparsity...")
 
-        for node in self.module.graph.nodes:
+        for node in self.graph_module.graph.nodes:
             node: Node
             self.node_infos[node].mask_updater.direct_update_preprocess(self, node)
 
-        for node in self.module.graph.nodes:
+        for node in self.graph_module.graph.nodes:
             node: Node
             self.logger.info('Update direct mask for %s: %s', node.op, node.name)
             self.node_infos[node].mask_updater.direct_update_process(self, node)
 
-        for node in self.module.graph.nodes:
+        for node in self.graph_module.graph.nodes:
             node: Node
             self.node_infos[node].mask_updater.direct_update_postprocess(self, node)
 
@@ -238,16 +249,16 @@ class ModelSpeedup(torch.fx.Interpreter):
         # update indirect out mask
         self.logger.info("Update indirect sparsity...")
 
-        for node in reversed(self.module.graph.nodes):
+        for node in reversed(self.graph_module.graph.nodes):
             node: Node
             self.node_infos[node].mask_updater.indirect_update_preprocess(self, node)
 
-        for node in reversed(self.module.graph.nodes):
+        for node in reversed(self.graph_module.graph.nodes):
             node: Node
             self.logger.info('Update indirect mask for %s: %s', node.op, node.name)
             self.node_infos[node].mask_updater.indirect_update_process(self, node)
 
-        for node in reversed(self.module.graph.nodes):
+        for node in reversed(self.graph_module.graph.nodes):
             node: Node
             self.node_infos[node].mask_updater.indirect_update_postprocess(self, node)
 
@@ -266,7 +277,7 @@ class ModelSpeedup(torch.fx.Interpreter):
             for replacer in self.replacers:
                 replacer.replace_modules(self)
         for node in self.node_infos:
-            if node.op == 'call_module':
+            if node.op == 'call_module' and not self.node_infos[node].replaced:
                 module = self.fetch_attr(node.target)
                 module_type = module._get_name()
                 err_msg = f"Has not supported replacing module with type: {module_type}, "
@@ -290,7 +301,7 @@ class ModelSpeedup(torch.fx.Interpreter):
                 return obj
 
         # input of the whole model
-        placeholders: List[Node] = [node for node in self.module.graph.nodes if node.op == 'placeholder']
+        placeholders: List[Node] = [node for node in self.graph_module.graph.nodes if node.op == 'placeholder']
         assert len(args) <= len(placeholders)
         args = tree_map_zip(model_tensor_randomizer, args)
         self.arg_dict = {}
@@ -309,98 +320,62 @@ class ModelSpeedup(torch.fx.Interpreter):
                     self.node_infos[node].mask_updater = mask_updater
                     break
 
-        # The following code is related to preset input/output mask...
+        for node_info in self.node_infos.values():
+            if node_info.module is None:
+                continue
+            masks = self.masks.get(node_info.node.target, {})
 
-        # node_to_masks = defaultdict(list)
-        # for node in (node for node in self.node_infos if self.node_infos[node].module is not None):
-        #     # some 'call_module's has no 'module' such as 'log_softmax'
-        #     param_masks = self.masks_file.get(node.target, {})
-        #     if '_output_' in param_masks:
-        #         node_to_masks[node].append(param_masks['_output_'])
-        #     if '_input_' in param_masks:
-        #         func = self.fetch_attr(node.target).forward
-        #         while hasattr(func, '__wrapped__'):
-        #             func = func.__wrapped__
-        #         arg_list = inspect.getfullargspec(func).args
-        #         kw_to_posi = dict(zip(arg_list[1:], range(len(arg_list))[1:]))
-        #         node_kw = {
-        #             **dict(zip(range(len(arg_list))[1:], node.args)),
-        #             **dict(zip(arg_list[1:], node.args)),
-        #             **{kw_to_posi[k]: v for k, v in node.kwargs.items()},
-        #             **node.kwargs,
-        #         }
-        #         for key, mask in param_masks['_input_'].items():
-        #             node_to_masks[node_kw[key]].append(mask)
+            output_masks = {name: masks[name] for name in filter(lambda name: name.startswith('_output_'), masks.keys())}
+            if output_masks:
+                if isinstance(node_info.output_masks, torch.Tensor):
+                    node_info.output_masks *= list(output_masks.values())[0]
+                elif isinstance(node_info.output_masks, (list, tuple)):
+                    for key, mask in output_masks.items():
+                        key = key.split('_output_')[1]
+                        assert key.isnumeric()
+                        if mask is not None:
+                            node_info.output_masks[int(key)] *= mask
+                elif isinstance(node_info.output_masks, dict):
+                    for key, mask in output_masks.items():
+                        if mask is not None:
+                            key = key.split('_output_')[1]
+                            node_info.output_masks[key] *= mask
+                else:
+                    raise RuntimeError(f'Unsupported output type {type(node_info.output_masks)}.')
 
-        # def check_equal(a, b):
-        #     if type(a) != type(b):
-        #         return False
-        #     if isinstance(a, (list, tuple)):
-        #         if len(a) != len(b):
-        #             return False
-        #         for sub_a, sub_b in zip(a, b):
-        #             if not check_equal(sub_a, sub_b):
-        #                 return False
-        #         return True
-        #     elif isinstance(a, dict):
-        #         if len(set(a.keys()).symmetric_difference(b.keys())) != 0:
-        #             return False
-        #         for key in a.keys():
-        #             if not check_equal(a[key], b[key]):
-        #                 return False
-        #         return True
-        #     else:
-        #         assert isinstance(a, torch.Tensor), f'contents in masks can only be (list, tuple, dict, Tensor), not ({type(a)})'
-        #         return torch.equal(a, b) # totally equal, no bias
-
-        # def check_valid(a, b):
-        #     if isinstance(a, (list, tuple)):
-        #         if not isinstance(b, (list, tuple)):
-        #             return False
-        #         if len(a) != len(b):
-        #             return False
-        #         for sub_a, sub_b in zip(a, b):
-        #             if not check_equal(sub_a, sub_b):
-        #                 return False
-        #         return True
-        #     elif isinstance(a, dict):
-        #         if not isinstance(b, dict):
-        #             return False
-        #         if len(set(a.keys()).symmetric_difference(b.keys())) != 0:
-        #             return False
-        #         for key in a.keys():
-        #             if not check_equal(a[key], b[key]):
-        #                 return False
-        #         return True
-        #     elif isinstance(a, torch.Tensor):
-        #         if not isinstance(b, torch.Tensor):
-        #             return False
-        #         return a.shape == b.shape
-        #     else:
-        #         return b is None
-
-        # for node, masks in node_to_masks.items():
-        #     if len(masks) >= 1:
-        #         mask = masks[0]
-        #         for mask_next in masks[1:]:
-        #             assert check_equal(mask, mask_next), f'preset-masks of "{node}" are not euqal!'
-        #         assert check_valid(self.node_infos[node].output_origin, mask),\
-        #             f'structure of preset-mask and value of slot "{node}" are not euqal!'
-        #         self.node_infos[node].output_masks = mask
+            input_masks = {name: masks[name] for name in filter(lambda name: name.startswith('_input_'), masks.keys())}
+            if input_masks:
+                func = self.fetch_attr(node_info.node.target).forward
+                while hasattr(func, '__wrapped__'):
+                    func = func.__wrapped__
+                arg_list = inspect.getfullargspec(func).args
+                kw_to_posi = dict(zip(arg_list[1:], range(len(arg_list) - 1)))
+                node_kw = {
+                    **dict(zip(range(len(arg_list) - 1), node_info.node.args)),
+                    **dict(zip(arg_list[1:], node_info.node.args)),
+                    **{kw_to_posi[k]: v for k, v in node.kwargs.items()},
+                    **node_info.node.kwargs,
+                }
+                for key, mask in input_masks.items():
+                    key = key.split('_input_')[1]
+                    key = int(key) if key.isnumeric() else key
+                    if isinstance(mask, torch.Tensor):
+                        assert isinstance(self.node_infos[node_kw[key]].output_masks, torch.Tensor)
+                        self.node_infos[node_kw[key]].output_masks *= mask.detach().clone()
 
     def speedup_model(self) -> GraphModule:
         try:
             ori_state_dict_file = tempfile.NamedTemporaryFile(delete=False)
-            torch.save(self.module.state_dict(), ori_state_dict_file)
+            torch.save(self.graph_module.state_dict(), ori_state_dict_file)
             ori_state_dict_file.close()
 
             self.logger.info("Start to speedup the model...")
-            training = self.module.training
-            self.module.train(False)
+            training = self.graph_module.training
+            self.graph_module.train(False)
 
             # TODO: suppose to fix the conflict after the sparsity propagation, which is more elegent
             self.logger.info('Resolve the mask conflict before mask propagate...')
-            fix_mask_conflict(self.masks_file, self.module, self.dummy_input)
+            fix_mask_conflict(self.masks, self.graph_module, self.dummy_input)
             self.logger.info('Infer module masks...')
             self.initialize_propagate(self.dummy_input)
             self.propagate_originally()
@@ -408,18 +383,18 @@ class ModelSpeedup(torch.fx.Interpreter):
             self.update_direct_sparsity()
             self.update_indirect_sparsity()
             self.logger.info('Resolve the mask conflict after mask propagate...')
-            fix_mask_conflict(self.masks_file, self.module, self.dummy_input)
+            fix_mask_conflict(self.masks, self.graph_module, self.dummy_input)
 
-            self.module.load_state_dict(torch.load(ori_state_dict_file.name))
+            self.graph_module.load_state_dict(torch.load(ori_state_dict_file.name))
+            self.graph_module.train(training)
         finally:
             import os
             os.unlink(ori_state_dict_file.name)
 
         self.replace_compressed_modules()
-        self.module.train(training)
         self.logger.info("Speedup done.")
 
-        return self.module
+        return self.bound_model
 
     def run(self):
         self.speedup_model()

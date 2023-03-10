@@ -33,13 +33,13 @@ class TrialClient(TrialCommandChannel):
             self._trial_id = trial_env_vars.NNI_TRIAL_JOB_ID
 
     def receive_parameter(self) -> ParameterRecord | None:
-        response = requests.get(TrialServerHandler.ADDRESS + '/parameter/' + self._trial_id)
+        response = requests.get(self._url + '/parameter/' + self._trial_id)
         if response.status_code != 200:
             _logger.error('Failed to receive parameter: %s', response)
             return None
         parameter = response.json()['parameter']
         if not parameter:
-            _logger.error('Received empty parameter: \'%s\'', parameter)
+            _logger.warning('Received empty parameter: \'%s\'', parameter)
             return None
         if not isinstance(parameter, str):
             _logger.error('Received invalid parameter: \'%s\'', parameter)
@@ -54,6 +54,9 @@ class TrialClient(TrialCommandChannel):
         sequence: int,
         value: TrialMetric
     ) -> None:
+        if trial_job_id != self._trial_id:
+            _logger.warning('Trial job id does not match: %s vs. %s. Metric will be ignored.', trial_job_id, self._trial_id)
+            return
         metric = {
             'parameter_id': parameter_id,
             'trial_job_id': trial_job_id,

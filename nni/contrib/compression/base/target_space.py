@@ -133,13 +133,15 @@ class PruningTargetSpace(TargetSpace):
     def mask(self, val: Tensor | None):
         self._tensor_setter_helper(self._mask_name, val)
 
-    # don't support setter
     @property
     def apply_method(self) -> str:
         _method = self.setting.get('apply_method', None)
         _method = _method if _method else 'mul'
-        assert _method in ['mul', 'add']
         return _method
+
+    @apply_method.setter
+    def apply_method(self, val: str):
+        self._setting['apply_method'] = val
 
     @property
     def sparse_ratio(self) -> float | None:
@@ -183,7 +185,7 @@ class PruningTargetSpace(TargetSpace):
 
     @granularity.setter
     def granularity(self, val: List[int] | Tuple[List[int], str, int] | str | None):
-        if isinstance(val, abc.Sequence):
+        if isinstance(val, abc.Sequence) and not isinstance(val, str):
             assert all(isinstance(v, int) for v in val) or \
                    (all(isinstance(v, int) for v in val[0]) and  # type: ignore
                     isinstance(val[1], str) if len(val) > 1 else True and \
@@ -289,11 +291,11 @@ class QuantizationTargetSpace(TargetSpace):
         self._tensor_setter_helper(self._zero_point_name, val)
 
     @property
-    def qmax(self) -> int | None:
+    def qmax(self) -> int:
         return self._get_wrapper_attr(self._qmax_name)
 
     @property
-    def qmin(self) -> int | None:
+    def qmin(self) -> int:
         return self._get_wrapper_attr(self._qmin_name)
 
     @property
@@ -318,7 +320,7 @@ class QuantizationTargetSpace(TargetSpace):
 
     @granularity.setter
     def granularity(self, val: List[int] | Tuple[List[int], str, int] | str | None):
-        if isinstance(val, abc.Sequence):
+        if isinstance(val, abc.Sequence) and not isinstance(val, str):
             assert all(isinstance(v, int) for v in val) or \
                    (all(isinstance(v, int) for v in val[0]) and  # type: ignore
                     isinstance(val[1], str) if len(val) > 1 else True and \
@@ -351,6 +353,8 @@ class DistillationTargetSpace(TargetSpace):
         assert target_type is TargetType.INPUT or target_type is TargetType.OUTPUT
         super().__init__(wrapper, target_name, target_type, setting)
         self._buffer = []
+        # 'append' will record each observed tensor and cost a lot memory, 'refresh' only record the latest tensor.
+        self._buffer_mode = 'refresh'
 
     def clean(self):
         self._buffer.clear()
@@ -370,7 +374,13 @@ class DistillationTargetSpace(TargetSpace):
     def hidden_state(self, val: torch.Tensor):
         if not isinstance(val, torch.Tensor):
             raise TypeError('Only support saving tensor as distillation hidden_state.')
-        self._buffer.append(val)
+        if self._buffer_mode == 'append':
+            self._buffer.append(val)
+        elif self._buffer_mode == 'refresh':
+            self._buffer.clear()
+            self._buffer.append(val)
+        else:
+            raise RuntimeError(f'Unsupported buffer mode: {self._buffer_mode}')
 
     @property
     def lambda_(self) -> float | None:
@@ -382,8 +392,13 @@ class DistillationTargetSpace(TargetSpace):
         self._setting['lambda'] = val
 
     @property
-    def link(self):
+    def link(self) -> str | List[str] | Tuple[str]:
         return self.setting.get('link', None)
+
+    @link.setter
+    def link(self, val: str | List[str] | Tuple[str]):
+        assert isinstance(val, str) or all(isinstance(v, str) for v in val)
+        self._setting['link'] = val
 
     @property
     def apply_method(self) -> str:
