@@ -58,6 +58,7 @@ export class RemoteTrialKeeper {
             this.rpc.call(this.id, 'onTrialStart', undefined, [ this.emitTrialStart.bind(this) ]),
             this.rpc.call(this.id, 'onTrialStop', undefined, [ this.emitTrialStop.bind(this) ]),
             this.rpc.call(this.id, 'onReceiveCommand', undefined, [ this.emitCommand.bind(this) ]),
+            this.rpc.call(this.id, 'onEnvironmentUpdate', undefined, [ this.emitEnvUpdate.bind(this) ]),
         ]);
 
         this.initialized.resolve();
@@ -114,5 +115,13 @@ export class RemoteTrialKeeper {
 
     private emitCommand(trialId: string, command: Command): void {
         this.emitter.emit(command.type, trialId, command);
+    }
+
+    public onEnvironmentUpdate(callback: (environmentInfo: EnvironmentInfo) => void): void {
+        this.emitter.on('__env_update', callback);
+    }
+
+    private emitEnvUpdate(envInfo: EnvironmentInfo): void {
+        this.emitter.emit('__env_update', envInfo);
     }
 }

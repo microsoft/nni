@@ -54,6 +54,7 @@ export declare namespace TrialKeeper {
 
 export class TrialKeeper {
     private envId: string;
+    private envInfo!: EnvironmentInfo;
     private channels: HttpChannelServer;
     private dirs: Map<string, string> = new Map();
     private emitter: EventEmitter = new EventEmitter();
@@ -68,6 +69,10 @@ export class TrialKeeper {
         this.log = getLogger(`TrialKeeper.${environmentId}`);
 
         this.scheduler = new TaskSchedulerClient(enableGpuScheduling);
+        this.scheduler.onUtilityUpdate(info => {
+            Object.assign(this.envInfo, info);
+            this.emitter.emit('env_update', this.envInfo);
+        });
 
         this.channels = new HttpChannelServer(this.envId, `/env/${this.envId}`);
         this.channels.onReceive((trialId, command) => {
@@ -79,11 +84,15 @@ export class TrialKeeper {
     }
 
     // TODO: support user configurable init command
-    public async start(): Promise<void> {
+    public async start(): Promise<EnvironmentInfo> {
         await Promise.all([
             this.scheduler.start(),
             this.channels.start(),
         ]);
+
+        this.envInfo = { id: this.envId, type: 'hot' };
+        Object.assign(this.envInfo, await collectWorkerInfo());
+        return this.envInfo;
     }
 
     public async shutdown(): Promise<void> {
@@ -133,10 +142,10 @@ export class TrialKeeper {
 
         const trial = new TrialProcess(trialId);
         trial.onStart(timestamp => {
-            this.emitter.emit('trial-start', trialId, timestamp);
+            this.emitter.emit('trial_start', trialId, timestamp);
         });
         trial.onStop((timestamp, exitCode, _signal) => {
-            this.emitter.emit('trial-stop', trialId, timestamp, exitCode);
+            this.emitter.emit('trial_stop', trialId, timestamp, exitCode);
             this.scheduler.release(trialId);  // TODO: fire and forget, handle exception?
         });
 
@@ -168,11 +177,11 @@ export class TrialKeeper {
     }
 
     public onTrialStart(callback: (trialId: string, timestamp: number) => void): void {
-        this.emitter.on('trial-start', callback);
+        this.emitter.on('trial_start', callback);
     }
 
     public onTrialStop(callback: (trialId: string, timestamp: number, exitCode: number | null) => void): void {
-        this.emitter.on('trial-stop', callback);
+        this.emitter.on('trial_stop', callback);
     }
 
     public onReceiveCommand(callback: (trialId: string, command: Command) => void): void;
@@ -188,5 +197,9 @@ export class TrialKeeper {
         } else {
             this.emitter.on('command', commandTypeOrCallback);
         }
+    }
+
+    public onEnvironmentUpdate(callback: (info: EnvironmentInfo) => void): void {
+        this.emitter.on('env_update', callback);
     }
 }
