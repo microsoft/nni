@@ -6,7 +6,7 @@ import os
 import argparse
 import tqdm
 
-from .model import db, NlpTrialConfig, NlpTrialStats, NlpIntermediateStats
+from .schema import db, NlpTrialConfig, NlpTrialStats, NlpIntermediateStats
 
 def main():
     parser = argparse.ArgumentParser()

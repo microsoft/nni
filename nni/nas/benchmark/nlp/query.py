@@ -5,7 +5,7 @@ import functools
 
 from peewee import fn
 from playhouse.shortcuts import model_to_dict
-from .model import NlpTrialStats, NlpTrialConfig
+from .schema import NlpTrialStats, NlpTrialConfig
 
 def query_nlp_trial_stats(arch, dataset, reduction=None, include_intermediates=False):
     """

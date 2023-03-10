@@ -6,8 +6,8 @@ import functools
 from peewee import fn
 from playhouse.shortcuts import model_to_dict
 
-from nni.nas.benchmarks.utils import load_benchmark
-from .model import NdsTrialStats, NdsTrialConfig, proxy
+from nni.nas.benchmark.utils import load_benchmark
+from .schema import NdsTrialStats, NdsTrialConfig, proxy
 
 
 def query_nds_trial_stats(model_family, proposer, generator, model_spec, cell_spec, dataset,

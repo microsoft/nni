@@ -7,9 +7,9 @@ import re
 import tqdm
 import torch
 
-from nni.nas.benchmarks.utils import load_benchmark
+from nni.nas.benchmark.utils import load_benchmark
 from .constants import NONE, SKIP_CONNECT, CONV_1X1, CONV_3X3, AVG_POOL_3X3
-from .model import Nb201TrialConfig, Nb201TrialStats, Nb201IntermediateStats
+from .schema import Nb201TrialConfig, Nb201TrialStats, Nb201IntermediateStats
 
 
 def parse_arch_str(arch_str):

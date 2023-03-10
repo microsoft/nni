@@ -6,8 +6,8 @@ import os
 from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model
 from playhouse.sqlite_ext import JSONField, SqliteExtDatabase
 
-from nni.nas.benchmarks.utils import json_dumps
-from nni.nas.benchmarks.constants import DATABASE_DIR
+from nni.nas.benchmark.utils import json_dumps
+from nni.nas.benchmark.constants import DATABASE_DIR
 
 db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nlp.db'), autoconnect=True)
 
