@@ -1422,7 +1422,7 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                     user_deleted = recursively_check_node(user)
                     if not user_deleted:
                         return False
-            if not n.users:
+            if not n.users and n.op != 'placeholder':
                 for input_node in n.all_input_nodes:
                     input_node.users.pop(n)
                 n._remove_from_list()
