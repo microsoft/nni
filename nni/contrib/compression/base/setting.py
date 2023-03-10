@@ -217,6 +217,7 @@ class QuantizationSetting(ModuleSetting):
         'BatchNorm1d': default_setting,
         'Hardtanh': activation_setting,
         'MaxPool2d': activation_setting,
+        'BatchNorm2d': default_setting,
     }
 
 

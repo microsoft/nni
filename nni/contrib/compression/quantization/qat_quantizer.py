@@ -165,7 +165,7 @@ class QATQuantizer(Quantizer):
 
     def _fuse_preprocess(self, evaluator: Evaluator) -> None:
         module_name_param_dict = self.patch_optimizer_param_group()
-        if module_name_param_dict is not None:
+        if len(module_name_param_dict) > 0:
             evaluator.patch_optim_param_group(module_name_param_dict)
         self.register_trigger(evaluator)
 

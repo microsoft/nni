@@ -72,6 +72,3 @@ def test_lsq_forward_with_lighting_model():
     model = SimpleLightningModel().to(device)
     quantizer = LsqQuantizer(model, configure_list, evaluator)
     quantizer.compress(None, 20)
-    
-
-

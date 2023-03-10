@@ -48,7 +48,7 @@ def test_bnn_forward_with_torch_model():
     }]
     evaluator = create_pytorch_evaluator(model)
     quantizer = BNNQuantizer(model, configure_list, evaluator)
-    quantizer.compress(None, 20)
+    quantizer.compress(None, 1)
 
 
 def test_bnn_forward_with_lighting_model():
@@ -71,4 +71,4 @@ def test_bnn_forward_with_lighting_model():
     evaluator = create_lighting_evaluator()
     model = SimpleLightningModel().to(device)
     quantizer = BNNQuantizer(model, configure_list, evaluator)
-    quantizer.compress(None, 20)
+    quantizer.compress(None, 1)

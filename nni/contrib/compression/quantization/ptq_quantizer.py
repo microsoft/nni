@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
-from typing import List, Dict, Union
+from typing import List, Dict, Union, overload
 
 import torch
 from torch import Tensor
@@ -25,8 +25,6 @@ class PtqQuantizer(Quantizer):
         Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
         TODO: {evaluator_docstring}
-    quant_start_step
-        The steps for warmup training before QAT begin.
 
     Examples
     --------
@@ -39,16 +37,22 @@ class PtqQuantizer(Quantizer):
         >>> quantizer = PtqQuantizer(model, configure_list, evaluator)
         >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
     '''
+    @overload
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator):
+        ...
+
+    @overload
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
+                 existed_wrappers: Dict[str, ModuleWrapper] | None = None):
+        ...
+
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, \
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None):
-        super().__init__(model, config_list, evaluator, existed_wrappers=existed_wrappers)
+        super().__init__(model, config_list, evaluator, existed_wrappers)
         self.evaluator: Evaluator
         self.is_compressed = False
         self.register_ptq_apply_method()
         self.register_track_func()
-
-    def _validate_config(self):
-        pass
 
     def register_ptq_apply_method(self):
         for _, ts in self._target_spaces.items():
@@ -114,7 +118,7 @@ class PtqQuantizer(Quantizer):
 
     def _fuse_preprocess(self, evaluator: Evaluator) -> None:
         module_name_param_dict = self.patch_optimizer_param_group()
-        if module_name_param_dict is not None:
+        if len(module_name_param_dict) > 0:
             evaluator.patch_optim_param_group(module_name_param_dict)
 
     def _fuse_postprocess(self, evaluator: Evaluator) -> None:

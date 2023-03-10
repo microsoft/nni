@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Dict
+from typing import List, Dict, overload
 
 import torch
 from torch import Tensor
@@ -39,8 +39,6 @@ class BNNQuantizer(Quantizer):
         Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
         TODO: {evaluator_docstring}
-    quant_start_step
-        The steps for warmup training before QAT begin.
 
     Examples
     --------
@@ -53,9 +51,18 @@ class BNNQuantizer(Quantizer):
         >>> quantizer = BNNQuantizer(model, configure_list, evaluator)
         >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
     """
+    @overload
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator):
+        ...
+
+    @overload
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
+                 existed_wrappers: Dict[str, ModuleWrapper] | None = None):
+        ...
+
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, \
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None):
-        super().__init__(model, config_list, evaluator, existed_wrappers=existed_wrappers)
+        super().__init__(model, config_list, evaluator, existed_wrappers)
 
         self.check_validation()
         self.evaluator: Evaluator
@@ -92,8 +99,8 @@ class BNNQuantizer(Quantizer):
             self.is_init = True
             # clip params to (-1,1)
             for _, ts in self._target_spaces.items():
-                for target_name, target_space in ts.items():
-                    if target_space.type is TargetType.PARAMETER and 'weight' in target_name and \
+                for _, target_space in ts.items():
+                    if target_space.type is TargetType.PARAMETER and \
                         isinstance(target_space.target, torch.nn.parameter.Parameter):
                         target_space.target.data = target_space.target.data.clamp(-1,1)
 
@@ -104,7 +111,7 @@ class BNNQuantizer(Quantizer):
 
     def _fuse_preprocess(self, evaluator: Evaluator) -> None:
         module_name_param_dict = self.patch_optimizer_param_group()
-        if module_name_param_dict is not None:
+        if len(module_name_param_dict) > 0:
             evaluator.patch_optim_param_group(module_name_param_dict)
         self.register_trigger(evaluator)
 

@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
-from typing import List, Dict
+from typing import List, Dict, overload
 
 import torch
 from torch import Tensor
@@ -31,8 +31,6 @@ class LsqQuantizer(Quantizer):
         Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
         TODO: {evaluator_docstring}
-    quant_start_step
-        The steps for warmup training before QAT begin.
 
     Examples
     --------
@@ -45,6 +43,15 @@ class LsqQuantizer(Quantizer):
         >>> quantizer = LsqQuantizer(model, configure_list, evaluator)
         >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
     '''
+    @overload
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator):
+        ...
+
+    @overload
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
+                 existed_wrappers: Dict[str, ModuleWrapper] | None = None):
+        ...
+
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, \
                  existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         super().__init__(model, config_list, evaluator, existed_wrappers=existed_wrappers)
@@ -91,17 +98,14 @@ class LsqQuantizer(Quantizer):
                 wrapper.register_parameter(f"{target_name}_scale", param)
 
     def patch_optimizer_param_group(self):
-        module_name_param_dict = {}
+        module_name_param_dict = super().patch_optimizer_param_group()
         for module_name, ts in self._target_spaces.items():
-            wrapper = self._module_wrappers[module_name]
-            scale_param_lis = []
-            if getattr(wrapper.module, "original_bias", None) is not None:
-                scale_param_lis.append(wrapper.module.original_bias)
-            for _, target_space in ts.items():
-                scale_param_lis.append(target_space.scale)
-            module_name_param_dict[module_name] = scale_param_lis
+            for target_name, target_space in ts.items():
+                if module_name not in module_name_param_dict:
+                    module_name_param_dict[module_name] = []
+                module_name_param_dict[module_name].append(target_space.scale)
 
-        return module_name_param_dict if len(module_name_param_dict) > 0 else None
+        return module_name_param_dict
 
     def register_trigger(self, evaluator: Evaluator):
         def optimizer_task():
@@ -114,7 +118,7 @@ class LsqQuantizer(Quantizer):
 
     def _fuse_preprocess(self, evaluator: Evaluator) -> None:
         module_name_param_dict = self.patch_optimizer_param_group()
-        if module_name_param_dict is not None:
+        if len(module_name_param_dict) > 0:
             evaluator.patch_optim_param_group(module_name_param_dict)
         self.register_trigger(evaluator)
 

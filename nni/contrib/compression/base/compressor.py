@@ -327,14 +327,12 @@ class Quantizer(Compressor):
                     calibration_config[module_name][target_name]['tracked_max'] = target_space.tracked_max.cpu()
                 elif target_space.zero_point is not None and target_space.scale is not None:
                     tracked_max = target_space.scale * (target_space.qmax - target_space.zero_point)
-                    calibration_config[module_name][target_name]["tracked_max"] = tracked_max.cpu() \
-                        if isinstance(target_space.scale, torch.Tensor) else tracked_max
+                    calibration_config[module_name][target_name]['tracked_max'] = tracked_max.cpu()
                 if target_space.tracked_min is not None:
                     calibration_config[module_name][target_name]['tracked_min'] = target_space.tracked_min.cpu()
                 elif target_space.zero_point is not None and target_space.scale is not None:
                     tracked_min = target_space.scale * (target_space.qmin - target_space.zero_point)
-                    calibration_config[module_name][target_name]["tracked_min"] = tracked_min.cpu() \
-                        if isinstance(target_space.scale, torch.Tensor) else tracked_min
+                    calibration_config[module_name][target_name]['tracked_min'] = tracked_min.cpu()
 
         return calibration_config
 
@@ -342,10 +340,10 @@ class Quantizer(Compressor):
         module_name_param_dict = {}
         for module_name, _ in self._target_spaces.items():
             wrapper = self._module_wrappers[module_name]
-            if getattr(wrapper.module, "original_bias", None) is not None:
-                module_name_param_dict[module_name] = [wrapper.module.original_bias]
+            if getattr(wrapper, "is_register_bias", False) and isinstance(wrapper.bias, torch.nn.parameter.Parameter):
+                module_name_param_dict[module_name] = [wrapper.bias]
 
-        return module_name_param_dict if len(module_name_param_dict) > 0 else None
+        return module_name_param_dict
 
     def compress(self, max_steps: int | None, max_epochs: int | None):
         return super().compress(max_steps, max_epochs), self.get_calibration_config()
