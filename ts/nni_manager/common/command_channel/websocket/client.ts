@@ -76,10 +76,7 @@ export class WsChannelClient extends WsChannel {
                 this.reconnecting = false;
                 return;
 
-            } catch (error: any) {
-                if (error?.code === 'ECONNREFUSED') {
-                    error = 'ECONNREFUSED';
-                }
+            } catch (error) {
                 this.logger.warning('Reconnect failed:', error);
             }
         }
