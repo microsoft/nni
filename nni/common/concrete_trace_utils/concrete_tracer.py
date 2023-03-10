@@ -509,14 +509,14 @@ class ConcreteTracer(TracerBase):
 
     @compatibility(is_backward_compatible=True)
     def trace(self, root: Union[torch.nn.Module, Callable[..., Any]], *,
-              autowrap_modules: Tuple[str] | None = None,
+              autowrap_modules: Tuple[str] = None,
               autowrap_leaf_function = None,
               autowrap_leaf_class = None,
               leaf_module = None,
               fake_middle_class = None,
               concrete_args: Union[Dict[str, Any], Tuple],
               use_operator_patch: bool = True,
-              operator_patch_backlist: List[str] | None = None,
+              operator_patch_backlist: List[str] = None,
               forwrad_function_name: str = 'forward') -> Graph:
         """
         similar to _symbolic_trace.Tracer.trace
@@ -552,7 +552,7 @@ class ConcreteTracer(TracerBase):
             }
 
         # preprocess arguments
-        autowrap_modules = autowrap_modules if autowrap_modules is not None else tuple()
+        autowrap_modules = autowrap_modules if autowrap_modules is not None else ()
         autowrap_leaf_function = autowrap_leaf_function if autowrap_leaf_function is not None else {}
         autowrap_leaf_class = autowrap_leaf_class if autowrap_leaf_class is not None else {}
         leaf_module = leaf_module if leaf_module is not None else ()
@@ -671,15 +671,15 @@ class ConcreteTracer(TracerBase):
                     self.current_module_qualified_name = self.path_of_module(mod)
                     module_qualified_name = self.path_of_module(mod)
                     if not self.is_leaf_module(mod, module_qualified_name):
-                        _autowrap_check(self,
-                                        mod.forward.__globals__,
-                                        self._autowrap_function_ids,
-                                        self.autowrap_leaf_pairs,
+                        _autowrap_check(self, 
+                                        mod.forward.__globals__, 
+                                        self._autowrap_function_ids, 
+                                        self.autowrap_leaf_pairs, 
                                         self.agfunc_dict)
-                        _autowrap_check(self,
-                                        mod.__dict__,
-                                        self._autowrap_function_ids,
-                                        self.autowrap_leaf_pairs,
+                        _autowrap_check(self, 
+                                        mod.__dict__, 
+                                        self._autowrap_function_ids, 
+                                        self.autowrap_leaf_pairs, 
                                         self.agfunc_dict)
                         return _orig_module_call(mod, *args, **kwargs)
                     else:
@@ -1118,7 +1118,7 @@ class MagicMethodPatcher:
     @staticmethod
     def format_import_statement_new(name: str, obj: Any, importer) -> str:
         if isinstance(obj, BuiltinMethodType) and getattr(obj, '__name__', None) == 'apply'\
-            and isinstance(getattr(obj, '__self__', None), Type) and issubclass(obj.__self__, torch.autograd.Function):  # type: ignore
+            and isinstance(getattr(obj, '__self__', None), Type) and issubclass(obj.__self__, torch.autograd.Function):
             # torch.autograd.function
             return MagicMethodPatcher.format_import_statement_ori(name, obj.__self__, importer) + f'\n{name} = {name}.apply'
         return MagicMethodPatcher.format_import_statement_ori(name, obj, importer)
@@ -1289,12 +1289,12 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    concrete_args: Union[Dict[str, Any], Tuple],
                    *,
                    use_operator_patch: bool = True,
-                   operator_patch_backlist: List[str] | None = None,
+                   operator_patch_backlist: List[str] = None,
                    forwrad_function_name: str = 'forward',
                    check_args: Optional[Dict[str, Any]] = None,
                    autowrap_leaf_function = None,
                    autowrap_leaf_class = None,
-                   leaf_module: Tuple | None = None,
+                   leaf_module = None,
                    fake_middle_class = None,
                    dce = False) -> GraphModule:
     """
@@ -1461,19 +1461,9 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         else:
             assert node_a.op == node_b.op and target_a == target_b
 
-    with MagicMethodPatcher():
-        name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
-        traced = GraphModule(tracer.root, graph, name)
-
-    # TODO: better infomation
-    # # assert root(**concrete_args) == traced(**concrete_args)
-    if check_args is not None:
-        assert root(**check_args) == traced(**check_args)
-
-    # before returning the traced GraphModule, store module path info
-    setattr(traced, 'module_path', tracer.node_to_originating_module.copy())
-
     # apply dead code elimination according to the switch param `dce`
+    # note that we perform dce before instantiate GraphModule
+    # since there maybe some problems if we use GraphModule.recompile()
     if dce:
         def recursively_check_node(n: torch.fx.Node) -> bool:
             # !pay attention that the `output` node should be ignored for users checking
@@ -1492,9 +1482,21 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                 return True
             else:
                 return False
-
-        for node in traced.graph.nodes:
+            
+        for node in graph.nodes:
             recursively_check_node(node)
-        traced.recompile()
 
+    with MagicMethodPatcher():
+        name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
+        traced = GraphModule(tracer.root, graph, name)
+
+    # TODO: better infomation
+    # # assert root(**concrete_args) == traced(**concrete_args)
+    if check_args is not None:
+        assert root(**check_args) == traced(**check_args)
+
+    # before returning the traced GraphModule, store module path info
+    setattr(traced, 'module_path', tracer.node_to_originating_module.copy())
+
+    # return traced, tracer
     return traced
