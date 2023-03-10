@@ -10,12 +10,14 @@ __all__ = ['HPOTunerStrategy', 'TPE']
 import logging
 import time
 import threading
+from typing import cast
 
 import nni
 from nni.nas.execution import ExecutionEngine
 from nni.nas.execution.event import FinalMetricEvent, TrainingEndEvent, ModelEventType
 from nni.nas.space import ExecutableModelSpace, ModelStatus
 from nni.tuner import Tuner
+from nni.typehint import SearchSpace
 
 from .base import Strategy
 
@@ -68,7 +70,7 @@ class HPOTunerStrategy(Strategy):
         _logger.debug('Tuner search space: %s', tuner_search_space)
 
         with self._thread_lock:
-            self.tuner.update_search_space(tuner_search_space)
+            self.tuner.update_search_space(cast(SearchSpace, tuner_search_space))
 
         while self.engine.budget_available():
             if self.engine.idle_worker_available():
@@ -90,6 +92,9 @@ class HPOTunerStrategy(Strategy):
     def on_metric(self, event: FinalMetricEvent) -> None:
         with self._thread_lock:
             model_id = self._model_to_id[event.model]
+            if event.model.sample is None:
+                _logger.warning('Model %d has no sample, cannot report to tuner.', model_id)
+                return
             self.tuner.receive_trial_result(model_id, event.model.sample, event.metric)
 
     def on_training_end(self, event: TrainingEndEvent) -> None:

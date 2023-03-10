@@ -7,7 +7,7 @@ __all__ = ['GridSearch', 'Random']
 
 import logging
 import warnings
-from typing import Iterable
+from typing import Iterator, Any
 
 from numpy.random import RandomState
 
@@ -55,7 +55,7 @@ class GridSearch(Strategy):
     def extra_repr(self) -> str:
         return f'shuffle={self.shuffle}, dedup={self._dedup is not None}'
 
-    def _grid_generator(self, model_space: ExecutableModelSpace) -> Iterable[ExecutableModelSpace]:
+    def _grid_generator(self, model_space: ExecutableModelSpace) -> Iterator[ExecutableModelSpace]:
         if self._no_sample_found_counter >= self._granularity_patience:
             _logger.info('Patience already run out (%d > %d). Nothing to search.',
                          self._no_sample_found_counter, self._granularity_patience)
@@ -159,7 +159,7 @@ class GridSearch(Strategy):
             _logger.info('Grid search would possibly yield duplicate samples since dedup is turned off.')
 
     def state_dict(self) -> dict:
-        result = {'random_state': self._random_state.get_state()}
+        result: dict[str, Any] = {'random_state': self._random_state.get_state()}
         if self._granularity_processed is None:
             result.update(granularity=self._granularity, no_sample_found_counter=self._no_sample_found_counter)
         else:

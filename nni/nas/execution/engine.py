@@ -6,7 +6,7 @@ from __future__ import annotations
 import logging
 import time
 from collections import defaultdict
-from typing import Any, Iterable, NewType, Callable, Type, overload
+from typing import Any, Iterable, NewType, Callable, Type, Literal, overload
 
 from nni.nas.space import ExecutableModelSpace, ModelStatus
 
@@ -121,7 +121,7 @@ class ExecutionEngine:
         """
         raise NotImplementedError()
 
-    def register_model_event_callback(self, event_type: ModelEventType, callback: Callable[[ModelEvent], None]) -> None:
+    def register_model_event_callback(self, event_type: ModelEventType, callback: Callable[..., None]) -> None:
         """
         Register a callback to receive model event.
 
@@ -131,12 +131,13 @@ class ExecutionEngine:
             The type of event that is to listen.
         callback
             The callback to receive the event.
+            It receives a :class:`~nni.nas.execution.ModelEvent` object, and is expected to return nothing.
         """
         if not isinstance(event_type, ModelEventType):
             event_type = ModelEventType(event_type)
         self._callbacks[event_type].append(callback)
 
-    def unregister_model_event_callback(self, event_type: ModelEventType, callback: Callable[[ModelEvent], None]) -> None:
+    def unregister_model_event_callback(self, event_type: ModelEventType, callback: Callable[..., None]) -> None:
         """
         Unregister a callback.
 
@@ -146,6 +147,7 @@ class ExecutionEngine:
             The type of event that is to listen.
         callback
             The callback to receive the event.
+            The event must have been registered before.
         """
         if not isinstance(event_type, ModelEventType):
             event_type = ModelEventType(event_type)

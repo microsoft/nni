@@ -9,7 +9,7 @@ import copy
 import logging
 import warnings
 from collections import defaultdict, deque
-from typing import Iterable, Callable, Any, Iterator
+from typing import Iterable, Callable, Any, Iterator, List, cast
 from typing_extensions import Literal
 
 import numpy as np
@@ -73,7 +73,7 @@ class Chain(Strategy):
         2. initialize the main strategy.
         3. calling :meth:`StrategyMiddleware._initialize_model_space` from top to bottom.
         """
-        for cur, nex in list(zip(self._middlewares, self._middlewares[1:] + [engine]))[::-1]:
+        for cur, nex in list(zip(self._middlewares, cast(List[ExecutionEngine], self._middlewares[1:]) + [engine]))[::-1]:
             cur.set_engine(nex)
 
         model_space = self._strategy.initialize(model_space, self._middlewares[0])
@@ -124,7 +124,7 @@ class Chain(Strategy):
 
     def extra_repr(self):
         return '\n' + ',\n'.join([
-            '  ' + repr(s) for s in [self._strategy] + self._middlewares
+            '  ' + repr(s) for s in cast(List[Any], [self._strategy]) + cast(List[Any], self._middlewares)
         ]) + '\n'
 
 
@@ -428,7 +428,7 @@ class Deduplication(StrategyMiddleware):
                 if status is None or model.status == status:
                     yield model
 
-    def handle_duplicate_model(self, model: ExecutableModelSpace) -> None:
+    def handle_duplicate_model(self, model: ExecutableModelSpace) -> bool:
         if self.action == 'invalid':
             self.dispatch_model_event(ModelEventType.TrainingEnd, status=ModelStatus.Invalid, model=model)
 
@@ -855,5 +855,5 @@ class MedianStop(StrategyMiddleware):
             _logger.info('%s is not successfully trained. MedianStop will not consider it.', event.model)
             return
 
-        for intermediate_id, intermediate_value in enumerate(event.intermediates):
+        for intermediate_id, intermediate_value in enumerate(event.model.metrics.intermediates):
             self._intermediates_history[intermediate_id].append(intermediate_value)

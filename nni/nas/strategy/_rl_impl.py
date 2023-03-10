@@ -240,7 +240,6 @@ class TuningTrajectoryGenerator:
         It will either receive the reward via :meth:`send_reward` or be reset via another :meth:`next_sample`.
         """
         obs, info = self.env.reset()
-        done = False
         last_state = None  # hidden state
 
         self._trajectory = []
@@ -261,7 +260,7 @@ class TuningTrajectoryGenerator:
 
         step_count = 0
 
-        while not done:
+        while True:
             obs_batch = Batch([self._transition])    # the first dimension is batch-size
             policy_result = self.policy(obs_batch, last_state)
             # get bounded and remapped actions first (not saved into buffer)
@@ -331,6 +330,8 @@ class TuningTrajectoryGenerator:
             The reward for the sample just created.
             If None, the sample will be ignored.
         """
+
+        assert self._trajectory is not None and self._transition is not None and self._last_action is not None
 
         obs_next, _, terminated, truncated, info = self.env.step(self._last_action)
         assert terminated, 'The environment should be done.'

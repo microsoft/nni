@@ -59,7 +59,7 @@ class Strategy:
         # Status is internal for now.
         self._status = StrategyStatus.EMPTY
         if engine is not None and model_space is not None:
-            self.initialize(engine, model_space)
+            self.initialize(model_space, engine)
         elif engine is not None or model_space is not None:
             raise ValueError('Both engine and model_space should be provided, or both should be None.')
 
