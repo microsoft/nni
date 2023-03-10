@@ -25,7 +25,7 @@ import json
 import os.path
 from pathlib import Path
 import socket
-from typing import Tuple, TYPE_CHECKING, get_type_hints
+from typing import TYPE_CHECKING, get_type_hints
 
 import typeguard
 

@@ -418,7 +418,7 @@ class NasExperiment(Experiment):
             if not self._checkpoint_directory.exists():
                 self._checkpoint_directory.mkdir(parents=True, exist_ok=True)
 
-            with (self._checkpoint_directory / 'config.json').open('w') as f:
+            with (self._checkpoint_directory / 'config.json').open('w', encoding='utf-8') as f:
                 nni.dump(self.config.json(), fp=f, indent=2)
 
             if self._engine is not None:
