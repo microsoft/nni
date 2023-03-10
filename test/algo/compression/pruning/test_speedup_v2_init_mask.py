@@ -97,17 +97,13 @@ class InitMaskTestCase(unittest.TestCase):
         pruner._unwrap_model()  # unwrap all modules to normal state
 
         masks['relu1'] = {
-            '_input_': {
-                'input': torch.ones((8, 20, 24, 24)),
-                1: torch.ones((8, 20, 24, 24))
-            },
-            '_output_': torch.ones((8, 20, 24, 24)),
+            '_input_input': torch.ones((8, 20, 24, 24)),
+            '_output_0': torch.ones((8, 20, 24, 24)),
         }
-        masks['conv1']['_output_'] = torch.ones((8, 20, 24, 24))
+        masks['conv1']['_output_0'] = torch.ones((8, 20, 24, 24))
 
         traced_model = concrete_trace(model, {'x': dummy_input}, leaf_module=(WithAnno1, WithAnno2, WithAnno3))
-        ModelSpeedup(traced_model, customized_replace_func = {'WithAnno1': no_replace, 'WithAnno2': no_replace, 'WithAnno3': no_replace}
-            ).run(args=[dummy_input], masks_file=masks)
+        ModelSpeedup(traced_model, (dummy_input,), masks).speedup_model()
         traced_model(dummy_input)
 
         print('model before speedup', repr(model))

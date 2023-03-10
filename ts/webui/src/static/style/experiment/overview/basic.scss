@@ -6,7 +6,7 @@
     .icon {
         width: 48px;
         height: 48px;
-        margin-right: 16px;
+        margin: 4px 16px 0 0;
         background: #3582ec;
         text-align: center;
 
@@ -46,13 +46,27 @@
     width: 136px;
     height: 78px;
     margin: 32px 0;
-    padding: 12px 20px;
+    padding-top: 12px;
     box-sizing: border-box;
     text-align: center;
 
     .focus-text {
         font-size: 24px;
         font-weight: 700;
+    }
+
+    .NO_MORE_TRIAL,
+    .TUNER_NO_MORE_TRIAL {
+        font-size: 14px;
+    }
+
+    .NO_MORE_TRIAL {
+        position: relative;
+        top: 7px;
+    }
+
+    .TUNER_NO_MORE_TRIAL {
+        word-wrap: break-word;
     }
 
     .description {

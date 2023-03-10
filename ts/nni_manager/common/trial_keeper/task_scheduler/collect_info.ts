@@ -38,7 +38,7 @@ export async function collectGpuInfo(forceUpdate?: boolean): Promise<GpuSystemIn
     let str: string;
     try {
         const args = (forceUpdate ? [ '--detail' ] : undefined);
-        str = await runPythonModule('nni.tools.training_service_scripts.collect_gpu_info', args);
+        str = await runPythonModule('nni.tools.nni_manager_scripts.collect_gpu_info', args);
     } catch (error) {
         logger.error('Failed to collect GPU info:', error);
         return null;

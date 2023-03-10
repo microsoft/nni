@@ -4,7 +4,6 @@
 import pytest
 
 import os
-import traceback
 import torch
 import mmcv
 import mmcv.cnn as mmcv_cnn
@@ -14,10 +13,6 @@ from mmcv.parallel import collate
 from mmdet.datasets import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
 from nni.common.concrete_trace_utils import concrete_trace, ConcreteTracer
-
-assert 'MMDET_DIR' in os.environ, 'please set env variable `MMDET_DIR` to your mmdetection folder!'
-folder_prefix = os.environ['MMDET_DIR']
-img = '%s/tests/data/color.jpg' % folder_prefix
 
 config_files_correct = (
     'atss/atss_r50_fpn_1x_coco',
@@ -172,9 +167,14 @@ def check_equal(a, b):
     else:
         return a == b
 
+@pytest.mark.skipif('MMDET_DIR' not in os.environ, reason='please set env variable `MMDET_DIR` to your mmdetection folder!')
 @pytest.mark.parametrize('config_file', config_files_correct)
 def test_mmdetection(config_file: str):
     torch.cuda.empty_cache()
+
+    folder_prefix = os.environ['MMDET_DIR']
+    img = '%s/tests/data/color.jpg' % folder_prefix
+
     # Specify the path to model config and checkpoint file
     config = mmcv.Config.fromfile(
         folder_prefix + '/configs/' + config_file + '.py')
@@ -238,28 +238,28 @@ def test_mmdetection(config_file: str):
             torch_fx.proxy.base_types = (*torch_fx.proxy.base_types, intc, int64)
 
         traced_model = concrete_trace(model, {'img': img_tensor},
-                                        use_function_patch = False, forwrad_function_name='forward_dummy',
-                                        autowrap_leaf_function = {
-            **ConcreteTracer.default_autowrap_leaf_function,
-            all:                                                                    ((), False, None),
-            min:                                                                    ((), False, None),
-            max:                                                                    ((), False, None),
-        }, autowrap_leaf_class = {
-            **ConcreteTracer.default_autowrap_leaf_class,
-            int:        ((), False),
-            reversed:   ((), False),
-            torch.Size: ((), False),
-        }, leaf_module = (
-            *leaf_module_append,
-            mmcv_cnn.bricks.wrappers.Conv2d,
-            mmcv_cnn.bricks.wrappers.Conv3d,
-            mmcv_cnn.bricks.wrappers.ConvTranspose2d,
-            mmcv_cnn.bricks.wrappers.ConvTranspose3d,
-            mmcv_cnn.bricks.wrappers.Linear,
-            mmcv_cnn.bricks.wrappers.MaxPool2d,
-            mmcv_cnn.bricks.wrappers.MaxPool3d,
-        ), fake_middle_class = (
-            mmdet_core.anchor.anchor_generator.AnchorGenerator,
+                                      forwrad_function_name='forward_dummy',
+                                      autowrap_leaf_function = {
+                                        **ConcreteTracer.default_autowrap_leaf_function,
+                                        all:  ((), False, None),
+                                        min:  ((), False, None),
+                                        max:  ((), False, None),
+                                      }, autowrap_leaf_class = {
+                                        **ConcreteTracer.default_autowrap_leaf_class,
+                                        int:        ((), False),
+                                        reversed:   ((), False),
+                                        torch.Size: ((), False),
+                                      }, leaf_module = (
+                                        *leaf_module_append,
+                                        mmcv_cnn.bricks.wrappers.Conv2d,
+                                        mmcv_cnn.bricks.wrappers.Conv3d,
+                                        mmcv_cnn.bricks.wrappers.ConvTranspose2d,
+                                        mmcv_cnn.bricks.wrappers.ConvTranspose3d,
+                                        mmcv_cnn.bricks.wrappers.Linear,
+                                        mmcv_cnn.bricks.wrappers.MaxPool2d,
+                                        mmcv_cnn.bricks.wrappers.MaxPool3d,
+                                      ), fake_middle_class = (
+                                        mmdet_core.anchor.anchor_generator.AnchorGenerator,
         ))
 
         if config_file == 'pvt/retinanet_pvt-l_fpn_1x_coco':

@@ -18,7 +18,7 @@ class SampleValidationError(ValueError):
 
     def __str__(self) -> str:
         if self.paths:
-            return self.msg + ' (path:' + ' -> '.join(self.paths) + ')'
+            return self.msg + ' (path:' + ' -> '.join(map(str, self.paths)) + ')'
         else:
             return self.msg
 

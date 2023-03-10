@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useContext } from 'react';
 import axios from 'axios';
 import { Stack, Dropdown, IStackTokens } from '@fluentui/react';
+import { MotionAnimations, MotionDurations, MotionTimings } from '@fluentui/theme'; // fluentMotion.js
 import { AppContext } from '@/App';
 import { MANAGER_IP, MAX_TRIAL_NUMBERS } from '@static/const';
 import { EXPERIMENT } from '@static/datamodel';
@@ -177,18 +178,31 @@ export const EditExperimentParam = (): any => {
 
     return (
         <React.Fragment>
-            <div className='edit-position'>
+            <Stack className='edit-position'>
                 {/* field: maxTrialNumber trialConcurrency maxExperimentDuration */}
-                <div className={`${field} show-params`} onClick={hidePencil}>
+                <div className={`${field} show-params cursor borderRadius`} onClick={hidePencil}>
                     <span className='title'>{title}</span>
                     <span className='number'>{editVal}</span>
-                    {title === 'Max duration' && <span className='unit'>{convertUnit(maxDurationUnit)}</span>}
+                    {title === 'Max duration' && (
+                        <span className='unit borderRadius'>{convertUnit(maxDurationUnit)}</span>
+                    )}
                 </div>
                 {/* edit model */}
                 {!isShowPencil && (
-                    <Stack className='edit-params' horizontal tokens={editElementGap}>
+                    <Stack
+                        className='edit-params cursor borderRadius'
+                        styles={{
+                            root: {
+                                animation: MotionAnimations.slideUpIn,
+                                animationDuration: MotionDurations.duration4,
+                                animationTimingFunction: MotionTimings.decelerate
+                            }
+                        }}
+                        horizontal
+                        tokens={editElementGap}
+                    >
                         <input
-                            className={`${field} edit-input`}
+                            className={`${field} edit-input borderRadius`}
                             ref={durationInputRef}
                             value={editInputVal}
                             onChange={setInputVal}
@@ -213,7 +227,7 @@ export const EditExperimentParam = (): any => {
                     </Stack>
                 )}
                 {isShowSucceedInfo && <MessageInfo className='info' typeInfo={typeInfo} info={info} />}
-            </div>
+            </Stack>
         </React.Fragment>
     );
 };

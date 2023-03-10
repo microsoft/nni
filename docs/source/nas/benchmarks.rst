@@ -17,7 +17,7 @@ Data Preparation
 Option 1 (Recommended)
 ^^^^^^^^^^^^^^^^^^^^^^
 
-You can download the preprocessed benchmark files via ``python -m nni.nas.benchmarks.download <benchmark_name>``, where ``<benchmark_name>`` can be ``nasbench101``, ``nasbench201``, and etc. Add ``--help`` to the command for supported command line arguments.
+You can download the preprocessed benchmark files via ``python -m nni.nas.benchmark.download <benchmark_name>``, where ``<benchmark_name>`` can be ``nasbench101``, ``nasbench201``, and etc. Add ``--help`` to the command for supported command line arguments.
 
 Option 2
 ^^^^^^^^
@@ -79,7 +79,7 @@ Instead of storing results obtained with different configurations in separate fi
 
 Here is a list of available operators used in NDS.
 
-.. automodule:: nni.nas.benchmarks.nds.constants
+.. automodule:: nni.nas.benchmark.nds.constants
    :noindex:
 
 See :doc:`example usages </tutorials/nasbench_as_dataset>` and :ref:`API references <nds-reference>`.

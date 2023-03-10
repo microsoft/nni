@@ -9,7 +9,7 @@ import { getValue } from '@model/localStorage';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { SingleAxis, MultipleAxes } from '@static/interface';
 import ChangeColumnComponent from '../ChangeColumnComponent';
-
+import { buttonsGap } from '@components/common/Gap';
 import 'parcoord-es/dist/parcoords.css';
 import '@style/button.scss';
 import '@style/experiment/trialdetail/para.scss';
@@ -31,8 +31,6 @@ const innerChartMargins = {
     bottom: 20,
     left: 28
 };
-
-// TODO: class 全局变量，需要调试
 let pcs: any;
 const paraRef = React.createRef<HTMLDivElement>();
 
@@ -44,18 +42,34 @@ const Para = (props: ParaProps) => {
     const [noChart, setNoChart] = useState(true);
     const [customizeColumnsDialogVisible, setCustomizeColumnsDialogVisible] = useState(false);
     const [availableDimensions, setAvailableDimensions] = useState([] as string[]);
-    const [chosenDimensions, setChosenDimensions] = useState(
-        localStorage.getItem(`${EXPERIMENT.profile.id}_paraColumns`) !== null &&
-            getValue(`${EXPERIMENT.profile.id}_paraColumns`) !== null
-            ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              JSON.parse(getValue(`${EXPERIMENT.profile.id}_paraColumns`)!)
-            : []
-    );
+    const originChosenColumns = (): string[] => {
+        const inferredSearchSpace = TRIALS.inferredSearchSpace(searchSpace);
+        const inferredMetricSpace = TRIALS.inferredMetricSpace();
 
+        const dimensions: string[] = [];
+        for (const [k] of inferredSearchSpace.axes) {
+            dimensions.push(k);
+        }
+        for (const [k] of inferredMetricSpace.axes) {
+            dimensions.push(k);
+        }
+        return dimensions;
+    };
+    const initChosenColumns = (arr: string[]): string[] => {
+        if (
+            localStorage.getItem(`${EXPERIMENT.profile.id}_paraColumns`) !== null &&
+            getValue(`${EXPERIMENT.profile.id}_paraColumns`) !== null
+        ) {
+            return JSON.parse(getValue(`${EXPERIMENT.profile.id}_paraColumns`)!);
+        } else {
+            return arr;
+        }
+    };
+    const [chosenDimensions, setChosenDimensions] = useState(initChosenColumns(originChosenColumns()));
     // get percent value number
     const percentNum = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
-            setSelectedPercent(item.key.toString()); // 触发useeffect
+            setSelectedPercent(item.key.toString());
         }
     };
 
@@ -86,16 +100,15 @@ const Para = (props: ParaProps) => {
                 });
             });
             return (
-                <div>
-                    <span className='para-filter-text para-filter-middle'>Metrics</span>
+                <React.Fragment>
+                    <div className='para-filter-text'>Metrics</div>
                     <Dropdown
                         selectedKey={primaryMetricKey}
                         options={finalKeysDropdown}
                         onChange={updateEntries}
-                        styles={{ root: { width: 150, display: 'inline-block' } }}
-                        className='para-filter-percent'
+                        styles={{ root: { width: 150 } }}
                     />
-                </div>
+                </React.Fragment>
             );
         }
     };
@@ -148,9 +161,6 @@ const Para = (props: ParaProps) => {
         return scaleInst;
     };
 
-    const _updateDisplayedColumns = (displayedColumns: string[]): void => {
-        setChosenDimensions(displayedColumns);
-    };
     /**
      * Render the parallel coordinates. Using trial data as base and leverage
      * information from search space at a best effort basis.
@@ -224,6 +234,9 @@ const Para = (props: ParaProps) => {
 
         const firstRun = pcs === undefined;
         if (firstRun) {
+            if (paraRef.current !== undefined || paraRef.current !== null) {
+                paraRef.current!.innerHTML = '';
+            }
             pcs = ParCoords()(paraRef.current);
         }
         pcs.data(convertedTrials).dimensions(
@@ -244,36 +257,42 @@ const Para = (props: ParaProps) => {
             pcs.color(d => (colorScale as any)(d[colorDim as any]));
         }
         pcs.render();
-        // if (firstRun) {
         if (convertedTrials.length >= 0) {
             setNoChart(false);
         }
 
         // set new available dims
         setAvailableDimensions(dimensions.map(e => e[0]));
+        // setChosenDimensions(initChosenColumns(dimensions.map(e => e[0])));
     };
 
     useEffect(() => {
         // FIXME: redundant update(comment for componentDidUpdate)
         renderParallelCoordinates();
-        // return function clearPCS() {
-        //     pcs = undefined;
-        // };
-        // }, [chosenDimensions, selectedPercent, userSelectOptimizeMode, primaryMetricKey, trials, searchSpace]); // 百分比变化触发页面更新
-    }, [chosenDimensions, selectedPercent, metricGraphMode, primaryMetricKey, trials, searchSpace]); // 百分比变化触发页面更新
 
+        return function clearPCS() {
+            pcs = undefined;
+        };
+    }, [chosenDimensions, selectedPercent, metricGraphMode, primaryMetricKey, trials, searchSpace]);
+
+    const hyperParameterChart = React.useMemo(() => {
+        return (
+            <React.Fragment>
+                <div className='parcoords' style={chartMulineStyle} ref={paraRef} />
+                {noChart && <div className='nodata'>No data</div>}
+            </React.Fragment>
+        );
+    }, [noChart, chosenDimensions]);
     return (
         <div className='parameter'>
-            <Stack horizontal className='para-filter' horizontalAlign='end'>
+            <Stack horizontal className='para-filter' horizontalAlign='end' tokens={buttonsGap}>
                 <DefaultButton
                     text='Add/Remove axes'
                     onClick={(): void => {
                         setCustomizeColumnsDialogVisible(true);
                     }}
-                    styles={{ root: { marginRight: 10 } }}
                 />
                 <Dropdown
-                    // selectedKey={userSelectOptimizeMode}
                     selectedKey={metricGraphMode}
                     onChange={updateUserOptimizeMode}
                     options={[
@@ -281,7 +300,6 @@ const Para = (props: ParaProps) => {
                         { key: 'Minimize', text: 'Minimize' }
                     ]}
                     styles={{ dropdown: { width: 100 } }}
-                    className='para-filter-percent'
                 />
                 <Dropdown
                     selectedKey={selectedPercent}
@@ -293,7 +311,6 @@ const Para = (props: ParaProps) => {
                         { key: '1', text: 'Top 100%' }
                     ]}
                     styles={{ dropdown: { width: 120 } }}
-                    className='para-filter-percent'
                 />
                 {finalKeysDropdown()}
             </Stack>
@@ -301,10 +318,10 @@ const Para = (props: ParaProps) => {
                 <ChangeColumnComponent
                     selectedColumns={chosenDimensions}
                     allColumns={availableDimensions.map(dim => ({ key: dim, name: dim }))}
-                    onSelectedChange={_updateDisplayedColumns}
-                    // onSelectedChange={(selected: string[]): void => {
-                    //     setChosenDimensions(selected);
-                    // }}
+                    onSelectedChange={(selected: string[]): void => {
+                        // pcs = undefined;
+                        setChosenDimensions(selected);
+                    }}
                     onHideDialog={(): void => {
                         setCustomizeColumnsDialogVisible(false);
                     }}
@@ -312,8 +329,7 @@ const Para = (props: ParaProps) => {
                     whichComponent='para'
                 />
             )}
-            <div className='parcoords' style={chartMulineStyle} ref={paraRef} />
-            {noChart && <div className='nodata'>No data</div>}
+            {hyperParameterChart}
         </div>
     );
 };

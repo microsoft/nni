@@ -89,11 +89,8 @@ def map_recursive_zip(fn: Callable, arg0, *args) -> Any:
         return _orig_list(map_recursive_zip(fn, *sub_args) for sub_args in _orig_zip(arg0, *args))
     elif _orig_isinstance(arg0, _orig_dict):
         keys = _orig_set(arg0.keys())
-        keys_len = len(keys)
         for arg in args:
-            assert _orig_isinstance(arg, _orig_dict)
-            keys.update(arg.keys())
-            assert keys_len == len(keys)
+            assert _orig_isinstance(arg, _orig_dict) and len(keys.symmetric_difference(arg.keys())) == 0
         return {k: map_recursive_zip(fn, arg0[k], *(arg[k] for arg in args)) for k in keys}
     else:
         # assert not _orig_isinstance(arg0, slice)
