@@ -19,7 +19,7 @@ import { globals, initGlobalsCustom } from 'common/globals';
 import { Logger, getRobustLogger } from 'common/log';
 import { WsChannelClient } from 'common/command_channel/websocket/client';
 import { RestServerCore } from 'rest_server/core';
-import { registerOnChannel } from './rpc';
+import { registerTrialKeeperOnChannel } from './rpc';
 
 const logger: Logger = getRobustLogger('TrialKeeper.main');
 
@@ -71,8 +71,16 @@ async function main(): Promise<void> {
     logger.debug('command:', process.argv);
     logger.debug('config:', config);
 
-    const client = new WsChannelClient(args.managerCommandChannel);
-    registerOnChannel(client);
+    const client = new WsChannelClient(args.managerCommandChannel, args.environmentId);
+    client.on('close', reason => {
+        logger.info('Manager closed connection:', reason);
+        globals.shutdown.initiate('Connection end');
+    });
+    client.on('error', error => {
+        logger.info('Connection error:', error);
+        globals.shutdown.initiate('Connection error');
+    });
+    registerTrialKeeperOnChannel(client);
     await client.connect();
 
     const restServer = new RestServerCore();

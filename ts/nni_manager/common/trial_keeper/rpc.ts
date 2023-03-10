@@ -35,7 +35,7 @@ import { TrialKeeper } from './keeper';
 /**
  *  The trial keeper daemon must call this function before `channel.connect()`.
  **/
-export function registerOnChannel(channel: WsChannel): void {
+export function registerTrialKeeperOnChannel(channel: WsChannel): void {
     getRpcHelper(channel).registerClass('TrialKeeper', TrialKeeper);
 }
 

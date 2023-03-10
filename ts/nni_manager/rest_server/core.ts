@@ -72,6 +72,12 @@ export class RestServerCore {
             logger.info('REST server stopped.');
             deferred.resolve();
         });
+        setTimeout(() => {
+            if (!deferred.settled) {
+                logger.debug('Killing connections');
+                this.server?.closeAllConnections();
+            }
+        }, 5000);
         return deferred.promise;
     }
 }

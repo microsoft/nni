@@ -27,6 +27,7 @@ const maxPayload: number = 1024 * 1024 * 1024;
 
 export class WsChannelClient extends WsChannel {
     private logger: Logger;  // avoid name conflict with base class
+    private reconnecting: boolean = false;
     private url: string;
 
     /**
@@ -57,6 +58,11 @@ export class WsChannelClient extends WsChannel {
     }
 
     private async reconnect(): Promise<void> {
+        if (this.reconnecting) {
+            return;
+        }
+        this.reconnecting = true;
+
         this.logger.warning('Connection lost. Try to reconnect');
         for (let i = 0; i <= 5; i++) {
             if (i > 0) {
@@ -67,8 +73,13 @@ export class WsChannelClient extends WsChannel {
             try {
                 await this.connect();
                 this.logger.info('Reconnect success');
+                this.reconnecting = false;
                 return;
-            } catch (error) {
+
+            } catch (error: any) {
+                if (error?.code === 'ECONNREFUSED') {
+                    error = 'ECONNREFUSED';
+                }
                 this.logger.warning('Reconnect failed:', error);
             }
         }

@@ -16,6 +16,7 @@ import { RemoteTrialKeeper } from 'common/trial_keeper/rpc';
 import { Ssh } from './ssh';
 
 export class Worker {
+    private channel!: WsChannel;
     private channelUrl: string;
     private log: Logger;
     private ssh: Ssh;
@@ -51,6 +52,7 @@ export class Worker {
     }
 
     public setChannel(channel: WsChannel): void {
+        this.channel = channel;
         this.trialKeeper.setChannel(channel);
     }
 
@@ -76,6 +78,7 @@ export class Worker {
     async stop(): Promise<void> {
         this.log.info('Stop worker', this.config.host);
         await this.trialKeeper.shutdown();
+        this.channel.close('shutdown');
     }
 
     async upload(name: string, tar: string): Promise<void> {
