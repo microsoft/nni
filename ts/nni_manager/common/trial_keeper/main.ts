@@ -1,6 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  Entry point of trial keeper daemon.
+ *
+ *  This script should be run via "nni/tools/nni_manager_scripts/launch_trial_keeper.py".
+ **/
+
 import 'app-module-path/cwd';
 
 import fs from 'node:fs/promises';

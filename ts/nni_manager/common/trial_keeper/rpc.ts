@@ -1,6 +1,28 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  Helper class to manipulate a trial keeper through WebSocket command channel.
+ *  Provides similar interface to TrialKeeper class.
+ *
+ *  Example:
+ *
+ *      const trialKeeper = new RemoteTrialKeeper(...);
+ *      trialKeeper.onTrialStart(...);
+ *
+ *      server.onConnection((channelId, channel) => {
+ *          await trialKeeper.setChannel(channel);
+ *          await trialKeeper.start();
+ *          await trialKeeper.createTrial(...);
+ *      });
+ *
+ *  Note that "onSomeEvent()" methods should be called before `setChannel()`;
+ *  any other methods must be called after `setChannel()`.
+ *
+ *  Because the remote OS might differ from the local OS,
+ *  all path parameters will be changed internally to use '/' as separator.
+ **/
+
 import { EventEmitter } from 'node:events';
 import util from 'node:util';
 
@@ -10,6 +32,9 @@ import type { WsChannel } from 'common/command_channel/websocket/channel';
 import { Deferred } from 'common/deferred';
 import { TrialKeeper } from './keeper';
 
+/**
+ *  The trial keeper daemon must call this function before `channel.connect()`.
+ **/
 export function registerOnChannel(channel: WsChannel): void {
     getRpcHelper(channel).registerClass('TrialKeeper', TrialKeeper);
 }

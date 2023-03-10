@@ -1,17 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  Remote training service that runs trials on one or more SSH servers.
+ *
+ *  It supports both POSIX and Windows servers,
+ *  but requires the server to have a recent python installed.
+ **/
+
 import { EventEmitter } from 'node:events';
 
-import { Logger, getLogger } from 'common/log';
+import { WsChannel, WsChannelServer } from 'common/command_channel/websocket/index';
 import type { RemoteConfig, RemoteMachineConfig, TrainingServiceConfig } from 'common/experimentConfig';
-import type { EnvironmentInfo, Metric, Parameter, TrainingServiceV3 } from 'common/training_service_v3';
 import type { TrialKeeper } from 'common/trial_keeper/keeper';
-
-import { WsChannelServer } from 'common/command_channel/websocket/server';
-import { WsChannel } from 'common/command_channel/websocket/channel';
-
+import { Logger, getLogger } from 'common/log';
 import { createTarball } from 'common/tarball';
+import type { EnvironmentInfo, Metric, Parameter, TrainingServiceV3 } from 'common/training_service_v3';
 
 import { Worker } from './worker';
 
@@ -54,11 +58,12 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     }
 
     public async start(): Promise<EnvironmentInfo[]> {
-        this.log.info('Start');
+        this.log.info('Starting remote training service');
         await this.server.start();
         for (const workerConfig of this.config.machineList) {
             const worker = await this.launchWorker(workerConfig);
         }
+        this.log.info('Remote training service started');
         return this.workers.map(worker => worker.getEnv());
     }
 
@@ -68,8 +73,8 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         const worker = new Worker(
             this.id,
             channelId,
-            this.server.getChannelUrl(channelId),
             config,
+            this.server.getChannelUrl(channelId),
             Boolean(this.config.trialGpuNumber)
         );
 
@@ -169,7 +174,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     }
 
     public onEnvironmentUpdate(_callback: (environments: EnvironmentInfo[]) => Promise<void>): void {
-        // never
+        // TODO
     }
 }
 

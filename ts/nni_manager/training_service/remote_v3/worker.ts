@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import fs from 'node:fs'; 
-import path from 'node:path';
+/**
+ *  Manage SSH servers.
+ **/
 
-import type { ConnectConfig } from 'ssh2';
+import path from 'node:path';
 
 import type { WsChannel } from 'common/command_channel/websocket/channel';
 import type { RemoteMachineConfig } from 'common/experimentConfig';
@@ -15,42 +16,37 @@ import { RemoteTrialKeeper } from 'common/trial_keeper/rpc';
 import { Ssh } from './ssh';
 
 export class Worker {
-    trainingServiceId: string;
-    channelId: string;
-    channelUrl: string;
-    trialKeeper: RemoteTrialKeeper;
-    ssh: Ssh;
-    uploadDir!: string;
-    log: Logger;
-    config: RemoteMachineConfig;
+    private channelUrl: string;
+    private log: Logger;
+    private ssh: Ssh;
+    private trainingServiceId: string;
+    private uploadDir!: string;
+
+    public readonly channelId: string;
+    public readonly config: RemoteMachineConfig;
+    public readonly trialKeeper: RemoteTrialKeeper;
 
     public get envId(): string {
         return `${this.trainingServiceId}-worker${this.channelId}`;
     }
 
-    constructor(trainingServiceId: string, channelId: string, channelUrl: string, config: RemoteMachineConfig, enableGpu: boolean) {
-        this.log = getLogger('Worker.TODO');
+    constructor(
+            trainingServiceId: string,
+            channelId: string,
+            config: RemoteMachineConfig,
+            channelUrl: string,
+            enableGpuScheduling: boolean) {
+        this.log = getLogger(`RemoteV3.Worker.${channelId}`);
         this.trainingServiceId = trainingServiceId;
         this.channelId = channelId;
-        this.channelUrl = channelUrl;
-        this.trialKeeper = new RemoteTrialKeeper(this.envId, 'remote', enableGpu);
         this.config = config;
-
-        const sshConfig: ConnectConfig = {
-            host: config.host,
-            port: config.port,
-            username: config.user,
-            password: config.password,
-        };
-        if (config.sshKeyFile) {
-            sshConfig.privateKey = fs.readFileSync(config.sshKeyFile, { encoding: 'utf8' });
-            sshConfig.passphrase = config.sshPassphrase;
-        }
-
-        this.ssh = new Ssh(sshConfig);
+        this.channelUrl = channelUrl;
+        this.trialKeeper = new RemoteTrialKeeper(this.envId, 'remote', enableGpuScheduling);
+        this.ssh = new Ssh(channelId, config);
     }
 
-    getEnv(): EnvironmentInfo {
+    public getEnv(): EnvironmentInfo {
+        // TODO
         return { id: this.envId };
     }
 
@@ -58,14 +54,56 @@ export class Worker {
         this.trialKeeper.setChannel(channel);
     }
 
+    public async start(): Promise<void> {
+        this.log.info('Initializing SSH worker', this.config.host);
+
+        await this.ssh.connect();
+
+        let python = await this.findPython();
+        if (this.config.pythonPath) {
+            python = await this.updatePath(python);
+        }
+
+        await this.ssh.run(`${python} -m pip install nni --upgrade`);  // FIXME: why upgrade???
+        // TODO: version check
+
+        this.uploadDir = await this.launchTrialKeeperDaemon(python);
+        await this.trialKeeper.start();
+
+        this.log.info(`Worker ${this.config.host} initialized`);
+    }
+
+    async stop(): Promise<void> {
+        this.log.info('Stop worker', this.config.host);
+        await this.trialKeeper.shutdown();
+    }
+
+    async upload(name: string, tar: string): Promise<void> {
+        this.log.info('Uploading', name);
+        const remotePath = path.join(this.uploadDir, `${name}.tgz`);
+        await this.ssh.upload(tar, remotePath);
+        await this.trialKeeper.unpackDirectory(name, remotePath);
+        this.log.info('Upload success');
+    }
+
+    /**
+     *  Find a usable python command.
+     *
+     *  If the user provides a `pythonPath` config, this python will be used to setup PATH env,
+     *  and we will re-find python after that.
+     *  In this case, python 2 is also acceptable.
+     *
+     *  Otherwise if there is no `pythonPath` config,
+     *  the found python will be used for all tasks including user trials.
+     **/
     private async findPython(): Promise<string> {
         const candidates = [];
         if (this.config.pythonPath) {
-            if (!this.config.pythonPath.includes('\\')) {
+            if (!this.config.pythonPath.includes('\\')) {  // it might be a posix server
                 candidates.push(this.config.pythonPath + '/python');
                 candidates.push(this.config.pythonPath + '/python3');
             }
-            if (!this.config.pythonPath.includes('/')) {
+            if (!this.config.pythonPath.includes('/')) {  // it might be a windows server
                 candidates.push(this.config.pythonPath + '\\python');
             }
             candidates.push(this.config.pythonPath);  // in case the user makes mistake
@@ -77,46 +115,45 @@ export class Worker {
 
         for (const python of candidates) {
             const result = await this.ssh.exec(python + ' --version');
-            if (result.code === 0) {
-                if (result.stdout.startsWith('Python 2.')) {
+            if (result.code !== 0) {
+                continue;
+            }
+
+            if (this.config.pythonPath) {
+                if (result.stdout.startsWith('Python 2')) {
                     python2 = python;
                 } else {
-                    this.log.debug('Python command chosen for initializing:', python);
+                    this.log.debug('Python for initializing:', python);
                     return python;
                 }
+            } else {
+                this.log.info('Use following python command:', python);
+                return python;
             }
         }
 
-        if (this.config.pythonPath && python2) {
+        if (python2) {
             this.log.warning('Cannot find python 3, using python 2 for initializing:', python2);
             return python2;
         }
 
         this.log.error('Cannot find python on SSH server');
-        throw new Error(`Cannot find python on server ${this.config.host}`);
+        throw new Error(`Cannot find python on SSH server ${this.config.host}`);
     }
 
-    private async setPythonPath(python: string): Promise<string> {
+    /**
+     *  Update PATH env using the given python interpreter.
+     *  Return the new python command after setting up PATH.
+     **/
+    private async updatePath(python: string): Promise<string> {
         if (python === this.config.pythonPath) {
             this.log.error('python_path should be the directory rather than the executable, please check your config');
             return python;
         }
 
-        const osCmd = `${python} -c "import sys ; print(sys.platform)"`;
-        const osResult = await this.ssh.exec(osCmd);
-        if (!osResult.stdout) {
-            this.log.error('Failed to detect OS', osResult);
-            throw new Error(`Failed to detect OS for server ${this.config.host}`);
-        }
-        const os = osResult.stdout.trim();
-
-        const envCmd = `${python} -c "import json,os ; print(json.dumps(dict(os.environ)))"`
-        const envResult = await this.ssh.exec(envCmd);
-        if (!envResult.stdout) {
-            this.log.error('Failed to get env', envResult);
-            throw new Error(`Failed to get environment variables for server ${this.config.host}`);
-        }
-        const env = JSON.parse(envResult.stdout);
+        const os = await this.ssh.run(`${python} -c "import sys ; print(sys.platform)"`);
+        const envJson = await this.ssh.run(`${python} -c "import json,os ; print(json.dumps(dict(os.environ)))"`);
+        const env = JSON.parse(envJson);
 
         const delimiter = (os === 'win32' ? ';' : ':');
         env['PATH'] = this.config.pythonPath + delimiter + env['PATH'];
@@ -124,26 +161,19 @@ export class Worker {
 
         for (const newPython of ['python', 'python3']) {
             const result = await this.ssh.exec(newPython + ' --version');
-            if (result.code === 0 && !result.stdout.startsWith('Python 2.')) {
-                return python;
+            if (result.code === 0 && !result.stdout.startsWith('Python 2')) {
+                return newPython;
             }
         }
-        this.log.error('Cannot find python after setting pythonPath');
+        this.log.error('Cannot find python after adding python_path', this.config.pythonPath);
         throw new Error(`Cannot find python after adding ${this.config.pythonPath} to PATH`);
     }
 
-    public async start(): Promise<void> {
-        await this.ssh.connect();
-
-        let python = await this.findPython();
-        if (this.config.pythonPath) {
-            python = await this.setPythonPath(python);
-        }
-
-        await this.ssh.run(`${python} -m pip install nni --upgrade`);  // FIXME: upgrade???
-
-        // todo: check version
-
+    /**
+     *  Launch trial keeper daemon process.
+     *  Return trial keeper's upload directory.
+     **/
+    private async launchTrialKeeperDaemon(python: string): Promise<string> {
         const prepareCommand = [
             python,
             '-m nni.tools.nni_manager_scripts.create_trial_keeper_dir',
@@ -167,18 +197,6 @@ export class Worker {
             this.log.error('Failed to launch trial keeper daemon:', result);
             throw new Error('Failed to launch trial keeper daemon');
         }
-        this.uploadDir = result.uploadDirectory;
-
-        await this.trialKeeper.start();
-    }
-
-    async stop(): Promise<void> {
-        await this.trialKeeper.shutdown();
-    }
-
-    async upload(name: string, tar: string): Promise<void> {
-        const remotePath = path.join(this.uploadDir, `${name}.tgz`);
-        await this.ssh.upload(tar, remotePath);
-        await this.trialKeeper.unpackDirectory(name, remotePath);
+        return result.uploadDirectory;
     }
 }

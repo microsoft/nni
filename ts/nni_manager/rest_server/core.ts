@@ -1,6 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  RestServerCore, a rest server which has no built-in handlers.
+ *  All handlers will be registered with `globals.rest` APIs.
+ *
+ *  Currently it's a copy-paste of the main RestServer.
+ *  In future RestServer will inherit this class.
+ **/
+
 import assert from 'node:assert/strict';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -19,6 +27,9 @@ export class RestServerCore {
     private urlPrefix: string;
     private server: Server | null = null;
 
+    /**
+     *  When `port` is 0 or not given, let the OS to choose a random free port.
+     **/
     constructor(port?: number, urlPrefix?: string) {
         this.port = port ?? 0;
         this.urlPrefix = urlPrefix ?? '';
@@ -41,7 +52,7 @@ export class RestServerCore {
         this.server.on('listening', () => {
             if (this.port === 0) {
                 this.port = (this.server!.address() as AddressInfo).port;
-                (globals.args.port as any) = this.port;  // TODO: too hacky, use globals.rest.port in future
+                (globals.args.port as any) = this.port;  // TODO: hacky, use globals.rest.port in future
             }
             logger.info('REST server started.');
             deferred.resolve();

@@ -4,19 +4,28 @@
 /**
  *  WebSocket command channel server.
  *
- *  By default the server maintains a heartbeat for each client.
- *  When a client loses heartbeat for 20 seconds, the connection will be closed.
+ *  The server will specify a URL prefix like `ws://1.2.3.4:8080/SERVER_PREFIX`,
+ *  and each client will append a channel ID, like `ws://1.2.3.4:8080/SERVER_PREFIX/CHANNEL_ID`.
  *
- *  The constructor provides an optional parameter `robustness` to control this behavior.
- *  The parameter specifies how many consecutive missing heartbeats (at 5s interval) will kill a connection.
- *  Setting the robustness to 0 will drop dead connections in 5 seconds,
- *  and settig it to `Infinity` will effectively disable the heartbeat.
+ *      const server = new WsChannelServer('example', 'SERVER_PREFIX');
+ *      const url = server.getChannelUrl('CHANNEL_ID');
+ *      const client = new WsChannelClient(url);
+ *      await server.start();
+ *      await client.connect();
  *
- *  Note that the WebSocket connection is not reliable, even for localhost loopback connection.
- *  The client should recreate a connection when any error occurs.
+ *  There two styles to use the server:
  *
- *  To keep consistency with other channel types, each URL only serves one connection.
- *  When the client creates a new connection to the same URL, the previous connection will be closed by server.
+ *   1. Handle all clients' commands in one space:
+ *
+ *          server.onReceive((channelId, command) => { ... });
+ *          server.send(channelId, command);
+ *
+ *   2. Maintain a `WsChannel` instance for each client:
+ *
+ *          server.onConnection((channelId, channel) => {
+ *              channel.onCommand(command => { ... });
+ *              channel.send(command);
+ *          });
  **/
 
 import { EventEmitter } from 'events';
@@ -24,7 +33,7 @@ import { EventEmitter } from 'events';
 import type { Request } from 'express';
 import type { WebSocket } from 'ws';
 
-import type { Command, CommandChannelServer } from 'common/command_channel/interface';
+import type { Command } from 'common/command_channel/interface';
 import { Deferred } from 'common/deferred';
 import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
@@ -67,7 +76,10 @@ export class WsChannelServer extends EventEmitter {
 
         // wait for at most 5 seconds
         // use heartbeatInterval here for easier unit test
-        setTimeout(() => { deferred.resolve(); }, heartbeatInterval);
+        setTimeout(() => {
+            this.log.debug('Shutdown timeout. Stop waiting following channels:', Array.from(this.channels.keys()));
+            deferred.resolve();
+        }, heartbeatInterval);
 
         return deferred.promise;
     }
@@ -78,10 +90,10 @@ export class WsChannelServer extends EventEmitter {
 
     public send(channelId: string, command: Command): void {
         const channel = this.channels.get(channelId);
-        if (channel === undefined) {
-            this.log.error(`Channel ${channelId} is not available`);
-        } else {
+        if (channel) {
             channel.send(command);
+        } else {
+            this.log.error(`Channel ${channelId} is not available`);
         }
     }
 

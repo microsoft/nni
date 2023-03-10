@@ -1,25 +1,42 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  WebSocket command channel client.
+ *
+ *  Usage:
+ *
+ *      const client = new WsChannelClient('ws://1.2.3.4:8080/server/channel_id');
+ *      await client.connect();
+ *      client.send(command);
+ *
+ *  Most APIs are derived the base class `WsChannel`.
+ *  See its doc for more details.
+ **/
+
+import events from 'node:events';
 import { setTimeout } from 'node:timers/promises';
 
 import { WebSocket } from 'ws';
 
-import { Deferred } from 'common/deferred';
 import { Logger, getLogger } from 'common/log';
 import { WsChannel } from './channel';
 
-const maxPayload: number = 4 * 1024 * 1024 * 1024;
+// need large message because resuming experiment will re-send all final metrics in one command
+const maxPayload: number = 1024 * 1024 * 1024;
 
 export class WsChannelClient extends WsChannel {
     private logger: Logger;  // avoid name conflict with base class
     private url: string;
 
+    /**
+     *  The url should start with "ws://".
+     *  The name is used for better logging.
+     **/
     constructor(url: string, name?: string) {
         const name_ = name ?? generateName(url);
         super(name_);
-        this.logger = getLogger(`WsClient.${name_}`);
-        this.logger.trace('Created with URL:', url);
+        this.logger = getLogger(`WsChannelClient.${name_}`);
         this.url = url;
         this.on('lost', this.reconnect.bind(this));
     }
@@ -27,28 +44,20 @@ export class WsChannelClient extends WsChannel {
     public async connect(): Promise<void> {
         this.logger.debug('Connecting to', this.url);
         const ws = new WebSocket(this.url, { maxPayload });
-
-        // fixme
         this.setConnection(ws);
-
-        const deferred = new Deferred<void>();
-        ws.once('open', () => {
-            deferred.resolve();
-        });
-        ws.once('error', error => {
-            deferred.reject(error);
-        });
-        await deferred.promise;
-
+        await events.once(ws, 'open');
         this.logger.debug('Connected');
     }
 
+    /**
+     *  Alias of `close()`.
+     **/
     public async disconnect(reason?: string): Promise<void> {
         this.close(reason ?? 'client disconnecting');
     }
 
     private async reconnect(): Promise<void> {
-        this.logger.warning('Connection lost; try to reconnect');
+        this.logger.warning('Connection lost. Try to reconnect');
         for (let i = 0; i <= 5; i++) {
             if (i > 0) {
                 this.logger.warning(`Wait ${i}s before next try`);
@@ -64,7 +73,7 @@ export class WsChannelClient extends WsChannel {
             }
         }
 
-        this.logger.error('Conenction lost; cannot reconnect');
+        this.logger.error('Conenction lost. Cannot reconnect');
         this.emit('error', new Error('Connection lost'));
     }
 }

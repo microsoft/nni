@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  Utility to create .tgz archive for trial code directory.
+ **/
+
 import type { Stats } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -19,7 +23,7 @@ export async function createTarball(tarName: string, sourcePath: string): Promis
     let ignorePatterns;
     try {
         ignorePatterns = await fs.readFile(path.join(sourcePath, '.nniignore'), { encoding: 'utf8' });
-    } catch { /* make lint happy */ }
+    } catch { /* do nothing */ }
     const ig = ignorePatterns ? ignore().add(ignorePatterns) : undefined;
 
     let countNum = 0;
@@ -38,9 +42,9 @@ export async function createTarball(tarName: string, sourcePath: string): Promis
             logger.error(`Failed to pack ${sourcePath}: too many files`);
             throw new Error(`${sourcePath} contains too many files (more than 2000)`);
         }
-        if (countSize > 1024 * 1024 * 1024) {
+        if (countSize > 300 * 1024 * 1024) {
             logger.error(`Failed to pack ${sourcePath}: too large`);
-            throw new Error(`${sourcePath} is too large (more than 1GB)`);
+            throw new Error(`${sourcePath} is too large (more than 300MB)`);
         }
     }
 
