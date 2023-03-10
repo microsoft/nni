@@ -95,10 +95,12 @@ def generate_stub_file() -> str:
                               'It means your PyTorch version might not be supported.', RuntimeWarning)
                 code.append(f'{name} = nn.{name}')
             elif name in _WRAP_WITHOUT_TAG_CLASSES:
-                code.append(f'class {name}(ParametrizedModule, nn.{name}, wraps=nn.{name}, copy_wrapped=True):\n    _nni_basic_unit = False')  # for graph model space
+                # for graph model space
+                code.append(f'class {name}(ParametrizedModule, nn.{name}, wraps=nn.{name}, copy_wrapped=True):\n    _nni_basic_unit = False')  # pylint: disable=line-too-long
             else:
                 code.append(f'class Mutable{name}(ParametrizedModule, nn.{name}, wraps=nn.{name}): pass')
-                code.append(f'class {name}(ParametrizedModule, nn.{name}, wraps=nn.{name}, copy_wrapped=True): pass')  # for graph model space
+                # for graph model space
+                code.append(f'class {name}(ParametrizedModule, nn.{name}, wraps=nn.{name}, copy_wrapped=True): pass')
 
         elif inspect.isfunction(obj) or inspect.ismodule(obj):
             code.append(f'{name} = nn.{name}')  # no modification
@@ -131,8 +133,10 @@ except ModuleNotFoundError:
     # Backup plan when the file is not writable.
     exec(code, globals())
 
+
 def mutable_global_names():
     return [name for name, obj in globals().items() if isinstance(obj, type) and name.startswith('Mutable')]
+
 
 # Export all the MutableXXX in this module by default.
 __all__ = mutable_global_names()

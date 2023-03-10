@@ -73,8 +73,8 @@ class Chain(Strategy):
         2. initialize the main strategy.
         3. calling :meth:`StrategyMiddleware._initialize_model_space` from top to bottom.
         """
-        for cur, next in list(zip(self._middlewares, self._middlewares[1:] + [engine]))[::-1]:
-            cur.set_engine(next)
+        for cur, nex in list(zip(self._middlewares, self._middlewares[1:] + [engine]))[::-1]:
+            cur.set_engine(nex)
 
         model_space = self._strategy.initialize(model_space, self._middlewares[0])
 

@@ -10,10 +10,10 @@ import sys
 import time
 import weakref
 from threading import Event, Thread
-from typing import Any, Iterable, Callable, TYPE_CHECKING
+from typing import Iterable, TYPE_CHECKING
 
 import nni
-from nni.runtime.tuner_command_channel import command_type, TunerIncomingCommand, TunerCommandChannel
+from nni.runtime.tuner_command_channel import command_type, TunerCommandChannel
 from nni.utils import MetricType
 
 from nni.nas.space import ExecutableModelSpace, ModelStatus, GraphModelSpace
@@ -99,7 +99,7 @@ class TrainingServiceExecutionEngine(ExecutionEngine):
 
     def wait_models(self, *models: ExecutableModelSpace) -> None:
         """Wait models to finish training.
-        
+
         If argument models is empty, wait for all models to finish.
         Using the experiment status as an indicator of all models' status,
         which is more efficient.
@@ -151,7 +151,7 @@ class TrainingServiceExecutionEngine(ExecutionEngine):
 
         See Also
         --------
-        nni.nas.ExecutionEngine.submit_models        
+        nni.nas.ExecutionEngine.submit_models
         """
         self._check_running()
 
@@ -226,9 +226,9 @@ class TrainingServiceExecutionEngine(ExecutionEngine):
                 # Dump and reload it here will turn it into a model.
                 model: ExecutableModelSpace = nni.load(nni.dump(param.parameters))
                 if not isinstance(model, ExecutableModelSpace):
-                    _logger.error('The parameter of trial "%s" is not a model. Skip.' % trial.trialJobId)
+                    _logger.error('The parameter of trial "%s" is not a model. Skip.', trial.trialJobId)
                     continue
-                
+
                 model.status = model_status
                 if trial.finalMetricData:
                     if len(trial.finalMetricData) != 1:
@@ -254,7 +254,7 @@ class TrainingServiceExecutionEngine(ExecutionEngine):
 
     def idle_worker_available(self) -> bool:
         """Return the number of available resources.
-        
+
         The resource is maintained by the engine itself.
         It should be fetched from nodejs side directly in future.
         """

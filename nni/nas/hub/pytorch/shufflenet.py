@@ -42,7 +42,7 @@ class ShuffleNetBlock(nn.Module):
             self.branch_proj = nn.Sequential(
                 # dw
                 MutableConv2d(self.channels, self.channels, kernel_size, stride, self.pad,
-                          groups=self.channels, bias=False),
+                              groups=self.channels, bias=False),
                 MutableBatchNorm2d(self.channels, affine=affine),
                 # pw-linear
                 MutableConv2d(self.channels, self.channels, 1, 1, 0, bias=False),
@@ -78,7 +78,7 @@ class ShuffleNetBlock(nn.Module):
                     # check can only be done for static channels
                     assert pc == c, "Depth-wise conv must not change channels."
                 result.append(MutableConv2d(pc, c, self.kernel_size, self.stride if first_depth else 1, self.pad,
-                                        groups=c, bias=False))
+                                            groups=c, bias=False))
                 result.append(MutableBatchNorm2d(c, affine=self.affine))
                 first_depth = False
             elif token == "p":
@@ -108,7 +108,8 @@ class ShuffleXceptionBlock(ShuffleNetBlock):
     `Single Path One-shot <https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123610528.pdf>`__.
     """
 
-    def __init__(self, in_channels: int, out_channels: int, mid_channels: Union[int, MutableExpression[int]], *, stride: int, affine: bool = True):
+    def __init__(self, in_channels: int, out_channels: int, mid_channels: Union[int, MutableExpression[int]],
+                 *, stride: int, affine: bool = True):
         super().__init__(in_channels, out_channels, mid_channels,
                          kernel_size=3, stride=stride, sequence="dpdpdp", affine=affine)
 

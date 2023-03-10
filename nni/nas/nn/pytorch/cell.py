@@ -346,7 +346,7 @@ class Cell(MutableModule):
             if new_cell.merge_op == 'loose_end':
                 used_nodes = set()
                 for input_list in new_cell.inputs:
-                    for input in input_list:
+                    for input in input_list:  # pylint: disable=redefined-builtin
                         assert isinstance(input, ChosenInputs)
                         used_nodes.update(input.chosen)
 

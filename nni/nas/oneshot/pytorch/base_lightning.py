@@ -4,20 +4,15 @@
 from __future__ import annotations
 
 import warnings
-from itertools import chain
-from typing import Callable, Any, Dict, Union, Tuple, Iterable, cast
+from typing import Any, Iterable, cast
 
-import numpy as np
-import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
 from torch.optim import Optimizer
-from pytorch_lightning import loggers
 
 import nni.nas.nn.pytorch as nas_nn
 from nni.nas.evaluator.pytorch import LightningModule, Trainer
-from nni.common.serializer import is_traceable
-from nni.mutable import MutableExpression, frozen_context, Sample
+from nni.mutable import Sample
 from .supermodule.base import BaseSuperNetModule
 
 __all__ = [

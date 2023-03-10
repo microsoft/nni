@@ -13,7 +13,7 @@ from typing import List, Dict, Tuple, cast
 
 from nni.common.device import GPUDevice, Device
 from nni.experiment.config.training_services import RemoteConfig
-from nni.nas.space import GraphModelSpace, Node, ModelStatus, ExecutableModelSpace
+from nni.nas.space import GraphModelSpace, Node, ModelStatus
 from nni.nas.execution.engine import Middleware, ExecutionEngine
 from nni.nas.execution.event import ModelEventType, IntermediateMetricEvent, FinalMetricEvent, TrainingEndEvent
 from nni.typehint import TrialMetric

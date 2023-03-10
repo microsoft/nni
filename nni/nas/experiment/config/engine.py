@@ -26,7 +26,7 @@ class ExecutionEngineConfig(NamedSubclassConfigBase):
 @dataclass(init=False)
 class TrainingServiceEngineConfig(ExecutionEngineConfig):
     """Engine used together with NNI training service.
-    
+
     Training service specific configs should go here,
     but they are now in top-level experiment config for historical reasons.
     """

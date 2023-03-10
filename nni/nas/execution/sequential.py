@@ -23,6 +23,7 @@ from .event import FinalMetricEvent, IntermediateMetricEvent, TrainingEndEvent
 
 _logger = logging.getLogger(__name__)
 
+
 class SequentialTrialCommandChannel(TrialCommandChannel):
 
     def __init__(self, engine: SequentialExecutionEngine, model: ExecutableModelSpace):

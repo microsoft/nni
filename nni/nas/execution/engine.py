@@ -154,7 +154,7 @@ class ExecutionEngine:
     @overload
     def dispatch_model_event(self, event: ModelEventType, **kwargs: Any) -> None:
         ...
-    
+
     @overload
     def dispatch_model_event(self, event: str, **kwargs: Any) -> None:
         ...

@@ -5,7 +5,7 @@
 # from __future__ import annotations
 
 __all__ = [
-     'recursive_freeze', 'MutableModule', 'ModelSpace', 'ParametrizedModule'
+    'recursive_freeze', 'MutableModule', 'ModelSpace', 'ParametrizedModule'
 ]
 
 import copy
@@ -240,7 +240,7 @@ class MutableModule(Mutable, nn.Module):
 
     def named_mutable_descendants(self) -> Iterable[Tuple[str, 'MutableModule']]:
         """Traverse the module subtree, find all descendants that are :class:`MutableModule`.
-        
+
         - If a child module is :class:`MutableModule`, return it directly, and its subtree will be ignored.
         - If not, it will be recursively expanded, until :class:`MutableModule` is found.
         """
@@ -304,7 +304,7 @@ class TraceableMixin(Mutable):
     @torch.jit.ignore
     def auto_save_init_arguments(self, *args, **kwargs) -> None:
         """Save init arguments into ``trace_args`` and ``trace_kwargs``.
-        
+
         Skip when ``trace_args`` and ``trace_kwargs`` are already set,
         which could be possibly due to subclassing / inheritance.
         """
@@ -510,7 +510,7 @@ class ParametrizedModule(
 
     Warnings
     --------
-    :class:`ParametrizedModule` can be nested. 
+    :class:`ParametrizedModule` can be nested.
     It's also possible to put arbitrary mutable modules inside a :class:`ParametrizedModule`.
     But be careful if the inner mutable modules are dependant on the parameters of :class:`ParametrizedModule`,
     because NNI can't handle cases where the mutables are a dynamically changing after initialization.
@@ -580,18 +580,18 @@ class ParametrizedModule(
         assert cls._bound_type is not None, 'Cannot create fixed module for a class that is not bound to a fixed type.'
         args, kwargs = cls.freeze_init_arguments(sample, *args, **kwargs)
         with model_context(sample):  # A context should already exists. But it doesn't harm to create a new one.
-            return cls._bound_type(*args, **kwargs)
+            return cls._bound_type(*args, **kwargs)  # type: ignore  # pylint: disable=not-callable
 
     def freeze(self, sample: Dict[str, Any]) -> nn.Module:
         """Freeze all the mutable arguments in init.
-        
+
         Note that a brand new module will be created, and all previous weights will be lost.
         Supernet must be created with one-shot strategies if you want to keep the weights.
         """
         args, kwargs = self.freeze_init_arguments(sample, *self.trace_args, **self.trace_kwargs)
         with model_context(sample):  # provide a context for nested mutable modules
             if self._bound_type is not None:
-                return self._bound_type(*args, **kwargs)
+                return self._bound_type(*args, **kwargs)  # type: ignore  # pylint: disable=not-callable
             else:
                 return self.__class__(*args, **kwargs)
 

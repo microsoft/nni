@@ -48,7 +48,6 @@ class _MultiModelSupervisedLearningModule(LightningModule):
         kwargs['optimizer'] = self.optimizer
         return kwargs
 
-
     def forward(self, x):
         y_hat = self.model(x)
         return y_hat
@@ -188,6 +187,7 @@ class Classification(Lightning):
                                        weight_decay=weight_decay, optimizer=optimizer)
         super().__init__(module, Trainer(use_cgo=True, **trainer_kwargs),
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
+
 
 class _RegressionModule(_MultiModelSupervisedLearningModule):
     def __init__(self, criterion: Type[nn.Module] = nn.MSELoss,

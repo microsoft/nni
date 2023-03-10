@@ -13,9 +13,8 @@ When adding/modifying a new strategy in this file, don't forget to link it in st
 from __future__ import annotations
 
 import logging
-import warnings
 from functools import partial
-from typing import Any, Type, Callable, Dict, Union, Tuple, TypeVar, Iterator, TYPE_CHECKING, cast
+from typing import Any, Callable, Dict, Union, Tuple, TypeVar, Iterator, TYPE_CHECKING, cast
 
 import torch
 import torch.nn as nn
@@ -46,7 +45,8 @@ MutationHook = Callable[[nn.Module, str, Dict[str, Any], Dict[str, Any]], Mutati
 ModuleType = TypeVar('ModuleType', bound=nn.Module)
 
 
-def _submodule_tree_map(name: str, module: ModuleType, map_fn: Callable[[str, nn.Module], nn.Module | None], topdown: bool = True) -> ModuleType:
+def _submodule_tree_map(name: str, module: ModuleType, map_fn: Callable[[str, nn.Module], nn.Module | None],
+                        topdown: bool = True) -> ModuleType:
     """Transform every submodule with ``map_fn``.
 
     ``map_fn`` is expected to return a new module, or ``None`` to indicate that the module should not be changed.
@@ -73,7 +73,7 @@ def _submodule_tree_map(name: str, module: ModuleType, map_fn: Callable[[str, nn
 
 def no_default_hook(module: nn.Module, name: str, memo: dict[str, Any], mutate_kwargs: dict[str, Any]) -> bool:
     """Add this hook at the end of your hook list to raise error for unsupported mutation primitives.
-    
+
     If error is not raised, it's possible that users assume it works but the model is actually wrong.
     """
 
@@ -226,7 +226,7 @@ class OneShotStrategy(Strategy):
         which encodes the sharing pattern and mechanism.
         :meth:`create_supernet` transforms a model space into a one-shot supernet.
 
-        Mostly useful for debugging and supernet inspection.        
+        Mostly useful for debugging and supernet inspection.
 
         Parameters
         ----------
@@ -249,7 +249,7 @@ class OneShotStrategy(Strategy):
         model_defined_hooks = []
         if hasattr(model, 'extra_oneshot_hooks'):
             model_defined_hooks = model.extra_oneshot_hooks(self)
-        
+
         # Find all hooks. User-defined ones are upfront.
         hooks = self.extra_mutation_hooks + model_defined_hooks + self.default_mutation_hooks()
 
@@ -399,7 +399,7 @@ class OneShotStrategy(Strategy):
     @property
     def supernet(self) -> ModelSpace:
         """The supernet created by one-shot strategy.
-        
+
         Only available after :meth:`run` is called.
         """
         if self._mutated_model_space is None:
@@ -409,7 +409,7 @@ class OneShotStrategy(Strategy):
     @property
     def oneshot_module(self) -> BaseOneShotLightningModule:
         """The one-shot module created by one-shot strategy.
-        
+
         Only available after :meth:`run` is called.
         """
         if self._mutated_model_space is None:
@@ -442,8 +442,8 @@ class OneShotStrategy(Strategy):
             if hook_suggest is not None:
                 if not isinstance(hook_suggest, BaseSuperNetModule):
                     _logger.warning("Mutation hook on %s didn't return a BaseSuperNetModule. "
-                                  "The replacement will still be effective but it will be probably ignored by the algorithm.",
-                                  name)
+                                    "The replacement will still be effective but it will be probably ignored by the algorithm.",
+                                    name)
 
                 module = hook_suggest
                 is_replaced = True
@@ -803,7 +803,7 @@ class RandomOneShot(OneShotStrategy):
         supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
     )
 
-    def __init__(self, filter: ProfilerFilter | dict | Callable[[Sample], bool] | None = None, **kwargs) -> None:
+    def __init__(self, filter: ProfilerFilter | dict | Callable[[Sample], bool] | None = None, **kwargs) -> None:  # pylint: disable=redefined-builtin
         super().__init__(**kwargs)
         if isinstance(filter, dict):
             self.filter = RangeProfilerFilter(**filter)
@@ -911,7 +911,7 @@ class ENAS(RandomOneShot):
 
         if self.filter is not None:
             raise ValueError('ENAS does not support sampling filter.')
-    
+
         self.batches_per_update = batches_per_update
         self.log_prob_every_n_step = log_prob_every_n_step
         self.replay_buffer_size = replay_buffer_size
@@ -959,4 +959,3 @@ class ENAS(RandomOneShot):
             )):
                 raise TypeError(f'ENAS strategy only supports categorical variables, but got {type(mutable)}')
         return super().mutate_model(model)
- 

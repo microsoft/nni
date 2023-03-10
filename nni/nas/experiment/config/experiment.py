@@ -7,7 +7,7 @@ import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Union, Optional, TYPE_CHECKING
+from typing import Any, Dict, Optional, TYPE_CHECKING
 from typing_extensions import Literal
 
 from nni.experiment.config import utils, ExperimentConfig
@@ -48,7 +48,7 @@ class NasExperimentConfig(ExperimentConfig):
 
     2. Create an object by providing several required fields, and then set other fields.
        Though marked as optional in function signature, it's recommended to set all three fields.
-    
+
         config = NasExperimentConfig('ts', 'graph', 'local')
         config.experiment_name = 'hello'
         config.execution_engine.dummy_input = [1, 3, 224, 224]

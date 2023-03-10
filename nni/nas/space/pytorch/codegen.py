@@ -101,7 +101,7 @@ def _format_variable_name(name: str, graph_name: str) -> str:
     name = name.replace('/', '__')
 
     # https://stackoverflow.com/questions/3303312/how-do-i-convert-a-string-to-a-valid-variable-name-in-python
-    name = re.sub(r'\W|^(?=\d)','_', name)
+    name = re.sub(r'\W|^(?=\d)', '_', name)
 
     if name.startswith('__') and (len(name) > 2 and name[2] != '_'):
         # name can't start with double underscore

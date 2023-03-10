@@ -140,7 +140,7 @@ class DartsLightningModule(BaseOneShotLightningModule):
 
 class GumbelDartsLightningModule(DartsLightningModule):
     """Extend :class:`DartsLightningModule` to support gumbel-softmax with temperature annealing.
-    
+
     The default implementation of :class:`~nni.nas.strategy.GumbelDARTS`.
 
     See Also
@@ -176,8 +176,9 @@ class LinearTemperatureScheduler:
     min
         Minimum temperature.
     """
+
     def __init__(self, init: float, min: float):
-        if not isinstance(init, float) and isinstance(min, float):
+        if not isinstance(init, float) and isinstance(min, float):  # pylint: disable=redefined-builtin
             raise TypeError('init and min must be float')
         if not (init >= min >= 0):
             raise ValueError('Invalid temperature range: init >= min >= 0')
@@ -187,7 +188,7 @@ class LinearTemperatureScheduler:
 
     def step(self, current: int, total: int | None = None):
         """Compute temperature for current epoch.
-        
+
         ``current`` is 0-indexed in the range of [0, total).
         If ``total`` is not given, ``init`` must be equal to ``min``.
         """

@@ -7,8 +7,7 @@ __all__ = [
     'AutoFormer', 'RelativePositionSelfAttention', 'RelativePosition2D',
 ]
 
-from copy import deepcopy
-from typing import Optional, Tuple, cast, Any, Dict, Union
+from typing import Tuple, cast, Any, Dict
 
 import torch
 import torch.nn as nn
@@ -88,7 +87,7 @@ class RelativePositionSelfAttention(MutableModule):
     interacting with queries and keys in self-attention modules.
 
     This class is different from PyTorch's built-in ``nn.MultiheadAttention`` in:
-    
+
     1. It supports relative position embedding.
     2. It only supports self attention.
     3. It uses fixed dimension for each head, rather than fixed total dimension.

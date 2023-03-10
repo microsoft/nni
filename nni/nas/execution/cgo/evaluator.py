@@ -17,7 +17,7 @@ from nni.nas.evaluator.pytorch.lightning import LightningModule
 
 class MultiModelLightningModule(LightningModule):
     """The lightning module for a merged "multi-model".
-    
+
     The output of the multi-model is expected to be a tuple of tensors.
     The tensors will be each passed to a criterion and a metric.
     The loss will be added up for back propagation, and the metrics will be logged.

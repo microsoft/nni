@@ -41,7 +41,7 @@ def standardize_arguments(args: tuple | Any, process_fn: Callable | None = None)
     if not isinstance(args, tuple):
         args, kwargs = (args,), {}
     elif not args:
-        args, kwargs =  (), {}
+        args, kwargs = (), {}
     elif isinstance(args[-1], dict):
         args, kwargs = args[:-1], args[-1]
     else:
@@ -59,7 +59,7 @@ _leaf_registry = []
 
 def is_leaf_module(mod: nn.Module) -> bool:
     """The default implementation of leaf module detection.
-    
+
     If you want to add more leaf modules, use :func:`profiler_leaf_module` to register them.
 
     Note that the interpretation of leaf module is finally decided by the profiler.
@@ -71,10 +71,10 @@ def is_leaf_module(mod: nn.Module) -> bool:
     if any(isinstance(mod, registered) for registered in _leaf_registry):
         return True
     return (mod.__class__.__module__.startswith('torch.nn')
-        and not isinstance(mod, nn.Sequential)
-        and not isinstance(mod, nn.ModuleList)
-        and not isinstance(mod, nn.ModuleDict)
-    )   
+            and not isinstance(mod, nn.Sequential)
+            and not isinstance(mod, nn.ModuleList)
+            and not isinstance(mod, nn.ModuleDict)
+            )
 
 
 def profiler_leaf_module(mod: nn.Module):

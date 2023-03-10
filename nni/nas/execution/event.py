@@ -39,10 +39,10 @@ class ModelEvent:
 
     def prevent_default(self):
         """Prevent the default action of this event.
-        
+
         The default action is invoked at the end of the event dispatch.
         It's usually defined by whoever dispatches the event.
-        
+
         This is similar to ``event.preventDefault()`` in JavaScript.
         """
         self._default_canceled = True
@@ -51,7 +51,7 @@ class ModelEvent:
 @dataclass
 class FinalMetricEvent(ModelEvent):
     """Event of a model update with final metric.
-    
+
     Currently the metric is raw, and wasn't canonicalized.
     But it's subject to change in next iterations.
     """
@@ -75,7 +75,7 @@ class TrainingEndEvent(ModelEvent):
 
 class ModelEventCallbacks(TypedDict):
     """Callback functions for model update events.
-    
+
     The type of registered event listeners.
     """
     final_metric: List[Callable[[FinalMetricEvent], None]]

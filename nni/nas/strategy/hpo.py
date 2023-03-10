@@ -3,19 +3,21 @@
 
 """Wrappers of HPO tuners as NAS strategy."""
 
+from __future__ import annotations
+
 __all__ = ['HPOTunerStrategy', 'TPE']
 
 import logging
 import time
 import threading
 
-from .base import Strategy
-
 import nni
 from nni.nas.execution import ExecutionEngine
 from nni.nas.execution.event import FinalMetricEvent, TrainingEndEvent, ModelEventType
 from nni.nas.space import ExecutableModelSpace, ModelStatus
 from nni.tuner import Tuner
+
+from .base import Strategy
 
 _logger = logging.getLogger(__name__)
 

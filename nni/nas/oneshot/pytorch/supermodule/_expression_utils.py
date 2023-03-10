@@ -6,7 +6,6 @@ in the way that is most convenient to one-shot algorithms."""
 
 from __future__ import annotations
 
-import itertools
 import operator
 from typing import Any, TypeVar, List, cast, Mapping, Sequence, Optional, Iterable
 

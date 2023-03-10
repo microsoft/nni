@@ -17,14 +17,14 @@ from nni.experiment import Experiment, RunMode
 from nni.nas.evaluator import Evaluator
 from nni.nas.execution import ExecutionEngine, TrainingServiceExecutionEngine, SequentialExecutionEngine
 from nni.nas.space import ExecutableModelSpace, BaseModelSpace, GraphModelSpace
+from nni.nas.strategy import Strategy
+from nni.nas.utils.serializer import get_default_serializer
+from nni.tools.nnictl.config_utils import Experiments
 from .config import (
     NasExperimentConfig, ExecutionEngineConfig,
     TrainingServiceEngineConfig, CgoEngineConfig, SequentialEngineConfig,
     ModelFormatConfig, GraphModelFormatConfig, SimplifiedModelFormatConfig, RawModelFormatConfig
 )
-from nni.nas.strategy import Strategy
-from nni.nas.utils.serializer import get_default_serializer
-from nni.tools.nnictl.config_utils import Experiments
 
 _logger = logging.getLogger(__name__)
 
@@ -139,7 +139,6 @@ class NasExperiment(Experiment):
             from nni.nas.execution.cgo import CrossGraphOptimization
             engine = TrainingServiceExecutionEngine(self)
             cgo_middleware = CrossGraphOptimization(
-                self,
                 config.training_service,
                 config.max_concurrency_cgo,
                 config.batch_waiting_time

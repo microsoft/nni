@@ -50,7 +50,7 @@ class RangeProfilerFilter(ProfilerFilter):
     """Give up the sample if the result of the profiler is out of range.
 
     ``min`` and ``max`` can't be both None.
-    
+
     Parameters
     ----------
     profiler
@@ -61,7 +61,7 @@ class RangeProfilerFilter(ProfilerFilter):
         The upper bound of the profiler result. None means no maximum.
     """
 
-    def __init__(self, profiler: Profiler, min: float | None = None, max: float | None = None):
+    def __init__(self, profiler: Profiler, min: float | None = None, max: float | None = None):  # pylint: disable=redefined-builtin
         super().__init__(profiler)
         self.min_value = min
         self.max_value = max
@@ -181,7 +181,7 @@ class ExpectationProfilerPenalty(ProfilerPenalty):
 
     def profile(self, sample: Sample) -> float:
         """Profile based on a distribution of samples.
-        
+
         Each value in the sample must be a dict representation a categorical distribution.
         """
         if not isinstance(self.profiler, ExpressionProfiler):
@@ -208,11 +208,13 @@ def _pow(x: float, y: float) -> float:
     else:
         return np.power(x, y)
 
+
 def _abs(x: float) -> float:
     if isinstance(x, torch.Tensor):
         return torch.abs(x)
     else:
         return np.abs(x)
+
 
 def _relu(x: float) -> float:
     if isinstance(x, torch.Tensor):
