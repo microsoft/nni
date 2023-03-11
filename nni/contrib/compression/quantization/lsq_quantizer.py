@@ -100,7 +100,7 @@ class LsqQuantizer(Quantizer):
     def patch_optimizer_param_group(self):
         module_name_param_dict = super().patch_optimizer_param_group()
         for module_name, ts in self._target_spaces.items():
-            for target_name, target_space in ts.items():
+            for _, target_space in ts.items():
                 if module_name not in module_name_param_dict:
                     module_name_param_dict[module_name] = []
                 module_name_param_dict[module_name].append(target_space.scale)
