@@ -106,6 +106,7 @@ export interface KubernetesStorageConfig {
     storageType: string;
     server?: string;
     path?: string;
+    localMountPath?: string;
     azureAccount?: string;
     azureShare?: string;
     keyVaultName?: string;
@@ -152,6 +153,7 @@ export interface FrameworkControllerTaskRoleConfig {
 }
 
 export interface FrameworkControllerConfig extends TrainingServiceConfig {
+    // FIXME: some the fields defined in TrainingServiceConfig are not assigned!!!
     platform: 'frameworkcontroller';
     storage: KubernetesStorageConfig;
     serviceAccountName: string;

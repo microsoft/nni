@@ -223,6 +223,16 @@ export async function tarAdd(tarPath: string, sourcePath: string): Promise<void>
 }
 
 /**
+ * Uncompress tar file to directory
+ * @param  tarFile
+ * @param  targetPath
+ */
+export async function tarExtract(tarFile: string, targetPath: string): Promise<void> {
+    tar.extract({cwd: targetPath, file: tarFile, sync: true});
+    return Promise.resolve();
+}
+
+/**
  * generate script file name
  * @param fileNamePrefix
  */

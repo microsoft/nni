@@ -2,13 +2,69 @@ FrameworkController Training Service
 ====================================
 
 NNI supports running experiment using `FrameworkController <https://github.com/Microsoft/frameworkcontroller>`__,
-called frameworkcontroller mode.
+called *frameworkcontroller* mode.
 FrameworkController is built to orchestrate all kinds of applications on Kubernetes,
 you don't need to install Kubeflow for specific deep learning framework like tf-operator or pytorch-operator.
-Now you can use FrameworkController as the training service to run NNI experiment.
+The following tutorial is based on Minikube, which should be the same for on-premise Kubernetes cluster.
 
-Prerequisite for on-premises Kubernetes Service
------------------------------------------------
+Preparation
+-----------
+
+**Step 0**. To run NNI experiment with FrameworkController, you should have a Kubernetes cluster (or Minikube for simplicity).
+
+**Step 1**. you need to install FrameworkController in the Kubernetes cluster simply with the following three commands.
+
+.. code-block:: bash
+
+    kubectl create serviceaccount frameworkcontroller --namespace default
+    kubectl create clusterrolebinding frameworkcontroller \
+        --clusterrole=cluster-admin \
+        --user=system:serviceaccount:default:frameworkcontroller
+    kubectl create -f frameworkcontroller-with-default-config.yaml
+
+The content of frameworkcontroller-with-default-config.yaml is:
+
+.. code-block:: yaml
+
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+    name: frameworkcontroller
+    namespace: default
+    spec:
+    serviceName: frameworkcontroller
+    selector:
+        matchLabels:
+        app: frameworkcontroller
+    replicas: 1
+    template:
+        metadata:
+        labels:
+            app: frameworkcontroller
+        spec:
+        # Using the ServiceAccount with granted permission
+        # if the k8s cluster enforces authorization.
+        serviceAccountName: frameworkcontroller
+        containers:
+        - name: frameworkcontroller
+            image: frameworkcontroller/frameworkcontroller
+            # Using k8s inClusterConfig, so usually, no need to specify
+            # KUBE_APISERVER_ADDRESS or KUBECONFIG
+            #env:
+            #- name: KUBE_APISERVER_ADDRESS
+            #  value: {http[s]://host:port}
+            #- name: KUBECONFIG
+            #  value: {Pod Local KubeConfig File Path}
+
+You can refer to `more advanced configuration of FrameworkController here <https://github.com/microsoft/frameworkcontroller/tree/master/example/run>`__.
+
+**Step 2**. When running on Kubernetes, NNI need a shared storage to synchronize trial code and log files
+between the NNI experiment runing on your dev machine and the trials running on Kubernetes.
+NFS and Azure File Storage are supported for now.
+
+.. code-block:: bash
+
+    apt install nfs-common
 
 1. A **Kubernetes** cluster using Kubernetes 1.8 or later.
    Follow this `guideline <https://kubernetes.io/docs/setup/>`__ to set up Kubernetes.
@@ -31,11 +87,6 @@ Prerequisite for on-premises Kubernetes Service
 
     apt install nfs-common
 
-6. Install **NNI**:
-
-.. code-block:: bash
-
-    python -m pip install nni
 
 Prerequisite for Azure Kubernetes Service
 -----------------------------------------
@@ -136,3 +187,8 @@ NNIManager will start a rest server and listen on a port which is your NNI web p
 For example, if your web portal port is ``8080``, the rest server will listen on ``8081``,
 to receive metrics from trial job running in Kubernetes.
 So you should ``enable 8081`` TCP port in your firewall rule to allow incoming traffic.
+
+FAQ
+---
+
+1. TBD
