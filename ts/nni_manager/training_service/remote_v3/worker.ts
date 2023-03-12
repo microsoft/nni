@@ -195,6 +195,7 @@ export class Worker {
             managerCommandChannel: this.channelUrl,
             platform: 'remote',
         };
+        this.log.debug('Trial keeper launcher config:', launcherConfig);
         await this.ssh.writeFile(path.join(trialKeeperDir, 'launcher_config.json'), JSON.stringify(launcherConfig));
 
         const launchCommand = `${python} -m nni.tools.nni_manager_scripts.launch_trial_keeper ${trialKeeperDir}`;

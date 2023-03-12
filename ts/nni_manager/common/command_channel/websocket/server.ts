@@ -45,14 +45,16 @@ type ReceiveCallback = (channelId: string, command: Command) => void;
 
 export class WsChannelServer extends EventEmitter {
     private channels: Map<string, WsChannel> = new Map();
+    private ip: string;
     private log: Logger;
     private path: string;
     private receiveCallbacks: ReceiveCallback[] = [];
 
-    constructor(name: string, urlPath: string) {
+    constructor(name: string, urlPath: string, ip?: string) {
         super();
         this.log = getLogger(`WsChannelServer.${name}`);
         this.path = urlPath;
+        this.ip = ip ?? 'localhost';
     }
 
     public async start(): Promise<void> {
@@ -85,7 +87,7 @@ export class WsChannelServer extends EventEmitter {
     }
 
     public getChannelUrl(channelId: string): string {
-        return globals.rest.getFullUrl('ws', this.path, channelId);
+        return globals.rest.getFullUrl('ws', this.ip, this.path, channelId);
     }
 
     public send(channelId: string, command: Command): void {

@@ -41,7 +41,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         this.log = getLogger(`RemoteV3.${this.id}`);
         this.log.debug('Training sevice config:', config);
 
-        this.server = new WsChannelServer('remote_trialkeeper', `platform/${this.id}`);
+        this.server = new WsChannelServer('remote_trialkeeper', `platform/${this.id}`, config.nniManagerIp);
 
         this.server.on('connection', (channelId: string, channel: WsChannel) => {
             const worker = this.workersByChannel.get(channelId);
