@@ -30,6 +30,7 @@ import type { Command } from 'common/command_channel/interface';
 import { RpcHelper, getRpcHelper } from 'common/command_channel/rpc_util';
 import type { WsChannel } from 'common/command_channel/websocket/channel';
 import { Deferred } from 'common/deferred';
+import type { EnvironmentInfo } from 'common/training_service_v3';
 import { TrialKeeper } from './keeper';
 
 /**
@@ -64,9 +65,9 @@ export class RemoteTrialKeeper {
         this.initialized.resolve();
     }
 
-    public async start(): Promise<void> {
+    public async start(): Promise<EnvironmentInfo> {
         await this.initialized.promise;
-        await this.rpc.call(this.id, 'start');
+        return await this.rpc.call(this.id, 'start');
     }
 
     public async shutdown(): Promise<void> {

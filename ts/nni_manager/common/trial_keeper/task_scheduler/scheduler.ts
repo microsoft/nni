@@ -271,10 +271,12 @@ export class TaskScheduler {
 
     private async emitUpdate(info?: GpuSystemInfo): Promise<void> {
         const copy = structuredClone(info ?? await collectGpuInfo());
-        for (const gpu of copy.gpus) {
-            (gpu as any).nomialUtilization = this.gpus[gpu.index].util;
+        if (copy) {
+            for (const gpu of copy.gpus) {
+                (gpu as any).nomialUtilization = this.gpus[gpu.index].util;
+            }
+            this.emitter.emit('update', { gpu: copy });
         }
-        this.emitter.emit('update', { gpu: copy });
     }
 }
 

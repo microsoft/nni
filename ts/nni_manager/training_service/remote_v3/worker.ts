@@ -25,6 +25,7 @@ export class Worker {
 
     public readonly channelId: string;
     public readonly config: RemoteMachineConfig;
+    public env: EnvironmentInfo;
     public readonly trialKeeper: RemoteTrialKeeper;
 
     public get envId(): string {
@@ -42,13 +43,9 @@ export class Worker {
         this.channelId = channelId;
         this.config = config;
         this.channelUrl = channelUrl;
+        this.env = { id: this.envId };
         this.trialKeeper = new RemoteTrialKeeper(this.envId, 'remote', enableGpuScheduling);
         this.ssh = new Ssh(channelId, config);
-    }
-
-    public getEnv(): EnvironmentInfo {
-        // TODO
-        return { id: this.envId };
     }
 
     public setChannel(channel: WsChannel): void {
@@ -70,7 +67,7 @@ export class Worker {
         // TODO: version check
 
         this.uploadDir = await this.launchTrialKeeperDaemon(python);
-        await this.trialKeeper.start();
+        this.env = await this.trialKeeper.start();
 
         this.log.info(`Worker ${this.config.host} initialized`);
     }

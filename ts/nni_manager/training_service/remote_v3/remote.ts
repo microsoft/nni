@@ -64,7 +64,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
             const worker = await this.launchWorker(workerConfig);
         }
         this.log.info('Remote training service started');
-        return this.workers.map(worker => worker.getEnv());
+        return this.workers.map(worker => worker.env);
     }
 
     private async launchWorker(config: RemoteMachineConfig): Promise<Worker> {
@@ -93,6 +93,10 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         });
         worker.trialKeeper.onReceiveCommand('metric', (trialId, command) => {
             this.emitter.emit('metric', trialId, command['metric']);
+        });
+        worker.trialKeeper.onEnvironmentUpdate(env => {
+            worker.env = env;
+            this.emitter.emit('env_update', this.workers.map(worker => worker.env));
         });
 
         await worker.start();
@@ -173,8 +177,8 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         this.emitter.on('metric', callback);
     }
 
-    public onEnvironmentUpdate(_callback: (environments: EnvironmentInfo[]) => Promise<void>): void {
-        // TODO
+    public onEnvironmentUpdate(callback: (environments: EnvironmentInfo[]) => Promise<void>): void {
+        this.emitter.on('env_update', callback);
     }
 }
 

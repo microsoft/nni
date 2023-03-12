@@ -1,147 +1,138 @@
-all:
-  logCollection: http
-
-kubeflow:
-  maxExecDuration: 15m
-  nniManagerIp:
-  # use a small trial number to make IT faster
-  maxTrialNum: 2
-  trialConcurrency: 2
-
-  kubeflowConfig:
-    operator: tf-operator
-    apiVersion: v1
-    storage: azureStorage
-    keyVault:
-      vaultName:
-      name:
-    azureStorage:
-      accountName:
-      azureShare:
-    namespace: kubeflow
-  trial:
-    worker:
-      replicas: 1
-      command:
-      gpuNum: 1
-      cpuNum: 1
-      memoryMB: 8192
-      image:
-  trainingServicePlatform: kubeflow
-
-frameworkcontroller:
-  maxExecDuration: 15m
-  nniManagerIp:
-  # use a small trial number to make IT faster
-  maxTrialNum: 2
-  trialConcurrency: 2
-  frameworkcontrollerConfig:
-    serviceAccountName: frameworkcontroller
-    storage: azureStorage
-    keyVault:
-      vaultName:
-      name:
-    azureStorage:
-      accountName:
-      azureShare:
-    namespace: kubeflow
-  trial:
-    taskRoles:
-      - name: worker
-        taskNum: 1
-        command:
-        gpuNum: 1
-        cpuNum: 1
-        memoryMB: 8192
-        image:
-        frameworkAttemptCompletionPolicy:
-          minFailedTaskCount: 1
-          minSucceededTaskCount: 1
-  trainingServicePlatform: frameworkcontroller
-
-local:
-  trainingServicePlatform: local
-pai:
-  nniManagerIp:
-  maxExecDuration: 15m
-  # PAI has job submission limitation, set maxTrialNum=1 to control trial job numbers for PAI 
-  maxTrialNum: 1
-  trialConcurrency: 1
-  paiConfig:
-    host:
-    userName:
-  trainingServicePlatform: pai
-  trial:
-    gpuNum: 1 
-    cpuNum: 1
-    image:
-    memoryMB: 8192
-    virtualCluster: default
-    nniManagerNFSMountPath: 
-    containerNFSMountPath: 
-    paiStorageConfigName: 
-remote:
-  remoteConfig:
-    reuse: false
-  machineList:
-  - ip:
-    passwd:
-    port:
-    username:
-  trainingServicePlatform: remote
-  sharedStorage:
-    storageAccountKey:
-    nfsServer:
-hybrid:
-  maxExecDuration: 15m
-  nniManagerIp:
-  maxTrialNum: 2
-  trialConcurrency: 2
-  trial:
-    gpuNum: 0
-  trainingServicePlatform: hybrid
-  hybridConfig:
-    # TODO: Add more platforms
-    trainingServicePlatforms:
-      - remote
-      - local
-  machineList:
-  - ip:
-    passwd:
-    port:
-    username:
-  remoteConfig:
-    reuse: true
 adl:
   maxExecDuration: 15m
-  nniManagerIp:
-  # use a small trial number to make IT faster
   maxTrialNum: 2
-  trialConcurrency: 2
-  trial:
-    namespace: default
-    command:
-    codeDir:
-    gpuNum: 1
-    cpuNum: 1
-    image:
-    memorySize: 1Gi
-    checkpoint:
-      storageClass:
-      storageSize:
+  nniManagerIp: null
   trainingServicePlatform: adl
-aml:
-  nniManagerIp:
-  maxExecDuration: 15m
-  # PAI has job submission limitation, set maxTrialNum=1 to control trial job numbers for PAI 
-  maxTrialNum: 2
+  trial:
+    checkpoint:
+      storageClass: null
+      storageSize: null
+    codeDir: null
+    command: null
+    cpuNum: 1
+    gpuNum: 1
+    image: null
+    memorySize: 1Gi
+    namespace: default
   trialConcurrency: 2
+all:
+  logCollection: http
+aml:
+  amlConfig:
+    computeTarget: null
+    resourceGroup: null
+    subscriptionId: null
+    workspaceName: null
+  maxExecDuration: 15m
+  maxTrialNum: 2
+  nniManagerIp: null
   trainingServicePlatform: aml
   trial:
     gpuNum: 1
-    image:
-  amlConfig:
-    subscriptionId:
-    resourceGroup:
-    workspaceName:
-    computeTarget:
+    image: null
+  trialConcurrency: 2
+frameworkcontroller:
+  frameworkcontrollerConfig:
+    azureStorage:
+      accountName: null
+      azureShare: null
+    keyVault:
+      name: null
+      vaultName: null
+    namespace: kubeflow
+    serviceAccountName: frameworkcontroller
+    storage: azureStorage
+  maxExecDuration: 15m
+  maxTrialNum: 2
+  nniManagerIp: null
+  trainingServicePlatform: frameworkcontroller
+  trial:
+    taskRoles:
+    - command: null
+      cpuNum: 1
+      frameworkAttemptCompletionPolicy:
+        minFailedTaskCount: 1
+        minSucceededTaskCount: 1
+      gpuNum: 1
+      image: null
+      memoryMB: 8192
+      name: worker
+      taskNum: 1
+  trialConcurrency: 2
+hybrid:
+  hybridConfig:
+    trainingServicePlatforms:
+    - remote
+    - local
+  machineList:
+  - ip: null
+    passwd: null
+    port: null
+    username: null
+  maxExecDuration: 15m
+  maxTrialNum: 2
+  nniManagerIp: null
+  remoteConfig:
+    reuse: true
+  trainingServicePlatform: hybrid
+  trial:
+    gpuNum: 0
+  trialConcurrency: 2
+kubeflow:
+  kubeflowConfig:
+    apiVersion: v1
+    azureStorage:
+      accountName: null
+      azureShare: null
+    keyVault:
+      name: null
+      vaultName: null
+    namespace: kubeflow
+    operator: tf-operator
+    storage: azureStorage
+  maxExecDuration: 15m
+  maxTrialNum: 2
+  nniManagerIp: null
+  trainingServicePlatform: kubeflow
+  trial:
+    worker:
+      command: null
+      cpuNum: 1
+      gpuNum: 1
+      image: null
+      memoryMB: 8192
+      replicas: 1
+  trialConcurrency: 2
+local:
+  trainingServicePlatform: local
+pai:
+  maxExecDuration: 15m
+  maxTrialNum: 1
+  nniManagerIp: null
+  paiConfig:
+    host: null
+    userName: null
+  trainingServicePlatform: pai
+  trial:
+    containerNFSMountPath: null
+    cpuNum: 1
+    gpuNum: 1
+    image: null
+    memoryMB: 8192
+    nniManagerNFSMountPath: null
+    paiStorageConfigName: null
+    virtualCluster: default
+  trialConcurrency: 1
+remote:
+  machineList:
+  - ip: localhost
+    passwd: cffbk
+    port: 22
+    username: lz
+  nniManagerIp: localhost
+  remoteConfig:
+    reuse: false
+  sharedStorage:
+    nfsServer: null
+    storageAccountKey: null
+  trainingServicePlatform: remote

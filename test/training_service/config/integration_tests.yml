@@ -1,6 +1,6 @@
 
 defaultTestCaseConfig:
-  launchCommand: nnictl create --config $configFile --debug --foreground
+  launchCommand: nnictl create --config $configFile --debug
   stopCommand: nnictl stop
   experimentStatusCheck: True
   platform: linux darwin win32
@@ -23,7 +23,7 @@ testCases:
   validator:
 
   # launch command, default launch command is 'nnictl create --config $configFile'
-  launchCommand: nnictl create --config $configFile --debug --foreground
+  launchCommand: nnictl create --config $configFile --debug
 
   # stop command, default stop command is 'nnictl stop', empty means no stop command
   stopCommand: nnictl stop
@@ -85,7 +85,7 @@ testCases:
 - name: mnist-pytorch-non-local
   configFile: test/training_service/config/examples/mnist-pytorch.yml
   # download data first, to prevent concurrent issue.
-  launchCommand: nnictl create --config $configFile --debug --foreground
+  launchCommand: nnictl create --config $configFile --debug
   trainingService: remote pai kubeflow frameworkcontroller dlts
 
 - name: cifar10-pytorch

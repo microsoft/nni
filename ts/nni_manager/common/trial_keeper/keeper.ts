@@ -32,6 +32,8 @@ import type { Command } from 'common/command_channel/interface';
 import { HttpChannelServer } from 'common/command_channel/http';
 import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
+import type { EnvironmentInfo } from 'common/training_service_v3';
+import { collectPlatformInfo } from './collect_platform_info';
 import { TrialProcess, TrialProcessOptions } from './process';
 import { TaskSchedulerClient } from './task_scheduler_client';
 
@@ -62,10 +64,12 @@ export class TrialKeeper {
     private log: Logger;
     private platform: string;
     private trials: Map<string, TrialProcess> = new Map();
+    private gpuEnabled: boolean;
 
     constructor(environmentId: string, platform: string, enableGpuScheduling: boolean) {
         this.envId = environmentId;
         this.platform = platform;
+        this.gpuEnabled = enableGpuScheduling;
         this.log = getLogger(`TrialKeeper.${environmentId}`);
 
         this.scheduler = new TaskSchedulerClient(enableGpuScheduling);
@@ -90,8 +94,8 @@ export class TrialKeeper {
             this.channels.start(),
         ]);
 
-        this.envInfo = { id: this.envId, type: 'hot' };
-        Object.assign(this.envInfo, await collectWorkerInfo());
+        this.envInfo = { id: this.envId, type: 'hot' } as EnvironmentInfo;
+        Object.assign(this.envInfo, await collectPlatformInfo(this.gpuEnabled));
         return this.envInfo;
     }
 

@@ -1,0 +1,28 @@
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+authorName: nni
+experimentName: default_test
+logCollection: http
+machineList:
+- ip: localhost
+  passwd: cffbk
+  port: 22
+  username: lz
+maxExecDuration: 10m
+maxTrialNum: 1
+multiPhase: false
+multiThread: false
+nniManagerIp: localhost
+remoteConfig:
+  reuse: false
+searchSpacePath: ./mnist_search_space.json
+trainingServicePlatform: remote
+trial:
+  codeDir: ../../../../examples/trials/mnist-tfv2
+  command: python3 mnist.py
+trialConcurrency: 1
+tuner:
+  builtinTunerName: Random
+useAnnotation: false

@@ -10,7 +10,7 @@ import { getLogger } from 'common/log';
 import { runPythonModule } from 'common/pythonScript';
 import { getIPV4Address } from 'common/utils';
 
-export async function collectPlatformInfo(includeGpu: boolean, detailed: boolean): Promise<Record<string, any>> {
+export async function collectPlatformInfo(includeGpu: boolean): Promise<Record<string, any>> {
     // TODO: explicitly set debug flag
     const detailed = (globals.args.logLevel === 'debug' || globals.args.logLevel === 'trace');
 
