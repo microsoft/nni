@@ -154,7 +154,10 @@ export class V3asV1 implements TrainingService {
     }
 
     public run(): Promise<void> {
-        this.start();
+        this.start().catch(error => {
+            getLogger('TrainingServiceCompat').error('Training srevice initialize failed:', error);
+            globals.shutdown.initiate('training service initialize failed');
+        });
         return this.runDeferred.promise;
     }
 
