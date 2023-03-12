@@ -9,7 +9,7 @@ import nni
 def main():
     data = {}
     data['nniVersion'] = nni.__version__
-    data['nniPath'] = nni.__path__[0]
+    data['nniPath'] = nni.__path__[0]  # type: ignore
     data['pythonVersion'] = '{}.{}.{}-{}-{}'.format(*sys.version_info)
     data['pythonPath'] = sys.executable
     print(json.dumps(data))
