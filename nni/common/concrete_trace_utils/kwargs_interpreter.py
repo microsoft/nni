@@ -68,8 +68,13 @@ class KwargsInterpreter(Interpreter):
             try:
                 self.env[node] = self.run_node(node)
             except Exception as e:
-                print(node.name, node.op, node.target)
-                msg = f'While executing {node.format_node()}'
+                try:
+                    msg = f'While executing {node.format_node()}'
+                except RuntimeError:
+                    from types import BuiltinFunctionType
+                    if isinstance(node.target, BuiltinFunctionType):
+                        msg = f'While executing %{node.name} : [#users={len(node.users)}] = '\
+                              f'{node.op}[target={node.target}]'
                 msg = '{}\n\n{}'.format(e.args[0], msg) if e.args else str(msg)
                 msg += f"\nOriginal traceback:\n{node.stack_trace}"
                 e.args = (msg,) + e.args[1:]
