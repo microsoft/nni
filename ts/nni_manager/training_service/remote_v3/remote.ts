@@ -85,8 +85,11 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         worker.trialKeeper.onTrialStart((...args) => {
             this.emitter.emit('trial_start', ...args);
         });
-        worker.trialKeeper.onTrialStop((...args) => {
-            this.emitter.emit('trial_stop', ...args);
+        worker.trialKeeper.onTrialStop((trialId, _timestamp, exitCode) => {
+            if (exitCode !== 0) {
+                this.collectTrialLog(trialId);
+            }
+            this.emitter.emit('trial_stop', trialId, _timestamp, exitCode);
         });
         worker.trialKeeper.onReceiveCommand('request_parameter', (trialId, _command) => {
             this.emitter.emit('request_parameter', trialId);
@@ -179,6 +182,15 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
 
     public onEnvironmentUpdate(callback: (environments: EnvironmentInfo[]) => Promise<void>): void {
         this.emitter.on('env_update', callback);
+    }
+
+    private collectTrialLog(trialId: string): void {
+        const worker = this.workersByTrial.get(trialId);
+        if (worker) {
+            worker.downloadTrialLog(trialId);
+        } else {
+            this.log.error('Failed to collect trial log: cannot find worker for trial', trialId);
+        }
     }
 }
 

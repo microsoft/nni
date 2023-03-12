@@ -5,6 +5,7 @@
  *  Manage SSH servers.
  **/
 
+import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import type { WsChannel } from 'common/command_channel/websocket/channel';
@@ -90,6 +91,24 @@ export class Worker {
         await this.ssh.upload(tar, remotePath);
         await this.trialKeeper.unpackDirectory(name, remotePath);
         this.log.info('Upload success');
+    }
+
+    public async downloadTrialLog(trialId: string): Promise<void> {
+        this.log.debug('Downloading trial log:', trialId);
+
+        const localDir = path.join(globals.paths.experimentRoot, 'output', trialId);
+        await fs.mkdir(localDir, { recursive: true });
+
+        // fixme: hack
+        const remoteDir = path.join(path.dirname(this.uploadDir), 'trials', trialId);
+
+        await Promise.all([
+            this.ssh.download(path.join(remoteDir, 'trial.stdout'), path.join(localDir, 'trial.stdout')),
+            this.ssh.download(path.join(remoteDir, 'trial.stderr'), path.join(localDir, 'trial.stderr')),
+        ]);
+
+        const stderr = await fs.readFile(path.join(localDir, 'trial.stderr'), { encoding: 'utf8' });
+        this.log.info(`Trial ${trialId} stderr:`, stderr);
     }
 
     /**
