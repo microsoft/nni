@@ -11,6 +11,7 @@ import type { WsChannel } from 'common/command_channel/websocket/channel';
 import type { RemoteMachineConfig } from 'common/experimentConfig';
 import { globals } from 'common/globals';
 import { Logger, getLogger } from 'common/log';
+import { runPythonScript } from 'common/pythonScript';
 import type { EnvironmentInfo } from 'common/training_service_v3';
 import { RemoteTrialKeeper } from 'common/trial_keeper/rpc';
 import { Ssh } from './ssh';
@@ -64,7 +65,12 @@ export class Worker {
         }
 
         await this.ssh.run(`${python} -m pip install nni --upgrade`);  // FIXME: why upgrade???
-        // TODO: version check
+
+        const remoteVersion = await this.ssh.run(`${python} -c "import nni ; print(nni.__version__)"`);
+        const localVersion = await runPythonScript('import nni ; print(nni.__version__)');
+        if (localVersion !== remoteVersion) {
+            this.log.error(`NNI version mismatch. Local: ${localVersion} ; SSH server: ${remoteVersion}`);
+        }
 
         this.uploadDir = await this.launchTrialKeeperDaemon(python);
         this.env = await this.trialKeeper.start();
