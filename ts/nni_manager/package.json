@@ -43,6 +43,7 @@
     "@types/express-ws": ">=3.0.1",
     "@types/glob": ">=8.0.0",
     "@types/http-proxy": ">=1.17.7",
+    "@types/js-yaml": ">=4.0.1",
     "@types/lockfile": ">=1.0.0",
     "@types/mocha": ">=8.2.3",
     "@types/node": ">=18.15.0",
