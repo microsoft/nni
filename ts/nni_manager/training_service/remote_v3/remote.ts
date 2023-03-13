@@ -8,6 +8,7 @@
  *  but requires the server to have a recent python installed.
  **/
 
+import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 
 import { WsChannel, WsChannelServer } from 'common/command_channel/websocket/index';
@@ -22,17 +23,14 @@ import { Worker } from './worker';
 export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     private id: string;
     private config: RemoteConfig;
-    private log: Logger;
-
     private emitter: EventEmitter = new EventEmitter();
-
     private lastWorkerIndex: number = 0;
+    private log: Logger;
+    private server: WsChannelServer;
     private workers: Worker[] = [];
     private workersByChannel: Map<string, Worker> = new Map();
     private workersByEnv: Map<string, Worker> = new Map();
     private workersByTrial: Map<string, Worker> = new Map();
-
-    private server: WsChannelServer;
 
     constructor(trainingServiceId: string, config: TrainingServiceConfig) {
         this.id = trainingServiceId;
@@ -41,7 +39,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         this.log = getLogger(`RemoteV3.${this.id}`);
         this.log.debug('Training sevice config:', config);
 
-        this.server = new WsChannelServer('remote_trialkeeper', `platform/${this.id}`, config.nniManagerIp);
+        this.server = new WsChannelServer('RemoteTrialKeeper', `platform/${this.id}`, config.nniManagerIp);
 
         this.server.on('connection', (channelId: string, channel: WsChannel) => {
             const worker = this.workersByChannel.get(channelId);
@@ -60,15 +58,15 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     public async start(): Promise<EnvironmentInfo[]> {
         this.log.info('Starting remote training service');
         await this.server.start();
-        for (const workerConfig of this.config.machineList) {
-            const worker = await this.launchWorker(workerConfig);
-        }
+        await Promise.all(
+            this.config.machineList.map(workerConfig => this.launchWorker(workerConfig))
+        );
         this.log.info('Remote training service started');
         return this.workers.map(worker => worker.env);
     }
 
     private async launchWorker(config: RemoteMachineConfig): Promise<Worker> {
-        this.lastWorkerIndex += 1;
+        this.lastWorkerIndex += 1;  // TODO: add a global counter module to support recover on resume
         const channelId = String(this.lastWorkerIndex);
         const worker = new Worker(
             this.id,
@@ -82,14 +80,14 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         this.workersByChannel.set(worker.channelId, worker);
         this.workersByEnv.set(worker.envId, worker);
 
-        worker.trialKeeper.onTrialStart((...args) => {
-            this.emitter.emit('trial_start', ...args);
+        worker.trialKeeper.onTrialStart((trialId, timestamp) => {
+            this.emitter.emit('trial_start', trialId, timestamp);
         });
-        worker.trialKeeper.onTrialStop((trialId, _timestamp, exitCode) => {
-            if (exitCode !== 0) {
+        worker.trialKeeper.onTrialStop((trialId, timestamp, exitCode) => {
+            if (this.shouldCollectLog(exitCode !== 0)) {
                 this.collectTrialLog(trialId);
             }
-            this.emitter.emit('trial_stop', trialId, _timestamp, exitCode);
+            this.emitter.emit('trial_stop', trialId, timestamp, exitCode);
         });
         worker.trialKeeper.onReceiveCommand('request_parameter', (trialId, _command) => {
             this.emitter.emit('request_parameter', trialId);
@@ -114,13 +112,17 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     public async uploadDirectory(name: string, path: string): Promise<void> {
         this.log.info(`Upload directory ${name} = ${path}`);
         const tar = await createTarball(name, path);
-        await Promise.all(this.workers.map(worker => worker.upload(name, tar)));
+        await Promise.all(
+            this.workers.map(worker => worker.upload(name, tar))
+        );
     }
 
     public async createTrial(envId: string, trialCommand: string, directoryName: string, sequenceId?: number):
             Promise<string | null> {
 
-        const worker = this.workersByEnv.get(envId)!;
+        const worker = this.workersByEnv.get(envId);
+        assert.ok(worker, `Bad environment ID: ${envId}`);
+
         const trialId = uuid();
 
         let gpuNumber = this.config.trialGpuNumber;
@@ -132,7 +134,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
             id: trialId,
             command: trialCommand,
             codeDirectoryName: directoryName,
-            sequenceId,
+            sequenceId,  // TODO: move to global counter
             gpuNumber,
             gpuRestrictions: {
                 onlyUseIndices: worker.config.gpuIndices,
@@ -184,10 +186,20 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         this.emitter.on('env_update', callback);
     }
 
-    private collectTrialLog(trialId: string): void {
+    private shouldCollectLog(errorOccurred: boolean): boolean {
+        if (this.config.logCollection === 'always') {
+            return true;
+        }
+        if (this.config.logCollection === 'never') {
+            return false;
+        }
+        return errorOccurred;
+    }
+
+    private async collectTrialLog(trialId: string): Promise<void> {
         const worker = this.workersByTrial.get(trialId);
         if (worker) {
-            worker.downloadTrialLog(trialId);
+            await worker.downloadTrialLog(trialId);
         } else {
             this.log.error('Failed to collect trial log: cannot find worker for trial', trialId);
         }
