@@ -320,6 +320,7 @@ describe('Unit test for nnimanager basic testing', function () {
 
 async function resumeExperiment(): Promise<void> {
     globals.reset();
+    // the following function call show nnimanager.log in console
     // globals.showLog();
     // explicitly reset the websocket channel because it is singleton, does not work when two experiments
     // (one is start and the other is resume) run in the same process.
