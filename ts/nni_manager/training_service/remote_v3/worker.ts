@@ -73,8 +73,8 @@ export class Worker {
 
         const remoteVersion = await this.ssh.run(`${python} -c "import nni ; print(nni.__version__)"`);
         const localVersion = await runPythonScript('import nni ; print(nni.__version__)');
-        if (localVersion !== remoteVersion) {
-            this.log.error(`NNI version mismatch. Local: ${localVersion} ; SSH server: ${remoteVersion}`);
+        if (localVersion.trim() !== remoteVersion.trim()) {
+            this.log.error(`NNI version mismatch. Local: ${localVersion.trim()} ; SSH server: ${remoteVersion}`);
         }
 
         this.uploadDir = await this.launchTrialKeeperDaemon(python);

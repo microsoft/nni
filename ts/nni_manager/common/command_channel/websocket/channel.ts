@@ -72,6 +72,7 @@ export class WsChannel extends EventEmitter {
     }
 
     public enableHeartbeat(interval: number): void {
+        this.log.debug('## enable heartbeat');
         this.heartbeatInterval = interval;
     }
 
@@ -131,6 +132,7 @@ export class WsChannel extends EventEmitter {
     }
 
     private configConnection(ws: WebSocket): WsConnection {
+        this.log.debug('## config connection');
         const epoch = this.epoch;  // copy it to use in closure
         const conn = new WsConnection(
             this.epoch ? `${this.name}.${epoch}` : this.name,

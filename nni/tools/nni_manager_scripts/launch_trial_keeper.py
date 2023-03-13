@@ -61,8 +61,8 @@ def main() -> None:
 
     # launch process
 
-    stdout = (trial_keeper_dir / 'trial_keeper.stdout').open('a')
-    stderr = (trial_keeper_dir / 'trial_keeper.stderr').open('a')
+    stdout = (trial_keeper_dir / 'trial_keeper.stdout').open('ab')
+    stderr = (trial_keeper_dir / 'trial_keeper.stderr').open('ab')
 
     node_dir = Path(nni_node.__path__[0])  # type: ignore
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
