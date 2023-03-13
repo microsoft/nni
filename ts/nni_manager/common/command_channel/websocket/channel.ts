@@ -212,7 +212,7 @@ class WsConnection extends EventEmitter {
         }
     }
 
-    public close(reason: string): void {
+    public async close(reason: string): Promise<void> {
         if (this.closing) {
             this.log.debug('Close again:', reason);
             return;
@@ -224,9 +224,30 @@ class WsConnection extends EventEmitter {
             clearInterval(this.heartbeatTimer);
             this.heartbeatTimer = null;
         }
-        this.sendAsync({ type: '_bye_', reason }).finally(() => {
+
+        try {
+            await this.sendAsync({ type: '_bye_', reason });
+        } catch (error) {
+            this.log.error('Failed to send bye:', error);
+        }
+
+        try {
             this.ws.close(1001, reason);
-        });
+        } catch (error) {
+            this.log.error('Failed to close:', error);
+            this.ws.terminate();
+        }
+    }
+
+    private terminate(reason: string): void {
+        this.log.debug('Terminate:', reason);
+        this.closing = true;
+        try {
+            this.ws.close(1001, reason);
+        } catch (error) {
+            this.log.debug('Failed to close:', error);
+            this.ws.terminate();
+        }
     }
 
     public send(command: Command): void {
@@ -303,8 +324,8 @@ class WsConnection extends EventEmitter {
             this.sendAsync({ type: '_nop_' }).then(() => {
                 this.missingPongs = 0;
             }).catch(error => {
-                this.log.error('Failed sending command. Drop connection');
-                this.close(`peer lost responsive: ${util.inspect(error)}`);
+                this.log.error('Failed sending command. Drop connection:', error);
+                this.terminate(`peer lost responsive: ${util.inspect(error)}`);
             });
         }
         this.missingPongs += 1;
