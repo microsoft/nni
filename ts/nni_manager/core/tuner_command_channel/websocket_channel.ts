@@ -192,16 +192,15 @@ class WebSocketChannelImpl implements WebSocketChannel {
 
 let channelSingleton: WebSocketChannelImpl = new WebSocketChannelImpl();
 
-// NOTE: this function is only for unittest of nnimanager,
-// because resuming an experiment should reset websocket channel.
-export function resetChannelSingleton(): void {
-    channelSingleton = new WebSocketChannelImpl();
-}
-
 let heartbeatInterval: number = 5000;
 
 export namespace UnitTestHelpers {
     export function setHeartbeatInterval(ms: number): void {
         heartbeatInterval = ms;
+    }
+    // NOTE: this function is only for unittest of nnimanager,
+    // because resuming an experiment should reset websocket channel.
+    export function resetChannelSingleton(): void {
+        channelSingleton = new WebSocketChannelImpl();
     }
 }

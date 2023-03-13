@@ -22,7 +22,7 @@ import { NNITensorboardManager } from '../../extensions/nniTensorboardManager';
 import * as path from 'path';
 import { RestServer } from '../../rest_server';
 import globals from '../../common/globals/unittest';
-import { resetChannelSingleton } from '../../core/tuner_command_channel/websocket_channel';
+import { UnitTestHelpers } from '../../core/tuner_command_channel/websocket_channel';
 import * as timersPromises from 'timers/promises';
 
 let nniManager: NNIManager;
@@ -323,7 +323,7 @@ async function resumeExperiment(): Promise<void> {
     // globals.showLog();
     // explicitly reset the websocket channel because it is singleton, does not work when two experiments
     // (one is start and the other is resume) run in the same process.
-    resetChannelSingleton();
+    UnitTestHelpers.resetChannelSingleton();
     await initContainer('resume');
     nniManager = component.get(Manager);
 
