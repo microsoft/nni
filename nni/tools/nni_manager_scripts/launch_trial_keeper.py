@@ -71,8 +71,9 @@ def main() -> None:
 
     # NOTE: cwd must be node_dir, or trial keeper will not work (because of app-module-path/cwd)
     if sys.platform == 'win32':
-        from subprocess import CREATE_NEW_PROCESS_GROUP
-        proc = Popen(cmd, stdout=stdout, stderr=stderr, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
+        from subprocess import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW
+        flags = CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW
+        proc = Popen(cmd, stdout=stdout, stderr=stderr, cwd=node_dir, creationflags=flags)
     else:
         proc = Popen(cmd, stdout=stdout, stderr=stderr, cwd=node_dir, preexec_fn=os.setpgrp)  # type: ignore
     (trial_keeper_dir / 'trial_keeper.pid').write_text(str(proc.pid))
