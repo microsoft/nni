@@ -37,6 +37,7 @@
     "yargs": "^17.6.2"
   },
   "devDependencies": {
+    "@types/app-module-path": ">=2.2.0",
     "@types/chai": ">=4.2.18",
     "@types/chai-as-promised": ">=7.1.0",
     "@types/express": ">=4.17.14",

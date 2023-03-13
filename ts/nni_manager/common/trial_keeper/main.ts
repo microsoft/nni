@@ -7,11 +7,12 @@
  *  This script should be run via "nni/tools/nni_manager_scripts/launch_trial_keeper.py".
  **/
 
-import 'app-module-path/cwd';
-
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import util from 'node:util';
+
+import { addPath } from 'app-module-path';
+addPath(path.dirname(path.dirname(__dirname)));  // __dirname = nni_node/common/trial_keeper
 
 // FIXME: reordering imports may cause circular dependency (imported objects become undefined)
 
