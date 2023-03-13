@@ -112,17 +112,17 @@ class TuningEnvironment(gym.Env[ObservationType, int]):
     def action_space(self):
         return spaces.Discrete(self.max_num_choices)
 
-    def reset(self) -> ObservationType:
+    def reset(self) -> tuple[ObservationType, dict]:
         self.action_history = np.zeros(self.num_steps, dtype=np.int32)
         self.cur_step = 0
         self.sample = {}
-        return {
-            'action_history': self.action_history,
-            'cur_step': self.cur_step,
-            'action_dim': self.num_choices[self.cur_step]
-        }, {}
+        return ObservationType(
+            action_history=self.action_history,
+            cur_step=self.cur_step,
+            action_dim=self.num_choices[self.cur_step]
+        ), {}
 
-    def step(self, action: int) -> EnvStepType | Generator[Sample, float, EnvStepType]:
+    def step(self, action: int) -> tuple[ObservationType, float, bool, bool, dict]:
         """Step the environment.
 
         Parameters

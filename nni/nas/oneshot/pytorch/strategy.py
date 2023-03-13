@@ -248,7 +248,7 @@ class OneShotStrategy(Strategy):
 
         model_defined_hooks = []
         if hasattr(model, 'extra_oneshot_hooks'):
-            model_defined_hooks = model.extra_oneshot_hooks(self)
+            model_defined_hooks: list[MutationHook] = model.extra_oneshot_hooks(self)  # type: ignore
 
         # Find all hooks. User-defined ones are upfront.
         hooks = self.extra_mutation_hooks + model_defined_hooks + self.default_mutation_hooks()
@@ -359,10 +359,10 @@ class OneShotStrategy(Strategy):
         checkpoint_callback = evaluator.trainer.checkpoint_callback
         if checkpoint_callback is not None:
             if getattr(checkpoint_callback, 'last_model_path', None):
-                return {'ckpt_path': checkpoint_callback.last_model_path}
+                return {'ckpt_path': checkpoint_callback.last_model_path}  # type: ignore
             elif getattr(checkpoint_callback, 'best_model_path', None):
                 _logger.debug('Checkpoint callback does not have last_model_path attribute, using best_model_path.')
-                return {'ckpt_path': checkpoint_callback.best_model_path}
+                return {'ckpt_path': checkpoint_callback.best_model_path}  # type: ignore
             else:
                 _logger.warning('Checkpoint callback does not have last_model_path or best_model_path attribute. '
                                 'Either the strategy has not started, or it did not save any checkpoint: %s',

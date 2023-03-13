@@ -323,7 +323,7 @@ class InputChoice(MutableModule):
 
     @torch.jit.ignore
     def _tensor_reduction(self, candidate_inputs: List[torch.Tensor]) -> Optional[torch.Tensor]:
-        return ChosenInputs._tensor_reduction(self.reduction, [candidate_inputs[idx] for idx in self._dry_run_choice])
+        return ChosenInputs._tensor_reduction(self.reduction, [candidate_inputs[idx] for idx in self._dry_run_choice])  # type: ignore
 
 
 class ChosenInputs(nn.Module):
@@ -354,7 +354,7 @@ class ChosenInputs(nn.Module):
         return self._tensor_reduction(self.reduction, [candidate_inputs[i] for i in self.chosen])
 
     @staticmethod
-    def _tensor_reduction(reduction_type: str, tensor_list: List[torch.Tensor]) -> Optional[torch.Tensor]:
+    def _tensor_reduction(reduction_type: str, tensor_list: List[torch.Tensor]) -> Union[List[torch.Tensor], torch.Tensor, None]:
         if reduction_type == 'none':
             return tensor_list
         if not tensor_list:
@@ -362,9 +362,9 @@ class ChosenInputs(nn.Module):
         if len(tensor_list) == 1:
             return tensor_list[0]
         if reduction_type == 'sum':
-            return sum(tensor_list)
+            return cast(torch.Tensor, sum(tensor_list))
         if reduction_type == 'mean':
-            return sum(tensor_list) / len(tensor_list)
+            return cast(torch.Tensor, sum(tensor_list) / len(tensor_list))
         if reduction_type == 'concat':
             return torch.cat(tensor_list, dim=1)
         raise ValueError(f'Unrecognized reduction policy: "{reduction_type}"')

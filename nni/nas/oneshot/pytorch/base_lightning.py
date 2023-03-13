@@ -342,16 +342,18 @@ class BaseOneShotLightningModule(LightningModule):
     def architecture_optimizers(self) -> list[Optimizer] | Optimizer | None:
         """
         Get the optimizers configured in :meth:`configure_architecture_optimizers`.
+
+        Return type would be LightningOptimizer or list of LightningOptimizer.
         """
         optimizers = self.optimizers()
-        if isinstance(optimizers, optim.Optimizer):
+        if not isinstance(optimizers, list):
             optimizers = [optimizers]
         optimizers = [opt for opt in optimizers if getattr(opt, 'is_arch_optimizer', False)]
         if not optimizers:
             return None
         if len(optimizers) == 1:
             return optimizers[0]
-        return optimizers
+        return optimizers  # type: ignore
 
     # The following methods redirects the callbacks to inner module.
     # It's not the complete list though.

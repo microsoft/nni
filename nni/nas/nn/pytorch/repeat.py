@@ -188,7 +188,7 @@ class Repeat(MutableModule):
                 exception.paths.append(path)
                 return exception
         else:
-            for name, module in MutableModule.named_mutable_descendants(module):
+            for name, module in MutableModule.named_mutable_descendants(module):  # type: ignore
                 exception = module.check_contains(sample)
                 if exception is not None:
                     exception.paths.append(name)
