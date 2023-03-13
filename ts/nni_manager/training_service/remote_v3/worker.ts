@@ -53,6 +53,10 @@ export class Worker {
     public setChannel(channel: WsChannel): void {
         this.channel = channel;
         this.trialKeeper.setChannel(channel);
+        channel.on('lost', () => {
+            this.log.warning('Trial keeper connection lost');
+            this.downloadTrialKeeperLog();
+        });
     }
 
     public async start(): Promise<void> {
@@ -109,6 +113,30 @@ export class Worker {
 
         const stderr = await fs.readFile(path.join(localDir, 'trial.stderr'), { encoding: 'utf8' });
         this.log.info(`Trial ${trialId} stderr:`, stderr);
+    }
+
+    private async downloadTrialKeeperLog(): Promise<void> {
+        this.log.debug('Downloading trial keeper log');
+
+        const localDir = path.join(globals.paths.experimentRoot, 'environments', this.envId, 'trial_keeper_log');
+        await fs.mkdir(localDir, { recursive: true });
+
+        // fixme
+        const remoteDir = path.join(path.dirname(this.uploadDir), 'trial_keeper');
+
+        await Promise.all([
+            this.ssh.download(path.join(remoteDir, 'trial_keeper.log'), path.join(localDir, 'trial_keeper.log')),
+            this.ssh.download(path.join(remoteDir, 'trial_keeper.stdout'), path.join(localDir, 'trial_keeper.stdout')),
+            this.ssh.download(path.join(remoteDir, 'trial_keeper.stderr'), path.join(localDir, 'trial_keeper.stderr')),
+        ]);
+
+        const log = await fs.readFile(path.join(localDir, 'trial_keeper.log'), { encoding: 'utf8' });
+        console.error('## Trial keeper log:');
+        console.error(log);
+
+        const stderr = await fs.readFile(path.join(localDir, 'trial_keeper.stderr'), { encoding: 'utf8' });
+        console.error('## Trial keeper stderr:');
+        console.error(stderr);
     }
 
     /**
