@@ -334,6 +334,7 @@ class WsConnection extends EventEmitter {
             });
         }
         this.missingPongs += 1;
+        this.log.debug('send ping');
         this.ws.ping();
     }
 }
