@@ -93,6 +93,10 @@ async function main(): Promise<void> {
 
     // notify launcher
     await fs.writeFile(path.join(workDir, 'success.flag'), 'ok');
+
+    setInterval(() => {
+        logger.debug('@', new Date());
+    }, 1000);
 }
 
 if (!process.argv[1].endsWith('mocha')) {  // the unit test imports all scripts and will reach here
