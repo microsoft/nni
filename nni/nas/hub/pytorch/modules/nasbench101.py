@@ -444,7 +444,7 @@ class NasBench101CellConstraint(Constraint):
         # Check num_nodes
         err = self.num_nodes.check_contains(sample)
         if err is not None:
-            err.path.append('num_nodes')
+            err.paths.append('num_nodes')
             return err
         num_nodes = self.num_nodes.freeze(sample)  # must succeed
         assert num_nodes >= 2

@@ -283,7 +283,7 @@ class Cell(MutableModule):
         self.num_ops_per_node = num_ops_per_node
         self.num_predecessors = num_predecessors
         assert merge_op in ['all', 'loose_end']
-        self.merge_op = merge_op
+        self.merge_op: Literal['all', 'loose_end'] = merge_op
         self.output_node_indices = list(range(num_predecessors, num_predecessors + num_nodes))
 
         self.concat_dim = concat_dim
@@ -340,13 +340,13 @@ class Cell(MutableModule):
                 )
 
         else:
-            new_cell: Cell = super().freeze(sample)
+            new_cell = cast(Cell, super().freeze(sample))
 
             # Only need to re-calculate the loose end indices
             if new_cell.merge_op == 'loose_end':
                 used_nodes = set()
                 for input_list in new_cell.inputs:
-                    for input in input_list:  # pylint: disable=redefined-builtin
+                    for input in input_list:  # type: ignore  # pylint: disable=redefined-builtin
                         assert isinstance(input, ChosenInputs)
                         used_nodes.update(input.chosen)
 

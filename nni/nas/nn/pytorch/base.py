@@ -81,7 +81,7 @@ class MutableModule(Mutable, nn.Module):
         if cls.should_invoke_fixed_module() and arch is not None:
             # If within a fixed_arch context, create the frozen module.
             # It must return a object with different type, or else infinite recursion will happen.
-            return cls.create_fixed_module(arch, *args, **kwargs)
+            return cls.create_fixed_module(arch, *args, **kwargs)  # type: ignore
         else:
             return super().__new__(cls)
 
@@ -190,7 +190,9 @@ class MutableModule(Mutable, nn.Module):
 
         return self._mutables
 
-    def create_fixed_module(cls, sample: dict, *args, **kwargs) -> nn.Module:
+    # This is actually a classmethod, but decorated afterwards to assign `_notimplemented` attribute.
+    # @classmethod
+    def create_fixed_module(cls, sample: dict, *args, **kwargs) -> nn.Module:  # type: ignore
         """
         The classmethod is to create a brand new module with fixed architecture.
 
@@ -210,7 +212,7 @@ class MutableModule(Mutable, nn.Module):
         raise NotImplementedError('create_fixed_module() must be implemented when `custom_fixed_module_creation` is set to true.')
 
     create_fixed_module._notimplemented = True
-    create_fixed_module = classmethod(create_fixed_module)
+    create_fixed_module = classmethod(create_fixed_module)  # type: ignore
 
     def check_contains(self, sample: Sample) -> Optional[SampleValidationError]:
         for mutable in self.mutables:
@@ -244,7 +246,7 @@ class MutableModule(Mutable, nn.Module):
         - If a child module is :class:`MutableModule`, return it directly, and its subtree will be ignored.
         - If not, it will be recursively expanded, until :class:`MutableModule` is found.
         """
-        def _iter(name: str, module: nn.Module) -> Iterable[MutableModule]:
+        def _iter(name: str, module: nn.Module) -> Iterable[Tuple[str, MutableModule]]:
             for subname, child in module.named_children():
                 name_ = name + '.' + subname if name else subname
                 if isinstance(child, MutableModule):
@@ -296,12 +298,12 @@ class TraceableMixin(Mutable):
     # Useful in getting the signature of the original class __init__.
     _init_wrapped: Optional[Callable[..., None]] = None
 
-    @torch.jit.ignore
+    @torch.jit.ignore  # type: ignore
     def save_init_arguments(self, *args, **kwargs) -> None:
         self.trace_args = tuple(args)
         self.trace_kwargs = dict(kwargs)
 
-    @torch.jit.ignore
+    @torch.jit.ignore  # type: ignore
     def auto_save_init_arguments(self, *args, **kwargs) -> None:
         """Save init arguments into ``trace_args`` and ``trace_kwargs``.
 
@@ -338,10 +340,10 @@ class TraceableMixin(Mutable):
                 rv[param.name] = param.default
         return rv
 
-    @torch.jit.ignore
+    @torch.jit.ignore  # type: ignore
     def trace_copy(self):
         """Returns a different object here. All the model-specific details will be thrown away."""
-        return SerializableObject(self.__class__, self.trace_args, self.trace_kwargs)
+        return SerializableObject(self.__class__, list(self.trace_args), self.trace_kwargs)
 
 
 class ModelSpace(
@@ -450,9 +452,9 @@ def model_space_init_wrapper(original_init_fn: Callable[..., None]) -> Callable[
                 self._label_scope = label_scope(self._label_prefix)
             else:
                 self._label_scope = strict_label_scope('_unused_')  # the name is not used
-        if hasattr(self, '_label_scope') and not self._label_scope.activated:
+        if hasattr(self, '_label_scope') and not self._label_scope.activated:  # type: ignore
             # Has a label scope but it's not activated. Create a "with".
-            with self._label_scope:
+            with self._label_scope:  # type: ignore
                 return init_with_context(self, *args, **kwargs)
         else:
             return init_with_context(self, *args, **kwargs)
@@ -542,7 +544,7 @@ class ParametrizedModule(
     def should_invoke_fixed_module(cls) -> bool:
         return cls._bound_type is not None
 
-    @torch.jit.ignore
+    @torch.jit.ignore  # type: ignore
     def __init_subclass__(
         cls,
         disable_init_wrapper: bool = False,
@@ -554,7 +556,7 @@ class ParametrizedModule(
         # The init wrapper can be turned off in tricky cases.
         if not disable_init_wrapper:
             if wraps:
-                cls.__wrapped__ = wraps
+                cls.__wrapped__ = wraps  # type: ignore
                 cls._init_wrapped = wraps.__init__
             else:
                 cls._init_wrapped = cls.__init__

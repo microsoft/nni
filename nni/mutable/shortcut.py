@@ -11,11 +11,12 @@ __all__ = [
 ]
 
 import logging
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, overload
 
 from .mutable import Categorical, Numerical
 
 if TYPE_CHECKING:
+    from torch.nn import Module
     from nni.nas.nn.pytorch import LayerChoice
 
 T = TypeVar('T')
@@ -23,7 +24,17 @@ T = TypeVar('T')
 _logger = logging.getLogger(__name__)
 
 
-def choice(label: str, choices: list[T]) -> Categorical[T] | LayerChoice:
+@overload
+def choice(label: str, choices: list[T]) -> Categorical[T]:
+    ...
+
+
+@overload
+def choice(label: str, choices: list[Module]) -> LayerChoice:
+    ...
+
+
+def choice(label: str, choices: list[T] | list[Module]) -> Categorical[T] | LayerChoice:
     """Choose from a list of options.
 
     By default, it will create a :class:`~nni.mutable.Categorical` object.

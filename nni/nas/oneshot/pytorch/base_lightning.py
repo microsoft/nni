@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Iterable, cast
+from typing import Any, Iterable, cast, TYPE_CHECKING
 
 import torch.optim as optim
 import torch.nn as nn
@@ -14,6 +14,9 @@ import nni.nas.nn.pytorch as nas_nn
 from nni.nas.evaluator.pytorch import LightningModule, Trainer
 from nni.mutable import Sample
 from .supermodule.base import BaseSuperNetModule
+
+if TYPE_CHECKING:
+    from pytorch_lightning.core.optimizer import LightningOptimizer
 
 __all__ = [
     'BaseSuperNetModule',
@@ -283,13 +286,13 @@ class BaseOneShotLightningModule(LightningModule):
         # instead of trainer.optimizers (raw optimizers),
         # because otherwise optim_progress is incorrect.
         optimizers = self.optimizers()
-        if isinstance(optimizers, optim.Optimizer):
+        if not isinstance(optimizers, list):
             optimizers = [optimizers]
         # Filter out optimizers for architecture parameters.
         optimizers = [opt for opt in optimizers if not getattr(opt, 'is_arch_optimizer', False)]
 
         opt_idx = self._optimizer_progress % len(optimizers)
-        optimizer = optimizers[opt_idx]
+        optimizer = cast(Optimizer, optimizers[opt_idx])  # LightningOptimizer has the same interface as Optimizer.
 
         # There should be many before/after hooks called here, but they are omitted in this implementation.
         # 1. zero gradient
@@ -339,7 +342,7 @@ class BaseOneShotLightningModule(LightningModule):
                 if lr_scheduler['interval'] == interval and current_idx % lr_scheduler['frequency']:
                     lr_scheduler['scheduler'].step()
 
-    def architecture_optimizers(self) -> list[Optimizer] | Optimizer | None:
+    def architecture_optimizers(self) -> list[LightningOptimizer] | LightningOptimizer | None:
         """
         Get the optimizers configured in :meth:`configure_architecture_optimizers`.
 
