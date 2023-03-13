@@ -316,6 +316,7 @@ class WsConnection extends EventEmitter {
     }
 
     private handlePong(): void {
+        this.log.debug('receive pong'); // todo
         this.missingPongs = 0;
     }
 
