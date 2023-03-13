@@ -72,6 +72,7 @@ async function main(): Promise<void> {
     logger.debug('config:', config);
 
     const client = new WsChannelClient(args.managerCommandChannel, args.environmentId);
+    client.enableHeartbeat(5000);
     client.on('close', reason => {
         logger.info('Manager closed connection:', reason);
         globals.shutdown.initiate('Connection end');

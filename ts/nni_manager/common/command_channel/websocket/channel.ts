@@ -71,6 +71,10 @@ export class WsChannel extends EventEmitter {
         }
     }
 
+    public enableHeartbeat(interval: number): void {
+        this.heartbeatInterval = interval;
+    }
+
     // internal, don't use
     public setConnection(ws: WebSocket): void {
         if (this.connection) {
