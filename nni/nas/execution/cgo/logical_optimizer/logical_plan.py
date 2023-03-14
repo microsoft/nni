@@ -209,6 +209,7 @@ class LogicalPlan:
         added_models = []
 
         for node in hidden_nodes:
+            model_id = None
             if isinstance(node, OriginNode):
                 model_id = node.original_graph.model.model_id
                 if node.original_graph.model not in multi_model_placement:
@@ -221,7 +222,6 @@ class LogicalPlan:
 
             if isinstance(node, AbstractLogicalNode):
                 new_node, placement = node.assemble(multi_model_placement)
-                model_id = None
                 if isinstance(new_node.operation, _IOPseudoOperation):
                     model_id = new_node.graph.model.model_id
                     if model_id not in evaluator_slot:
@@ -238,13 +238,13 @@ class LogicalPlan:
                         input_slot_mapping[new_node] = slot
                     if new_node.operation.type == '_outputs':
                         output_slot_mapping[new_node] = slot
-                assert model_id is not None, 'No psuedo operation found in logical node.'
 
                 self.node_replace(node, new_node)
 
                 # name prefix of M_ of cells in hidden_nodes of root graphs is added here
                 # FIXME: merge this rename with non-root graph, only do once.
                 if isinstance(new_node.operation, Cell):
+                    assert model_id is not None, 'No psuedo operation found in logical node.'
                     old_cell_name = new_node.operation.cell_name
                     new_node.operation = copy.deepcopy(new_node.operation)
                     new_node.operation.cell_name = f'M_{model_id}_{old_cell_name}'

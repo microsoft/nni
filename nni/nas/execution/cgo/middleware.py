@@ -106,11 +106,15 @@ class CrossGraphOptimization(Middleware):
         self._stopped = True
         self._consumer_thread.join()
 
-        self.engine.unregister_model_event_callback(ModelEventType.TrainingEnd, self._training_end_callback)
-        self.engine.unregister_model_event_callback(ModelEventType.FinalMetric, self._final_metric_callback)
-        self.engine.unregister_model_event_callback(ModelEventType.IntermediateMetric, self._intermediate_metric_callback)
+        if self._engine is None:
+            _logger.warning('Underlying engine is not set. Skip shutdown.')
 
-        self.engine.shutdown()
+        else:
+            self.engine.unregister_model_event_callback(ModelEventType.TrainingEnd, self._training_end_callback)
+            self.engine.unregister_model_event_callback(ModelEventType.FinalMetric, self._final_metric_callback)
+            self.engine.unregister_model_event_callback(ModelEventType.IntermediateMetric, self._intermediate_metric_callback)
+
+            self.engine.shutdown()
 
     def load_state_dict(self, state_dict: dict) -> None:
         _logger.info('Cross graph optimization does not preserve any states by itself. Loading the state of inner engine: %s', self.engine)
