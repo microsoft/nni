@@ -89,6 +89,7 @@ class ModuleWrapper(torch.nn.Module):
         self.fused_modules = fused_modules if fused_modules is not None else []
 
     def register_fusion_info(self):
+        self.is_register_bias = False
         if len(self.fused_modules) > 0:
             self.is_bias = check_bias(self.module) # used for fold_bn
             assert self.is_bias in ['Tensor', 'None'], \
@@ -100,14 +101,15 @@ class ModuleWrapper(torch.nn.Module):
             return
         types = {type(module) for module in self.fused_modules[1:]}
         intersec_types = types.intersection({nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d})
-        if self.is_bias == "Tensor" and 'bias' not in self.quantization_target_spaces and len(intersec_types) > 0:
+        if self.is_bias == "Tensor" and not hasattr(self, 'bias') and len(intersec_types) > 0:
             bias = self.module.bias
+            self.is_register_bias = True
             if isinstance(bias, nn.parameter.Parameter):
-                self.module.register_parameter('original_bias', torch.nn.Parameter(bias.detach().clone()))
+                self.register_parameter('bias', torch.nn.Parameter(bias.detach().clone()))
                 delattr(self.module, 'bias')
                 self.module.register_buffer('bias', bias.data)
             elif isinstance(bias, torch.Tensor):
-                self.module.register_buffer('original_bias', bias.detach().clone())
+                self.register_buffer('bias', bias.detach().clone())
                 delattr(self.module, 'bias')
                 self.module.register_buffer('bias', bias.detach().clone())
             else:
@@ -167,14 +169,13 @@ class ModuleWrapper(torch.nn.Module):
         self.module.forward = self.module_forward
         delattr(self.module, '_nni_wrapper')
         # delete bias which is created during module fusion process
-        if getattr(self.module, "original_bias", None) is not None:
+        if getattr(self, "is_register_bias", False):
             delattr(self.module, 'bias')
-            original_bias = self.module.original_bias
-            if isinstance(original_bias, nn.parameter.Parameter):
-                self.module.register_parameter('bias', torch.nn.Parameter(original_bias.detach().clone()))
-            elif isinstance(original_bias, torch.Tensor):
-                self.module.register_buffer('bias', original_bias.detach().clone())
-            delattr(self.module, 'original_bias')
+            nni_original_bias = self.bias
+            if isinstance(nni_original_bias, nn.parameter.Parameter):
+                self.module.register_parameter('bias', torch.nn.Parameter(nni_original_bias.detach().clone()))
+            elif isinstance(nni_original_bias, torch.Tensor):
+                self.module.register_buffer('bias', nni_original_bias.detach().clone())
         if len(self.fused_modules) > 0 and self.is_bias == 'None' and check_bias(self.module) == 'Tensor':
             delattr(self.module, 'bias')
             self.module.register_parameter('bias', None)
@@ -380,13 +381,11 @@ class ModuleWrapper(torch.nn.Module):
         params_dict = {}
         params_dict.update({k: v.target for k, v in self.pruning_target_spaces.items() if v.type is TargetType.PARAMETER})
         params_dict.update({k: v.target for k, v in self.distillation_target_spaces.items() if v.type is TargetType.PARAMETER})
+        params_dict.update({k: v.target for k, v in self.quantization_target_spaces.items() if v.type is TargetType.PARAMETER})
 
-        if len(self.fused_modules) == 0:
-            params_dict.update({k: v.target for k, v in self.quantization_target_spaces.items() if v.type is TargetType.PARAMETER})
-            activation_func_lis = []
-        else:
-            quant_params_dict, activation_func_lis = fuse_modules(self, *args, **kwargs)
-            params_dict.update(quant_params_dict)
+        activation_func_lis = []
+        if len(self.fused_modules) > 0:
+            params_dict, activation_func_lis = fuse_modules(self, params_dict, *args, **kwargs)
 
         params_dict = self.patch_params(params_dict)
         for target_name, patched_param in params_dict.items():
