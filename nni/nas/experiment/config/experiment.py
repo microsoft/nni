@@ -196,7 +196,7 @@ class NasExperimentConfig(ExperimentConfig):
             self.trial_concurrency = 1
 
             if not utils.is_missing(self.training_service):
-                _logger.warning('`training_service` will be overridden for sequential execution engine.')
+                _logger.warning('`training_service` will be ignored for sequential execution engine.')
 
             self.training_service = utils.training_service_config_factory('local')
 
