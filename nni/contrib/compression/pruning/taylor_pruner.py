@@ -20,7 +20,7 @@ _logger = logging.getLogger(__name__)
 
 
 class TaylorPruner(Pruner):
-    """
+    r"""
     Taylor pruner is a pruner which prunes on the first weight dimension by default,
     based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity.
     The estimated importance is defined as the paper

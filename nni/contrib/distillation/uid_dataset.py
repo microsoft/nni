@@ -147,7 +147,7 @@ class AugmentationDataset(_UidDataset):
         return int(torch.randint(-0x8000_0000_0000_0000, 0x7fff_ffff_ffff_ffff, (1,), dtype=torch.long, generator=self._rng).item())
 
     def get_origin_dataset(self):
-        return self._dataset.get_origin_dataset()
+        return self._dataset.get_origin_dataset()  # type: ignore
 
 
 def create_uid_dataset(dataset: Dataset, uid_dataset_cls: Type[_UidDataset] | None, uidd_args: List | None, uidd_kwargs: Dict | None):
