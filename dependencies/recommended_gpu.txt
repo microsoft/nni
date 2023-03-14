@@ -7,8 +7,8 @@ torchvision == 0.14.1+cu117
 pytorch-lightning >= 1.6.1
 
 # for full-test-compression 
--f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10/index.html
-mmcv-full == 1.7.0
+-f https://download.openmmlab.com/mmcv/dist/cu117/torch1.13/index.html
+mmcv-full == 1.7.1
 mmdet
 
 nn-meter
