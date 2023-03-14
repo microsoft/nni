@@ -67,7 +67,7 @@ class NNIDataStore implements DataStore {
         return this.db.queryLatestExperimentProfile(experimentId);
     }
 
-    public async storeTrialJobEvent(
+    public storeTrialJobEvent(
         event: TrialJobEvent, trialJobId: string, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
 
         // Use the timestamp in jobDetail as TrialJobEvent timestamp for different events
