@@ -35,9 +35,9 @@ from .utils import tree_map_zip
 def _normalize_input(dummy_input: Any) -> Any:
     if isinstance(dummy_input, torch.Tensor):
         dummy_input = (dummy_input, )
-    elif isinstance(dummy_input, dict):
-        dummy_input = tuple(dummy_input.values())
-    return tuple(dummy_input)
+    elif isinstance(dummy_input, list):
+        dummy_input = tuple(dummy_input)
+    return dummy_input
 
 @compatibility(is_backward_compatible=True)
 class ModelSpeedup(torch.fx.Interpreter):
