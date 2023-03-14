@@ -71,13 +71,3 @@ class TrainingEndEvent(ModelEvent):
     """Event of a model update with training end."""
     event_type: ClassVar[ModelEventType] = ModelEventType.TrainingEnd
     status: ModelStatus
-
-
-class ModelEventCallbacks(TypedDict):
-    """Callback functions for model update events.
-
-    The type of registered event listeners.
-    """
-    final_metric: List[Callable[[FinalMetricEvent], None]]
-    intermediate_metric: List[Callable[[IntermediateMetricEvent], None]]
-    training_end: List[Callable[[TrainingEndEvent], None]]

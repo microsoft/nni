@@ -6,11 +6,11 @@ from __future__ import annotations
 import logging
 import time
 from collections import defaultdict
-from typing import Any, Iterable, NewType, Callable, Type, Literal, overload
+from typing import Any, Iterable, NewType, Callable, Type, Literal, overload, cast
 
 from nni.nas.space import ExecutableModelSpace, ModelStatus
 
-from .event import ModelEventCallbacks, ModelEvent, ModelEventType, FinalMetricEvent, IntermediateMetricEvent, TrainingEndEvent
+from .event import ModelEvent, ModelEventType, FinalMetricEvent, IntermediateMetricEvent, TrainingEndEvent
 
 __all__ = [
     'WorkerInfo', 'ExecutionEngine', 'Middleware',
@@ -54,7 +54,7 @@ class ExecutionEngine:
     """
 
     def __init__(self) -> None:
-        self._callbacks: ModelEventCallbacks = defaultdict(list)
+        self._callbacks: dict[ModelEventType, list] = defaultdict(list)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.extra_repr()})'
@@ -68,10 +68,12 @@ class ExecutionEngine:
         If no models are given, wait for all models to complete.
         """
         if not models:
-            models = self.list_models()
+            model_iterator = self.list_models()
+        else:
+            model_iterator = models
 
         while True:
-            left_models = [g for g in models if not g.status.completed()]
+            left_models = [g for g in model_iterator if not g.status.completed()]
             if not left_models:
                 break
             time.sleep(1)

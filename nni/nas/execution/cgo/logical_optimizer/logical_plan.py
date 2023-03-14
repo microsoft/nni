@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import copy
-from typing import Dict, Tuple, Any, Type
+from typing import Dict, Tuple, Any, Type, cast
 
 from nni.common.device import Device, CPUDevice
 from nni.mutable.utils import uid
@@ -42,7 +42,7 @@ class AbstractLogicalNode(Node):
 
 
 class LogicalGraph(Graph):
-    def __init__(self, model: GraphModelSpace, graph_id: int, name: str = None, _internal: bool = False):
+    def __init__(self, model: GraphModelSpace, graph_id: int, name: str, _internal: bool = False):
         super().__init__(model, graph_id, name='logical_' + name, _internal=_internal)
 
     def _dump(self) -> Any:
@@ -119,7 +119,7 @@ class OriginNode(AbstractLogicalNode):
             operation={self.operation}, origin_model_id={self.original_graph.model.model_id})'
 
     def _fork_to(self, graph: Graph):
-        OriginNode(graph, self.original_graph, self.original_node,
+        OriginNode(cast(LogicalGraph, graph), self.original_graph, self.original_node,
                    self.name, self.operation)._register()
 
 
@@ -129,8 +129,8 @@ class LogicalPlan:
         self.model_cls = model_cls
         self.lp_model = model_cls(_internal=True)
         self.id = plan_id
-        self.logical_graph = LogicalGraph(
-            self.lp_model, self.id, name=f'{self.id}', _internal=True)._register()
+        self.logical_graph = cast(LogicalGraph, LogicalGraph(
+            self.lp_model, self.id, name=f'{self.id}', _internal=True)._register())
         self.lp_model._root_graph_name = self.logical_graph.name
         self.models = []
 
@@ -221,6 +221,7 @@ class LogicalPlan:
 
             if isinstance(node, AbstractLogicalNode):
                 new_node, placement = node.assemble(multi_model_placement)
+                model_id = None
                 if isinstance(new_node.operation, _IOPseudoOperation):
                     model_id = new_node.graph.model.model_id
                     if model_id not in evaluator_slot:
@@ -237,6 +238,7 @@ class LogicalPlan:
                         input_slot_mapping[new_node] = slot
                     if new_node.operation.type == '_outputs':
                         output_slot_mapping[new_node] = slot
+                assert model_id is not None, 'No psuedo operation found in logical node.'
 
                 self.node_replace(node, new_node)
 
@@ -260,7 +262,7 @@ class LogicalPlan:
         # TODO: when copying one node to multiple devices, broadcast is more efficient than P2P communication
         existing_edges = phy_graph.edges.copy()
         # Avoid a node is copied multiple times on the same device
-        copied_op: Dict[Tuple(Node, Device), Node] = {}
+        copied_op: Dict[Tuple[Node, Device], Node] = {}
         for edge in existing_edges:
             head_placement = node_placements[edge.head]
             tail_placement = node_placements[edge.tail]

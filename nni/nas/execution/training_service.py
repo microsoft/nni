@@ -10,10 +10,11 @@ import sys
 import time
 import weakref
 from threading import Event, Thread
-from typing import Iterable, TYPE_CHECKING
+from typing import Iterable, TYPE_CHECKING, Any, cast
 
 import nni
 from nni.runtime.tuner_command_channel import command_type, TunerCommandChannel
+from nni.typehint import TrialMetric
 from nni.utils import MetricType
 
 from nni.nas.space import ExecutableModelSpace, ModelStatus, GraphModelSpace
@@ -170,7 +171,7 @@ class TrainingServiceExecutionEngine(ExecutionEngine):
 
             self._channel.send_trial(
                 parameter_id=parameter_id,
-                parameters=model,
+                parameters=cast(Any, model),
                 placement_constraint=placement
             )
 
@@ -208,7 +209,7 @@ class TrainingServiceExecutionEngine(ExecutionEngine):
 
             param = trial.hyperParameters[0]
             parameter_id = param.parameter_id
-            model = self._find_reference_model(parameter_id)
+            model = self._find_reference_model(parameter_id)  # type: ignore
 
             # Check model status first to avoid loading the unneeded models.
             if model is not None:
@@ -235,7 +236,7 @@ class TrainingServiceExecutionEngine(ExecutionEngine):
                         _logger.warning('The final metric data of trial "%s" is not a single value. Taking the last one.',
                                         trial.trialJobId)
                     # The data has already been unpacked at the binding.
-                    model.metrics.final = trial.finalMetricData[-1].data
+                    model.metrics.final = cast(TrialMetric, trial.finalMetricData[-1].data)
 
                 if self.fetch_intermediates:
                     metrics = self.nodejs_binding.get_job_metrics(trial.trialJobId)
@@ -258,7 +259,7 @@ class TrainingServiceExecutionEngine(ExecutionEngine):
         The resource is maintained by the engine itself.
         It should be fetched from nodejs side directly in future.
         """
-        return self._workers
+        return self._workers > 0
 
     def budget_available(self) -> bool:
         """Infer the budget from resources.
@@ -299,9 +300,9 @@ class TrainingServiceExecutionEngine(ExecutionEngine):
         # It can be retrieved from `list_models()` anyway.
         if model is not None:
             if command.type == MetricType.PERIODICAL:
-                self.dispatch_model_event(IntermediateMetricEvent(model, command.value))
+                self.dispatch_model_event(IntermediateMetricEvent(model, cast(TrialMetric, command.value)))
             elif command.type == MetricType.FINAL:
-                self.dispatch_model_event(FinalMetricEvent(model, command.value))
+                self.dispatch_model_event(FinalMetricEvent(model, cast(TrialMetric, command.value)))
             else:
                 raise ValueError('Unknown metric type: %r' % command.type)
         else:

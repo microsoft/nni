@@ -146,8 +146,8 @@ class SequentialExecutionEngine(ExecutionEngine):
         return self._history
 
     def idle_worker_available(self) -> bool:
-        """Return 1 because this engine will run models sequentially."""
-        return 1
+        """Return true because this engine will run models sequentially and never invokes this method when running the model."""
+        return True
 
     def budget_available(self) -> bool:
         return (self.max_model_count is None or self._model_count < self.max_model_count) \

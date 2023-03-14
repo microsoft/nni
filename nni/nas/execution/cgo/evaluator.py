@@ -99,11 +99,11 @@ class MultiModelLightningModule(LightningModule):
         return torch.optim.Adam(self.parameters(), lr=1e-3)
 
     def on_validation_epoch_end(self):
-        nni.report_intermediate_result(self._get_validation_metrics())
+        nni.report_intermediate_result(self._get_validation_metrics())  # type: ignore
 
     def teardown(self, stage):
         if stage == 'fit':
-            nni.report_final_result(self._get_validation_metrics())
+            nni.report_final_result(self._get_validation_metrics())  # type: ignore
 
     def _get_validation_metrics(self):
         # TODO: split metric of multiple models?
