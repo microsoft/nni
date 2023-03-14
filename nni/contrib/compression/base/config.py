@@ -203,7 +203,7 @@ def default_config_schema(mode: Literal['pruning', 'quantization', 'distillation
         }
     elif mode == 'quantization':
         setting_schema = {
-            'quant_dtype': str,
+            'quant_dtype': Or(str, None),
             Optional('quant_scheme'): Or('affine', 'symmetric'),
             Optional('granularity'): Or('default', 'in_channel', 'out_channel', 'per_channel', list),
             Optional('apply_method'): Or('bypass', 'clamp_round', 'qat_clamp_round'),
