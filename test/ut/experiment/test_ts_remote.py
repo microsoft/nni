@@ -71,6 +71,7 @@ minimal_canon = {
             }
         ],
         'reuseMode': False,
+        'logCollection': 'on_error',
     }
 }
 
@@ -147,6 +148,7 @@ detailed_canon = {
             }
         ],
         'reuseMode': False,
+        'logCollection': 'on_error',
     }
 }
 
