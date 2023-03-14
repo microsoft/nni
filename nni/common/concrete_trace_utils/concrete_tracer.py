@@ -270,7 +270,7 @@ class ConcreteTracer(TracerBase):
 
     @compatibility(is_backward_compatible=True)
     def create_proxy(self, kind: str, target: Target, args: Tuple[Any, ...], kwargs: Dict[str, Any],
-                     name: Optional[str] = None, type_expr: Optional[Any] = None, 
+                     name: Optional[str] = None, type_expr: Optional[Any] = None,
                      proxy_factory_fn: Optional[Callable[[Node], Any]] = None):
         """
         similar to _symbolic_trace.Tracer.create_proxy.
@@ -282,7 +282,7 @@ class ConcreteTracer(TracerBase):
         assert isinstance(kwargs_, dict)
 
         node = self.create_node(kind, target, args_, kwargs_, name, type_expr)
-        
+
         def upwrapper(obj: Any):
             while _orig_isinstance(obj, ep.ConcreteProxy):
                 obj = obj.value
@@ -1303,12 +1303,14 @@ def _retain_weight_consistency(root: torch.nn.Module):
     for module in root.modules():
         for name, param in module.named_parameters():
             if _orig_isinstance(param, ep.ConcreteProxy):
-                _logger.warning(f'Parameter {name} of {module} is a ConcreteProxy. Some weight may be modified inplace within forward().')    
+                param: ep.ConcreteProxy     # pyright: reportGeneralTypeIssues=false
+                _logger.warning(f'Parameter {name} of {module} is a ConcreteProxy. Some weight may be modified inplace within forward().')
                 setattr(module, name, param.value)
                 _flag |= 1
         for name, buffer in module.named_buffers():
             if _orig_isinstance(buffer, ep.ConcreteProxy):
-                _logger.warning(f'Buffer {name} of {module} is a ConcreteProxy. Some buffer may be modified inplace within forward().')    
+                buffer: ep.ConcreteProxy    # pyright: reportGeneralTypeIssues=false
+                _logger.warning(f'Buffer {name} of {module} is a ConcreteProxy. Some buffer may be modified inplace within forward().')
                 setattr(module, name, buffer.value)
                 _flag |= 1
     if _flag:
