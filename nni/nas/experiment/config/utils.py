@@ -5,11 +5,9 @@ from __future__ import annotations
 
 __all__ = ['NamedSubclassConfigBase']
 
-from typing import TypeVar
+from typing import Type
 
 from nni.experiment.config.base import ConfigBase
-
-T = TypeVar('T')
 
 
 class NamedSubclassConfigBase(ConfigBase):
@@ -39,7 +37,7 @@ class NamedSubclassConfigBase(ConfigBase):
         }
 
     @classmethod
-    def config_class_from_name(cls: T, name: str) -> T:
+    def config_class_from_name(cls: Type[NamedSubclassConfigBase], name: str) -> Type[NamedSubclassConfigBase]:
         valid_names = []
         for subcls in cls.__subclasses__():
             valid_names.append(subcls.name)

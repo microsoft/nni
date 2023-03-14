@@ -47,10 +47,8 @@ class SequentialEngineConfig(ExecutionEngineConfig):
         assert isinstance(parent_config, ExperimentConfig), 'SequentialEngineConfig must be a child of ExperimentConfig'
         if self.max_model_count is None:
             self.max_model_count = parent_config.max_trial_number
-        if self.max_duration is None:
-            self.max_duration = parent_config.max_trial_duration
-            if parent_config.max_trial_duration is not None:
-                self.max_duration = parse_time(parent_config.max_trial_duration)
+        if self.max_duration is None and parent_config.max_trial_duration is not None:
+            self.max_duration = parse_time(parent_config.max_trial_duration)
         if isinstance(parent_config.trial_concurrency, int) and parent_config.trial_concurrency > 1:
             _logger.warning('Sequential engine does not support trial concurrency > 1')
         return super()._canonicalize(parents)

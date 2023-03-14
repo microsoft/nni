@@ -43,6 +43,7 @@ MutationHookReturnType = Union[nn.Module, bool, Tuple[nn.Module, bool]]
 MutationHook = Callable[[nn.Module, str, Dict[str, Any], Dict[str, Any]], MutationHookReturnType]
 
 ModuleType = TypeVar('ModuleType', bound=nn.Module)
+ModelSpaceType = TypeVar('ModelSpaceType', bound=ModelSpace)
 
 
 def _submodule_tree_map(name: str, module: ModuleType, map_fn: Callable[[str, nn.Module], nn.Module | None],
@@ -219,7 +220,7 @@ class OneShotStrategy(Strategy):
         """
         return val_dataloader_fn()
 
-    def mutate_model(self, model: ModelSpace) -> ModelSpace:
+    def mutate_model(self, model: ModelSpaceType) -> ModelSpaceType:
         """Convert the model space to a supernet **inplace**.
 
         The core of a one-shot strategy is usually a carefully-designed supernet,
@@ -576,7 +577,7 @@ class DARTS(OneShotStrategy):
         hooks.append(no_default_hook)
         return hooks
 
-    def mutate_model(self, model: ModelSpace) -> ModelSpace:
+    def mutate_model(self, model: ModelSpaceType) -> ModelSpaceType:
         # Create architecture parameters beforehand here, in order to save the trouble of creating them inside.
         # It should only be done once because everything else.
         # But sometimes we need to create them inside, e.g., in the cell an extra connection is needed.
@@ -952,7 +953,7 @@ class ENAS(RandomOneShot):
     def val_dataloader(self, train_dataloader_fn, val_dataloader_fn):
         return None
 
-    def mutate_model(self, model: ModelSpace) -> ModelSpace:
+    def mutate_model(self, model: ModelSpaceType) -> ModelSpaceType:
         for mutable in model.simplify().values():
             if not (isinstance(mutable, Categorical) or (
                 isinstance(mutable, CategoricalMultiple) and mutable.n_chosen in (1, None)

@@ -5,10 +5,12 @@ from __future__ import annotations
 
 __all__ = ['concat_name', 'standardize_arguments', 'is_leaf_module', 'profiler_leaf_module', 'argument_in_spec']
 
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar, Type
 
 from torch import nn
 from nni.nas.nn.pytorch import ParametrizedModule
+
+ModuleType = TypeVar('ModuleType', bound=Type[nn.Module])
 
 
 def concat_name(name: str, child_name: str) -> str:
@@ -77,7 +79,7 @@ def is_leaf_module(mod: nn.Module) -> bool:
             )
 
 
-def profiler_leaf_module(mod: nn.Module):
+def profiler_leaf_module(mod: ModuleType) -> ModuleType:
     """Register a module as a leaf module for profiler.
 
     Examples

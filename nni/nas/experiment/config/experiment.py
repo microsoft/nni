@@ -17,6 +17,7 @@ from .format import ModelFormatConfig
 
 if TYPE_CHECKING:
     from nni.nas.evaluator import Evaluator
+    from nni.nas.space import BaseModelSpace
     from nni.nas.nn.pytorch import ModelSpace
     from nni.nas.strategy import Strategy
 
@@ -105,7 +106,7 @@ class NasExperimentConfig(ExperimentConfig):
         super().__init__(training_service_platform=training_service_platform, **kwargs)
 
     @classmethod
-    def default(cls, model_space: ModelSpace, evaluator: Evaluator, strategy: Strategy) -> NasExperimentConfig:
+    def default(cls, model_space: BaseModelSpace, evaluator: Evaluator, strategy: Strategy) -> NasExperimentConfig:
         """Instantiate a default config. Infer from current setting of model space, evaluator and strategy.
 
         If the strategy is found to be a one-shot strategy, the execution engine will be set to "sequential" and
@@ -130,7 +131,7 @@ class NasExperimentConfig(ExperimentConfig):
                              'Setting execution engine to "sequential" and format to "raw".')
                 execution_engine = 'sequential'
                 model_format = 'raw'
-            if is_supernet(model_space):
+            if isinstance(model_space, ModelSpace) and is_supernet(model_space):
                 _logger.info('Model space is found to be a one-shot supernet. '
                              'Setting execution engine to "sequential" and format to "raw" to preserve the weights.')
                 execution_engine = 'sequential'
