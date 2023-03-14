@@ -2,8 +2,8 @@
 
 -f https://download.pytorch.org/whl/torch_stable.html
 tensorflow
-torch == 1.10.0+cu113
-torchvision == 0.11.1+cu113
+torch == 1.13.1+cu117
+torchvision == 0.14.1+cu117
 pytorch-lightning >= 1.6.1
 
 # for full-test-compression 

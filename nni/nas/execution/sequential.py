@@ -117,7 +117,7 @@ class SequentialExecutionEngine(ExecutionEngine):
             # Sometimes, callbacks could do heavy things here, e.g., retry the model.
             # So the callback should only be done at the very very end.
             # And we don't catch exceptions happen inside.
-            self.dispatch_model_event(TrainingEndEvent(model, status))
+            self.dispatch_model_event(TrainingEndEvent(model, status))  # pylint: disable=used-before-assignment
             _logger.debug('Training end callbacks of model %d are done.', self._model_count)
 
     def submit_models(self, *models: ExecutableModelSpace) -> None:
