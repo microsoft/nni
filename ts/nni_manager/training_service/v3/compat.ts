@@ -111,7 +111,9 @@ export class V3asV1 implements TrainingService {
     }
 
     public async getTrialFile(trialJobId: string, fileName: string): Promise<Buffer | string> {
-        const dir = path.join(globals.paths.experimentRoot, 'trials', trialJobId);
+        const dir = await this.v3.downloadTrialDirectory(trialJobId);
+
+        //const dir = path.join(globals.paths.experimentRoot, 'trials', trialJobId);
 
         let logPath: string | null = null;
         if (fileName === 'trial.log') {
@@ -128,7 +130,7 @@ export class V3asV1 implements TrainingService {
             // FIXME
             // Need to fix `model.onnx`.
             // I guess it should be put inside `nni_outputs`.
-            return await readFile(path.join(dir, 'output', fileName));
+            return await readFile(path.join(dir, fileName));
         }
     }
 

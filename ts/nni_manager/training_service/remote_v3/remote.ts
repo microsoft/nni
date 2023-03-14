@@ -63,7 +63,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     }
 
     public async start(): Promise<EnvironmentInfo[]> {
-        this.log.info('Starting remote training service');
+        this.log.info('Starting remote training service...');
         await this.server.start();
         await Promise.all(
             this.config.machineList.map(workerConfig => this.launchWorker(workerConfig))
@@ -152,7 +152,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         this.log.info('Trial parameter:', trialId, parameter);
         const worker = this.workersByTrial.get(trialId);
         if (!worker) {
-            this.log.warning(`Trial ${trialId} does not exist. Maybe it has been stopped`);
+            this.log.error(`Worker of trial ${trialId} is not working`);
             return;
         }
         const command = { type: 'parameter', parameter };
@@ -206,7 +206,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
             //    this.collectTrialLog(trialId);
             //}
             this.emitter.emit('trial_stop', trialId, timestamp, exitCode);
-            this.workersByTrial.delete(trialId);
+            // do not delete workersByTrial. it might be used to collect logs
         });
         worker.trialKeeper.onReceiveCommand('request_parameter', (trialId, _command) => {
             this.emitter.emit('request_parameter', trialId);
@@ -272,16 +272,17 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         }
         return errorOccurred;
     }
+    */
 
-    private async collectTrialLog(trialId: string): Promise<void> {
+    public async downloadTrialDirectory(trialId: string): Promise<string> {
         const worker = this.workersByTrial.get(trialId);
         if (worker) {
-            await worker.downloadTrialLog(trialId);
+            return await worker.downloadTrialLog(trialId);  // TODO: should download NNI_OUTPUT_DIR as well
         } else {
-            this.log.error('Failed to collect trial log: cannot find worker for trial', trialId);
+            this.log.error('Failed to download trial log: cannot find worker for trial', trialId);
+            throw new Error(`The worker of trial ${trialId} is not working`);
         }
     }
-    */
 }
 
 // Temporary helpers, will be moved later

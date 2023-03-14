@@ -248,25 +248,27 @@ export class Worker {
         }
     }
 
-    /*  used to debug pipeline. re-enable it when we support log collection
-
-    public async downloadTrialLog(trialId: string): Promise<void> {
+    public async downloadTrialLog(trialId: string): Promise<string> {
         this.log.debug('Downloading trial log:', trialId);
 
-        const localDir = path.join(globals.paths.experimentRoot, 'output', trialId);
-        await fs.mkdir(localDir, { recursive: true });
-
-        // fixme: hack
+        // FIXME: hack
+        const localDir = path.join(globals.paths.experimentRoot, 'trials', trialId);
         const remoteDir = path.join(path.dirname(this.uploadDir), 'trials', trialId);
 
-        await Promise.all([
-            this.ssh.download(path.join(remoteDir, 'trial.stdout'), path.join(localDir, 'trial.stdout')),
-            this.ssh.download(path.join(remoteDir, 'trial.stderr'), path.join(localDir, 'trial.stderr')),
-        ]);
+        await fs.mkdir(localDir, { recursive: true });
 
-        const stderr = await fs.readFile(path.join(localDir, 'trial.stderr'), { encoding: 'utf8' });
-        this.log.info(`Trial ${trialId} stderr:`, stderr);
+        for (const file of ['trial.log', 'trial.stdout', 'trial.stderr']) {
+            try {
+                await this.ssh.download(path.join(remoteDir, file), path.join(localDir, file));
+            } catch (error) {
+                this.log.warning(`Cannot download ${file} of ${trialId}`);
+            }
+        }
+
+        return localDir;
     }
+
+    /*  used to debug pipeline. re-enable it when we support log collection
 
     private async downloadTrialKeeperLog(): Promise<void> {
         this.log.debug('Downloading trial keeper log');
