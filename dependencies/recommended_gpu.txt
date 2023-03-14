@@ -8,9 +8,10 @@ pytorch-lightning >= 1.6.1
 
 # for full-test-compression 
 -f https://download.openmmlab.com/mmcv/dist/cu113/torch1.10/index.html
-mmcv-full==1.7.0
+mmcv-full == 1.7.0
 mmdet
 
+nn-meter
 lightgbm
 onnx
 peewee
