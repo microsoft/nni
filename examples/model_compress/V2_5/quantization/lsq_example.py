@@ -151,7 +151,12 @@ def main():
     # lrs = nni.trace(StepLR)(optimizer, step_size=300, gamma=0.1)
     evaluator = TorchEvaluator(training_model, optimizer, training_step) #, lrs)
     quantizer = LsqQuantizer(model, configure_list, evaluator)
-    model, calibration_config = quantizer.compress(None, 40)
+    for module_name, ts in quantizer._target_spaces.items():
+        for target_name, target_name in ts.items():
+            print(f"module_name={module_name}\ttarget_name={target_name}\t")
+    for module_name, wrapper in quantizer._module_wrappers.items():
+        print("module_name={}\twrapper={}\tbias={}".format(module_name, wrapper, getattr(wrapper, "bias", -1)))
+    model, calibration_config = quantizer.compress(None, 4)
     acc = evaluating_model(model)
     print(f"inference: acc:{acc}")
 
