@@ -41,8 +41,8 @@ def test_fused_wrapper_register():
     for module_name, wrapper in wrappers_2.items():
         wrapper.wrap()
         if module_name in ['conv1', 'conv2']:
-            assert hasattr(wrapper, 'is_bias') and hasattr(wrapper.module, 'original_bias') \
-                and getattr(wrapper, 'is_bias') == 'Tensor' and isinstance(wrapper.module.original_bias, torch.Tensor)
+            assert hasattr(wrapper, 'is_bias') and hasattr(wrapper, 'bias') \
+                and getattr(wrapper, 'is_bias') == 'Tensor' and isinstance(wrapper.bias, torch.Tensor)
         elif module_name in ['bn1', 'bn2']:
             assert isinstance(wrapper, IdentityModuleWrapper)
 
