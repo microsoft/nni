@@ -4,12 +4,14 @@
 import json
 from pathlib import Path
 import sys
+from typing import Any, NoReturn
 
 import psutil
 
 def main() -> None:
+    pid_file = Path(sys.argv[1], 'trial_keeper.pid')
+
     try:
-        pid_file = Path(sys.argv[1], 'trial_keeper.pid')
         pid = int(pid_file.read_text())
     except Exception:
         _exit_with_result({'alive': False, 'reason': f'Cannot read pid file {pid_file}'})
@@ -24,7 +26,7 @@ def main() -> None:
     else:
         _exit_with_result({'alive': False, 'reason': f'Process {pid} is not nni'})
 
-def _exit_with_result(result: dict) -> None:
+def _exit_with_result(result: Any) -> NoReturn:
     print(json.dumps(result), flush=True)
     sys.exit()
 
