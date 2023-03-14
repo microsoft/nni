@@ -27,12 +27,10 @@ Usage:
 import json
 import os
 from pathlib import Path
-import subprocess
+from subprocess import Popen
 import sys
 import time
 from typing import Dict
-
-import psutil
 
 import nni_node
 
@@ -63,15 +61,33 @@ def main() -> None:
 
     # launch process
 
+    stdout = (trial_keeper_dir / 'trial_keeper.stdout').open('ab')
+    stderr = (trial_keeper_dir / 'trial_keeper.stderr').open('ab')
+
     node_dir = Path(nni_node.__path__[0])  # type: ignore
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'common/trial_keeper/main.js')
     cmd = [node, '--max-old-space-size=4096', '--trace-uncaught', main_js, str(trial_keeper_dir)]
 
+    # NOTE: cwd must be node_dir, or trial keeper will not work (because of app-module-path/cwd)
     if sys.platform == 'win32':
-        success = _windows_launch(trial_keeper_dir, cmd)
+        from subprocess import CREATE_BREAKAWAY_FROM_JOB, DETACHED_PROCESS
+        flags = CREATE_BREAKAWAY_FROM_JOB | DETACHED_PROCESS
+        proc = Popen(cmd, stdout=stdout, stderr=stderr, cwd=node_dir, creationflags=flags)
     else:
-        success = _posix_launch(trial_keeper_dir, cmd)
+        proc = Popen(cmd, stdout=stdout, stderr=stderr, cwd=node_dir, preexec_fn=os.setpgrp)  # type: ignore
+    (trial_keeper_dir / 'trial_keeper.pid').write_text(str(proc.pid))
+
+    # wait for result
+
+    while True:
+        if proc.poll() is not None:
+            success = False
+            break
+        if (trial_keeper_dir / 'success.flag').exists():
+            success = True
+            break
+        time.sleep(0.1)
 
     # save and print result
 
@@ -81,56 +97,6 @@ def main() -> None:
         err = (trial_keeper_dir / 'trial_keeper.stderr').read_text('utf_8')
         result = {'success': False, 'stderr': err}
     print(json.dumps(result, ensure_ascii=False), flush=True)
-
-def _posix_launch(trial_keeper_dir, command) -> bool:
-    stdout = (trial_keeper_dir / 'trial_keeper.stdout').open('a')
-    stderr = (trial_keeper_dir / 'trial_keeper.stderr').open('a')
-    proc = subprocess.Popen(command, stdout=stdout, stderr=stderr, preexec_fn=os.setpgrp)  # type: ignore
-    (trial_keeper_dir / 'trial_keeper.pid').write_text(str(proc.pid))
-
-    while True:
-        if proc.poll() is not None:
-            return False
-        if (trial_keeper_dir / 'success.flag').exists():
-            return True
-        time.sleep(0.1)
-
-def _windows_launch(trial_keeper_dir, command) -> bool:
-    # Popen flags can only detach process from console, not login session
-    # https://serverfault.com/questions/1044393
-
-    script = [
-        'powershell',
-        'Invoke-WmiMethod',  # this is windows' nohup
-        '-Class', 'Win32_Process',
-        '-Name', 'Create',
-        '-ArgumentList', "'" + ' '.join(command) + "'"
-    ]
-    proc = subprocess.run(script, capture_output=True)
-
-    if proc.returncode != 0:
-        err = f'PowerShell script error: {proc.returncode}\nstdout: {proc.stdout}\nstderr: {proc.stderr}'
-        (trial_keeper_dir / 'trial_keeper.stderr').write_text(err)
-        return False
-
-    result = {}
-    for line in proc.stdout.decode().split('\n'):
-        if line.strip():
-            k, v = line.split(':', 1)
-            result[k.strip()] = v.strip()
-
-    if int(result['ReturnValue']) != 0:
-        err = f'Non-zero return value\nstdout: {proc.stdout}\nstderr: {proc.stderr}'
-        (trial_keeper_dir / 'trial_keeper.stderr').write_text(err)
-        return False
-
-    pid = int(result['ProcessId'])
-    while True:
-        if not psutil.pid_exists(pid):
-            return False
-        if (trial_keeper_dir / 'success.flag').exists():
-            return True
-        time.sleep(0.1)
 
 if __name__ == '__main__':
     main()
