@@ -36,7 +36,7 @@ from __future__ import annotations
 __all__ = ['ObservationType', 'TuningEnvironment', 'TuningTrajectoryGenerator', 'PolicyFactory', 'default_policy_fn']
 
 from copy import deepcopy
-from typing import Tuple, Generator, Callable
+from typing import Tuple, Callable
 
 import gym
 import numpy as np

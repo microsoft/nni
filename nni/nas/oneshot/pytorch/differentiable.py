@@ -177,7 +177,7 @@ class LinearTemperatureScheduler:
         Minimum temperature.
     """
 
-    def __init__(self, init: float, min: float):
+    def __init__(self, init: float, min: float):  # pylint: disable=redefined-builtin
         if not isinstance(init, float) and isinstance(min, float):  # pylint: disable=redefined-builtin
             raise TypeError('init and min must be float')
         if not (init >= min >= 0):

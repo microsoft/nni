@@ -6,7 +6,7 @@ from __future__ import annotations
 import logging
 import time
 from collections import defaultdict
-from typing import Any, Iterable, NewType, Callable, Type, Literal, overload, cast
+from typing import Any, Iterable, NewType, Callable, Type, overload
 
 from nni.nas.space import ExecutableModelSpace, ModelStatus
 

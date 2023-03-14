@@ -6,7 +6,7 @@ from __future__ import annotations
 __all__ = ['ModelEventType', 'ModelEvent', 'FinalMetricEvent', 'IntermediateMetricEvent', 'TrainingEndEvent']
 
 from enum import Enum
-from typing import ClassVar, TypedDict, Callable, List
+from typing import ClassVar
 from dataclasses import dataclass
 
 from nni.nas.space import ExecutableModelSpace, ModelStatus
