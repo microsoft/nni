@@ -18,7 +18,6 @@ from .format import ModelFormatConfig
 if TYPE_CHECKING:
     from nni.nas.evaluator import Evaluator
     from nni.nas.space import BaseModelSpace
-    from nni.nas.nn.pytorch import ModelSpace
     from nni.nas.strategy import Strategy
 
 
@@ -126,6 +125,7 @@ class NasExperimentConfig(ExperimentConfig):
 
         try:
             from nni.nas.oneshot.pytorch.strategy import OneShotStrategy, is_supernet
+            from nni.nas.nn.pytorch import ModelSpace
             if isinstance(strategy, OneShotStrategy):
                 _logger.info('Strategy is found to be a one-shot strategy. '
                              'Setting execution engine to "sequential" and format to "raw".')
@@ -166,8 +166,9 @@ class NasExperimentConfig(ExperimentConfig):
         return config
 
     def _canonicalize(self, parents):
-        if self.search_space != RESERVED:
+        if self.search_space != RESERVED and self.search_space != {}:
             raise ValueError('`search_space` field can not be customized in NAS experiment.')
+        self.search_space = {}
 
         if not Path(self.trial_code_directory).samefile(Path.cwd()):
             raise ValueError('`trial_code_directory` field can not be customized in NAS experiment.')
@@ -200,5 +201,3 @@ class NasExperimentConfig(ExperimentConfig):
             self.training_service = utils.training_service_config_factory('local')
 
         super()._canonicalize([self] + parents)
-
-        self._canonical = True

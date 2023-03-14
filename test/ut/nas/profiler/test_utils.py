@@ -82,10 +82,10 @@ def test_conclude_assumption():
     assert _expression.conclude_assumptions([2, 4, 6, -2, 0]) == {
         'real': True, 'integer': True, 'even': True
     }
-    assert _expression.conclude_assumptions([1.0, 2.0, 3.0]) == {'real': True, 'integer': False}
-    assert _expression.conclude_assumptions([1.0, 2, 3]) == {'real': True, 'integer': False}
-    assert _expression.conclude_assumptions([1.0, 2.0, 3]) == {'real': True, 'integer': False}
-    assert _expression.conclude_assumptions([1, 2.0, 3]) == {'real': True, 'integer': False}
+    assert _expression.conclude_assumptions([1.0, 2.0, 3.0]) == {'nonnegative': True, 'nonzero': True, 'positive': True}
+    assert _expression.conclude_assumptions([1.0, 2, 3]) == {'nonnegative': True, 'nonzero': True, 'positive': True}
+    assert _expression.conclude_assumptions([1.0, 2.0, 3]) == {'nonnegative': True, 'nonzero': True, 'positive': True}
+    assert _expression.conclude_assumptions([1, 2.0, 3]) == {'nonnegative': True, 'nonzero': True, 'positive': True}
     assert _expression.conclude_assumptions(['cat', 'dog']) == {'real': False}
 
 
