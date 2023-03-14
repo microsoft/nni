@@ -92,7 +92,7 @@ def main() -> None:
     # save and print result
 
     if success:
-        result = {'success': True, 'uploadDirectory': str(upload_dir)}
+        result = {'success': True, 'uploadDirectory': str(upload_dir), 'trialKeeperDirectory': str(trial_keeper_dir)}
     else:
         err = (trial_keeper_dir / 'trial_keeper.stderr').read_text('utf_8')
         result = {'success': False, 'stderr': err}

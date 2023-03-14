@@ -250,7 +250,7 @@ export class RpcHelper {
     }
 
     private sendError(id: number, error: any): void {
-        const msg = error.stack ? String(error.stack) : util.inspect(error);
+        const msg = error?.stack ? String(error.stack) : util.inspect(error);
         this.channel.send({ type: 'rpc_response', id, error: msg });
     }
 

@@ -50,7 +50,7 @@ export interface RemoteConfig extends TrainingServiceConfig {
     platform: 'remote';
     machineList: RemoteMachineConfig[];
     reuseMode: boolean;
-    logCollection: 'on_error' | 'always' | 'never'
+    //logCollection: 'on_error' | 'always' | 'never'
 }
 
 /* OpenPAI */

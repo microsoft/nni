@@ -8,14 +8,13 @@
  *  but requires the server to have a recent python installed.
  **/
 
-import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 
 import { WsChannel, WsChannelServer } from 'common/command_channel/websocket/index';
 import type { RemoteConfig, RemoteMachineConfig, TrainingServiceConfig } from 'common/experimentConfig';
 import type { TrialKeeper } from 'common/trial_keeper/keeper';
 import { Logger, getLogger } from 'common/log';
-import { createTarball } from 'common/tarball';
+import { createTarball, getTarballPath } from 'common/tarball';
 import type { EnvironmentInfo, Metric, Parameter, TrainingServiceV3 } from 'common/training_service_v3';
 
 import { Worker } from './worker';
@@ -27,6 +26,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
     private lastWorkerIndex: number = 0;
     private log: Logger;
     private server: WsChannelServer;
+    private uploadedDirs: Set<string> = new Set();
     private workers: Worker[] = [];
     private workersByChannel: Map<string, Worker> = new Map();
     private workersByEnv: Map<string, Worker> = new Map();
@@ -45,6 +45,13 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
             const worker = this.workersByChannel.get(channelId);
             if (worker) {
                 worker.setChannel(channel);
+                channel.on('close', reason => {
+                    this.log.error('Worker channel closed unexpectedly:', reason);
+                });
+                channel.on('error', error => {
+                    this.log.error('Worker channel error:', error);
+                    this.restartWorker(worker);
+                });
             } else {
                 this.log.error('Incoming connection from unexpected worker', channelId);
             }
@@ -65,63 +72,45 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         return this.workers.map(worker => worker.env);
     }
 
-    private async launchWorker(config: RemoteMachineConfig): Promise<Worker> {
-        this.lastWorkerIndex += 1;  // TODO: add a global counter module to support recover on resume
-        const channelId = String(this.lastWorkerIndex);
-        const worker = new Worker(
-            this.id,
-            channelId,
-            config,
-            this.server.getChannelUrl(channelId),
-            Boolean(this.config.trialGpuNumber)
-        );
-
-        this.workers.push(worker);
-        this.workersByChannel.set(worker.channelId, worker);
-        this.workersByEnv.set(worker.envId, worker);
-
-        worker.trialKeeper.onTrialStart((trialId, timestamp) => {
-            this.emitter.emit('trial_start', trialId, timestamp);
-        });
-        worker.trialKeeper.onTrialStop((trialId, timestamp, exitCode) => {
-            if (this.shouldCollectLog(exitCode !== 0)) {
-                this.collectTrialLog(trialId);
-            }
-            this.emitter.emit('trial_stop', trialId, timestamp, exitCode);
-        });
-        worker.trialKeeper.onReceiveCommand('request_parameter', (trialId, _command) => {
-            this.emitter.emit('request_parameter', trialId);
-        });
-        worker.trialKeeper.onReceiveCommand('metric', (trialId, command) => {
-            this.emitter.emit('metric', trialId, command['metric']);
-        });
-        worker.trialKeeper.onEnvironmentUpdate(env => {
-            worker.env = env;
-            this.emitter.emit('env_update', this.workers.map(worker => worker.env));
-        });
-
-        await worker.start();
-        return worker;
-    }
-
     public async stop(): Promise<void> {
-        await Promise.all(this.workers.map(worker => worker.stop()));
+        await Promise.allSettled(this.workers.map(worker => worker.stop()));
         this.log.info('All workers stopped');
     }
 
     public async uploadDirectory(name: string, path: string): Promise<void> {
         this.log.info(`Upload directory ${name} = ${path}`);
-        const tar = await createTarball(name, path);
-        await Promise.all(
-            this.workers.map(worker => worker.upload(name, tar))
+        const tar = await createTarball(name, path);  // TODO: this should be done outside
+        this.uploadedDirs.add(name);
+
+        // since upload() is async, when uploaded this.workers might have already changed
+        const workers = Array.from(this.workers);
+
+        const results = await Promise.allSettled(
+            workers.map(worker => worker.upload(name, tar))
         );
+
+        // TODO: currently this is only called on start up, so it's acceptable to skip recovering
+        let fail = false;
+        results.forEach((result, i) => {
+            if (result.status === 'rejected') {
+                this.log.error(`Worker ${workers[i].envId} failed to upload ${name}:`, result.reason);
+                this.stopWorker(workers[i], false);
+                fail = true;
+            }
+        });
+        if (fail) {
+            this.emitEnvUpdate();
+        }
     }
 
     public async createTrial(envId: string, trialCommand: string, directoryName: string, sequenceId?: number):
             Promise<string | null> {
 
         const worker = this.workersByEnv.get(envId);
-        assert.ok(worker, `Bad environment ID: ${envId}`);
+        if (!worker) {
+            this.log.warning('Cannot create trial. Bad environment ID:', envId);
+            return null;
+        }
 
         const trialId = uuid();
 
@@ -155,13 +144,17 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
 
     public async stopTrial(trialId: string): Promise<void> {
         this.log.info('Stop trial', trialId);
-        const worker = this.workersByTrial.get(trialId)!;
-        await worker.trialKeeper.stopTrial(trialId);
+        const worker = this.workersByTrial.get(trialId);
+        await worker?.trialKeeper.stopTrial(trialId);
     }
 
     public async sendParameter(trialId: string, parameter: Parameter): Promise<void> {
         this.log.info('Trial parameter:', trialId, parameter);
-        const worker = this.workersByTrial.get(trialId)!;
+        const worker = this.workersByTrial.get(trialId);
+        if (!worker) {
+            this.log.warning(`Trial ${trialId} does not exist. Maybe it has been stopped`);
+            return;
+        }
         const command = { type: 'parameter', parameter };
         await worker.trialKeeper.sendCommand(trialId, command);
     }
@@ -186,6 +179,90 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         this.emitter.on('env_update', callback);
     }
 
+    private emitEnvUpdate(): void {
+        this.emitter.emit('env_update', this.workers.map(worker => worker.env));
+    }
+
+    private async launchWorker(config: RemoteMachineConfig): Promise<Worker> {
+        this.lastWorkerIndex += 1;  // TODO: add a global counter module to support recover on resume
+        const channelId = String(this.lastWorkerIndex);
+        const worker = new Worker(
+            this.id,
+            channelId,
+            config,
+            this.server.getChannelUrl(channelId),
+            Boolean(this.config.trialGpuNumber)
+        );
+
+        this.workers.push(worker);
+        this.workersByChannel.set(worker.channelId, worker);
+        this.workersByEnv.set(worker.envId, worker);
+
+        worker.trialKeeper.onTrialStart((trialId, timestamp) => {
+            this.emitter.emit('trial_start', trialId, timestamp);
+        });
+        worker.trialKeeper.onTrialStop((trialId, timestamp, exitCode) => {
+            //if (this.shouldCollectLog(exitCode !== 0)) {
+            //    this.collectTrialLog(trialId);
+            //}
+            this.emitter.emit('trial_stop', trialId, timestamp, exitCode);
+            this.workersByTrial.delete(trialId);
+        });
+        worker.trialKeeper.onReceiveCommand('request_parameter', (trialId, _command) => {
+            this.emitter.emit('request_parameter', trialId);
+        });
+        worker.trialKeeper.onReceiveCommand('metric', (trialId, command) => {
+            this.emitter.emit('metric', trialId, command['metric']);
+        });
+        worker.trialKeeper.onEnvironmentUpdate(env => {
+            worker.env = env;
+            this.emitEnvUpdate();
+        });
+
+        await worker.start();
+        return worker;
+    }
+
+    private stopWorker(oldWorker: Worker, emitEnvUpdate: boolean): void {
+        this.workers = this.workers.filter(worker => (worker !== oldWorker));
+        if (emitEnvUpdate) {
+            this.emitEnvUpdate();
+        }
+
+        this.workersByChannel.delete(oldWorker.channelId);
+        this.workersByEnv.delete(oldWorker.envId);
+
+        const now = Date.now();
+        this.workersByTrial.forEach((worker, trialId) => {
+            if (worker === oldWorker) {
+                this.emitter.emit('trial_stop', trialId, now, null);
+                this.workersByTrial.delete(trialId);  // mdn says it's save
+            }
+        });
+    }
+
+    private async restartWorker(oldWorker: Worker): Promise<void> {
+        this.stopWorker(oldWorker, true);
+
+        try {
+            const worker = await this.launchWorker(oldWorker.config);
+
+            for (const dirName of this.uploadedDirs) {
+                const tar = getTarballPath(dirName);
+                await worker.upload(dirName, tar);
+            }
+            
+        } catch (error) {
+            this.log.error(`Failed to recover worker ${oldWorker.config.host}:`, error);
+            return;
+        }
+
+        this.emitEnvUpdate();
+        this.log.info(`Worker ${oldWorker.config.host} has been recovered`);
+    }
+
+    /*  used to debug pipeline. re-enable it when we support log collection
+
     private shouldCollectLog(errorOccurred: boolean): boolean {
         if (this.config.logCollection === 'always') {
             return true;
@@ -204,6 +281,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
             this.log.error('Failed to collect trial log: cannot find worker for trial', trialId);
         }
     }
+    */
 }
 
 // Temporary helpers, will be moved later

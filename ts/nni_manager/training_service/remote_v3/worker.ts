@@ -21,6 +21,8 @@ export class Worker {
     private channel!: WsChannel;
     private channelUrl: string;
     private log: Logger;
+    private python!: string;
+    private remoteTrialKeeperDir!: string;
     private ssh: Ssh;
     private trainingServiceId: string;
     private uploadDir!: string;
@@ -39,7 +41,9 @@ export class Worker {
             channelId: string,
             config: RemoteMachineConfig,
             channelUrl: string,
-            enableGpuScheduling: boolean) {
+            enableGpuScheduling: boolean
+        ) {
+
         this.log = getLogger(`RemoteV3.Worker.${channelId}`);
         this.trainingServiceId = trainingServiceId;
         this.channelId = channelId;
@@ -53,9 +57,11 @@ export class Worker {
     public setChannel(channel: WsChannel): void {
         this.channel = channel;
         this.trialKeeper.setChannel(channel);
-        channel.on('lost', () => {
-            this.log.warning('Trial keeper connection lost');
-            this.downloadTrialKeeperLog();
+        channel.on('lost', async () => {
+            if (!await this.checkAlive()) {
+                this.log.error('Trial keeper failed');
+                channel.terminate('Trial keeper failed');  // MARK
+            }
         });
     }
 
@@ -64,32 +70,29 @@ export class Worker {
 
         await this.ssh.connect();
 
-        let python = await this.findPython();
-        if (this.config.pythonPath) {
-            python = await this.updatePath(python);
-        }
+        this.python = await this.findPython();
 
-        await this.ssh.run(`${python} -m pip install nni --upgrade`);  // FIXME: why upgrade???
+        await this.ssh.run(`${this.python} -m pip install nni --upgrade`);  // FIXME: why upgrade???
 
-        const remoteVersion = await this.ssh.run(`${python} -c "import nni ; print(nni.__version__)"`);
+        const remoteVersion = await this.ssh.run(`${this.python} -c "import nni ; print(nni.__version__)"`);
         const localVersion = await runPythonScript('import nni ; print(nni.__version__)');
         if (localVersion.trim() !== remoteVersion.trim()) {
             this.log.error(`NNI version mismatch. Local: ${localVersion.trim()} ; SSH server: ${remoteVersion}`);
         }
 
-        this.uploadDir = await this.launchTrialKeeperDaemon(python);
+        await this.launchTrialKeeperDaemon();
         this.env = await this.trialKeeper.start();
 
         this.log.info(`Worker ${this.config.host} initialized`);
     }
 
-    async stop(): Promise<void> {
+    public async stop(): Promise<void> {
         this.log.info('Stop worker', this.config.host);
         await this.trialKeeper.shutdown();
         this.channel.close('shutdown');
     }
 
-    async upload(name: string, tar: string): Promise<void> {
+    public async upload(name: string, tar: string): Promise<void> {
         this.log.info('Uploading', name);
         const remotePath = path.join(this.uploadDir, `${name}.tgz`);
         await this.ssh.upload(tar, remotePath);
@@ -97,46 +100,12 @@ export class Worker {
         this.log.info('Upload success');
     }
 
-    public async downloadTrialLog(trialId: string): Promise<void> {
-        this.log.debug('Downloading trial log:', trialId);
-
-        const localDir = path.join(globals.paths.experimentRoot, 'output', trialId);
-        await fs.mkdir(localDir, { recursive: true });
-
-        // fixme: hack
-        const remoteDir = path.join(path.dirname(this.uploadDir), 'trials', trialId);
-
-        await Promise.all([
-            this.ssh.download(path.join(remoteDir, 'trial.stdout'), path.join(localDir, 'trial.stdout')),
-            this.ssh.download(path.join(remoteDir, 'trial.stderr'), path.join(localDir, 'trial.stderr')),
-        ]);
-
-        const stderr = await fs.readFile(path.join(localDir, 'trial.stderr'), { encoding: 'utf8' });
-        this.log.info(`Trial ${trialId} stderr:`, stderr);
-    }
-
-    private async downloadTrialKeeperLog(): Promise<void> {
-        this.log.debug('Downloading trial keeper log');
-
-        const localDir = path.join(globals.paths.experimentRoot, 'environments', this.envId, 'trial_keeper_log');
-        await fs.mkdir(localDir, { recursive: true });
-
-        // fixme
-        const remoteDir = path.join(path.dirname(this.uploadDir), 'trial_keeper');
-
-        await Promise.all([
-            this.ssh.download(path.join(remoteDir, 'trial_keeper.log'), path.join(localDir, 'trial_keeper.log')),
-            this.ssh.download(path.join(remoteDir, 'trial_keeper.stdout'), path.join(localDir, 'trial_keeper.stdout')),
-            this.ssh.download(path.join(remoteDir, 'trial_keeper.stderr'), path.join(localDir, 'trial_keeper.stderr')),
-        ]);
-
-        const log = await fs.readFile(path.join(localDir, 'trial_keeper.log'), { encoding: 'utf8' });
-        console.error('## Trial keeper log:');
-        console.error(log);
-
-        const stderr = await fs.readFile(path.join(localDir, 'trial_keeper.stderr'), { encoding: 'utf8' });
-        console.error('## Trial keeper stderr:');
-        console.error(stderr);
+    private async findPython(): Promise<string> {
+        const python = await this.findInitPython();
+        if (this.config.pythonPath) {
+            return await this.updatePath(python);
+        }
+        return python;
     }
 
     /**
@@ -149,7 +118,7 @@ export class Worker {
      *  Otherwise if there is no `pythonPath` config,
      *  the found python will be used for all tasks including user trials.
      **/
-    private async findPython(): Promise<string> {
+    private async findInitPython(): Promise<string> {
         const candidates = [];
         if (this.config.pythonPath) {
             if (!this.config.pythonPath.includes('\\')) {  // it might be a posix server
@@ -226,9 +195,9 @@ export class Worker {
      *  Launch trial keeper daemon process.
      *  Return trial keeper's upload directory.
      **/
-    private async launchTrialKeeperDaemon(python: string): Promise<string> {
+    private async launchTrialKeeperDaemon(): Promise<void> {
         const prepareCommand = [
-            python,
+            this.python,
             '-m nni.tools.nni_manager_scripts.create_trial_keeper_dir',
             globals.args.experimentId,
             this.envId,
@@ -245,12 +214,82 @@ export class Worker {
         this.log.debug('Trial keeper launcher config:', launcherConfig);
         await this.ssh.writeFile(path.join(trialKeeperDir, 'launcher_config.json'), JSON.stringify(launcherConfig));
 
-        const launchCommand = `${python} -m nni.tools.nni_manager_scripts.launch_trial_keeper ${trialKeeperDir}`;
+        const launchCommand = `${this.python} -m nni.tools.nni_manager_scripts.launch_trial_keeper ${trialKeeperDir}`;
         const result = JSON.parse(await this.ssh.run(launchCommand));
         if (!result.success) {
             this.log.error('Failed to launch trial keeper daemon:', result);
             throw new Error('Failed to launch trial keeper daemon');
         }
-        return result.uploadDirectory;
+
+        this.uploadDir = result.uploadDirectory;
+        this.remoteTrialKeeperDir = result.trialKeeperDirectory;
     }
+
+    private async checkAlive(): Promise<boolean> {
+        try {
+            const command = [
+                this.python,
+                '-m',
+                'nni.tools.nni_manager_scripts.check_trial_keeper_alive',
+                this.remoteTrialKeeperDir
+            ].join(' ');
+            const alive = JSON.parse(await this.ssh.run(command));
+
+            if (alive.alive) {
+                return true;
+            } else {
+                this.log.error('Trial keeper not alive:', alive);
+                return false;
+            }
+
+        } catch (error) {
+            this.log.error('Failed to check trail keeper status:', error);
+            return false;
+        }
+    }
+
+    /*  used to debug pipeline. re-enable it when we support log collection
+
+    public async downloadTrialLog(trialId: string): Promise<void> {
+        this.log.debug('Downloading trial log:', trialId);
+
+        const localDir = path.join(globals.paths.experimentRoot, 'output', trialId);
+        await fs.mkdir(localDir, { recursive: true });
+
+        // fixme: hack
+        const remoteDir = path.join(path.dirname(this.uploadDir), 'trials', trialId);
+
+        await Promise.all([
+            this.ssh.download(path.join(remoteDir, 'trial.stdout'), path.join(localDir, 'trial.stdout')),
+            this.ssh.download(path.join(remoteDir, 'trial.stderr'), path.join(localDir, 'trial.stderr')),
+        ]);
+
+        const stderr = await fs.readFile(path.join(localDir, 'trial.stderr'), { encoding: 'utf8' });
+        this.log.info(`Trial ${trialId} stderr:`, stderr);
+    }
+
+    private async downloadTrialKeeperLog(): Promise<void> {
+        this.log.debug('Downloading trial keeper log');
+
+        const localDir = path.join(globals.paths.experimentRoot, 'environments', this.envId, 'trial_keeper_log');
+        await fs.mkdir(localDir, { recursive: true });
+
+        // fixme
+        const remoteDir = path.join(path.dirname(this.uploadDir), 'trial_keeper');
+
+        await Promise.all([
+            this.ssh.download(path.join(remoteDir, 'trial_keeper.log'), path.join(localDir, 'trial_keeper.log')),
+            this.ssh.download(path.join(remoteDir, 'trial_keeper.stdout'), path.join(localDir, 'trial_keeper.stdout')),
+            this.ssh.download(path.join(remoteDir, 'trial_keeper.stderr'), path.join(localDir, 'trial_keeper.stderr')),
+        ]);
+
+        const log = await fs.readFile(path.join(localDir, 'trial_keeper.log'), { encoding: 'utf8' });
+        console.error('## Trial keeper log:');
+        console.error(log);
+
+        const stderr = await fs.readFile(path.join(localDir, 'trial_keeper.stderr'), { encoding: 'utf8' });
+        console.error('## Trial keeper stderr:');
+        console.error(stderr);
+    }
+    */
 }

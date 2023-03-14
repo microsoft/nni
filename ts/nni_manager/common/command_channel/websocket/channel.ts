@@ -98,6 +98,15 @@ export class WsChannel extends EventEmitter {
         }
     }
 
+    public terminate(reason: string): void {
+        this.log.info('Terminate channel:', reason);
+        this.closing = true;
+        if (this.connection) {
+            this.connection.terminate(reason);
+            this.endEpoch();
+        }
+    }
+
     public send(command: Command): void {
         if (this.connection) {
             this.connection.send(command);
@@ -238,18 +247,23 @@ class WsConnection extends EventEmitter {
         }
 
         try {
-            this.ws.close(1001, reason);
+            this.ws.close(4000, reason);
         } catch (error) {
             this.log.error('Failed to close:', error);
             this.ws.terminate();
         }
     }
 
-    private terminate(reason: string): void {
+    public terminate(reason: string): void {
         this.log.debug('Terminate:', reason);
         this.closing = true;
+        if (this.heartbeatTimer) {
+            clearInterval(this.heartbeatTimer);
+            this.heartbeatTimer = null;
+        }
+
         try {
-            this.ws.close(1001, reason);
+            this.ws.close(4001, reason);
         } catch (error) {
             this.log.debug('Failed to close:', error);
             this.ws.terminate();

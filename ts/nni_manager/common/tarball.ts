@@ -17,6 +17,12 @@ import { Logger, getLogger } from 'common/log';
 
 const logger: Logger = getLogger('common.tarball');
 
+export function getTarballPath(tarName: string): string {
+    // TODO: move it to globals.paths
+    const tarDir = path.join(globals.paths.experimentRoot, 'tarball');
+    return path.join(tarDir, `${tarName}.tgz`);
+}
+
 export async function createTarball(tarName: string, sourcePath: string): Promise<string> {
     const fileList = [];
 
@@ -48,10 +54,8 @@ export async function createTarball(tarName: string, sourcePath: string): Promis
         }
     }
 
-    // TODO: move it to globals.paths
-    const tarDir = path.join(globals.paths.experimentRoot, 'tarball');
-    await fs.mkdir(tarDir, { recursive: true });
-    const tarPath = path.join(tarDir, `${tarName}.tgz`);
+    const tarPath = getTarballPath(tarName);
+    await fs.mkdir(path.dirname(tarPath), { recursive: true });
 
     const opts = {
         gzip: true,
