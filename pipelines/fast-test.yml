@@ -110,8 +110,8 @@ stages:
 
     - script: |
         set -e
-        yarn --cwd ts/webui
-        yarn --cwd ts/webui sanity-check
+        npm --prefix ts/webui install
+        npm --prefix ts/webui run sanity-check
       displayName: Sanity check (WebUI)
 
 - stage: filter
