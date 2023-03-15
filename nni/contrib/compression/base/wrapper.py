@@ -365,6 +365,7 @@ class ModuleWrapper(torch.nn.Module):
             for idx, target in enumerate(outputs):
                 target_name = f'{OUTPUT_PREFIX}{idx}'
                 new_outputs.append(self.patch_helper(target_name, target))
+            new_outputs = type(outputs)(new_outputs)
         elif isinstance(outputs, dict):
             new_outputs = {}
             for output_name, target in outputs.items():

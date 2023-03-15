@@ -88,7 +88,7 @@ class ModelSpeedup(torch.fx.Interpreter):
                  graph_module: GraphModule | None = None,
                  garbage_collect_values: bool = True,
                  logger: logging.Logger | None = None):
-        self.dummy_input = (dummy_input,) if isinstance(dummy_input, torch.Tensor) else tuple(dummy_input)
+        self.dummy_input = (dummy_input,) if isinstance(dummy_input, torch.Tensor) else dummy_input
         self.bound_model = model
         self.graph_module = graph_module if isinstance(graph_module, GraphModule) else concrete_trace(model, self.dummy_input)
 

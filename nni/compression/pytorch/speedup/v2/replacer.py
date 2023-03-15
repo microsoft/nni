@@ -45,7 +45,7 @@ class DefaultReplacer(Replacer):
 
     def replace_modules(self, speedup: 'ModelSpeedup'):
         for node, node_info in speedup.node_infos.items():
-            if node.op == 'call_module':
+            if node.op == 'call_module' and not node_info.replaced:
                 # module = speedup.fetch_attr(node.target)
                 # module_type = module._get_name()
                 module = get_nested_attr(speedup.bound_model, node.target)
