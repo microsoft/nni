@@ -534,6 +534,7 @@ class ConcreteTracer(TracerBase):
         # fill default values
         args = inspect.getfullargspec(root.forward).args[1:]
         defaults = inspect.getfullargspec(root.forward).defaults
+        defaults = tuple() if defaults is None else defaults
         if isinstance(concrete_args, (tuple, list)):
             concrete_args = (*concrete_args, *defaults[len(concrete_args) + len(defaults) - len(args):])
         else:
