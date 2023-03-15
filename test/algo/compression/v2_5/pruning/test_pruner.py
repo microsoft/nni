@@ -40,7 +40,7 @@ pruner_dict: Dict[str, Type[Pruner]] = {
 }
 
 
-def check_masks(masks: Dict[str, Dict[str, torch.Tensor]], model_type, prune_type):
+def check_masks(masks: Dict[str, Dict[str, torch.Tensor]], model_type):
     prefix = 'model.' if model_type == 'lightning' else ''
     assert 1 - masks[f'{prefix}conv1']['weight'].sum() / masks[f'{prefix}conv1']['weight'].numel() == 0.75
     assert 1 - masks[f'{prefix}conv2']['weight'].sum() / masks[f'{prefix}conv2']['weight'].numel() == 0.75
@@ -71,15 +71,58 @@ def test_norm_pruner(model_type: str, prune_type: str):
     model, config_list_dict, dummy_input = create_model(model_type)
 
     config_list = config_list_dict['pruning']
-    # set dependency group ids if not level
     config_list = auto_set_denpendency_group_ids(model, config_list, dummy_input)
     pruner = pruner_dict[prune_type](model, config_list)
-    _, masks = pruner.compress()
+    pruner.compress()
     pruner.unwrap_model()
 
-    check_masks(masks, model_type, prune_type)
+    masks = pruner.get_masks()
+    check_masks(masks, model_type)
 
     pruned_model = ModelSpeedup(model, dummy_input, masks).speedup_model()
     ori_model, _, _  = create_model(model_type)
     check_pruned_simple_model(pruned_model, ori_model, dummy_input, model_type)
 
+
+@pytest.mark.parametrize('model_type', ['lightning', 'pytorch'])
+def test_slim_pruner(model_type: str):
+    model, config_list_dict, dummy_input = create_model(model_type)
+    if model_type == 'lightning':
+        evaluator = create_lighting_evaluator()
+    elif model_type == 'pytorch':
+        evaluator = create_pytorch_evaluator(model)
+
+    config_list = config_list_dict['pruning']
+    config_list = auto_set_denpendency_group_ids(model, config_list, dummy_input)
+    pruner = SlimPruner(model, config_list, evaluator=evaluator, training_steps=100)
+    pruner.compress()
+    pruner.unwrap_model()
+
+    masks = pruner.get_masks()
+    check_masks(masks, model_type)
+
+    pruned_model = ModelSpeedup(model, dummy_input, masks).speedup_model()
+    ori_model, _, _  = create_model(model_type)
+    check_pruned_simple_model(pruned_model, ori_model, dummy_input, model_type)
+
+
+@pytest.mark.parametrize('model_type', ['lightning', 'pytorch'])
+def test_taylor_pruner(model_type: str):
+    model, config_list_dict, dummy_input = create_model(model_type)
+    if model_type == 'lightning':
+        evaluator = create_lighting_evaluator()
+    elif model_type == 'pytorch':
+        evaluator = create_pytorch_evaluator(model)
+
+    config_list = config_list_dict['pruning']
+    config_list = auto_set_denpendency_group_ids(model, config_list, dummy_input)
+    pruner = TaylorPruner(model, config_list, evaluator=evaluator, training_steps=100)
+    pruner.compress()
+    pruner.unwrap_model()
+
+    masks = pruner.get_masks()
+    check_masks(masks, model_type)
+
+    pruned_model = ModelSpeedup(model, dummy_input, masks).speedup_model()
+    ori_model, _, _  = create_model(model_type)
+    check_pruned_simple_model(pruned_model, ori_model, dummy_input, model_type)
