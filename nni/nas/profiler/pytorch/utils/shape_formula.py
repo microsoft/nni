@@ -102,9 +102,14 @@ def _safe_register_aten_formula(name: str, formula: Formula) -> None:
     names = name.split('.')
     object = torch.ops.aten
     for name in names:
-        if not hasattr(object, name):
-            warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
-                          'Skip registering the shape inference formula.')
+        try:
+            if not hasattr(object, name):
+                warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+                              'Skip registering the shape inference formula.')
+                return
+        except RuntimeError as e:
+            # Some pytorch version will raise RuntimeError when using hasattr
+            warnings.warn(f'Fail to register shape inference formula for aten operator {name} because: {e}')
             return
         object = getattr(object, name)
     register_shape_inference_formula(object, formula)

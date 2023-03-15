@@ -252,7 +252,7 @@ class CriticNetwork(nn.Module):
 
     def forward(self, obs, **kwargs):
         obs = to_torch(obs, device=self.linear.weight.device)
-        steps_onehot = nn.functional.one_hot(obs['cur_step'], self.input_dim).float()
+        steps_onehot = nn.functional.one_hot(obs['cur_step'].long(), self.input_dim).float()
         return self.linear(steps_onehot)
 
 def naive_policy(env):
