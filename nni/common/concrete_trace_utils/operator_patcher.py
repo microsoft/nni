@@ -229,9 +229,9 @@ class OperatorPatcher:
                 assert _orig_len(closures) == _orig_len(co_freevars)
                 closure_dict = _orig_dict(_orig_zip(co_freevars, [c.cell_contents for c in closures]))
 
+            tuple_wrapped = tuple
             try:
                 if platform.python_version_tuple() < ('3', '9'):
-                    tuple_wrapped = tuple
                     setattr(builtins, 'tuple', _orig_tuple)
                 var_dict = {}
                 exec(
@@ -249,7 +249,7 @@ class OperatorPatcher:
                     return var_dict['new_func']
             finally:
                 if platform.python_version_tuple() < ('3', '9'):
-                    setattr(builtins, 'tuple', tuple_wrapped)  # type: ignore
+                    setattr(builtins, 'tuple', tuple_wrapped)
 
 class OperatorPatcherContext:
     ctx_tracer: Optional['ConcreteTracer'] = None
