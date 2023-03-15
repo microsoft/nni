@@ -6,7 +6,7 @@
  *
  *  Usage:
  *
- *      const client = new WsChannelClient('ws://1.2.3.4:8080/server/channel_id');
+ *      const client = new WsChannelClient('example', 'ws://1.2.3.4:8080/server/channel_id');
  *      await client.connect();
  *      client.send(command);
  *
@@ -19,7 +19,6 @@ import { setTimeout } from 'node:timers/promises';
 
 import { WebSocket } from 'ws';
 
-import { generateChannelName } from 'common/command_channel/utils';
 import { Logger, getLogger } from 'common/log';
 import { WsChannel } from './channel';
 
@@ -27,7 +26,7 @@ import { WsChannel } from './channel';
 const maxPayload: number = 1024 * 1024 * 1024;
 
 export class WsChannelClient extends WsChannel {
-    private logger: Logger;  // avoid name conflict with base class
+    private logger: Logger;
     private reconnecting: boolean = false;
     private url: string;
 
@@ -35,10 +34,9 @@ export class WsChannelClient extends WsChannel {
      *  The url should start with "ws://".
      *  The name is used for better logging.
      **/
-    constructor(url: string, name?: string) {
-        const name_ = name ?? generateChannelName(url);
-        super(name_);
-        this.logger = getLogger(`WsChannelClient.${name_}`);
+    constructor(name: string, url: string) {
+        super(name);
+        this.logger = getLogger(`WsChannelClient.${name}`);
         this.url = url;
         this.onLost(this.reconnect.bind(this));
     }

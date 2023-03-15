@@ -7,9 +7,9 @@
  *  The server will specify a URL prefix like `ws://1.2.3.4:8080/SERVER_PREFIX`,
  *  and each client will append a channel ID, like `ws://1.2.3.4:8080/SERVER_PREFIX/CHANNEL_ID`.
  *
- *      const server = new WsChannelServer('example', 'SERVER_PREFIX');
+ *      const server = new WsChannelServer('example_server', '/SERVER_PREFIX');
  *      const url = server.getChannelUrl('CHANNEL_ID');
- *      const client = new WsChannelClient(url);
+ *      const client = new WsChannelClient('example_client', url);
  *      await server.start();
  *      await client.connect();
  *
@@ -34,7 +34,6 @@ import type { Request } from 'express';
 import type { WebSocket } from 'ws';
 
 import type { Command } from 'common/command_channel/interface';
-import { generateChannelName } from 'common/command_channel/utils';
 import { Deferred } from 'common/deferred';
 import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
@@ -50,10 +49,9 @@ export class WsChannelServer extends EventEmitter {
     private path: string;
     private receiveCallbacks: ReceiveCallback[] = [];
 
-    constructor(urlPath: string, name?: string) {
+    constructor(name: string, urlPath: string) {
         super();
-        const name_ = name ?? generateChannelName(urlPath);
-        this.log = getLogger(`WsChannelServer.${name_}`);
+        this.log = getLogger(`WsChannelServer.${name}`);
         this.path = urlPath;
     }
 

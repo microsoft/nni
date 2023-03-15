@@ -29,7 +29,7 @@ export interface CommandChannel {
 }
 
 export interface CommandChannelClient extends CommandChannel {
-    // constructor(url: string, name?: string);
+    // constructor(name: string, url: string);
     connect(): Promise<void>;
     disconnect(reason?: string): Promise<void>;
 }
@@ -44,7 +44,7 @@ export interface CommandChannelClient extends CommandChannel {
  *  The APIs might be changed to return `Promise<void>` in future.
  **/
 export interface CommandChannelServer {
-    // constructor(urlPath: string, name?: string);
+    // constructor(name: string, urlPath: string);
     start(): Promise<void>;
     shutdown(): Promise<void>;
     getChannelUrl(channelId: string, ip?: string): string;
