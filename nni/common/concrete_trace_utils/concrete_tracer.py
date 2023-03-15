@@ -495,66 +495,6 @@ class ConcreteTracer(TracerBase):
 
         return root_fn, args, more_args, kwargs
 
-    @compatibility(is_backward_compatible=False)
-    def getattr(self, attr: str, attr_val: Any, parameter_proxy_cache: Dict[str, Any]):
-        """
-        Method that specifies the behavior of this ``Tracer`` when we call getattr
-        on a call to an ``nn.Module`` instance.
-
-        By default, the behavior is to return a proxy value for the attribute. It
-        also stores the proxy value in the ``parameter_proxy_cache``, so that future
-        calls will reuse the proxy rather than creating a new one.
-
-        This method can be overridden to --for example-- not return proxies when
-        querying parameters.
-
-        Args:
-
-            attr (str): The name of the attribute being queried
-            attr_val (Any): The value of the attribute
-            parameter_proxy_cache (Dict[str, Any]): A cache of attr names to proxies
-
-        Return:
-
-            The return value from the getattr call.
-        """
-        def maybe_get_proxy_for_attr(
-            attr_val, collection_to_search, parameter_proxy_cache
-        ):
-            for n, p in collection_to_search:
-                if attr_val is p:
-                    if n not in parameter_proxy_cache:
-                        kwargs = {}
-                        if (
-                            "proxy_factory_fn"
-                            in inspect.signature(self.create_proxy).parameters
-                        ):
-                            kwargs["proxy_factory_fn"] = (
-                                lambda node: ep.ConcreteProxy(
-                                    node, attr_val, self
-                                )
-                            )
-                        val_proxy = self.create_proxy("get_attr", n, (), {}, **kwargs)  # type: ignore[arg-type]
-                        parameter_proxy_cache[n] = val_proxy
-                    return parameter_proxy_cache[n]
-            return None
-
-        if isinstance(attr_val, torch.nn.Parameter):
-            maybe_parameter_proxy = maybe_get_proxy_for_attr(
-                attr_val, self.root.named_parameters(), parameter_proxy_cache
-            )
-            if maybe_parameter_proxy is not None:
-                return maybe_parameter_proxy
-
-        if self.proxy_buffer_attributes and isinstance(attr_val, torch.Tensor):
-            maybe_buffer_proxy = maybe_get_proxy_for_attr(
-                attr_val, self.root.named_buffers(), parameter_proxy_cache
-            )
-            if maybe_buffer_proxy is not None:
-                return maybe_buffer_proxy
-
-        return attr_val
-
     @compatibility(is_backward_compatible=True)
     def trace(self, root: Union[torch.nn.Module, Callable[..., Any]], *,
               autowrap_modules: Tuple[str] | None = None,
