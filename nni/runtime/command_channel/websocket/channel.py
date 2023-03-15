@@ -55,10 +55,10 @@ class WsChannelClient(CommandChannel):
             if msg is None:
                 return None
             command = nni.load(msg)
-            if command.type == '_nop_':
+            if command['type'] == '_nop_':
                 continue
-            if command.type == '_bye_':
-                reason = getattr(command, 'reason')
+            if command['type'] == '_bye_':
+                reason = command.get('reason')
                 _logger.debug(f'Server close connection: {reason}')
                 self._closing = True
                 self._close_conn('server intentionally close')
