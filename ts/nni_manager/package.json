@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "test": "nyc --reporter=cobertura --reporter=text mocha test/**/*.test.ts",
+    "test_nnimanager": "nyc --reporter=cobertura --reporter=text mocha test/core/nnimanager.test.ts",
     "mocha": "mocha",
     "eslint": "eslint . --ext .ts"
   },
