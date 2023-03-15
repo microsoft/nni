@@ -28,8 +28,8 @@ import path from 'path';
 import express, { Request, Response, Router } from 'express';
 import expressWs from 'express-ws';
 import httpProxy from 'http-proxy';
-import { Deferred } from 'ts-deferred';
 
+import { Deferred } from 'common/deferred';
 import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
 import * as tunerCommandChannel from 'core/tuner_command_channel';
@@ -91,6 +91,12 @@ export class RestServer {
             logger.info('REST server stopped.');
             deferred.resolve();
         });
+        setTimeout(() => {
+            if (!deferred.settled) {
+                logger.debug('Killing connections');
+                this.server?.closeAllConnections();
+            }
+        }, 5000);
         return deferred.promise;
     }
 }

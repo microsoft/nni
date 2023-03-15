@@ -24,7 +24,7 @@ import traceback
 from zipfile import ZipFile
 
 
-node_version = 'v18.12.1'
+node_version = 'v18.15.0'
 yarn_version = 'v1.22.19'
 
 def _print(*args, color='cyan'):

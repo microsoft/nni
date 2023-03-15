@@ -71,7 +71,7 @@ const yargsOptions = {
         type: 'string'
     },
     logLevel: {
-        choices: [ 'critical', 'error', 'warning', 'info', 'debug' ] as const,
+        choices: [ 'critical', 'error', 'warning', 'info', 'debug', 'trace' ] as const,
         demandOption: true
     },
     foreground: {
