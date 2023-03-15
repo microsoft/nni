@@ -5,10 +5,11 @@ from functools import partial
 from typing import Tuple, Optional, Callable, Union, List, Type, cast
 from typing_extensions import Literal
 
-import nni
 import torch
-from nni.nas.nn.pytorch import ModelSpace, Repeat, LayerChoice, MutableLinear, MutableConv2d
 from torch import nn
+
+import nni
+from nni.nas.nn.pytorch import ModelSpace, Repeat, LayerChoice, MutableLinear, MutableConv2d
 
 from .proxylessnas import ConvBNReLU, InvertedResidual, DepthwiseSeparableConv, MaybeIntChoice, make_divisible, reset_parameters
 from .utils.pretrained import load_pretrained_weight

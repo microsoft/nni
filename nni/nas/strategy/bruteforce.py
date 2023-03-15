@@ -6,14 +6,13 @@ from __future__ import annotations
 __all__ = ['GridSearch', 'Random']
 
 import logging
-import random
 import warnings
-from typing import Any, Iterable
+from typing import Iterator, Any
 
 from numpy.random import RandomState
 
-from nni.mutable import Sample, SampleValidationError
-from nni.nas.space import MutationSampler, ExecutableModelSpace, Mutator
+from nni.mutable import Sample
+from nni.nas.space import ExecutableModelSpace
 
 from .base import Strategy
 from .utils import DeduplicationHelper, RetrySamplingHelper
@@ -56,12 +55,12 @@ class GridSearch(Strategy):
     def extra_repr(self) -> str:
         return f'shuffle={self.shuffle}, dedup={self._dedup is not None}'
 
-    def _grid_generator(self, model_space: ExecutableModelSpace) -> Iterable[ExecutableModelSpace]:
+    def _grid_generator(self, model_space: ExecutableModelSpace) -> Iterator[ExecutableModelSpace]:
         if self._no_sample_found_counter >= self._granularity_patience:
             _logger.info('Patience already run out (%d > %d). Nothing to search.',
                          self._no_sample_found_counter, self._granularity_patience)
             return
-        
+
         finite = self._space_validation(model_space)
 
         while True:
@@ -69,7 +68,7 @@ class GridSearch(Strategy):
             for model in model_space.grid(granularity=self._granularity):
                 if self._dedup is not None and not self._dedup.dedup(model.sample):
                     continue
-                
+
                 new_sample_found = True
                 yield model
 
@@ -139,7 +138,7 @@ class GridSearch(Strategy):
 
     def _space_validation(self, model_space: ExecutableModelSpace) -> bool:
         """Check whether the space is supported by grid search.
-        
+
         Return true if the space is finite, false if it's not.
         Raise error if it's not supported.
         """
@@ -160,7 +159,7 @@ class GridSearch(Strategy):
             _logger.info('Grid search would possibly yield duplicate samples since dedup is turned off.')
 
     def state_dict(self) -> dict:
-        result = {'random_state': self._random_state.get_state()}
+        result: dict[str, Any] = {'random_state': self._random_state.get_state()}
         if self._granularity_processed is None:
             result.update(granularity=self._granularity, no_sample_found_counter=self._no_sample_found_counter)
         else:
@@ -169,6 +168,7 @@ class GridSearch(Strategy):
         if self._dedup is not None:
             result.update(self._dedup.state_dict())
         return result
+
 
 class Random(Strategy):
     """
@@ -191,7 +191,7 @@ class Random(Strategy):
             warnings.warn('Variational and model filter are no longer supported in random search and will be removed in future releases.',
                           DeprecationWarning)
 
-        self._dedup_helper = DeduplicationHelper(raise_on_dup=True) if dedup else None 
+        self._dedup_helper = DeduplicationHelper(raise_on_dup=True) if dedup else None
         self._retry_helper = RetrySamplingHelper(self._duplicate_retry)
 
         self._random_state = RandomState(seed)

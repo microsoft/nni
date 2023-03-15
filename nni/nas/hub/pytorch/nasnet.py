@@ -17,9 +17,10 @@ try:
 except ImportError:
     from typing_extensions import Literal
 
-import nni
 import torch
 from torch import nn
+
+import nni
 from nni.mutable import MutableExpression, Sample
 from nni.nas.nn.pytorch import ModelSpace, Repeat, Cell, MutableConv2d, MutableBatchNorm2d, MutableLinear, model_context
 

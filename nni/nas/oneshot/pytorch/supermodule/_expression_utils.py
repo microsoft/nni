@@ -6,9 +6,8 @@ in the way that is most convenient to one-shot algorithms."""
 
 from __future__ import annotations
 
-import itertools
 import operator
-from typing import Any, TypeVar, List, cast, Mapping, Sequence, Optional, Iterable
+from typing import Any, TypeVar, List, cast, Mapping, Sequence, Optional, Iterable, overload
 
 import numpy as np
 import torch
@@ -28,7 +27,7 @@ __all__ = [
 ]
 
 
-def expression_expectation(mutable_expr: MutableExpression[T] | Any, weights: dict[str, list[float]]) -> float:
+def expression_expectation(mutable_expr: MutableExpression[float] | Any, weights: dict[str, list[float]]) -> float:
     """Compute the expectation of a value choice.
 
     Parameters
@@ -54,13 +53,26 @@ def expression_expectation(mutable_expr: MutableExpression[T] | Any, weights: di
         return expression_expectation(mutable_expr.arguments[0], weights) - expression_expectation(mutable_expr.arguments[1], weights)
 
     all_options = traverse_all_options(mutable_expr, weights)  # [(option, weight), ...]
-    options, weights = zip(*all_options)  # ([option, ...], [weight, ...])
-    return weighted_sum(options, weights)
+    options, option_weights = zip(*all_options)  # ([option, ...], [weight, ...])
+    return weighted_sum(options, option_weights)
+
+
+@overload
+def traverse_all_options(mutable_expr: MutableExpression[T]) -> list[T]:
+    ...
+
+
+@overload
+def traverse_all_options(
+    mutable_expr: MutableExpression[T],
+    weights: dict[str, Sequence[float]] | dict[str, list[float]] | dict[str, np.ndarray] | dict[str, torch.Tensor]
+) -> list[tuple[T, float]]:
+    ...
 
 
 def traverse_all_options(
     mutable_expr: MutableExpression[T],
-    weights: dict[str, dict[float]] | dict[str, list[float]] | dict[str, np.ndarray] | dict[str, torch.Tensor] | None = None
+    weights: dict[str, Sequence[float]] | dict[str, list[float]] | dict[str, np.ndarray] | dict[str, torch.Tensor] | None = None
 ) -> list[tuple[T, float]] | list[T]:
     """Traverse all possible computation outcome of a value choice.
     If ``weights`` is not None, it will also compute the probability of each possible outcome.
@@ -133,7 +145,7 @@ def evaluate_constant(expr: Any) -> Any:
     return res
 
 
-def weighted_sum(items: list[T], weights: Sequence[float | None] = cast(Sequence[Optional[float]], None)) -> T:
+def weighted_sum(items: Sequence[T], weights: Sequence[float | None] = cast(Sequence[Optional[float]], None)) -> T:
     """Return a weighted sum of items.
 
     Items can be list of tensors, numpy arrays, or nested lists / dicts.

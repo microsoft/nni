@@ -17,7 +17,7 @@ from nni.nas.evaluator.pytorch.lightning import LightningModule
 
 class MultiModelLightningModule(LightningModule):
     """The lightning module for a merged "multi-model".
-    
+
     The output of the multi-model is expected to be a tuple of tensors.
     The tensors will be each passed to a criterion and a metric.
     The loss will be added up for back propagation, and the metrics will be logged.
@@ -99,11 +99,11 @@ class MultiModelLightningModule(LightningModule):
         return torch.optim.Adam(self.parameters(), lr=1e-3)
 
     def on_validation_epoch_end(self):
-        nni.report_intermediate_result(self._get_validation_metrics())
+        nni.report_intermediate_result(self._get_validation_metrics())  # type: ignore
 
     def teardown(self, stage):
         if stage == 'fit':
-            nni.report_final_result(self._get_validation_metrics())
+            nni.report_final_result(self._get_validation_metrics())  # type: ignore
 
     def _get_validation_metrics(self):
         # TODO: split metric of multiple models?
