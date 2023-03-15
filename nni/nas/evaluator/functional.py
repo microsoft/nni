@@ -22,6 +22,8 @@ class FunctionalEvaluator(MutableEvaluator):
         Keyword arguments for the function other than model.
     """
 
+    # The functional evaluator has already been equipped with "trace" functionality.
+    # It shouldn't be traced again when wrapped with `nni.trace`.
     _traced: ClassVar[bool] = True
 
     def __init__(self, function, **kwargs):
