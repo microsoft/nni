@@ -285,13 +285,6 @@ class ConcreteTracer(TracerBase):
         similar to _symbolic_trace.Tracer.create_proxy.
         use the 'run_target' to actually execute the code, and store the value in 'value' field.
         """
-        args_ = self.create_arg(args)
-        kwargs_ = self.create_arg(kwargs)
-        assert isinstance(args_, tuple)
-        assert isinstance(kwargs_, dict)
-
-        node = self.create_node(kind, target, args_, kwargs_, name, type_expr)
-
         def upwrapper(obj: Any):
             while _orig_isinstance(obj, ep.ConcreteProxy):
                 obj = obj.value
@@ -301,6 +294,13 @@ class ConcreteTracer(TracerBase):
 
         # real value by execution
         value_unwrapped = self.run_target(kind, target, args_unwrapped, kwargs_unwrapped)
+
+        args_ = self.create_arg(args)
+        kwargs_ = self.create_arg(kwargs)
+        assert isinstance(args_, tuple)
+        assert isinstance(kwargs_, dict)
+
+        node = self.create_node(kind, target, args_, kwargs_, name, type_expr)
 
         proxy = self.proxy(value_unwrapped, node)
         self.node_to_originating_module[proxy.node] = self.current_module_qualified_name
@@ -935,7 +935,7 @@ class ConcreteTracer(TracerBase):
         finally:
             # for cuda versions of pytorch, autograd.Function.apply should be reverted manually
             delattr(torch.autograd.Function, 'apply')
-            # _retain_weight_consistency(self.root)  # disable for test
+            _retain_weight_consistency(self.root)
             pass
 
         self.submodule_paths = None
