@@ -48,9 +48,6 @@ class custom_class:
 @pytest.mark.parametrize('trace_decorator', [False, True])
 def test_functional_mutate(capsys, trace_decorator):
     if trace_decorator:
-        # FIXME: this doens't work on non-linux.
-        if sys.platform != 'linux':
-            pytest.skip('trace decorator only works on linux')
         # The evaluator works with or without trace decorator.
         cls = nni.trace(FunctionalEvaluator)
     else:

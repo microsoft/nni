@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from nni.common.serializer import SerializableObject
 from .evaluator import MutableEvaluator
 
@@ -19,6 +21,8 @@ class FunctionalEvaluator(MutableEvaluator):
     arguments
         Keyword arguments for the function other than model.
     """
+
+    _traced: ClassVar[bool] = True
 
     def __init__(self, function, **kwargs):
         self.function = function
