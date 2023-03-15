@@ -531,6 +531,18 @@ class ConcreteTracer(TracerBase):
                 such as '__main__.FooModel' or '__main__.bar_func'. the namespace is
                 always needed.
         """
+        # fill default values
+        args = inspect.getfullargspec(root.forward).args[1:]
+        defaults = inspect.getfullargspec(root.forward).defaults
+        if isinstance(concrete_args, (tuple, list)):
+            concrete_args = (*concrete_args, *defaults[len(concrete_args) + len(defaults) - len(args):])
+        else:
+            kv_default = {k: v for k, v in zip(args[-len(defaults):], defaults)}
+            concrete_args = {
+                **concrete_args,
+                **{n: kv_default[n] for n in args if n not in concrete_args}
+            }
+
         # preprocess arguments
         autowrap_modules = autowrap_modules if autowrap_modules is not None else tuple()
         autowrap_leaf_function = autowrap_leaf_function if autowrap_leaf_function is not None else {}
@@ -1380,17 +1392,6 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         fx.GraphModule: a Module created from the recorded operations from ``root``.
     """
     tracer = ConcreteTracer()
-
-    args = inspect.getfullargspec(root.forward).args[1:]
-    defaults = inspect.getfullargspec(root.forward).defaults
-    if isinstance(concrete_args, (tuple, list)):
-        concrete_args = (*concrete_args, *defaults[len(concrete_args) + len(defaults) - len(args):])
-    else:
-        kv_default = {k: v for k, v in zip(args[-len(defaults):], defaults)}
-        concrete_args = {
-            **concrete_args,
-            **{n: kv_default[n] for n in args if n not in concrete_args}
-        }
 
     graph = tracer.trace(root,
         autowrap_leaf_function = autowrap_leaf_function,
