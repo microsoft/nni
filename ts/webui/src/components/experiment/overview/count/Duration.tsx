@@ -30,7 +30,7 @@ export const Duration = (): any => {
     const maxExecDuration = EXPERIMENT.maxExperimentDurationSeconds;
     const execDuration = EXPERIMENT.profile.execDuration;
     // because execDuration will be > maxExecDuration(it's by design) in experiment
-    const percent = (execDuration / maxExecDuration) * 100 > 1 ? 100 : (execDuration / maxExecDuration) * 100;
+    const percent = (execDuration / maxExecDuration) * 100 > 100 ? 100 : (execDuration / maxExecDuration) * 100;
     const maxExecDurationStr = convertTimeAsUnit(maxDurationUnit, maxExecDuration).toString();
 
     return (

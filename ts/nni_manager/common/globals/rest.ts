@@ -51,8 +51,8 @@ export class RestManager {
         return parts.map(trimSlash).filter(part => part).join('/');
     }
 
-    public getFullUrl(protocol: string, ...parts: string[]): string {
-        const root = `${protocol}://localhost:${global.nni.args.port}/`;
+    public getFullUrl(protocol: string, ip: string, ...parts: string[]): string {
+        const root = `${protocol}://${ip}:${global.nni.args.port}/`;
         return root + this.urlJoin(global.nni.args.urlPrefix, ...parts);
     }
 }

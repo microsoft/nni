@@ -69,6 +69,19 @@ jobs:
       cd test
       python training_service/nnitest/generate_ts_config.py \
           --ts remote \
+          --remote_reuse false \
+          --remote_user nni \
+          --remote_host $(worker_ip) \
+          --remote_port $(docker_port) \
+          --remote_pwd $(password_in_docker) \
+          --nni_manager_ip $(manager_ip)
+      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote
+    displayName: Integration test
+
+  - script: |
+      cd test
+      python training_service/nnitest/generate_ts_config.py \
+          --ts remote \
           --remote_reuse true \
           --remote_user nni \
           --remote_host $(worker_ip) \
@@ -82,19 +95,6 @@ jobs:
           --exported_directory $(Exported_Directory)
       python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote
     displayName: Integration test (reuse mode)
-
-  - script: |
-      cd test
-      python training_service/nnitest/generate_ts_config.py \
-          --ts remote \
-          --remote_reuse false \
-          --remote_user nni \
-          --remote_host $(worker_ip) \
-          --remote_port $(docker_port) \
-          --remote_pwd $(password_in_docker) \
-          --nni_manager_ip $(manager_ip)
-      python training_service/nnitest/run_tests.py --config training_service/config/integration_tests.yml --ts remote
-    displayName: Integration test
 
   - template: templates/save-crashed-info.yml
     parameters:
