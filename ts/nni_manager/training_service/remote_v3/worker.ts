@@ -72,9 +72,12 @@ export class Worker {
 
         this.python = await this.findPython();
 
+        this.log.info('Installing nni and dependencies...');
         await this.ssh.run(`${this.python} -m pip install nni --upgrade`);  // FIXME: why upgrade???
 
         const remoteVersion = await this.ssh.run(`${this.python} -c "import nni ; print(nni.__version__)"`);
+        this.log.info(`Installed nni v${remoteVersion}`);
+
         const localVersion = await runPythonScript('import nni ; print(nni.__version__)');
         if (localVersion.trim() !== remoteVersion.trim()) {
             this.log.error(`NNI version mismatch. Local: ${localVersion.trim()} ; SSH server: ${remoteVersion}`);
