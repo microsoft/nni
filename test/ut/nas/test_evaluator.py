@@ -2,6 +2,7 @@ import re
 import pytest
 
 import nni
+import nni.trial
 import torch
 import pytorch_lightning
 
@@ -12,6 +13,12 @@ from nni.nas.evaluator.pytorch import Classification, Lightning, DataLoader, Tra
 from nni.nas.evaluator.evaluator import FrozenEvaluator
 from torch import nn
 from torch.utils.data import TensorDataset
+
+
+@pytest.fixture(autouse=True)
+def reset_cached_parameter():
+    nni.trial._params = None
+    nni.trial.overwrite_intermediate_seq(0)
 
 
 @nni.trace
