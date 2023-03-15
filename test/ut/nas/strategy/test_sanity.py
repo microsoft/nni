@@ -235,7 +235,7 @@ class ActorNetwork(nn.Module):
 
     def forward(self, obs, **kwargs):
         obs = to_torch(obs, device=self.linear.weight.device)
-        steps_onehot = nn.functional.one_hot(obs['cur_step'], self.input_dim).float()
+        steps_onehot = nn.functional.one_hot(obs['cur_step'].long(), self.input_dim).float()
         out = self.linear(steps_onehot)
         mask = torch.arange(self.output_dim).expand(len(out), self.output_dim) >= obs['action_dim'].unsqueeze(1)
         out_bias = torch.zeros_like(out)
