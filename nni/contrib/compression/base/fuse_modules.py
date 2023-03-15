@@ -75,19 +75,22 @@ def conv_forward(inputs: torch.Tensor, conv_module: Union[nn.Conv1d, nn.Conv2d, 
         raise TypeError(f"Only support modules in [conv1d, conv2d, conv3d], but got {type(conv_module)}")
 
 
-def get_bias(wrapper, param_dict):
-    if 'bias' in param_dict:
-        return param_dict['bias']
+def get_bias(wrapper, params_dict):
+    if 'bias' in params_dict:
+        assert params_dict['bias'] is not None
+        return params_dict['bias']
     elif wrapper.is_bias == 'Tensor':
-        return wrapper.module.original_bias
+        assert getattr(wrapper, "is_register_bias", False)
+        return wrapper.bias
     else:
         return None
+
 
 def set_bias(wrapper, fused_bias):
     return fused_bias if wrapper.is_bias == "Tensor" else torch.nn.Parameter(fused_bias, False)
 
 
-def fuse_modules(wrapper, *args, **kwargs):
+def fuse_modules(wrapper, params_dict, *args, **kwargs):
     fused_modules = wrapper.fused_modules
     types = tuple(type(module) for module in fused_modules)
 
@@ -96,11 +99,12 @@ def fuse_modules(wrapper, *args, **kwargs):
         raise TypeError(f"{types} is not supported for model fusion, please register it \
                                   in the _DEFAULT_OP_LIST_TO_FUSER_METHOD")
 
-    return fuse_method(wrapper, fused_modules, *args, **kwargs)
+    return fuse_method(wrapper, fused_modules, params_dict, *args, **kwargs)
 
 # ============ fuse method =============
-def fuse_conv_bn(wrapper, fused_modules, *args, **kwargs):
+def fuse_conv_bn(wrapper, fused_modules, params_dict, *args, **kwargs):
     q_param_dict = {k: v.target for k, v in wrapper.quantization_target_spaces.items() if v.type is TargetType.PARAMETER}
+    params_dict = params_dict.copy()
     bn_module = fused_modules[1]
     conv_module = wrapper.module
 
@@ -112,7 +116,7 @@ def fuse_conv_bn(wrapper, fused_modules, *args, **kwargs):
 
     with torch.no_grad():
         #compute bias
-        bias: Union[torch.Tensor, None] = get_bias(wrapper, q_param_dict)
+        bias: Union[torch.Tensor, None] = get_bias(wrapper, params_dict)
         output = conv_forward(*args, **kwargs, conv_module=conv_module, \
             weight=q_param_dict['weight'], bias=bias)
         #statistics mean and var when track_running_stats = False
@@ -136,7 +140,7 @@ def fuse_conv_bn(wrapper, fused_modules, *args, **kwargs):
     bn_b = bn_module.bias if bn_module.affine else torch.zeros_like(bn_rm)
     # conv weight and bias
     conv_weight = q_param_dict["weight"]
-    conv_bias = get_bias(wrapper, q_param_dict)
+    conv_bias = get_bias(wrapper, params_dict)
     if conv_bias is None:
         conv_bias = torch.zeros_like(bn_rm)
     # fuse weight and bias
@@ -144,14 +148,15 @@ def fuse_conv_bn(wrapper, fused_modules, *args, **kwargs):
     bn_var_rsqrt = torch.rsqrt(bn_var + bn_eps)
     fused_conv_w = conv_weight * (bn_w * bn_var_rsqrt).reshape(shape)
     fused_conv_b = (conv_bias - bn_rm) * bn_var_rsqrt * bn_w + bn_b
-    q_param_dict['weight'] = fused_conv_w
-    q_param_dict['bias'] = set_bias(wrapper, fused_conv_b)
+    params_dict['weight'] = fused_conv_w
+    params_dict['bias'] = set_bias(wrapper, fused_conv_b)
 
-    return q_param_dict, []
+    return params_dict, []
 
 
-def fuse_linear_bn(wrapper, fused_modules, *args, **kwargs):
+def fuse_linear_bn(wrapper, fused_modules, params_dict, *args, **kwargs):
     q_param_dict = {k: v.target for k, v in wrapper.quantization_target_spaces.items() if v.type is TargetType.PARAMETER}
+    params_dict = params_dict.copy()
     bn_module = fused_modules[1]
     linear_module = wrapper.module
 
@@ -162,7 +167,7 @@ def fuse_linear_bn(wrapper, fused_modules, *args, **kwargs):
         'the output features of Linear must match num_features of BatchNorm'
 
     with torch.no_grad():
-        bias = get_bias(wrapper, q_param_dict)
+        bias = get_bias(wrapper, params_dict)
         output = F.linear(*args, **kwargs, weight=q_param_dict['weight'], bias=bias)
         # statistic mean and var
         if not bn_module.track_running_stats:
@@ -183,7 +188,7 @@ def fuse_linear_bn(wrapper, fused_modules, *args, **kwargs):
     bn_b = bn_module.bias if bn_module.affine else torch.zeros_like(bn_rm)
     # linear weight
     l_weight = q_param_dict["weight"]
-    l_bias = get_bias(wrapper, q_param_dict)
+    l_bias = get_bias(wrapper, params_dict)
     if l_bias is None:
         l_bias = torch.zeros_like(bn_rm)
     bn_scale = bn_w * torch.rsqrt(bn_var + bn_eps)
@@ -191,46 +196,44 @@ def fuse_linear_bn(wrapper, fused_modules, *args, **kwargs):
     fused_lin_w = l_weight * bn_scale.unsqueeze(-1)
     fused_lin_b = (l_bias - bn_rm) * bn_scale + bn_b
 
-    q_param_dict['weight'] = fused_lin_w
-    q_param_dict['bias'] = set_bias(wrapper, fused_lin_b)
+    params_dict['weight'] = fused_lin_w
+    params_dict['bias'] = set_bias(wrapper, fused_lin_b)
 
-    return q_param_dict, []
+    return params_dict, []
 
 
-def fuse_linear_bn_relu(wrapper, fused_modules, *args, **kwargs):
+def fuse_linear_bn_relu(wrapper, fused_modules, params_dict, *args, **kwargs):
     assert len(fused_modules) == 3 and isinstance(fused_modules[2], torch.nn.ReLU)
     # firstly, fuse linear and bn
-    q_param_dict, _ = fuse_linear_bn(wrapper, fused_modules, *args, **kwargs)
+    params_dict, _ = fuse_linear_bn(wrapper, fused_modules, params_dict, *args, **kwargs)
 
-    return q_param_dict, [fused_modules[2]]
+    return params_dict, [fused_modules[2]]
 
 
-def fuse_conv_bn_relu(wrapper, fused_modules, *args, **kwargs):
+def fuse_conv_bn_relu(wrapper, fused_modules, params_dict, *args, **kwargs):
     assert len(fused_modules) == 3 and isinstance(fused_modules[2], torch.nn.ReLU)
     # firstly, fuse conv and bn
-    q_param_dict, _ = fuse_conv_bn(wrapper, fused_modules, *args, **kwargs)
+    params_dict, _ = fuse_conv_bn(wrapper, fused_modules, params_dict, *args, **kwargs)
 
-    return q_param_dict, [fused_modules[2]]
+    return params_dict, [fused_modules[2]]
 
 
-def fuse_conv_relu(wrapper, fused_modules, *args, **kwargs):
-    q_param_dict = {k: v.target for k, v in wrapper.quantization_target_spaces.items() if v.type is TargetType.PARAMETER}
+def fuse_conv_relu(wrapper, fused_modules, params_dict, *args, **kwargs):
     assert type(fused_modules[1]) == nn.ReLU
 
-    return q_param_dict, [fused_modules[1]]
+    return params_dict, [fused_modules[1]]
 
 
-def fuse_linear_relu(wrapper, fused_modules, *args, **kwargs):
-    q_param_dict = {k: v.target for k, v in wrapper.quantization_target_spaces.items() if v.type is TargetType.PARAMETER}
+def fuse_linear_relu(wrapper, fused_modules, params_dict, *args, **kwargs):
     assert type(fused_modules[1]) == nn.ReLU
 
-    return q_param_dict, [fused_modules[1]]
+    return params_dict, [fused_modules[1]]
 
-def fuse_bn_relu(wrapper, fused_modules, *args, **kwargs):
-    q_param_dict = {k: v.target for k, v in wrapper.quantization_target_spaces.items() if v.type is TargetType.PARAMETER}
+
+def fuse_bn_relu(wrapper, fused_modules, params_dict, *args, **kwargs):
     assert type(fused_modules[1]) == nn.ReLU
 
-    return q_param_dict, [fused_modules[1]]
+    return params_dict, [fused_modules[1]]
 
 
 _DEFAULT_OP_LIST_TO_FUSER_METHOD: Dict[Tuple, Union[nn.Sequential, Callable]] = {

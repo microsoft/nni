@@ -49,7 +49,16 @@ class TransformerOp(ast.NodeTransformer):
         return super().visit(node)
 
     def visit_Call(self, node: ast.Call):
-        if not isinstance(node.func, ast.Name) or node.func.id != 'patch_run':
+        if isinstance(node.func, ast.Name) and node.func.id == 'super' and len(node.args) == 0:
+            return self.generic_visit(ast.Call(
+                func=ast.Name(id='super', ctx=ast.Load()),
+                args=[
+                    ast.Attribute(value=ast.Name(id='self', ctx=ast.Load()), attr='__class__', ctx=ast.Load()),
+                    ast.Name(id='self', ctx=ast.Load()),
+                ],
+                keywords=node.keywords,
+            ))
+        elif not isinstance(node.func, ast.Name) or node.func.id != 'patch_run':
             self.is_transformed = True
             return self.generic_visit(ast.Call(
                 func=ast.Name(id='patch_run', ctx=ast.Load()),
