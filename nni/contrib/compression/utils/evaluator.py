@@ -564,26 +564,39 @@ class LightningEvaluator(Evaluator):
 
     def patch_optimizer_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
         assert isinstance(self.model, pl.LightningModule)
+        old_configure_optimizers = self.model.configure_optimizers
 
-        class OptimizerCallback(Callback):
-            def on_before_optimizer_step(self, trainer: pl.Trainer, pl_module: pl.LightningModule,
-                                         optimizer: Optimizer, opt_idx: int) -> None:
+        def patched_step_factory(old_step):
+            def patched_step(_, *args, **kwargs):
                 for task in before_step_tasks:
                     task()
-
-            def on_before_zero_grad(self, trainer: pl.Trainer, pl_module: pl.LightningModule, optimizer: Optimizer) -> None:
+                # call origin optimizer step method
+                output = old_step(*args, **kwargs)
                 for task in after_step_tasks:
                     task()
+                return output
+            return patched_step
 
-        old_configure_callbacks = self.model.configure_callbacks
+        if self._opt_returned_dicts:
+            def new_configure_optimizers(_):  # type: ignore
+                opt_lrs_dicts = old_configure_optimizers()
+                optimizer = [opt_lrs_dict['optimizer'] for opt_lrs_dict in opt_lrs_dicts][0]
+                optimizer.step = types.MethodType(patched_step_factory(optimizer.step), optimizer)
+                return opt_lrs_dicts
+        elif self._lr_scheduler_helpers:
+            def new_configure_optimizers(_):  # type: ignore
+                optimizers, lr_schedulers = old_configure_optimizers()
+                optimizer = optimizers[0]
+                optimizer.step = types.MethodType(patched_step_factory(optimizer.step), optimizer)
+                return optimizers, lr_schedulers
+        else:
+            def new_configure_optimizers(_):
+                optimizers = old_configure_optimizers()
+                optimizer = optimizers[0]
+                optimizer.step = types.MethodType(patched_step_factory(optimizer.step), optimizer)
+                return optimizers
 
-        def patched_configure_callbacks(_):
-            callbacks = old_configure_callbacks()
-            callbacks = list(callbacks) if isinstance(callbacks, Sequence) else [callbacks]
-            callbacks.append(OptimizerCallback())
-            return callbacks
-
-        self.model.configure_callbacks = types.MethodType(patched_configure_callbacks, self.model)
+        self.model.configure_optimizers = types.MethodType(new_configure_optimizers, self.model)
 
     def revert_optimizer_step(self):
         assert isinstance(self.model, pl.LightningModule)

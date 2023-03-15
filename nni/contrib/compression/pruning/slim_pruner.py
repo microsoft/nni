@@ -117,11 +117,7 @@ class SlimPruner(Pruner):
         params = [{"params": scaling_factors}]
         optimizer = Adam(params, 1e-2)
 
-        def optimizer_task():
-            optimizer.step()
-            optimizer.zero_grad()
-
-        evaluator.patch_optimizer_step(before_step_tasks=[optimizer_task], after_step_tasks=[])
+        evaluator.patch_optimizer_step(before_step_tasks=[optimizer.step], after_step_tasks=[optimizer.zero_grad])
 
     def _patch_loss(self, evaluator: Evaluator):
         def loss_patch(original_loss, batch):

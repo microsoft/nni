@@ -27,12 +27,12 @@ def create_model(model_type: str):
 
 
     if model_type == 'lightning':
-        model = SimpleLightningModel().to(device)
+        model = SimpleLightningModel()
         config_list_dict = {
             'pruning': pruning_lightning_config_list,
             'distillation': distil_lightning_config_list
         }
-        dummy_input = torch.rand(8, 1, 28, 28, device=device)
+        dummy_input = torch.rand(8, 1, 28, 28)
     elif model_type == 'pytorch':
         model = SimpleTorchModel().to(device)
         config_list_dict = {
