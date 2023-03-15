@@ -935,7 +935,7 @@ class ConcreteTracer(TracerBase):
         finally:
             # for cuda versions of pytorch, autograd.Function.apply should be reverted manually
             delattr(torch.autograd.Function, 'apply')
-            _retain_weight_consistency(self.root)
+            # _retain_weight_consistency(self.root)  # disable for test
             pass
 
         self.submodule_paths = None
