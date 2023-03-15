@@ -190,7 +190,7 @@ def _get_ts_config_class(platform: str) -> type[TrainingServiceConfig] | None:
         pkg = importlib.import_module(custom_ts_pkg)
         _config_class = pkg.nni_training_service_info.config_class
 
-    for cls in TrainingServiceConfig.__subclasses__():
+    for cls in _all_subclasses(TrainingServiceConfig):
         if cls.platform == platform:
             return cls
     return None
