@@ -69,25 +69,25 @@ import setup_ts
 
 release = os.environ.get('NNI_RELEASE')
 
-def _get_jupyter_lab_version():
-    try:
-        import jupyterlab
-        return jupyterlab.__version__
-    except ImportError:
-        return '3.x'
+#def _get_jupyter_lab_version():
+#    try:
+#        import jupyterlab
+#        return jupyterlab.__version__
+#    except ImportError:
+#        return '3.x'
 
-jupyter_lab_major_version = _get_jupyter_lab_version().split('.')[0]
+#jupyter_lab_major_version = _get_jupyter_lab_version().split('.')[0]
 
-def check_jupyter_lab_version():
-    environ_version = os.environ.get('JUPYTER_LAB_VERSION')
-
-    jupyter_lab_version = _get_jupyter_lab_version()
-
-    if environ_version:
-        if jupyter_lab_version.split('.')[0] != environ_version.split('.')[0]:
-            sys.exit(f'ERROR: To build a jupyter lab extension, run "JUPYTER_LAB_VERSION={jupyter_lab_version}", current: {environ_version} ')
-    elif jupyter_lab_version.split('.')[0] != '3':
-        sys.exit(f'ERROR: To build a jupyter lab extension, run "JUPYTER_LAB_VERSION={jupyter_lab_version}" first for nondefault version(3.x)')
+#def check_jupyter_lab_version():
+#    environ_version = os.environ.get('JUPYTER_LAB_VERSION')
+#
+#    jupyter_lab_version = _get_jupyter_lab_version()
+#
+#    if environ_version:
+#        if jupyter_lab_version.split('.')[0] != environ_version.split('.')[0]:
+#            sys.exit(f'ERROR: To build a jupyter lab extension, run "JUPYTER_LAB_VERSION={jupyter_lab_version}", current: {environ_version} ')
+#    elif jupyter_lab_version.split('.')[0] != '3':
+#        sys.exit(f'ERROR: To build a jupyter lab extension, run "JUPYTER_LAB_VERSION={jupyter_lab_version}" first for nondefault version(3.x)')
 
 def _setup():
     setuptools.setup(
@@ -146,9 +146,9 @@ def _setup():
 
 def _get_data_files():
     data_files = []
-    if jupyter_lab_major_version == '2':
-        extension_file = glob.glob("nni_node/jupyter-extension/extensions/nni-jupyter-extension*.tgz")
-        data_files = [('share/jupyter/lab/extensions', extension_file)]
+#    if jupyter_lab_major_version == '2':
+#        extension_file = glob.glob("nni_node/jupyter-extension/extensions/nni-jupyter-extension*.tgz")
+#        data_files = [('share/jupyter/lab/extensions', extension_file)]
     return data_files
 
 def _find_python_packages():
@@ -221,7 +221,7 @@ class BuildTs(Command):
         pass
 
     def run(self):
-        check_jupyter_lab_version()
+        #check_jupyter_lab_version()
         setup_ts.build(release)
 
 class Build(build):
@@ -229,7 +229,7 @@ class Build(build):
         if not release:
             sys.exit('Please set environment variable "NNI_RELEASE=<release_version>"')
 
-        check_jupyter_lab_version()
+        #check_jupyter_lab_version()
 
         if os.path.islink('nni_node/main.js'):
             sys.exit('A development build already exists. Please uninstall NNI and run "python3 setup.py clean".')

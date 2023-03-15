@@ -82,7 +82,8 @@ steps:
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
 
 - script: |
-    yarn --cwd ts/webui install
+    cd ts/webui
+    npm install
   displayName: Install Web UI dependencies
   condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'legacy')))
 

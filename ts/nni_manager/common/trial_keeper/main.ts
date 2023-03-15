@@ -100,7 +100,7 @@ async function main(): Promise<void> {
     }, 1000);
 }
 
-if (!process.argv[1].endsWith('mocha')) {  // the unit test imports all scripts and will reach here
+if (!process.argv[1].includes('mocha')) {  // the unit test imports all scripts and will reach here
     main().catch(error => {
         logger.critical(error);
         console.error(util.inspect(error));

@@ -45,7 +45,7 @@ const TrialConfigPanel = (props: LogPanelProps): any => {
         return blacklist.includes(key) ? undefined : val;
     };
     const profile = lodash.cloneDeep(EXPERIMENT.profile);
-    profile.execDuration = convertDuration(profile.execDuration);
+    profile.execDuration = convertDuration(profile.execDuration) as any; // FIXME
     const prettyWidth = innerWidth > 1400 ? 100 : 60;
     const showProfile = JSON.stringify(profile, filter, 2);
 

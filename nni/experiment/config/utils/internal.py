@@ -89,8 +89,8 @@ def fields(config: ConfigBase) -> list[dataclasses.Field]:
 
 def is_instance(value, type_hint) -> bool:
     try:
-        typeguard.check_type('_', value, type_hint)
-    except TypeError:
+        typeguard.check_type(value, type_hint)
+    except typeguard.TypeCheckError:
         return False
     return True
 

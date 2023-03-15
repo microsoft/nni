@@ -116,6 +116,8 @@ linkcheck_ignore = [
     r'https://docs\.nvidia\.com/deeplearning/',
     r'https://cla\.opensource\.microsoft\.com',
     r'https://www\.docker\.com/',
+
+    r'https://pytorch-lightning\.readthedocs\.io/en/stable/guides/data\.html'  # FIXME
 ]
 
 # Ignore all links located in release.rst
