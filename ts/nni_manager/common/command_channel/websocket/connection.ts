@@ -39,7 +39,7 @@ export class Connection extends EventEmitter {
         ws.on('pong', this.handlePong.bind(this));
     }
 
-    public setHeartbeatInterval(interval: number) {
+    public setHeartbeatInterval(interval: number): void {
         if (this.heartbeatTimer) {
             clearTimeout(this.heartbeatTimer);
         }
