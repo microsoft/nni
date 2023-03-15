@@ -51,8 +51,8 @@ export class HttpChannelServer implements CommandChannelServer {
         this.outgoingQueues.forEach(queue => { queue.clear(); });
     }
 
-    public getChannelUrl(channelId: string): string {
-        return globals.rest.getFullUrl('http', 'localhost', this.path, channelId);
+    public getChannelUrl(channelId: string, ip?: string): string {
+        return globals.rest.getFullUrl('http', ip ?? 'localhost', this.path, channelId);
     }
 
     public send(channelId: string, command: Command): void {
