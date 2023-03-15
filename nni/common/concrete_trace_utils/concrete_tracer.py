@@ -82,14 +82,23 @@ class ConcreteTracer(TracerBase):
         _orig_contains:             ([], False, None),
         _orig_index:                ([], False, None),
 
-        # force-traced function
+        # force-traced function (the factory functions of tensor creation)
+        torch.arange:               ([], True, None),
+        torch.empty:                ([], True, None),
+        torch.eye:                  ([], True, None),
+        torch.full:                 ([], True, None),
+        torch.linspace:             ([], True, None),
+        torch.logspace:             ([], True, None),
+        torch.ones:                 ([], True, None),
         torch.rand:                 ([], True, None),
-        torch.randn:                ([], True, None),
         torch.randint:              ([], True, None),
-        torch.rand_like:            ([], True, None),
-        torch.randn_like:           ([], True, None),
-        torch.randint_like:         ([], True, None),
+        torch.randn:                ([], True, None),
+        # torch.rand_like:          ([], True, None),  # seems that xxx_like will not directly call torch._TensorBase.xxx
+        # torch.randn_like:         ([], True, None),
+        # torch.randint_like:       ([], True, None),
         torch.randperm:             ([], True, None),
+        torch.tensor:               ([], True, None),
+        torch.zeros:                ([], True, None),
 
         # method
         Sequential.__getitem__:     ([], False, operator.getitem),
