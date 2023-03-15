@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import sys
 import inspect
+import logging
 import operator
 import functools
 import builtins
@@ -61,6 +62,8 @@ from .utils import (
     _orig_index,
 )
 
+
+_logger = logging.getLogger(__name__)
 HAS_VARSTUFF = inspect.CO_VARARGS | inspect.CO_VARKEYWORDS
 
 @compatibility(is_backward_compatible=True)
@@ -276,11 +279,19 @@ class ConcreteTracer(TracerBase):
 
     @compatibility(is_backward_compatible=True)
     def create_proxy(self, kind: str, target: Target, args: Tuple[Any, ...], kwargs: Dict[str, Any],
-                     name: Optional[str] = None, type_expr: Optional[Any] = None):
+                     name: Optional[str] = None, type_expr: Optional[Any] = None,
+                     proxy_factory_fn: Optional[Callable[[Node], Any]] = None):
         """
         similar to _symbolic_trace.Tracer.create_proxy.
         use the 'run_target' to actually execute the code, and store the value in 'value' field.
         """
+        args_ = self.create_arg(args)
+        kwargs_ = self.create_arg(kwargs)
+        assert isinstance(args_, tuple)
+        assert isinstance(kwargs_, dict)
+
+        node = self.create_node(kind, target, args_, kwargs_, name, type_expr)
+
         def upwrapper(obj: Any):
             while _orig_isinstance(obj, ep.ConcreteProxy):
                 obj = obj.value
@@ -291,13 +302,6 @@ class ConcreteTracer(TracerBase):
         # real value by execution
         value_unwrapped = self.run_target(kind, target, args_unwrapped, kwargs_unwrapped)
 
-        args_noded = self.create_arg(args)
-        kwargs_noded = self.create_arg(kwargs)
-
-        assert isinstance(args_noded, tuple)
-        assert isinstance(kwargs_noded, dict)
-
-        node = self.create_node(kind, target, args_noded, kwargs_noded, name, type_expr)
         proxy = self.proxy(value_unwrapped, node)
         self.node_to_originating_module[proxy.node] = self.current_module_qualified_name
         return proxy
@@ -931,6 +935,7 @@ class ConcreteTracer(TracerBase):
         finally:
             # for cuda versions of pytorch, autograd.Function.apply should be reverted manually
             delattr(torch.autograd.Function, 'apply')
+            _retain_weight_consistency(self.root)
             pass
 
         self.submodule_paths = None
@@ -1254,6 +1259,26 @@ def _create_wrapped_attr_for_middle_class(tracer: ConcreteTracer, clz, the_path_
         else:
             return tracer.create_proxy('get_attr', f'{the_path_of_middle_class[id(obj)]}.{attr}', (), {})
     return clz_getattr_wrapper
+
+def _retain_weight_consistency(root: torch.nn.Module):
+    _flag = 0
+    for module in root.modules():
+        for name, param in module.named_parameters():
+            if _orig_isinstance(param, ep.ConcreteProxy):
+                param: ep.ConcreteProxy     # pyright: reportGeneralTypeIssues=false
+                _logger.warning(f'Parameter {name} of {module} is a ConcreteProxy. Some weight may be modified inplace within forward().')
+                setattr(module, name, param.value)
+                _flag |= 1
+        for name, buffer in module.named_buffers():
+            if _orig_isinstance(buffer, ep.ConcreteProxy):
+                buffer: ep.ConcreteProxy    # pyright: reportGeneralTypeIssues=false
+                _logger.warning(f'Buffer {name} of {module} is a ConcreteProxy. Some buffer may be modified inplace within forward().')
+                setattr(module, name, buffer.value)
+                _flag |= 1
+    if _flag:
+        _logger.warning('Some weight or buffer is modified inplace within forward(). This may cause unexpected behavior.'
+                        ' ``concrete_trace`` may not guarantee the consistency of the traced graph.')
+    return root
 
 def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    concrete_args: Union[Dict[str, Any], Tuple],
