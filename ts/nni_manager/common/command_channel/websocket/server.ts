@@ -34,6 +34,7 @@ import type { Request } from 'express';
 import type { WebSocket } from 'ws';
 
 import type { Command } from 'common/command_channel/interface';
+import { generateChannelName } from 'common/command_channel/utils';
 import { Deferred } from 'common/deferred';
 import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
@@ -45,16 +46,15 @@ type ReceiveCallback = (channelId: string, command: Command) => void;
 
 export class WsChannelServer extends EventEmitter {
     private channels: Map<string, WsChannel> = new Map();
-    private ip: string;
     private log: Logger;
     private path: string;
     private receiveCallbacks: ReceiveCallback[] = [];
 
-    constructor(name: string, urlPath: string, ip?: string) {
+    constructor(urlPath: string, name?: string) {
         super();
-        this.log = getLogger(`WsChannelServer.${name}`);
+        const name_ = name ?? generateChannelName(urlPath);
+        this.log = getLogger(`WsChannelServer.${name_}`);
         this.path = urlPath;
-        this.ip = ip ?? 'localhost';
     }
 
     public async start(): Promise<void> {
@@ -67,7 +67,7 @@ export class WsChannelServer extends EventEmitter {
         const deferred = new Deferred<void>();
 
         this.channels.forEach((channel, channelId) => {
-            channel.on('close', (_reason) => {
+            channel.onClose(_reason => {
                 this.channels.delete(channelId);
                 if (this.channels.size === 0) {
                     deferred.resolve();
@@ -86,8 +86,8 @@ export class WsChannelServer extends EventEmitter {
         return deferred.promise;
     }
 
-    public getChannelUrl(channelId: string): string {
-        return globals.rest.getFullUrl('ws', this.ip, this.path, channelId);
+    public getChannelUrl(channelId: string, ip?: string): string {
+        return globals.rest.getFullUrl('ws', ip ?? 'localhost', this.path, channelId);
     }
 
     public send(channelId: string, command: Command): void {
@@ -104,7 +104,7 @@ export class WsChannelServer extends EventEmitter {
         // because by this way it can detect and warning if a command is never listened
         this.receiveCallbacks.push(callback);
         for (const [channelId, channel] of this.channels) {
-            channel.onCommand(command => { callback(channelId, command); });
+            channel.onReceive(command => { callback(channelId, command); });
         }
     }
 
@@ -118,26 +118,29 @@ export class WsChannelServer extends EventEmitter {
 
         if (this.channels.has(channelId)) {
             this.log.warning(`Channel ${channelId} reconnecting, drop previous connection`);
-            this.channels.get(channelId)!.setConnection(ws);
+            this.channels.get(channelId)!.setConnection(ws, false);
             return;
         }
 
-        const channel = new WsChannel(channelId, ws, heartbeatInterval);
+        const channel = new WsChannel(channelId);
         this.channels.set(channelId, channel);
 
-        channel.on('close', reason => {
+        channel.onClose(reason => {
             this.log.debug(`Connection ${channelId} closed:`, reason);
             this.channels.delete(channelId);
         });
 
-        channel.on('error', error => {
+        channel.onError(error => {
             this.log.error(`Connection ${channelId} error:`, error);
             this.channels.delete(channelId);
         });
 
         for (const cb of this.receiveCallbacks) {
-            channel.on('command', command => { cb(channelId, command); });
+            channel.onReceive(command => { cb(channelId, command); });
         }
+
+        channel.enableHeartbeat(heartbeatInterval);
+        channel.setConnection(ws, false);
 
         this.emit('connection', channelId, channel);
     }

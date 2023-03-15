@@ -63,6 +63,10 @@ export class HttpChannelServer implements CommandChannelServer {
         this.emitter.on('receive', callback);
     }
 
+    public onConnection(_callback: (channelId: string, channel: any) => void): void {
+        throw new Error('Not implemented');
+    }
+
     private handleGet(request: Request, response: Response): void {
         const channelId = request.params['channel'];
         const promise = this.getOutgoingQueue(channelId).asyncPop(timeoutMilliseconds);

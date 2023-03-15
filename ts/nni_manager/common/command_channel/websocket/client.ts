@@ -19,6 +19,7 @@ import { setTimeout } from 'node:timers/promises';
 
 import { WebSocket } from 'ws';
 
+import { generateChannelName } from 'common/command_channel/utils';
 import { Logger, getLogger } from 'common/log';
 import { WsChannel } from './channel';
 
@@ -35,18 +36,17 @@ export class WsChannelClient extends WsChannel {
      *  The name is used for better logging.
      **/
     constructor(url: string, name?: string) {
-        const name_ = name ?? generateName(url);
+        const name_ = name ?? generateChannelName(url);
         super(name_);
         this.logger = getLogger(`WsChannelClient.${name_}`);
         this.url = url;
-        this.on('lost', this.reconnect.bind(this));
+        this.onLost(this.reconnect.bind(this));
     }
 
     public async connect(): Promise<void> {
         this.logger.debug('Connecting to', this.url);
         const ws = new WebSocket(this.url, { maxPayload });
-        this.setConnection(ws);
-        await events.once(ws, 'open');
+        await this.setConnection(ws, true),
         this.logger.debug('Connected');
     }
 
@@ -54,7 +54,7 @@ export class WsChannelClient extends WsChannel {
      *  Alias of `close()`.
      **/
     public async disconnect(reason?: string): Promise<void> {
-        this.close(reason ?? 'client disconnecting');
+        this.close(reason ?? 'client intentionally disconnect');
     }
 
     private async reconnect(): Promise<void> {
@@ -82,16 +82,6 @@ export class WsChannelClient extends WsChannel {
         }
 
         this.logger.error('Conenction lost. Cannot reconnect');
-        this.emit('error', new Error('Connection lost'));
+        this.emitter.emit('__error', new Error('Connection lost'));
     }
-}
-
-function generateName(url: string): string {
-    const parts = url.split('/');
-    for (let i = parts.length - 1; i > 1; i--) {
-        if (parts[i]) {
-            return parts[i];
-        }
-    }
-    return 'anonymous';
 }
