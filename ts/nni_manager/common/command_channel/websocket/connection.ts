@@ -25,9 +25,9 @@ export class Connection extends EventEmitter {
     private heartbeatTimer: NodeJS.Timer | null = null;
     private log: Logger;
     private missingPongs: number = 0;
-    private ws: WebSocket;
+    private ws: WebSocket;  // NOTE: used in unit test
 
-    constructor(name: string, ws: WebSocket, commandEmitter: EventEmitter, heartbeatInterval: number | null) {
+    constructor(name: string, ws: WebSocket, commandEmitter: EventEmitter) {
         super();
         this.log = getLogger(`WsConnection.${name}`);
         this.ws = ws;
@@ -37,10 +37,13 @@ export class Connection extends EventEmitter {
         ws.on('error', this.handleError.bind(this));
         ws.on('message', this.handleMessage.bind(this));
         ws.on('pong', this.handlePong.bind(this));
+    }
 
-        if (heartbeatInterval) {
-            this.heartbeatTimer = setInterval(this.heartbeat.bind(this), heartbeatInterval);
+    public setHeartbeatInterval(interval: number) {
+        if (this.heartbeatTimer) {
+            clearTimeout(this.heartbeatTimer);
         }
+        this.heartbeatTimer = setInterval(this.heartbeat.bind(this), interval);
     }
 
     public async close(reason: string): Promise<void> {

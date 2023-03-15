@@ -39,8 +39,6 @@ import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
 import { WsChannel } from './channel';
 
-let heartbeatInterval: number = 5000;
-
 type ReceiveCallback = (channelId: string, command: Command) => void;
 
 export class WsChannelServer extends EventEmitter {
@@ -75,11 +73,10 @@ export class WsChannelServer extends EventEmitter {
         });
 
         // wait for at most 5 seconds
-        // use heartbeatInterval here for easier unit test
         setTimeout(() => {
             this.log.debug('Shutdown timeout. Stop waiting following channels:', Array.from(this.channels.keys()));
             deferred.resolve();
-        }, heartbeatInterval);
+        }, 5000);
 
         return deferred.promise;
     }
@@ -137,15 +134,9 @@ export class WsChannelServer extends EventEmitter {
             channel.onReceive(command => { cb(channelId, command); });
         }
 
-        channel.enableHeartbeat(heartbeatInterval);
+        channel.enableHeartbeat();
         channel.setConnection(ws, false);
 
         this.emit('connection', channelId, channel);
-    }
-}
-
-export namespace UnitTestHelpers {
-    export function setHeartbeatInterval(ms: number): void {
-        heartbeatInterval = ms;
     }
 }

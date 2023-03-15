@@ -46,11 +46,12 @@ interface QueuedCommand {
 
 export class WsChannel implements CommandChannel {
     private closing: boolean = false;
-    private connection: Connection | null = null;
+    private connection: Connection | null = null;  // NOTE: used in unit test
     private epoch: number = -1;
     private heartbeatInterval: number | null = null;
     private log: Logger;
     private queue: QueuedCommand[] = [];
+    private terminateTimer: NodeJS.Timer | null = null;
 
     protected emitter: EventEmitter = new EventEmitter();
 
@@ -63,8 +64,12 @@ export class WsChannel implements CommandChannel {
     }
 
     // internal, don't use
-    // must be called after enableHeartbeat()
     public async setConnection(ws: WebSocket, waitOpen: boolean): Promise<void> {
+        if (this.terminateTimer) {
+            clearTimeout(this.terminateTimer);
+            this.terminateTimer = null;
+        }
+
         this.connection?.terminate('new epoch start');
         this.newEpoch();
         this.log.debug(`Epoch ${this.epoch} start`);
@@ -89,7 +94,8 @@ export class WsChannel implements CommandChannel {
     }
 
     public enableHeartbeat(interval?: number): void {
-        this.heartbeatInterval = interval ?? 5000;
+        this.heartbeatInterval = interval ?? defaultHeartbeatInterval;
+        this.connection?.setHeartbeatInterval(this.heartbeatInterval);
     }
 
     public close(reason: string): void {
@@ -166,7 +172,10 @@ export class WsChannel implements CommandChannel {
 
     private configConnection(ws: WebSocket): Connection {
         const connName = this.epoch ? `${this.name}.${this.epoch}` : this.name;
-        const conn = new Connection(connName, ws, this.emitter, this.heartbeatInterval);
+        const conn = new Connection(connName, ws, this.emitter);
+        if (this.heartbeatInterval) {
+            conn.setHeartbeatInterval(this.heartbeatInterval);
+        }
 
         conn.on('bye', reason => {
             this.log.debug('Peer intentionally closing:', reason);
@@ -212,6 +221,33 @@ export class WsChannel implements CommandChannel {
         this.log.warning('Connection closed unexpectedly:', reason);
         this.newEpoch();
         this.emitter.emit('__lost');
+
+        if (!this.terminateTimer) {
+            this.terminateTimer = setTimeout(() => {
+                if (!this.closing) {
+                    this.terminate('have not reconnected in 30s');
+                }
+            }, terminateTimeout);
+        }
+
         // the reconnect logic is in client subclass
+    }
+}
+
+let defaultHeartbeatInterval: number = 5000;
+let terminateTimeout: number = 30000;
+
+export namespace UnitTestHelper {
+    export function setHeartbeatInterval(ms: number): void {
+        defaultHeartbeatInterval = ms;
+    }
+
+    export function setTerminateTimeout(ms: number): void {
+        terminateTimeout = ms;
+    }
+
+    export function reset(): void {
+        defaultHeartbeatInterval = 5000;
+        terminateTimeout = 30000;
     }
 }
