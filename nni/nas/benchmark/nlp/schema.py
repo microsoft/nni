@@ -11,6 +11,7 @@ from nni.nas.benchmark.constants import DATABASE_DIR
 
 db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nlp.db'), autoconnect=True)
 
+
 class NlpTrialConfig(Model):
     """
     Trial config for NLP. epoch_num is fixed at 50.
@@ -37,6 +38,7 @@ class NlpTrialConfig(Model):
 
     class Meta:
         database = db
+
 
 class NlpTrialStats(Model):
     """
@@ -65,6 +67,7 @@ class NlpTrialStats(Model):
     class Meta:
         database = db
 
+
 class NlpIntermediateStats(Model):
     """
     Computation statistics for NAS-NLP-Benchmark.
@@ -92,4 +95,3 @@ class NlpIntermediateStats(Model):
 
     class Meta:
         database = db
-    

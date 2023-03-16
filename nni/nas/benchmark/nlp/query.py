@@ -7,6 +7,7 @@ from peewee import fn
 from playhouse.shortcuts import model_to_dict
 from .schema import NlpTrialStats, NlpTrialConfig
 
+
 def query_nlp_trial_stats(arch, dataset, reduction=None, include_intermediates=False):
     """
     Query trial stats of NLP benchmark given conditions, including config(arch + dataset) and training results after 50 epoch.

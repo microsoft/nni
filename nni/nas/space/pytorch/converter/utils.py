@@ -22,7 +22,7 @@ def build_python_name(prefix, name):
         name = '.'.join(name)
     if prefix:
         return '{}.{}'.format(prefix, name)
-    else: # predix could be None
+    else:  # predix could be None
         return name
 
 
@@ -236,7 +236,6 @@ def flatten_model_graph_without_layerchoice(ir_model: GraphModelSpace):
                                 head=(id_to_new_node[output_node_edge.head.id], output_node_edge.head_slot),
                                 tail=(out_edge.tail, out_edge.tail_slot))
 
-
                 for edge in node_graph.edges:
                     if edge.head == node_graph.input_node or edge.tail == node_graph.output_node:
                         continue
@@ -256,4 +255,3 @@ def flatten_model_graph_without_layerchoice(ir_model: GraphModelSpace):
     # remove subgraphs
     new_ir_model.graphs = {new_ir_model._root_graph_name: new_ir_model.root_graph}
     return new_ir_model
-

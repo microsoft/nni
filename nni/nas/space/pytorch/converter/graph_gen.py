@@ -259,7 +259,7 @@ class GraphConverter:
                     return f'({value}.item())'
                 else:
                     raise RuntimeError(f'Unsupported op type {tensor.node().kind()} in if condition, '
-                                        'you are suggested to decorate the corresponding class with "@basic_unit".')
+                                       'you are suggested to decorate the corresponding class with "@basic_unit".')
             expr = _generate_expr(cond_tensor)
             return eval(expr)
 
@@ -393,7 +393,7 @@ class GraphConverter:
                 assert hasattr(script_module, node.s('name'))
                 # TODO: support non member functions
                 assert node.inputsAt(0).debugName() == 'self'
-                script_method = getattr(script_module, node.s('name')) # <class 'torch._C.ScriptMethod'>
+                script_method = getattr(script_module, node.s('name'))  # <class 'torch._C.ScriptMethod'>
 
                 # step #1: generate graph ir for this method
                 method_ir_graph = Graph(model=ir_model, graph_id=-100, name='temp_graph', _internal=True)
@@ -521,7 +521,6 @@ class GraphConverter:
             # %x.1 : Tensor): return (%x.1)
             # add an edge from head to tail to handle this situation
             ir_graph.add_edge(head=(ir_graph.input_node, 0), tail=(ir_graph.output_node, None))
-
 
     def merge_aten_slices(self, ir_graph):
         """
@@ -710,6 +709,7 @@ class GraphConverterWithShape(GraphConverter):
            If forward path of candidates depends on input data, then wrong path will be traced.
            This will result in incomplete shape info.
     """
+
     def convert_module(self, script_module, module, module_name, ir_model, dummy_input):
         module.eval()
 

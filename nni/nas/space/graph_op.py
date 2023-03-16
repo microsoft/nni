@@ -105,11 +105,11 @@ class PyTorchOperation(Operation):
             subclass_name = 'FunctionalOperator'
         for subclass in cls.__subclasses__():
             if hasattr(subclass, '_ori_type_name') and \
-                subclass_name in cast(Any, subclass)._ori_type_name:
+                    subclass_name in cast(Any, subclass)._ori_type_name:
                 return subclass
         for subclass in cls.__subclasses__():
             if hasattr(subclass, '_artificial_op_name') and \
-                subclass_name in cast(Any, subclass)._artificial_op_name:
+                    subclass_name in cast(Any, subclass)._artificial_op_name:
                 return subclass
         return cls
 
@@ -228,6 +228,7 @@ class Cell(PyTorchOperation):
 
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = self.{field}({", ".join(inputs)})'
+
 
 class _IOPseudoOperation(Operation):
     """

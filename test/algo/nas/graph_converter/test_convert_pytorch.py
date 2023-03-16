@@ -205,24 +205,30 @@ class TestPytorch(unittest.TestCase, ConvertMixin):
 
     @unittest.skip('does not support `if A and/or B`')
     def test_keypoint_rcnn(self):
-        from .inject_nn import inject_pytorch_nn
-        inject_pytorch_nn()
+        from .inject_nn import inject_pytorch_nn, remove_inject_pytorch_nn
+        try:
+            inject_pytorch_nn()
 
-        model = torchvision.models.detection.keypoint_rcnn.keypointrcnn_resnet50_fpn(pretrained=True, min_size=200,
-                                                                                     max_size=300)
-        images, test_images = self.get_test_images()
-        self.run_test(model, (images,))
-        dummy_images = [torch.ones(3, 100, 100) * 0.3]
-        self.run_test(model, (dummy_images,))
+            model = torchvision.models.detection.keypoint_rcnn.keypointrcnn_resnet50_fpn(pretrained=True, min_size=200,
+                                                                                        max_size=300)
+            images, test_images = self.get_test_images()
+            self.run_test(model, (images,))
+            dummy_images = [torch.ones(3, 100, 100) * 0.3]
+            self.run_test(model, (dummy_images,))
+        finally:
+            remove_inject_pytorch_nn()
 
     def test_shufflenet_v2_dynamic_axes(self):
-        from .inject_nn import inject_pytorch_nn
-        inject_pytorch_nn()
+        from .inject_nn import inject_pytorch_nn, remove_inject_pytorch_nn
+        try:
+            inject_pytorch_nn()
 
-        model = torchvision.models.shufflenet_v2_x0_5(pretrained=True)
-        dummy_input = torch.randn(1, 3, 224, 224, requires_grad=True)
-        test_inputs = torch.randn(3, 3, 224, 224, requires_grad=True)
-        self.run_test(model, (dummy_input,))
+            model = torchvision.models.shufflenet_v2_x0_5(pretrained=True)
+            dummy_input = torch.randn(1, 3, 224, 224, requires_grad=True)
+            test_inputs = torch.randn(3, 3, 224, 224, requires_grad=True)
+            self.run_test(model, (dummy_input,))
+        finally:
+            remove_inject_pytorch_nn()
 
     @unittest.skip('')
     def test_word_language_model_RNN_TANH(self):

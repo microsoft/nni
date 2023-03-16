@@ -290,7 +290,9 @@ class ProxylessMixedInput(DifferentiableMixedInput):
             self._sampled = memo[self.label]
         else:
             probs = self._softmax(self._arch_alpha)
-            sample = torch.multinomial(probs, self.n_chosen).cpu().numpy().tolist()
+            # TODO: support real n_chosen is None
+            n_chosen = self.n_chosen or 1
+            sample = torch.multinomial(probs, n_chosen).cpu().numpy().tolist()
             self._sampled = sample
 
         return {self.label: self._sampled}
@@ -315,8 +317,9 @@ class ProxylessMixedRepeat(Repeat, BaseSuperNetModule):
         assert isinstance(depth, Categorical)
         assert len(blocks) == self.max_depth
         for d in range(self.min_depth, self.max_depth):
-            assert isinstance(blocks[d], ProxylessMixedLayer)
-            assert len(blocks[d]._arch_alpha) == 2
+            block = blocks[d]
+            assert isinstance(block, ProxylessMixedLayer)
+            assert len(block._arch_alpha) == 2
 
     def resample(self, memo):
         """Resample each individual depths."""
@@ -324,7 +327,8 @@ class ProxylessMixedRepeat(Repeat, BaseSuperNetModule):
             return {}
         depth = self.min_depth
         for d in range(self.min_depth, self.max_depth):
-            layer = cast(ProxylessMixedLayer, self.blocks[d])
+            layer = self.blocks[d]
+            assert isinstance(layer, ProxylessMixedLayer)
             # The depth-related choices must be sampled here.
             memo.pop(layer.label, None)
             sample = layer.resample(memo)
@@ -334,6 +338,7 @@ class ProxylessMixedRepeat(Repeat, BaseSuperNetModule):
 
     def export(self, memo):
         """Return the most likely to be chosen depth choice."""
+        sample = {}
         for _ in range(1000):
             sample = self.resample(memo)
             if sample[self.depth_choice.label] in self.depth_choice.values:
@@ -351,7 +356,9 @@ class ProxylessMixedRepeat(Repeat, BaseSuperNetModule):
             layer = cast(ProxylessMixedLayer, self.blocks[d])
             categoricals.append(MutableExpression.to_int(layer.choice))
             weights[layer.label] = layer._softmax(layer._arch_alpha)
-        return {self.depth_choice.label: dict(traverse_all_options(sum(categoricals) + self.min_depth, weights))}
+        return {self.depth_choice.label: dict(
+            traverse_all_options(cast(MutableExpression[int], sum(categoricals) + self.min_depth), weights)
+        )}
 
     def check_contains(self, sample: Sample) -> SampleValidationError | None:
         # Check depth choice
@@ -365,6 +372,7 @@ class ProxylessMixedRepeat(Repeat, BaseSuperNetModule):
             if i < self.min_depth:
                 exception = self._check_any_module_contains(block, sample, str(i))
             elif i < depth:
+                assert isinstance(block, ProxylessMixedLayer)
                 exception = self._check_any_module_contains(block['1'], sample, str(i))
             else:
                 break
@@ -378,6 +386,7 @@ class ProxylessMixedRepeat(Repeat, BaseSuperNetModule):
             if i < self.min_depth:
                 blocks.append(recursive_freeze(block, sample)[0])
             elif i < depth:
+                assert isinstance(block, ProxylessMixedLayer)
                 blocks.append(recursive_freeze(block['1'], sample)[0])
             else:
                 break

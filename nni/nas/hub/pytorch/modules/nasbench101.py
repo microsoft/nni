@@ -310,7 +310,7 @@ class NasBench101Cell(MutableModule):
                             op_candidates: Union[Dict[str, Callable[[int], nn.Module]], List[Callable[[int], nn.Module]]],
                             in_features: int, out_features: int, projection: Callable[[int, int], nn.Module],
                             max_num_nodes: int = 7, max_num_edges: int = 9, label: Optional[Union[str, label_scope]] = None):
-        with (label if isinstance(label, label_scope) else label_scope(label)) as scope:
+        with (label if isinstance(label, label_scope) else label_scope(label)):
             # Freeze number of nodes.
             num_nodes = cls._num_nodes_discrete(max_num_nodes)
             num_nodes_frozen = num_nodes.freeze(sample)
@@ -436,15 +436,15 @@ class NasBench101CellConstraint(Constraint):
         yield from self.num_nodes.leaf_mutables(is_leaf)
         for operator in self.operations:
             yield from operator.leaf_mutables(is_leaf)
-        for input in self.inputs:
-            yield from input.leaf_mutables(is_leaf)
+        for inp in self.inputs:
+            yield from inp.leaf_mutables(is_leaf)
         yield self
 
     def check_contains(self, sample: Sample) -> Optional[SampleValidationError]:
         # Check num_nodes
         err = self.num_nodes.check_contains(sample)
         if err is not None:
-            err.path.append('num_nodes')
+            err.paths.append('num_nodes')
             return err
         num_nodes = self.num_nodes.freeze(sample)  # must succeed
         assert num_nodes >= 2

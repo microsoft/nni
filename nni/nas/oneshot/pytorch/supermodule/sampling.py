@@ -377,6 +377,7 @@ class PathSamplingCell(BaseSuperNetModule):
                 op_candidates_lc = module.ops[-1][-1]  # type: ignore
                 assert isinstance(op_candidates_lc, LayerChoice)
                 candidates = op_candidates_lc.candidates
+
                 def _copy(_, __, ___, op):
                     return copy.deepcopy(op)
 

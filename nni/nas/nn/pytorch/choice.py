@@ -6,12 +6,12 @@
 
 import functools
 import warnings
-from typing import (Any, List, Optional, Dict, Union, Tuple, cast)
+from typing import (Any, Iterator, List, Optional, Dict, Union, Tuple, cast)
 from typing_extensions import Literal
 
 import torch
 import torch.nn as nn
-from nni.mutable import Categorical, CategoricalMultiple, Sample, SampleValidationError, ensure_frozen, label_scope
+from nni.mutable import Categorical, CategoricalMultiple, Sample, SampleValidationError, ensure_frozen
 
 from .base import MutableModule, recursive_freeze
 
@@ -102,7 +102,7 @@ class LayerChoice(MutableModule):
     """
 
     def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,
-                 weights: Optional[List[float]] = None, label: Union[str, label_scope, None] = None):
+                 weights: Optional[List[float]] = None, label: Optional[str] = None):
         super().__init__()
 
         _names, _modules = self._init_names(candidates)
@@ -130,10 +130,10 @@ class LayerChoice(MutableModule):
         if all(isinstance(name, int) for name in self.names) and self.names == list(range(len(self))):
             return list(self)
         else:
-            return {name: self[name] for name in self.names}
+            return {cast(str, name): self[name] for name in self.names}
 
     @staticmethod
-    def _inner_choice(names: List[str], weights: Optional[List[float]], label: Union[str, label_scope, None]) -> Categorical:
+    def _inner_choice(names: List[str], weights: Optional[List[float]], label: Optional[str]) -> Categorical:
         return Categorical(names, weights=weights, label=label)
 
     @staticmethod
@@ -169,7 +169,7 @@ class LayerChoice(MutableModule):
                 exception.paths.append(sample_val)
                 return exception
         else:
-            for name, submodule in MutableModule.named_mutable_descendants(module):
+            for name, submodule in MutableModule.named_mutable_descendants(module):  # type: ignore
                 exception = submodule.check_contains(sample)
                 if exception is not None:
                     exception.paths.append(name)
@@ -210,8 +210,8 @@ class LayerChoice(MutableModule):
     def __len__(self):
         return len(self.names)
 
-    def __iter__(self):
-        return map(lambda name: self._modules[str(name)], self.names)
+    def __iter__(self) -> Iterator[nn.Module]:
+        return map(lambda name: cast(nn.Module, self._modules[str(name)]), self.names)
 
     def forward(self, x):
         # The input argument can be arbitrary positional / keyword arguments,
@@ -280,18 +280,20 @@ class InputChoice(MutableModule):
         return ChosenInputs(sample_val, reduction=reduction)
 
     @staticmethod
-    def _inner_choice(n_candidates: int, n_chosen: int, weights: Optional[List[float]], label: str) -> CategoricalMultiple:
+    def _inner_choice(n_candidates: int, n_chosen: Optional[int],
+                      weights: Optional[List[float]], label: Optional[str]) -> CategoricalMultiple:
         return CategoricalMultiple(range(n_candidates), n_chosen=n_chosen, weights=weights, label=label)
 
     def __init__(self, n_candidates: int, n_chosen: Optional[int] = 1,
-                 reduction: str = 'sum', *,
+                 reduction: ReductionType = 'sum', *,
                  weights: Optional[List[float]] = None, label: Optional[str] = None):
         super().__init__()
+        if reduction not in ['mean', 'concat', 'sum', 'none']:
+            raise ValueError('reduction must be one of mean, concat, sum, none')
         self.n_candidates = n_candidates
         self.n_chosen = n_chosen
-        self.reduction = reduction
+        self.reduction: ReductionType = reduction
         self.weights = weights or [1 / n_candidates for _ in range(n_candidates)]
-        assert self.reduction in ['mean', 'concat', 'sum', 'none']
 
         self.choice = self._inner_choice(n_candidates, n_chosen, weights, label)
         self.add_mutable(self.choice)
@@ -321,9 +323,9 @@ class InputChoice(MutableModule):
     def extra_repr(self):
         return f'n_candidates={self.n_candidates}, n_chosen={self.n_chosen}, reduction={repr(self.reduction)}, label={repr(self.label)})'
 
-    @torch.jit.ignore
+    @torch.jit.ignore  # type: ignore
     def _tensor_reduction(self, candidate_inputs: List[torch.Tensor]) -> Optional[torch.Tensor]:
-        return ChosenInputs._tensor_reduction(self.reduction, [candidate_inputs[idx] for idx in self._dry_run_choice])
+        return ChosenInputs._tensor_reduction(self.reduction, [candidate_inputs[idx] for idx in self._dry_run_choice])  # type: ignore
 
 
 class ChosenInputs(nn.Module):
@@ -351,10 +353,10 @@ class ChosenInputs(nn.Module):
         """
         Compute the reduced input based on ``chosen`` and ``reduction``.
         """
-        return self._tensor_reduction(self.reduction, [candidate_inputs[i] for i in self.chosen])
+        return self._tensor_reduction(self.reduction, [candidate_inputs[i] for i in self.chosen])  # type: ignore
 
     @staticmethod
-    def _tensor_reduction(reduction_type: str, tensor_list: List[torch.Tensor]) -> Optional[torch.Tensor]:
+    def _tensor_reduction(reduction_type: str, tensor_list: List[torch.Tensor]) -> Union[List[torch.Tensor], torch.Tensor, None]:
         if reduction_type == 'none':
             return tensor_list
         if not tensor_list:
@@ -362,9 +364,9 @@ class ChosenInputs(nn.Module):
         if len(tensor_list) == 1:
             return tensor_list[0]
         if reduction_type == 'sum':
-            return sum(tensor_list)
+            return cast(torch.Tensor, sum(tensor_list))
         if reduction_type == 'mean':
-            return sum(tensor_list) / len(tensor_list)
+            return cast(torch.Tensor, sum(tensor_list) / len(tensor_list))
         if reduction_type == 'concat':
             return torch.cat(tensor_list, dim=1)
         raise ValueError(f'Unrecognized reduction policy: "{reduction_type}"')
