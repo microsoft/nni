@@ -8,6 +8,7 @@ import inspect
 from typing import Any, Callable, Dict, List, Tuple, Type, Union, Literal
 
 import torch
+import torch.nn as nn
 from torch import Tensor
 
 from .apply_method import pruning_apply_methods, quant_apply_methods
@@ -20,13 +21,22 @@ from .target_space import (
     QuantizationTargetSpace,
     DistillationTargetSpace
 )
+from .fuse_modules import fuse_modules
+from ..utils import (
+    check_bias,
+    update_config,
+    validate_fused_modules_config,
+    get_fused_module_list,
+    get_nested_attr
+)
 
 _logger = logging.getLogger(__name__)
 OUTPUT_FORMAT = Union[Tensor, Any, Tuple[Tensor, Any], Dict[str, Union[Tensor, Any]]]
 
 
 class ModuleWrapper(torch.nn.Module):
-    def __init__(self, module: torch.nn.Module, module_name: str, config: Dict[str, Dict[str, Any]] | None = None):
+    def __init__(self, module: torch.nn.Module, module_name: str, config: Dict[str, Dict[str, Any]] | None = None, \
+                 fused_modules: List[torch.nn.Module] | None = None):
         """
         Two changes will be done during initialization. One is an attribute named ``_nni_wrapper`` will be set to original module,
         this attribute points to this wrapper in the original module.
@@ -42,6 +52,8 @@ class ModuleWrapper(torch.nn.Module):
             The name of the module in the original model.
         config
             The config is a dict which contains keys (not required): ``pruning``, ``quantization``, ``distillation``.
+        fused_modules:
+            The List contains a series module names which need to fuse.
         """
         super().__init__()
 
@@ -52,6 +64,7 @@ class ModuleWrapper(torch.nn.Module):
         self.module_forward = self.module.forward
         self.name = module_name
         self.config = config if config is not None else {}
+        assert all(k in ['pruning', 'quantization', 'distillation'] for k in self.config)
 
         # the arguments' name of self.module.forward
         self._input_args_spec = inspect.getfullargspec(self.module.forward)
@@ -73,6 +86,34 @@ class ModuleWrapper(torch.nn.Module):
         # more track functions can be registered by ``ModuleWrapper.register_track_info_func``.
         # An example please refer ``track_target_shape``.
         self._track_funcs: List[Callable[[ModuleWrapper, str, Tensor], None]] = [track_target_shape]
+        self.fused_modules = fused_modules if fused_modules is not None else []
+
+    def register_fusion_info(self):
+        self.is_register_bias = False
+        if len(self.fused_modules) > 0:
+            self.is_bias = check_bias(self.module) # used for fold_bn
+            assert self.is_bias in ['Tensor', 'None'], \
+                f'For bias only Tensor and None are supported, but got {self.is_bias}'
+            self.register_bias()
+
+    def register_bias(self):
+        if isinstance(self.module, (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)):
+            return
+        types = {type(module) for module in self.fused_modules[1:]}
+        intersec_types = types.intersection({nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d})
+        if self.is_bias == "Tensor" and not hasattr(self, 'bias') and len(intersec_types) > 0:
+            bias = self.module.bias
+            self.is_register_bias = True
+            if isinstance(bias, nn.parameter.Parameter):
+                self.register_parameter('bias', torch.nn.Parameter(bias.detach().clone()))
+                delattr(self.module, 'bias')
+                self.module.register_buffer('bias', bias.data)
+            elif isinstance(bias, torch.Tensor):
+                self.register_buffer('bias', bias.detach().clone())
+                delattr(self.module, 'bias')
+                self.module.register_buffer('bias', bias.detach().clone())
+            else:
+                raise ValueError(f"The bias of the {self.name} is None, no need to register it.")
 
     def extra_repr(self) -> str:
         return f'module={self.module.__class__.__name__}({self.module.extra_repr()}), module_name={self.name}'
@@ -107,6 +148,9 @@ class ModuleWrapper(torch.nn.Module):
                 delattr(self.module, target_name)
                 self.module.register_buffer(target_name, target_space.target.detach().clone())
 
+        # register for module fusion
+        self.register_fusion_info()
+
     def unwrap(self):
         if not hasattr(self.module, '_nni_wrapper'):
             warn_msg = f'{self.name} is not wrapped, no need to unwrap.'
@@ -124,6 +168,17 @@ class ModuleWrapper(torch.nn.Module):
 
         self.module.forward = self.module_forward
         delattr(self.module, '_nni_wrapper')
+        # delete bias which is created during module fusion process
+        if getattr(self, "is_register_bias", False):
+            delattr(self.module, 'bias')
+            nni_original_bias = self.bias
+            if isinstance(nni_original_bias, nn.parameter.Parameter):
+                self.module.register_parameter('bias', torch.nn.Parameter(nni_original_bias.detach().clone()))
+            elif isinstance(nni_original_bias, torch.Tensor):
+                self.module.register_buffer('bias', nni_original_bias.detach().clone())
+        if len(self.fused_modules) > 0 and self.is_bias == 'None' and check_bias(self.module) == 'Tensor':
+            delattr(self.module, 'bias')
+            self.module.register_parameter('bias', None)
 
     def extend_target_spaces(self, sub_config: Dict[str, Any], mode: Literal['pruning', 'quantization', 'distillation']):
         assert mode in ['pruning', 'quantization', 'distillation']
@@ -184,7 +239,14 @@ class ModuleWrapper(torch.nn.Module):
         pos_args_num = len(self._input_args_spec.args) - 1
         pos_args = args[:pos_args_num]
         if len(pos_args) < pos_args_num:
-            pos_args += tuple(kwargs.pop(k) for k in self._input_args_spec.args[len(pos_args) + 1:])
+            default_values = {}
+            # if some positional arguments have default values and do not pass in, append the default value to `pos_args`
+            if self._input_args_spec.defaults:
+                default_kv = {k: v for k, v in \
+                    zip(self._input_args_spec.args[-len(self._input_args_spec.defaults):], self._input_args_spec.defaults)}
+                default_values.update(default_kv)
+            pos_args += tuple(kwargs.pop(k) if k in kwargs else default_values[k] for k in self._input_args_spec.args[len(pos_args) + 1:])
+
         var_args = args[pos_args_num:]
         kwonly_args = {k: kwargs.pop(k) for k in self._input_args_spec.kwonlyargs}
         return pos_args, var_args, kwonly_args, kwargs
@@ -304,6 +366,7 @@ class ModuleWrapper(torch.nn.Module):
             for idx, target in enumerate(outputs):
                 target_name = f'{OUTPUT_PREFIX}{idx}'
                 new_outputs.append(self.patch_helper(target_name, target))
+            new_outputs = type(outputs)(new_outputs)
         elif isinstance(outputs, dict):
             new_outputs = {}
             for output_name, target in outputs.items():
@@ -318,8 +381,13 @@ class ModuleWrapper(torch.nn.Module):
 
         params_dict = {}
         params_dict.update({k: v.target for k, v in self.pruning_target_spaces.items() if v.type is TargetType.PARAMETER})
-        params_dict.update({k: v.target for k, v in self.quantization_target_spaces.items() if v.type is TargetType.PARAMETER})
         params_dict.update({k: v.target for k, v in self.distillation_target_spaces.items() if v.type is TargetType.PARAMETER})
+        params_dict.update({k: v.target for k, v in self.quantization_target_spaces.items() if v.type is TargetType.PARAMETER})
+
+        activation_func_lis = []
+        if len(self.fused_modules) > 0:
+            params_dict, activation_func_lis = fuse_modules(self, params_dict, *args, **kwargs)
+
         params_dict = self.patch_params(params_dict)
         for target_name, patched_param in params_dict.items():
             # NOTE: here using copy_ will cause `backward through the graph a second time` error, don't know why.
@@ -331,37 +399,20 @@ class ModuleWrapper(torch.nn.Module):
             setattr(self.module, target_name, patched_param)
 
         outputs = self.module_forward(*args, **kwargs)
+        #fuse activation func
+        for activation_module in activation_func_lis:
+            outputs = activation_module._nni_wrapper.module_forward(outputs)
+
         outputs = self.patch_outputs(outputs)
         return outputs
 
 
-def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
-                      mode: Literal['pruning', 'quantization', 'distillation'],
-                      existed_wrappers: Dict[str, ModuleWrapper] | None = None,
-                      ) -> Tuple[Dict[str, ModuleWrapper], Dict[str, Dict[str, TargetSpace]]]:
-    assert mode in ['pruning', 'quantization', 'distillation']
-    configured_target_spaces = {}
-    existed_wrappers = existed_wrappers if existed_wrappers else {}
-    module_wrappers = {k: v for k, v in existed_wrappers.items()}
-    for config in config_list:
-        modules, public_config = select_modules_by_config(model, config)
-        for module_name, module in modules.items():
-            if module_name in module_wrappers:
-                wrapper = module_wrappers[module_name]
-                wrapper.unfreeze()
-                target_spaces = wrapper.extend_target_spaces(public_config, mode)
-            else:
-                wrapper = ModuleWrapper(module, module_name, {mode: public_config})
-                module_wrappers[module_name] = wrapper
-                if mode == 'pruning':
-                    target_spaces = {k: v for k, v in wrapper.pruning_target_spaces.items()}
-                elif mode == 'quantization':
-                    target_spaces = {k: v for k, v in wrapper.quantization_target_spaces.items()}
-                else:
-                    target_spaces = {k: v for k, v in wrapper.distillation_target_spaces.items()}
-            configured_target_spaces[module_name] = target_spaces
-
-    return module_wrappers, configured_target_spaces
+class IdentityModuleWrapper(ModuleWrapper): # only aviable for batchnorm
+    '''
+    used to replace fused modules
+    '''
+    def forward(self, inputs):
+        return inputs
 
 
 def track_target_shape(wrapper: ModuleWrapper, target_name: str, target: Tensor):
@@ -379,3 +430,79 @@ def track_target_shape(wrapper: ModuleWrapper, target_name: str, target: Tensor)
     if target_name in wrapper.distillation_target_spaces:
         if wrapper.distillation_target_spaces[target_name].type is not TargetType.PARAMETER:
             wrapper.distillation_target_spaces[target_name].shape = [_ for _ in target.shape]
+
+
+def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
+                      mode: Literal['pruning', 'quantization', 'distillation'],
+                      existed_wrappers: Dict[str, ModuleWrapper] | None = None,
+                      ) -> Tuple[Dict[str, ModuleWrapper], Dict[str, Dict[str, TargetSpace]]]:
+    assert mode in ['pruning', 'quantization', 'distillation']
+
+    configured_target_spaces = {}
+    existed_wrappers = existed_wrappers if existed_wrappers else {}
+    module_wrappers = {k: v for k, v in existed_wrappers.items()}
+    identity_module_set = set()
+    module_set = set()
+    for config in config_list:
+        fuse_module_names: List[Tuple[str]]
+        modules, public_config, fuse_module_names = select_modules_by_config(model, config)
+        if len(fuse_module_names) > 0:
+            validate_fused_modules_config(fuse_module_names, model, public_config)
+        for module_name, module in modules.items():
+            module_set.add(module_name)
+            fused_modules_pair: Tuple[str] = get_fused_module_list(module_name, mode, fuse_module_names)
+            if len(fused_modules_pair) > 0:
+                fuse_module_names.remove(fused_modules_pair)
+            old_wrapper = module_wrappers.get(module_name, None)
+            if len(fused_modules_pair) > 0: #fusion model
+                identity_module_set.update(fused_modules_pair[1:])
+            wrapper, target_spaces = create_module_wrapper(model, module, module_name, mode, public_config, \
+                                                           old_wrapper, list(fused_modules_pair))
+            module_wrappers[module_name] = wrapper
+            configured_target_spaces[module_name] = target_spaces
+        if len(fuse_module_names) > 0:
+            raise ValueError(f'{fuse_module_names} can\'t be fused with {modules.keys()}')
+    if module_set.intersection(identity_module_set):
+        raise ValueError(f"Don't provide quantization settings for identity modules:{module_set.intersection(identity_module_set)}")
+    for module_name, module in model.named_modules():
+        if module_name in identity_module_set:
+            if module_name in module_wrappers and not isinstance(module_wrappers[module_name], IdentityModuleWrapper):
+                warn_msg = f'Wrapper of {module_name} is wrapped, no need to wrap it because of module fusion.'
+                raise ValueError(warn_msg)
+            module_wrappers[module_name] = IdentityModuleWrapper(module, module_name, None, None)
+            identity_module_set.remove(module_name)
+
+    assert len(identity_module_set) == 0, f"{identity_module_set} do not exist in the model"
+
+    return module_wrappers, configured_target_spaces
+
+
+def create_module_wrapper(model:nn.Module, module: nn.Module, module_name: str, mode: Literal['pruning', 'quantization', 'distillation'], \
+        config: Dict[str, Any], wrapper: ModuleWrapper | None = None, fused_modules_pair: List[str] | None = None):
+    fused_modules_pair = fused_modules_pair if fused_modules_pair is not None else []
+    if mode != 'quantization' and len(fused_modules_pair) > 0:
+        raise ValueError(f"Only quantization supports model fusion, but got {mode} and {fused_modules_pair}")
+    if isinstance(wrapper, IdentityModuleWrapper):
+        raise ValueError('Using other compression methods on the fused module with IdentityWrapper is not supportted')
+
+    fused_modules = [get_nested_attr(model, f_module_name) for f_module_name in fused_modules_pair] \
+        if len(fused_modules_pair) > 0 else []
+
+    if wrapper is not None:
+        if len(wrapper.fused_modules) > 0 and len(fused_modules_pair) > 0:
+            raise ValueError(f'Using two fused_modules_pair for {module_name} is not supported')
+        wrapper.unfreeze()
+        target_spaces = wrapper.extend_target_spaces(config, mode)
+        wrapper.config = update_config(wrapper.config, {mode: config})
+        if len(fused_modules_pair) > 0:
+            wrapper.fused_modules = fused_modules
+    else:
+        wrapper = ModuleWrapper(module, module_name, {mode: config}, fused_modules)
+        if mode == 'pruning':
+            target_spaces = dict(wrapper.pruning_target_spaces.items())
+        elif mode == 'quantization':
+            target_spaces = dict(wrapper.quantization_target_spaces.items())
+        else:
+            target_spaces = dict(wrapper.distillation_target_spaces.items())
+
+    return wrapper, target_spaces

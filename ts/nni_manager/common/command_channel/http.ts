@@ -52,7 +52,7 @@ export class HttpChannelServer implements CommandChannelServer {
     }
 
     public getChannelUrl(channelId: string): string {
-        return globals.rest.getFullUrl('http', this.path, channelId);
+        return globals.rest.getFullUrl('http', 'localhost', this.path, channelId);
     }
 
     public send(channelId: string, command: Command): void {

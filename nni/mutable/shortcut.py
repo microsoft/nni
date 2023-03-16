@@ -11,11 +11,12 @@ __all__ = [
 ]
 
 import logging
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, overload, List, cast
 
 from .mutable import Categorical, Numerical
 
 if TYPE_CHECKING:
+    from torch.nn import Module
     from nni.nas.nn.pytorch import LayerChoice
 
 T = TypeVar('T')
@@ -23,7 +24,17 @@ T = TypeVar('T')
 _logger = logging.getLogger(__name__)
 
 
-def choice(label: str, choices: list[T]) -> Categorical[T] | LayerChoice:
+@overload
+def choice(label: str, choices: list[T]) -> Categorical[T]:
+    ...
+
+
+@overload
+def choice(label: str, choices: list[Module]) -> LayerChoice:
+    ...
+
+
+def choice(label: str, choices: list[T] | list[Module]) -> Categorical[T] | LayerChoice:
     """Choose from a list of options.
 
     By default, it will create a :class:`~nni.mutable.Categorical` object.
@@ -49,23 +60,22 @@ def choice(label: str, choices: list[T]) -> Categorical[T] | LayerChoice:
         (1): Conv2d(3, 3, kernel_size=(5, 5), stride=(1, 1))
     )
     """
-    # Comment out before nas.nn is merged.
-    # try:
-    #     from torch.nn import Module
-    #     if all(isinstance(c, Module) for c in choices):
-    #         from nni.nas.nn.pytorch import LayerChoice
-    #         return LayerChoice(choices, label=auto_label(label))
+    try:
+        from torch.nn import Module
+        if all(isinstance(c, Module) for c in choices):
+            from nni.nas.nn.pytorch import LayerChoice
+            return LayerChoice(cast(List[Module], choices), label=label)
 
-    #     from torch import Tensor
-    #     if any(isinstance(c, Tensor) for c in choices):
-    #         raise TypeError(
-    #             'Please do not use choice to choose from tensors. '
-    #             'If you are using this in forward, please use `InputChoice` explicitly in `__init__` instead.')
-    # except ImportError:
-    #     # In case PyTorch is not installed.
-    #     pass
+        from torch import Tensor
+        if any(isinstance(c, Tensor) for c in choices):
+            raise TypeError(
+                'Please do not use choice to choose from tensors. '
+                'If you are using this in forward, please use `InputChoice` explicitly in `__init__` instead.')
+    except ImportError:
+        # In case PyTorch is not installed.
+        pass
 
-    return Categorical(choices, label=label)
+    return Categorical(cast(List[T], choices), label=label)
 
 
 def uniform(label: str, low: float, high: float) -> Numerical:

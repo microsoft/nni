@@ -29,7 +29,8 @@ export const Duration = (): any => {
     const { maxDurationUnit, updateOverviewPage } = useContext(AppContext);
     const maxExecDuration = EXPERIMENT.maxExperimentDurationSeconds;
     const execDuration = EXPERIMENT.profile.execDuration;
-    const percent = (execDuration / maxExecDuration) * 100;
+    // because execDuration will be > maxExecDuration(it's by design) in experiment
+    const percent = (execDuration / maxExecDuration) * 100 > 100 ? 100 : (execDuration / maxExecDuration) * 100;
     const maxExecDurationStr = convertTimeAsUnit(maxDurationUnit, maxExecDuration).toString();
 
     return (
@@ -65,18 +66,24 @@ export const Duration = (): any => {
                 <EditExperimentParam />
             </EditExpeParamContext.Provider>
             {/* start time and end time */}
-            <div className='time'>
-                <Stack horizontal horizontalAlign='space-between'>
-                    <div className='font-untheme bg'>Start</div>
-                    <div className='text'>{formatTimestamp(EXPERIMENT.profile.startTime).split(',')[0]}</div>
-                    <div className='text'>{formatTimestamp(EXPERIMENT.profile.startTime).split(',')[1]}</div>
-                </Stack>
-                <Stack horizontal horizontalAlign='space-between'>
-                    <div className='font-untheme bg'>End</div>
+            <Stack className='time' horizontal horizontalAlign='space-between'>
+                <div>
+                    <div className='font-untheme bg startMargin borderRadius'>Start</div>
+                    <div className='font-untheme bg borderRadius'>End</div>
+                </div>
+                <div>
+                    <div className='text startMargin'>
+                        {formatTimestamp(EXPERIMENT.profile.startTime).split(',')[0]}
+                    </div>
                     <div className='text'>{formatTimestamp(EXPERIMENT.profile.endTime).split(',')[0]}</div>
+                </div>
+                <div>
+                    <div className='text startMargin'>
+                        {formatTimestamp(EXPERIMENT.profile.startTime).split(',')[1]}
+                    </div>
                     <div className='text'>{formatTimestamp(EXPERIMENT.profile.endTime).split(',')[1]}</div>
-                </Stack>
-            </div>
+                </div>
+            </Stack>
         </React.Fragment>
     );
 };

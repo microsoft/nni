@@ -3,14 +3,15 @@
 
 from functools import partial
 from typing import Tuple, Optional, Callable, Union, List, Type, cast
+from typing_extensions import Literal
 
 import torch
-import nni.nas.nn.pytorch as nn
-from nni.nas import model_wrapper
-from nni.typehint import Literal
+from torch import nn
 
-from .proxylessnas import ConvBNReLU, InvertedResidual, DepthwiseSeparableConv, make_divisible, reset_parameters
-from .utils.fixed import FixedFactory
+import nni
+from nni.nas.nn.pytorch import ModelSpace, Repeat, LayerChoice, MutableLinear, MutableConv2d
+
+from .proxylessnas import ConvBNReLU, InvertedResidual, DepthwiseSeparableConv, MaybeIntChoice, make_divisible, reset_parameters
 from .utils.pretrained import load_pretrained_weight
 
 
@@ -36,9 +37,9 @@ class SqueezeExcite(nn.Module):
         rd_channels = make_divisible(channels * reduction_ratio, 8)
         gate_layer = gate_layer or nn.Hardsigmoid
         activation_layer = activation_layer or nn.ReLU
-        self.conv_reduce = nn.Conv2d(channels, rd_channels, 1, bias=True)
+        self.conv_reduce = MutableConv2d(channels, rd_channels, 1, bias=True)
         self.act1 = activation_layer(inplace=True)
-        self.conv_expand = nn.Conv2d(rd_channels, channels, 1, bias=True)
+        self.conv_expand = MutableConv2d(rd_channels, channels, 1, bias=True)
         self.gate = gate_layer()
 
     def forward(self, x):
@@ -52,7 +53,7 @@ class SqueezeExcite(nn.Module):
 def _se_or_skip(hidden_ch: int, input_ch: int, optional: bool, se_from_exp: bool, label: str) -> nn.Module:
     ch = hidden_ch if se_from_exp else input_ch
     if optional:
-        return nn.LayerChoice({
+        return LayerChoice({
             'identity': nn.Identity(),
             'se': SqueezeExcite(ch)
         }, label=label)
@@ -71,15 +72,14 @@ def _act_fn(act_alias: Literal['hswish', 'swish', 'relu']) -> Type[nn.Module]:
         raise ValueError(f'Unsupported act alias: {act_alias}')
 
 
-@model_wrapper
-class MobileNetV3Space(nn.Module):
+class MobileNetV3Space(ModelSpace):
     """
     MobileNetV3Space implements the largest search space in `TuNAS <https://arxiv.org/abs/2008.06120>`__.
 
     The search dimensions include widths, expand ratios, kernel sizes, SE ratio.
     Some of them can be turned off via arguments to narrow down the search space.
 
-    Different from ProxylessNAS search space, this space is implemented with :class:`~nni.retiarii.nn.pytorch.ValueChoice`.
+    Different from ProxylessNAS search space, this space is implemented with :class:`~nni.nas.nn.pytorch.ValueChoice`.
 
     We use the following snipppet as reference.
     https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/mobile_search_space_v3.py#L728
@@ -123,7 +123,7 @@ class MobileNetV3Space(nn.Module):
         Momentum of batch normalization.
     """
 
-    widths: List[Union[nn.ChoiceOf[int], int]]
+    widths: List[MaybeIntChoice]
     depth_range: List[Tuple[int, int]]
 
     def __init__(
@@ -176,7 +176,7 @@ class MobileNetV3Space(nn.Module):
                     # According to tunas, stem and stage 0 share one width multiplier
                     # https://github.com/google-research/google-research/blob/20736344/tunas/mobile_search_space_v3.py#L791
                     make_divisible(
-                        nn.ValueChoice(list(width_multipliers), label=f's{max(i - 1, 0)}_width_mult') * base_width, 8
+                        nni.choice(f's{max(i - 1, 0)}_width_mult', list(width_multipliers)) * base_width, 8
                     )
                 )
 
@@ -189,7 +189,7 @@ class MobileNetV3Space(nn.Module):
 
         self.stem = ConvBNReLU(
             3, self.widths[0],
-            nn.ValueChoice([3, 5], label=f'stem_ks'),
+            nni.choice(f'stem_ks', [3, 5]),
             stride=stride[0], activation_layer=_act_fn(activation[0])
         )
 
@@ -199,9 +199,9 @@ class MobileNetV3Space(nn.Module):
             # https://github.com/google-research/google-research/blob/20736344/tunas/mobile_search_space_v3.py#L791
             DepthwiseSeparableConv(
                 self.widths[0], self.widths[1],
-                nn.ValueChoice([3, 5, 7], label=f's0_i0_ks'),
+                nni.choice(f's0_i0_ks', [3, 5, 7]),
                 stride=stride[1],
-                squeeze_excite=cast(Callable[[nn.MaybeChoice[int], nn.MaybeChoice[int]], nn.Module], partial(
+                squeeze_excite=cast(Callable[[MaybeIntChoice, MaybeIntChoice], nn.Module], partial(
                     _se_or_skip, optional=squeeze_excite[0] == 'optional', se_from_exp=self.se_from_exp, label=f's0_i0_se'
                 )) if squeeze_excite[0] != 'none' else None,
                 activation_layer=_act_fn(activation[1])
@@ -241,7 +241,7 @@ class MobileNetV3Space(nn.Module):
 
         self.classifier = nn.Sequential(
             nn.Dropout(dropout_rate),
-            nn.Linear(cast(int, self.widths[self.num_blocks]), num_labels),
+            MutableLinear(cast(int, self.widths[self.num_blocks]), num_labels),
         )
 
         reset_parameters(self, bn_momentum=bn_momentum, bn_eps=bn_eps)
@@ -255,10 +255,10 @@ class MobileNetV3Space(nn.Module):
 
     def _make_stage(self, stage_idx, inp, oup, se, stride, act):
         def layer_builder(idx):
-            exp = nn.ValueChoice(list(self.expand_ratios), label=f's{stage_idx}_i{idx}_exp')
-            ks = nn.ValueChoice([3, 5, 7], label=f's{stage_idx}_i{idx}_ks')
+            exp = nni.choice(f's{stage_idx}_i{idx}_exp', list(self.expand_ratios))
+            ks = nni.choice(f's{stage_idx}_i{idx}_ks', [3, 5, 7])
             # if SE is true, assign a layer choice to SE
-            se_or_skip = cast(Callable[[nn.MaybeChoice[int], nn.MaybeChoice[int]], nn.Module], partial(
+            se_or_skip = cast(Callable[[MaybeIntChoice, MaybeIntChoice], nn.Module], partial(
                 _se_or_skip, optional=se == 'optional', se_from_exp=self.se_from_exp, label=f's{stage_idx}_i{idx}_se'
             )) if se != 'none' else None
             return InvertedResidual(
@@ -273,11 +273,7 @@ class MobileNetV3Space(nn.Module):
         min_depth, max_depth = self.depth_range[stage_idx - 1]
         if stride != 1:
             min_depth = max(min_depth, 1)
-        return nn.Repeat(layer_builder, depth=(min_depth, max_depth), label=f's{stage_idx}_depth')
-
-    @classmethod
-    def fixed_arch(cls, arch: dict) -> FixedFactory:
-        return FixedFactory(cls, arch)
+        return Repeat(layer_builder, depth=(min_depth, max_depth), label=f's{stage_idx}_depth')
 
     @classmethod
     def load_searched_model(
@@ -653,7 +649,7 @@ class MobileNetV3Space(nn.Module):
         else:
             raise ValueError(f'Unsupported architecture with name: {name}')
 
-        model_factory = cls.fixed_arch(arch)
+        model_factory = cls.frozen_factory(arch)
         model = model_factory(**init_kwargs)
 
         if pretrained:

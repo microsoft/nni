@@ -26,7 +26,7 @@ def recompile_from_code(code: str, global_vars: dict):
 # run once before trace, for initiate parameters.
 # otherwise some lazy-loading parameters may be initiated into proxies
 out_a0 = model(dummy_input)
-traced_model = concrete_trace(model, {'ims': dummy_input}, use_function_patch=True)
+traced_model = concrete_trace(model, {'ims': dummy_input})
 recompiled = recompile_from_code(traced_model.code, model.forward.__globals__)
 print('traced code:\n', traced_model.code)
 

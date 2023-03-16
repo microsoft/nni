@@ -120,9 +120,8 @@ class PruningSetting(ModuleSetting):
             'apply_method': 'mul',
         },
         'bias': {
-            # should support granularity in the future
-            # module_name should also be supported
             'align': {
+                'module_name': None,
                 'target_name': 'weight',
                 'dims': [0],
             },
@@ -130,10 +129,33 @@ class PruningSetting(ModuleSetting):
         }
     }
 
+    embedding_setting = {
+        'weight': {
+            'sparse_ratio': None,
+            'max_sparse_ratio': None,
+            'min_sparse_ratio': None,
+            'sparse_threshold': None,
+            'global_group_id': None,
+            'dependency_group_id': None,
+            'granularity': 'default',
+            'internal_metric_block': None,
+            'apply_method': 'mul',
+        }
+    }
+
     # TODO: add more default module type
     registry = {
         'Linear': default_setting,
+        'Embedding': embedding_setting,
+        'Conv1d': default_setting,
         'Conv2d': default_setting,
+        'Conv3d': default_setting,
+        'ConvTranspose1d': default_setting,
+        'ConvTranspose2d': default_setting,
+        'ConvTranspose3d': default_setting,
+        'BatchNorm1d': default_setting,
+        'BatchNorm2d': default_setting,
+        'BatchNorm3d': default_setting,
     }
 
 
@@ -184,9 +206,18 @@ class QuantizationSetting(ModuleSetting):
     # TODO: add more default module type
     registry = {
         'Linear': default_setting,
+        'Conv1d': default_setting,
         'Conv2d': default_setting,
+        'Conv3d': default_setting,
+        'ConvTranspose1d': default_setting,
+        'ConvTranspose2d': default_setting,
+        'ConvTranspose3d': default_setting,
         'ReLU': activation_setting,
         'ReLU6': activation_setting,
+        'BatchNorm1d': default_setting,
+        'Hardtanh': activation_setting,
+        'MaxPool2d': activation_setting,
+        'BatchNorm2d': default_setting,
     }
 
 

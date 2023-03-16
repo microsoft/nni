@@ -4,10 +4,12 @@
 import { EventEmitter } from 'events';
 import { readFile } from 'fs/promises';
 import path from 'path';
+import { setTimeout } from 'timers/promises';
 
 import { Deferred } from 'common/deferred';
 import type { TrainingServiceConfig } from 'common/experimentConfig';
 import globals from 'common/globals';
+import { getLogger } from 'common/log';
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from 'common/trainingService';
@@ -41,7 +43,7 @@ export class V3asV1 implements TrainingService {
     private startDeferred: Deferred<void> = new Deferred();
 
     private trialJobs: Record<string, MutableTrialJobDetail> = {};
-    private parameters: Record<string, Parameter> = {};
+    private parameters: Parameter[] = [];
 
     private environments: EnvironmentInfo[] = [];
     private lastEnvId: string = '';
@@ -71,14 +73,16 @@ export class V3asV1 implements TrainingService {
         await this.startDeferred.promise;
         let trialId: string | null = null;
         let submitTime: number = 0;
+        this.parameters.push(form.hyperParameters.value);
         while (trialId === null) {
             const envId = this.schedule();
+            if (envId === null) {
+                await setTimeout(1000);
+                continue;
+            }
             submitTime = Date.now();
             trialId = await this.v3.createTrial(envId, this.config.trialCommand, 'trial_code', form.sequenceId);
         }
-
-        // In new interface, hyper parameters will be sent on demand.
-        this.parameters[trialId] = form.hyperParameters.value;
 
         if (this.trialJobs[trialId] === undefined) {
             this.trialJobs[trialId] = {
@@ -107,7 +111,9 @@ export class V3asV1 implements TrainingService {
     }
 
     public async getTrialFile(trialJobId: string, fileName: string): Promise<Buffer | string> {
-        const dir = path.join(globals.paths.experimentRoot, 'trials', trialJobId);
+        const dir = await this.v3.downloadTrialDirectory(trialJobId);
+
+        //const dir = path.join(globals.paths.experimentRoot, 'trials', trialJobId);
 
         let logPath: string | null = null;
         if (fileName === 'trial.log') {
@@ -124,7 +130,7 @@ export class V3asV1 implements TrainingService {
             // FIXME
             // Need to fix `model.onnx`.
             // I guess it should be put inside `nni_outputs`.
-            return await readFile(path.join(dir, 'output', fileName));
+            return await readFile(path.join(dir, fileName));
         }
     }
 
@@ -150,7 +156,10 @@ export class V3asV1 implements TrainingService {
     }
 
     public run(): Promise<void> {
-        this.start();
+        this.start().catch(error => {
+            getLogger('TrainingServiceCompat').error('Training srevice initialize failed:', error);
+            globals.shutdown.initiate('training service initialize failed');
+        });
         return this.runDeferred.promise;
     }
 
@@ -158,7 +167,11 @@ export class V3asV1 implements TrainingService {
         await this.v3.init();
 
         this.v3.onRequestParameter(async (trialId) => {
-            await this.v3.sendParameter(trialId, this.parameters[trialId]);
+            if (this.parameters.length > 0) {
+                await this.v3.sendParameter(trialId, this.parameters.shift()!);
+            } else {
+                getLogger('TrainingServiceCompat').error('No parameters available');
+            }
         });
         this.v3.onMetric(async (trialId, metric) => {
             this.emitter.emit('metric', { id: trialId, data: metric });
@@ -194,10 +207,13 @@ export class V3asV1 implements TrainingService {
         this.startDeferred.resolve();
     }
 
-    private schedule(): string {
+    private schedule(): string | null {
         // Simple round-robin schedule.
         // Find the last used environment and select next one.
         // If the last used environment is not found (destroyed), use first environment.
+        if (this.environments.length === 0) {
+            return null;
+        }
         const prevIndex = this.environments.findIndex((env) => env.id === this.lastEnvId);
         const index = (prevIndex + 1) % this.environments.length;
         this.lastEnvId = this.environments[index].id;

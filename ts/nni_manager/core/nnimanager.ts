@@ -33,6 +33,7 @@ import { createDispatcherInterface, IpcInterface } from './ipcInterface';
  * NNIManager which implements Manager interface
  */
 class NNIManager implements Manager {
+    private pollInterval: number; // for unittest to modify the polling interval
     private trainingService!: TrainingService;
     private dispatcher: IpcInterface | undefined;
     private currSubmittedTrialNum: number;  // need to be recovered
@@ -52,6 +53,7 @@ class NNIManager implements Manager {
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
 
     constructor() {
+        this.pollInterval = 5;
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
         this.dispatcherPid = 0;
@@ -122,7 +124,7 @@ class NNIManager implements Manager {
         return this.dataStore.exportTrialHpConfigs();
     }
 
-    public addRecoveredTrialJob(allTrialJobs: Array<TrialJobInfo>): void {
+    public addRecoveredTrialJob(allTrialJobs: Array<TrialJobInfo>): number {
         const jobs: Array<TrialJobInfo> = allTrialJobs.filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING');
         const trialData: any[] = [];
         let maxSequeceId = 0;
@@ -159,6 +161,7 @@ class NNIManager implements Manager {
 
         // next sequenceId
         this.experimentProfile.nextSequenceId = maxSequeceId + 1;
+        return trialData.length;
     }
 
     public addCustomizedTrialJob(hyperParams: string): Promise<number> {
@@ -263,7 +266,11 @@ class NNIManager implements Manager {
 
         // Resume currSubmittedTrialNum
         this.currSubmittedTrialNum = allTrialJobs.length;
-        this.addRecoveredTrialJob(allTrialJobs);
+        const recoveredTrialNum = this.addRecoveredTrialJob(allTrialJobs);
+        // minus the number of the recovered trials,
+        // the recovered trials should not be counted in maxTrialNumber.
+        this.log.info(`Number of current submitted trials: ${this.currSubmittedTrialNum}, where ${recoveredTrialNum} is resuming.`);
+        this.currSubmittedTrialNum -= recoveredTrialNum;
 
         // Collect generated trials and imported trials
         const finishedTrialData: string = await this.exportData();
@@ -478,9 +485,6 @@ class NNIManager implements Manager {
         if (reuseMode) {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
-        } else if (platform === 'local') {
-            const module_ = await import('../training_service/v3/compat');
-            return new module_.V3asV1(config.trainingService as TrainingServiceConfig);
         } else if (platform === 'kubeflow') {
             const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
             return new module_.KubeflowTrainingService();
@@ -490,12 +494,9 @@ class NNIManager implements Manager {
         } else if (platform === 'adl') {
             const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
             return new module_.AdlTrainingService();
-        } else if (platform.endsWith('_v3')) {
+        } else {
             const module_ = await import('../training_service/v3/compat');
             return new module_.V3asV1(config.trainingService as TrainingServiceConfig);
-        } else {
-            const module_ = await import('../training_service/reusable/routerTrainingService');
-            return await module_.RouterTrainingService.construct(config);
         }
     }
 
@@ -585,7 +586,7 @@ class NNIManager implements Manager {
         }
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
             this.dispatcher.sendCommand(PING);
-            await delay(1000 * 5);
+            await delay(1000 * this.pollInterval); // 5 seconds
         }
     }
 
@@ -746,7 +747,7 @@ class NNIManager implements Manager {
                     }
                 }
             }
-            await delay(1000 * 5); // 5 seconds
+            await delay(1000 * this.pollInterval); // 5 seconds
         }
     }
 

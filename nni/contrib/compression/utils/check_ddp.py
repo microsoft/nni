@@ -1,10 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Dict, List
+from typing import Dict
 import torch
 import torch.nn as nn
-import torch.distributed as dist
 
 def check_ddp_model(model: nn.Module):
     is_ddp_model = False
@@ -34,16 +33,6 @@ def check_ddp_model(model: nn.Module):
 
 
 def reset_ddp_model(model: torch.nn.parallel.DistributedDataParallel, ddp_params: Dict):
+    assert isinstance(model, torch.nn.parallel.DistributedDataParallel)
     module = model.module
     return torch.nn.parallel.DistributedDataParallel(module=module, **ddp_params)
-
-
-def all_reduce_on_multiple_gpus(buffer: List):
-    assert len(buffer) == 2
-    buffer_0 = torch.tensor([buffer[0]]).to(buffer[1].device)
-    buffer_1 = buffer[1].clone()
-
-    dist.all_reduce(buffer_0, op=dist.ReduceOp.SUM)
-    dist.all_reduce(buffer_1, op=dist.ReduceOp.SUM)
-
-    return [buffer_0.item(), buffer_1.to(buffer[1].device)]

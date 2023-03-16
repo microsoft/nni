@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { DefaultButton, IColumn, Icon, PrimaryButton, Stack, StackItem, Checkbox } from '@fluentui/react';
+import { DefaultButton, IColumn, Icon, PrimaryButton, Stack, Checkbox } from '@fluentui/react';
 import { Trial } from '@model/trial';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { convertDuration, formatTimestamp, copyAndSort, parametersType, _inferColumnTitle } from '@static/function';
@@ -16,6 +16,7 @@ import ExpandableDetails from '@components/common/ExpandableDetails/ExpandableIn
 import PaginationTable from '@components/common/PaginationTable';
 import CopyButton from '@components/common/CopyButton';
 import TooltipHostIndex from '@components/common/TooltipHostIndex';
+import { buttonsGap } from '@components/common/Gap';
 import { getValue } from '@model/localStorage';
 import { AppContext } from '@/App';
 require('echarts/lib/chart/line');
@@ -94,7 +95,7 @@ const TableList = (props: TableListProps): any => {
     };
 
     const _renderOperationColumn = (record: any): React.ReactNode => {
-        const runningTrial: boolean = ['RUNNING', 'UNKNOWN'].includes(record.status) ? false : true;
+        const runningTrial: boolean = ['RUNNING', 'UNKNOWN', 'ADD_RESUMED'].includes(record.status) ? false : true;
         const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED', 'VIEWED'].includes(EXPERIMENT.status);
         return (
             <Stack className='detail-button' horizontal>
@@ -308,19 +309,13 @@ const TableList = (props: TableListProps): any => {
                 <span style={{ marginRight: 12 }}>{tableListIcon}</span>
                 <span className='fontColor333'>Trial jobs</span>
             </Stack>
-            <Stack horizontal className='allList'>
-                <StackItem>
-                    <Stack horizontal horizontalAlign='end' className='allList'>
-                        <Search
-                            searchFilter={searchItems} // search filter list
-                            changeSearchFilterList={changeSearchFilterList}
-                        />
-                    </Stack>
-                </StackItem>
-
-                <StackItem styles={{ root: { position: 'absolute', right: '0' } }}>
+            <Stack horizontal horizontalAlign='space-between' className='allList'>
+                <Search
+                    searchFilter={searchItems} // search filter list
+                    changeSearchFilterList={changeSearchFilterList}
+                />
+                <Stack horizontal horizontalAlign='end' tokens={buttonsGap}>
                     <DefaultButton
-                        className='allList-button-gap'
                         text='Add/Remove columns'
                         onClick={(): void => {
                             setCustomizeColumnsDialogVisible(true);
@@ -328,7 +323,6 @@ const TableList = (props: TableListProps): any => {
                     />
                     <DefaultButton
                         text='Compare'
-                        className='allList-compare'
                         onClick={(): void => {
                             setCompareDialogVisible(true);
                         }}
@@ -346,7 +340,7 @@ const TableList = (props: TableListProps): any => {
                         />
                     )}
                     <TensorboardUI selectedRowIds={selectedRowIds} changeSelectTrialIds={changeSelectTrialIds} />
-                </StackItem>
+                </Stack>
             </Stack>
             {columns && displayedItems && (
                 <PaginationTable

@@ -44,15 +44,14 @@ function KillJobIndex(props: KillJobIndexProps): any {
             })
             .catch(error => {
                 if (error.response) {
-                    setKillDialogVisible(true);
-                    setError({ isError: false, message: error.response.data.error || 'Fail to cancel the job' });
+                    setError({ isError: true, message: error.response.data.error || 'Fail to cancel the job' });
                 } else {
-                    setKillDialogVisible(true);
                     setError({
-                        isError: false,
-                        message: error.response.data.error || '500 error, fail to cancel the job'
+                        isError: true,
+                        message: '500 error, fail to cancel the job'
                     });
                 }
+                setKillDialogVisible(true);
             });
     };
 

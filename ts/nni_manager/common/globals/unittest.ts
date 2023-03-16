@@ -23,7 +23,7 @@ import os from 'os';
 import path from 'path';
 
 import type { NniManagerArgs } from './arguments';
-import type { LogStream } from './log_stream';
+import { LogStream } from './log_stream';
 import { NniPaths, createPaths } from './paths';
 import { RestManager } from './rest';
 
@@ -44,6 +44,7 @@ export interface MutableGlobals {
     rest: RestManager;
 
     reset(): void;
+    showLog(): void;
 }
 
 export function resetGlobals(): void {
@@ -71,12 +72,18 @@ export function resetGlobals(): void {
     };
 
     const globalAsAny = global as any;
-    const utGlobals = { args, paths, logStream, rest, shutdown, reset: resetGlobals };
+    const utGlobals = { args, paths, logStream, rest, shutdown, reset: resetGlobals, showLog };
     if (globalAsAny.nni === undefined) {
         globalAsAny.nni = utGlobals;
     } else {
         Object.assign(globalAsAny.nni, utGlobals);
     }
+}
+
+function showLog(): void {
+    globals.args.logLevel = 'trace';
+    globals.logStream.writeLine = (line): void => { console.debug(line); };
+    globals.logStream.writeLineSync = (line): void => { console.debug(line); };
 }
 
 function isUnitTest(): boolean {

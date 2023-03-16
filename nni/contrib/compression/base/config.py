@@ -6,8 +6,9 @@ from __future__ import annotations
 from collections import defaultdict
 from copy import deepcopy
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Literal, Tuple
 
+from schema import Schema, Optional, Or
 import torch
 
 from .setting import INPUT_PREFIX, OUTPUT_PREFIX
@@ -68,13 +69,16 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
             group_id_candidate += 1
         if sparse_ratio is not None:
             config['target_names'] = ['weight', 'bias']
+            weight_setting = {
+                'sparse_ratio': sparse_ratio,
+                'granularity': 'default',
+            }
+            if max_sparse_ratio is not None:
+                weight_setting['max_sparse_ratio'] = max_sparse_ratio
+            if group_id is not None:
+                weight_setting['group_id'] = group_id
             config['target_settings'] = {
-                'weight': {
-                    'sparse_ratio': sparse_ratio,
-                    'max_sparse_ratio': max_sparse_ratio,
-                    'global_group_id': group_id,
-                    'sparse_granularity': 'default',
-                }
+                'weight': weight_setting
             }
 
     # trans quantization part
@@ -100,7 +104,8 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
     return config_list
 
 
-def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> Tuple[Dict[str, torch.nn.Module], Dict[str, Any]]:
+def select_modules_by_config(model: torch.nn.Module, \
+                             config: Dict[str, Any]) -> Tuple[Dict[str, torch.nn.Module], Dict[str, Any], List[Tuple[str]]]:
     """
     This is a helper function for selecting the modules in model specified in config.
 
@@ -113,6 +118,7 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
         - ``exclude_op_names``: a module name list, the modules with these names will be excluded.
         - ``exclude_op_types``: a module type name list, the modules satisfied these types will be excluded.
         - ``exclude_op_names_re``: a regular expression list, the modules satisfied the regular expressions will be excluded.
+        - ``fuse_names``: a List contains tuples of fusion module names in the model.
 
     A module is selected if it satisfies all the following conditions:
         1. If ``op_names`` or ``op_names_re`` is not empty, the module name should in ``op_names``
@@ -135,7 +141,7 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
         (named_module_dict, public_config).
         Named module dict is {module_name: selected_module}
         Public config is the passed-in config without keys:
-        ['op_names', 'op_types', 'op_names_re', 'exclude_op_names', 'exclude_op_types', 'exclude_op_names_re'].
+        ['op_names', 'op_types', 'op_names_re', 'exclude_op_names', 'exclude_op_types', 'exclude_op_names_re', 'fuse_names'].
     """
     # intersection(union(op_names, op_names_re), op_types) - exclude_op_names - exclude_op_names_re - exclude_op_types
     name2module = {}
@@ -151,6 +157,7 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
     exclude_op_names = config.pop('exclude_op_names', list())
     exclude_op_types = config.pop('exclude_op_types', list())
     exclude_op_names_re = config.pop('exclude_op_names_re', list())
+    fuse_names = config.pop('fuse_names', list())
 
     for op_name_re in op_names_re:
         for op_name in name2module:
@@ -161,7 +168,10 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
         selected_by_op_types = set()
         for op_type in op_types:
             selected_by_op_types.update(type2names.get(op_type, set()))
-        op_names.intersection_update(selected_by_op_types)
+        if op_names:
+            op_names.intersection_update(selected_by_op_types)
+        else:
+            op_names.update(selected_by_op_types)
 
     op_names.difference_update(exclude_op_names)
 
@@ -173,4 +183,47 @@ def select_modules_by_config(model: torch.nn.Module, config: Dict[str, Any]) -> 
     for op_type in exclude_op_types:
         op_names.difference_update(type2names.get(op_type, set()))
 
-    return {module_name: name2module[module_name] for module_name in op_names}, config
+    return {module_name: name2module[module_name] for module_name in op_names}, config, fuse_names
+
+
+# a temporary verification function, need a wider coverage, customizable, and easy-to-extend implementation.
+def default_config_schema(mode: Literal['pruning', 'quantization', 'distillation']) -> Schema:
+    assert mode in ['pruning', 'quantization', 'distillation']
+    if mode == 'pruning':
+        setting_schema = {
+            Optional(Or('sparse_ratio', 'sparse_threshold', only_one=True)): float,
+            Optional('max_sparse_ratio'): lambda x: 0 < x <= 1,
+            Optional('min_sparse_ratio'): lambda x: 0 <= x < 1,
+            Optional('global_group_id'): Or(int, str),
+            Optional('dependency_group_id'): Or(int, str),
+            Optional('internal_metric_block'): int,
+            Optional('granularity'): Or('default', 'in_channel', 'out_channel', 'per_channel', list),
+            Optional('apply_method'): Or('bypass', 'mul', 'add'),
+            Optional('align'): {'module_name': Or(str, None), 'target_name': str, 'dims': list}
+        }
+    elif mode == 'quantization':
+        setting_schema = {
+            'quant_dtype': Or(str, None),
+            Optional('quant_scheme'): Or('affine', 'symmetric'),
+            Optional('granularity'): Or('default', 'in_channel', 'out_channel', 'per_channel', list),
+            Optional('apply_method'): Or('bypass', 'clamp_round', 'qat_clamp_round'),
+            Optional('fuse_names'): [(str,)]
+        }
+    else:
+        setting_schema = {
+            Optional('lambda'): Or(int, float),
+            Optional('link'): Or(str, [str], (str,)),
+            Optional('apply_method'): Or('mse', 'kl')
+        }
+
+    schema = Schema({
+        Or('op_types', 'op_names', 'op_names_re'): [str],
+        Optional('exclude_op_names'): [str],
+        Optional('exclude_op_types'): [str],
+        Optional('exclude_op_names_re'): [str],
+        Optional('target_names'): [str],
+        Optional('target_settings'): {str: setting_schema},
+        **setting_schema
+    })
+
+    return schema

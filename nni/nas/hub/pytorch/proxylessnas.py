@@ -5,11 +5,13 @@ import math
 from typing import Optional, Callable, List, Tuple, Iterator, Union, cast, overload
 
 import torch
-import nni.nas.nn.pytorch as nn
-from nni.nas import model_wrapper
+from torch import nn
+from nni.mutable import MutableExpression
+from nni.nas.nn.pytorch import ModelSpace, LayerChoice, Repeat, MutableConv2d, MutableLinear, MutableBatchNorm2d
 
-from .utils.fixed import FixedFactory
 from .utils.pretrained import load_pretrained_weight
+
+MaybeIntChoice = Union[int, MutableExpression[int]]
 
 
 @overload
@@ -18,11 +20,11 @@ def make_divisible(v: Union[int, float], divisor, min_val=None) -> int:
 
 
 @overload
-def make_divisible(v: Union[nn.ChoiceOf[int], nn.ChoiceOf[float]], divisor, min_val=None) -> nn.ChoiceOf[int]:
+def make_divisible(v: Union[MutableExpression[int], MutableExpression[float]], divisor, min_val=None) -> MutableExpression[int]:
     ...
 
 
-def make_divisible(v: Union[nn.ChoiceOf[int], nn.ChoiceOf[float], int, float], divisor, min_val=None) -> nn.MaybeChoice[int]:
+def make_divisible(v: Union[MutableExpression[int], MutableExpression[float], int, float], divisor, min_val=None) -> MaybeIntChoice:
     """
     This function is taken from the original tf repo.
     It ensures that all layers have a channel number that is divisible by 8
@@ -32,9 +34,9 @@ def make_divisible(v: Union[nn.ChoiceOf[int], nn.ChoiceOf[float], int, float], d
     if min_val is None:
         min_val = divisor
     # This should work for both value choices and constants.
-    new_v = nn.ValueChoice.max(min_val, round(v + divisor // 2) // divisor * divisor)
+    new_v = MutableExpression.max(min_val, round(v + divisor // 2) // divisor * divisor)
     # Make sure that round down does not go down by more than 10%.
-    return nn.ValueChoice.condition(new_v < 0.9 * v, new_v + divisor, new_v)
+    return MutableExpression.condition(new_v < 0.9 * v, new_v + divisor, new_v)
 
 
 def simplify_sequential(sequentials: List[nn.Module]) -> Iterator[nn.Module]:
@@ -60,18 +62,18 @@ class ConvBNReLU(nn.Sequential):
 
     def __init__(
         self,
-        in_channels: nn.MaybeChoice[int],
-        out_channels: nn.MaybeChoice[int],
-        kernel_size: nn.MaybeChoice[int] = 3,
+        in_channels: MaybeIntChoice,
+        out_channels: MaybeIntChoice,
+        kernel_size: MaybeIntChoice = 3,
         stride: int = 1,
-        groups: nn.MaybeChoice[int] = 1,
+        groups: MaybeIntChoice = 1,
         norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
         dilation: int = 1,
     ) -> None:
         padding = (kernel_size - 1) // 2 * dilation
         if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
+            norm_layer = MutableBatchNorm2d
         if activation_layer is None:
             activation_layer = nn.ReLU6
         # If no normalization is used, set bias to True
@@ -79,7 +81,7 @@ class ConvBNReLU(nn.Sequential):
         norm = norm_layer(cast(int, out_channels))
         no_normalization = isinstance(norm, nn.Identity)
         blocks: List[nn.Module] = [
-            nn.Conv2d(
+            MutableConv2d(
                 cast(int, in_channels),
                 cast(int, out_channels),
                 cast(int, kernel_size),
@@ -114,11 +116,11 @@ class DepthwiseSeparableConv(nn.Sequential):
 
     def __init__(
         self,
-        in_channels: nn.MaybeChoice[int],
-        out_channels: nn.MaybeChoice[int],
-        kernel_size: nn.MaybeChoice[int] = 3,
+        in_channels: MaybeIntChoice,
+        out_channels: MaybeIntChoice,
+        kernel_size: MaybeIntChoice = 3,
         stride: int = 1,
-        squeeze_excite: Optional[Callable[[nn.MaybeChoice[int], nn.MaybeChoice[int]], nn.Module]] = None,
+        squeeze_excite: Optional[Callable[[MaybeIntChoice, MaybeIntChoice], nn.Module]] = None,
         norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
@@ -180,12 +182,12 @@ class InvertedResidual(nn.Sequential):
 
     def __init__(
         self,
-        in_channels: nn.MaybeChoice[int],
-        out_channels: nn.MaybeChoice[int],
-        expand_ratio: nn.MaybeChoice[float],
-        kernel_size: nn.MaybeChoice[int] = 3,
+        in_channels: MaybeIntChoice,
+        out_channels: MaybeIntChoice,
+        expand_ratio: Union[float, MutableExpression[float]],
+        kernel_size: MaybeIntChoice = 3,
         stride: int = 1,
-        squeeze_excite: Optional[Callable[[nn.MaybeChoice[int], nn.MaybeChoice[int]], nn.Module]] = None,
+        squeeze_excite: Optional[Callable[[MaybeIntChoice, MaybeIntChoice], nn.Module]] = None,
         norm_layer: Optional[Callable[[int], nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
     ) -> None:
@@ -255,13 +257,12 @@ def inverted_residual_choice_builder(
 
         # It can be implemented with ValueChoice, but we use LayerChoice here
         # to be aligned with the intention of the original ProxylessNAS.
-        return nn.LayerChoice(op_choices, label=f'{label}_i{index}')
+        return LayerChoice(op_choices, label=f'{label}_i{index}')
 
     return builder
 
 
-@model_wrapper
-class ProxylessNAS(nn.Module):
+class ProxylessNAS(ModelSpace):
     """
     The search space proposed by `ProxylessNAS <https://arxiv.org/abs/1812.00332>`__.
 
@@ -307,7 +308,7 @@ class ProxylessNAS(nn.Module):
         self.bn_eps = bn_eps
         self.bn_momentum = bn_momentum
 
-        self.stem = ConvBNReLU(3, widths[0], stride=2, norm_layer=nn.BatchNorm2d)
+        self.stem = ConvBNReLU(3, widths[0], stride=2, norm_layer=MutableBatchNorm2d)
 
         blocks: List[nn.Module] = [
             # first stage is fixed
@@ -321,7 +322,7 @@ class ProxylessNAS(nn.Module):
             builder = inverted_residual_choice_builder(
                 [3, 6], [3, 5, 7], downsamples[stage], widths[stage - 1], widths[stage], f's{stage}')
             if stage < 7:
-                blocks.append(nn.Repeat(builder, (1, 4), label=f's{stage}_depth'))
+                blocks.append(Repeat(builder, (1, 4), label=f's{stage}_depth'))
             else:
                 # No mutation for depth in the last stage.
                 # Directly call builder to initiate one block
@@ -330,10 +331,10 @@ class ProxylessNAS(nn.Module):
         self.blocks = nn.Sequential(*blocks)
 
         # final layers
-        self.feature_mix_layer = ConvBNReLU(widths[7], widths[8], kernel_size=1, norm_layer=nn.BatchNorm2d)
+        self.feature_mix_layer = ConvBNReLU(widths[7], widths[8], kernel_size=1, norm_layer=MutableBatchNorm2d)
         self.global_avg_pooling = nn.AdaptiveAvgPool2d(1)
         self.dropout_layer = nn.Dropout(dropout_rate)
-        self.classifier = nn.Linear(widths[-1], num_labels)
+        self.classifier = MutableLinear(widths[-1], num_labels)
 
         reset_parameters(self, bn_momentum=bn_momentum, bn_eps=bn_eps)
 
@@ -353,10 +354,6 @@ class ProxylessNAS(nn.Module):
         if hasattr(self, 'classifier'):
             return {'classifier.weight', 'classifier.bias'}
         return set()
-
-    @classmethod
-    def fixed_arch(cls, arch: dict) -> FixedFactory:
-        return FixedFactory(cls, arch)
 
     @classmethod
     def load_searched_model(
@@ -531,7 +528,7 @@ class ProxylessNAS(nn.Module):
         else:
             raise ValueError(f'Unsupported architecture with name: {name}')
 
-        model_factory = cls.fixed_arch(arch)
+        model_factory = cls.frozen_factory(arch)
         model = model_factory(**init_kwargs)
 
         if pretrained:

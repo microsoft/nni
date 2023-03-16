@@ -7,10 +7,13 @@
  **/
 
 import express, { Request, Response, Router } from 'express';
+import type { Router as WsRouter } from 'express-ws';
+import type { WebSocket } from 'ws';
 
 type HttpMethod = 'GET' | 'PUT';
 
 type ExpressCallback = (req: Request, res: Response) => void;
+type WebSocketCallback = (ws: WebSocket, req: Request) => void;
 
 export class RestManager {
     private router: Router;
@@ -35,6 +38,11 @@ export class RestManager {
         }
     }
 
+    public registerWebSocketHandler(path: string, callback: WebSocketCallback): void {
+        const p = '/' + trimSlash(path);
+        (this.router as WsRouter).ws(p, callback);
+    }
+
     public registerExpressRouter(path: string, router: Router): void {
         this.router.use(path, router);
     }
@@ -43,8 +51,8 @@ export class RestManager {
         return parts.map(trimSlash).filter(part => part).join('/');
     }
 
-    public getFullUrl(protocol: string, ...parts: string[]): string {
-        const root = `${protocol}://localhost:${global.nni.args.port}/`;
+    public getFullUrl(protocol: string, ip: string, ...parts: string[]): string {
+        const root = `${protocol}://${ip}:${global.nni.args.port}/`;
         return root + this.urlJoin(global.nni.args.urlPrefix, ...parts);
     }
 }
