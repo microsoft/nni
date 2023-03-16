@@ -116,7 +116,7 @@ def main(params):
         x_train,
         y_train,
         batch_size=params['batch_size'],
-        epochs=10,
+        epochs=5,
         verbose=0,
         callbacks=[ReportIntermediates()],
         validation_data=(x_test, y_test)

@@ -50,7 +50,14 @@ class QATQuantizer(Quantizer):
 
     Examples
     --------
-        TODO
+        >>> from nni.contrib.compression.quantization import QATQuantizer
+        >>> from nni.contrib.compression.utils import TorchEvaluator
+        >>> model = ...
+        >>> optimizer = ...
+        >>> max_steps, max_epochs = ..., ...
+        >>> evaluator = TorchEvaluator(train, optimizer, training_step)
+        >>> quantizer = QATQuantizer(model, configure_list, evaluator)
+        >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
     """
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
@@ -95,7 +102,7 @@ class QATQuantizer(Quantizer):
 
     def track_min_max_val(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
         # in a fused compression pipeline, the target name may be another compressor's target name
-        if not wrapper.training or target_name not in self._target_spaces:
+        if not wrapper.training or target_name not in wrapper.quantization_target_spaces:
             return
         return track_min_max_val(wrapper, target_name, target)
 
@@ -157,6 +164,9 @@ class QATQuantizer(Quantizer):
         self._fusion_compress(max_steps, max_epochs)
 
     def _fuse_preprocess(self, evaluator: Evaluator) -> None:
+        module_name_param_dict = self.patch_optimizer_param_group()
+        if len(module_name_param_dict) > 0:
+            evaluator.patch_optim_param_group(module_name_param_dict)
         self.register_trigger(evaluator)
 
     def _fuse_postprocess(self, evaluator: Evaluator) -> None:

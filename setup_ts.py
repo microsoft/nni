@@ -8,7 +8,7 @@ This script is called by `setup.py` and common users should avoid using this dir
 It compiles TypeScript source files in `ts` directory,
 and copies (or links) JavaScript output as well as dependencies to `nni_node`.
 
-You can set environment `GLOBAL_TOOLCHAIN=1` to use global node and yarn, if you know what you are doing.
+You can set environment `GLOBAL_TOOLCHAIN=1` to use global node and npm, if you know what you are doing.
 """
 
 from io import BytesIO
@@ -24,8 +24,7 @@ import traceback
 from zipfile import ZipFile
 
 
-node_version = 'v18.12.1'
-yarn_version = 'v1.22.19'
+node_version = 'v18.15.0'
 
 def _print(*args, color='cyan'):
     color_code = {'yellow': 33, 'cyan': 36}[color]
@@ -34,12 +33,12 @@ def _print(*args, color='cyan'):
     else:
         print(f'\033[1;{color_code}m#', *args, '\033[0m', flush=True)
 
-def _get_jupyter_lab_version():
-    try:
-        import jupyterlab
-        return jupyterlab.__version__
-    except ImportError:
-        return '3.x'
+#def _get_jupyter_lab_version():
+#    try:
+#        import jupyterlab
+#        return jupyterlab.__version__
+#    except ImportError:
+#        return '3.x'
 
 def _get_glibc_minor_version():  # type: () -> int | None
     try:
@@ -86,7 +85,7 @@ def _get_node_downloader():
         node_extractor = lambda data: tarfile.open(fileobj=BytesIO(data), mode='r:xz')
     return node_download_url, node_spec, node_extractor
 
-jupyter_lab_major_version = _get_jupyter_lab_version().split('.')[0]
+#jupyter_lab_major_version = _get_jupyter_lab_version().split('.')[0]
 
 def build(release):
     """
@@ -101,13 +100,13 @@ def build(release):
     if release or not os.environ.get('GLOBAL_TOOLCHAIN'):
         download_toolchain()
     prepare_nni_node()
-    update_package()
+    #update_package()
     compile_ts(release)
     if release or sys.platform == 'win32':
         copy_nni_node(release)
     else:
         symlink_nni_node()
-    restore_package()
+    #restore_package()
 
 def clean():
     """
@@ -132,9 +131,6 @@ if sys.platform == 'linux' or sys.platform == 'darwin':
 
     npm_executable = 'bin/npm'
 
-    yarn_executable = 'yarn'
-    yarn_download_url = f'https://github.com/yarnpkg/yarn/releases/download/{yarn_version}/yarn-{yarn_version}.tar.gz'
-
     path_env_separator = ':'
 
 elif sys.platform == 'win32':
@@ -146,9 +142,6 @@ elif sys.platform == 'win32':
 
     npm_executable = 'npm.cmd'
 
-    yarn_executable = 'yarn.cmd'
-    yarn_download_url = f'https://github.com/yarnpkg/yarn/releases/download/{yarn_version}/yarn-{yarn_version}.tar.gz'
-
     path_env_separator = ';'
 
 else:
@@ -157,7 +150,7 @@ else:
 
 def download_toolchain():
     """
-    Download and extract node and yarn.
+    Download and extract node.
     """
     if Path('toolchain/node', node_executable_in_tarball).is_file():
         return
@@ -174,34 +167,25 @@ def download_toolchain():
     shutil.rmtree('toolchain/node', ignore_errors=True)
     Path('toolchain', node_spec).rename('toolchain/node')
 
-    _print(f'Downloading yarn from {yarn_download_url}')
-    resp = requests.get(yarn_download_url)
-    resp.raise_for_status()
-    _print('Extracting yarn')
-    tarball = tarfile.open(fileobj=BytesIO(resp.content), mode='r:gz')
-    tarball.extractall('toolchain')
-    shutil.rmtree('toolchain/yarn', ignore_errors=True)
-    Path(f'toolchain/yarn-{yarn_version}').rename('toolchain/yarn')
+#def update_package():
+#    if jupyter_lab_major_version == '2':
+#        package_json = json.load(open('ts/jupyter_extension/package.json'))
+#        json.dump(package_json, open('ts/jupyter_extension/.package_default.json', 'w'), indent=2)
+#
+#        package_json['scripts']['build'] = 'tsc && jupyter labextension link .'
+#        package_json['dependencies']['@jupyterlab/application'] = '^2.3.0'
+#        package_json['dependencies']['@jupyterlab/launcher'] = '^2.3.0'
+#
+#        package_json['jupyterlab']['outputDir'] = 'build'
+#        json.dump(package_json, open('ts/jupyter_extension/package.json', 'w'), indent=2)
+#        print(f'updated package.json with {json.dumps(package_json, indent=2)}')
 
-def update_package():
-    if jupyter_lab_major_version == '2':
-        package_json = json.load(open('ts/jupyter_extension/package.json'))
-        json.dump(package_json, open('ts/jupyter_extension/.package_default.json', 'w'), indent=2)
-
-        package_json['scripts']['build'] = 'tsc && jupyter labextension link .'
-        package_json['dependencies']['@jupyterlab/application'] = '^2.3.0'
-        package_json['dependencies']['@jupyterlab/launcher'] = '^2.3.0'
-
-        package_json['jupyterlab']['outputDir'] = 'build'
-        json.dump(package_json, open('ts/jupyter_extension/package.json', 'w'), indent=2)
-        print(f'updated package.json with {json.dumps(package_json, indent=2)}')
-
-def restore_package():
-    if jupyter_lab_major_version == '2':
-        package_json = json.load(open('ts/jupyter_extension/.package_default.json'))
-        print(f'stored package.json with {json.dumps(package_json, indent=2)}')
-        json.dump(package_json, open('ts/jupyter_extension/package.json', 'w'), indent=2)
-        os.remove('ts/jupyter_extension/.package_default.json')
+#def restore_package():
+#    if jupyter_lab_major_version == '2':
+#        package_json = json.load(open('ts/jupyter_extension/.package_default.json'))
+#        print(f'stored package.json with {json.dumps(package_json, indent=2)}')
+#        json.dump(package_json, open('ts/jupyter_extension/package.json', 'w'), indent=2)
+#        os.remove('ts/jupyter_extension/.package_default.json')
 
 def prepare_nni_node():
     """
@@ -219,7 +203,7 @@ def prepare_nni_node():
 
 def compile_ts(release):
     """
-    Use yarn to download dependencies and compile TypeScript code.
+    Use npm to download dependencies and compile TypeScript code.
     """
     _print('Building NNI manager')
     _npm('ts/nni_manager', 'install')
@@ -229,21 +213,21 @@ def compile_ts(release):
     shutil.copytree('ts/nni_manager/config', 'ts/nni_manager/dist/config')
 
     _print('Building web UI')
-    _yarn('ts/webui')
+    _npm('ts/webui', 'install')
     if release:
-        _yarn('ts/webui', 'release')
+        _npm('ts/webui', 'run', 'release')
     else:
-        _yarn('ts/webui', 'build')
+        _npm('ts/webui', 'run', 'build')
 
-    _print('Building JupyterLab extension')
-    try:
-        _yarn('ts/jupyter_extension')
-        _yarn('ts/jupyter_extension', 'build')
-    except Exception:
-        if release:
-            raise
-        _print('Failed to build JupyterLab extension, skip for develop mode', color='yellow')
-        _print(traceback.format_exc(), color='yellow')
+    #_print('Building JupyterLab extension')
+    #try:
+    #    _yarn('ts/jupyter_extension')
+    #    _yarn('ts/jupyter_extension', 'build')
+    #except Exception:
+    #    if release:
+    #        raise
+    #    _print('Failed to build JupyterLab extension, skip for develop mode', color='yellow')
+    #    _print(traceback.format_exc(), color='yellow')
 
 
 def symlink_nni_node():
@@ -260,11 +244,11 @@ def symlink_nni_node():
 
     _symlink('ts/webui/build', 'nni_node/static')
 
-    if jupyter_lab_major_version == '2':
-        _symlink('ts/jupyter_extension/build', 'nni_node/jupyter-extension')
-        _symlink(os.path.join(sys.exec_prefix, 'share/jupyter/lab/extensions'), 'nni_node/jupyter-extension/extensions')
-    elif Path('ts/jupyter_extension/dist').exists():
-        _symlink('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
+    #if jupyter_lab_major_version == '2':
+    #    _symlink('ts/jupyter_extension/build', 'nni_node/jupyter-extension')
+    #    _symlink(os.path.join(sys.exec_prefix, 'share/jupyter/lab/extensions'), 'nni_node/jupyter-extension/extensions')
+    #elif Path('ts/jupyter_extension/dist').exists():
+    #    _symlink('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
 
 
 def copy_nni_node(version):
@@ -302,36 +286,28 @@ def copy_nni_node(version):
 
     # reinstall without development dependencies
     prod_path = Path('nni_node').resolve()
-    _yarn(str(prod_path), 'install', '--production')
+    _npm(str(prod_path), 'install', '--omit', 'dev')
 
     shutil.copytree('ts/webui/build', 'nni_node/static')
 
-    if jupyter_lab_major_version == '2':
-        shutil.copytree('ts/jupyter_extension/build', 'nni_node/jupyter-extension/build')
-        shutil.copytree(os.path.join(sys.exec_prefix, 'share/jupyter/lab/extensions'), 'nni_node/jupyter-extension/extensions')
-    elif version or Path('ts/jupyter_extension/dist').exists():
-        shutil.copytree('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
+    #if jupyter_lab_major_version == '2':
+    #    shutil.copytree('ts/jupyter_extension/build', 'nni_node/jupyter-extension/build')
+    #    shutil.copytree(os.path.join(sys.exec_prefix, 'share/jupyter/lab/extensions'), 'nni_node/jupyter-extension/extensions')
+    #elif version or Path('ts/jupyter_extension/dist').exists():
+    #    shutil.copytree('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
 
 
-_yarn_env = dict(os.environ)
+_npm_env = dict(os.environ)
 # `Path('nni_node').resolve()` does not work on Windows if the directory not exists
-_yarn_env['PATH'] = str(Path().resolve() / 'nni_node') + path_env_separator + os.environ['PATH']
-_yarn_path = Path().resolve() / 'toolchain/yarn/bin' / yarn_executable
+_npm_env['PATH'] = str(Path().resolve() / 'nni_node') + path_env_separator + os.environ['PATH']
 _npm_path = Path().resolve() / 'toolchain/node' / npm_executable
-
-def _yarn(path, *args):
-    _print('yarn ' + ' '.join(args) + f' (path: {path})')
-    if os.environ.get('GLOBAL_TOOLCHAIN'):
-        subprocess.run(['yarn', *args], cwd=path, check=True)
-    else:
-        subprocess.run([str(_yarn_path), *args], cwd=path, check=True, env=_yarn_env)
 
 def _npm(path, *args):
     _print('npm ' + ' '.join(args) + f' (path: {path})')
     if os.environ.get('GLOBAL_TOOLCHAIN'):
         subprocess.run(['npm', *args], cwd=path, check=True)
     else:
-        subprocess.run([str(_npm_path), *args], cwd=path, check=True, env=_yarn_env)
+        subprocess.run([str(_npm_path), *args], cwd=path, check=True, env=_npm_env)
 
 
 def _symlink(target_file, link_location):

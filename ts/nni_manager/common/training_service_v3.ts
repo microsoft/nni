@@ -117,4 +117,7 @@ export interface TrainingServiceV3 {
      *  Note that `environments` object should be immutable.
      **/
     onEnvironmentUpdate(callback: (environments: EnvironmentInfo[]) => Promise<void>): void;
+
+    // TODO: temporary api
+    downloadTrialDirectory(trialId: string): Promise<string>;
 }

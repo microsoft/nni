@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import path from 'node:path';
+
+import { globals } from 'common/globals';
 import { Logger, getLogger } from 'common/log';
 import type { LocalConfig, TrainingServiceConfig } from 'common/experimentConfig';
 import type { EnvironmentInfo, Metric, Parameter, TrainingServiceV3 } from 'common/training_service_v3';
@@ -111,6 +114,11 @@ export class LocalTrainingServiceV3 implements TrainingServiceV3 {
 
     public onEnvironmentUpdate(_callback: (environments: EnvironmentInfo[]) => Promise<void>): void {
         // never
+    }
+
+    public async downloadTrialDirectory(trialId: string): Promise<string> {
+        // FIXME: hack
+        return path.join(globals.paths.experimentRoot, 'environments', this.env.id, 'trials', trialId);
     }
 }
 

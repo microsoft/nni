@@ -43,7 +43,6 @@ stages:
     - script: |
         set -e
         (cd test && python -m pytest ut)
-        export PATH=$PATH:$PWD/toolchain/yarn/bin
         export CI=true
         (cd ts/nni_manager && npm run test)
       displayName: SDK unit test
