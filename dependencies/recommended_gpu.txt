@@ -14,6 +14,7 @@ mmdet
 nn-meter
 lightgbm
 onnx
+onnxsim
 peewee
 graphviz
 gym
