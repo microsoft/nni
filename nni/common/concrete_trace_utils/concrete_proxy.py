@@ -73,11 +73,7 @@ class ConcreteProxy(Proxy):
         self.node = node
 
     def __repr__(self) -> str:
-        # to detect if in debugging or in code
-        calling_frame_name = inspect.stack()[1][1]
-        if calling_frame_name.endswith('pydevd_exe2.py') or calling_frame_name.endswith('pydevd_safe_repr.py'):
-            return f'ConcreteProxy({self.node.name})'
-        return repr(self.value)
+        return f'ConcreteProxy({self.node.name}, {self.value})'
 
     def __getattr__(self, k) -> ConcreteProxy:
         return ConcreteAttrProxy(self, k)

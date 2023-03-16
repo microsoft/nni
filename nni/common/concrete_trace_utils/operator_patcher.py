@@ -6,8 +6,10 @@ if TYPE_CHECKING:
     from .concrete_tracer import ConcreteTracer
 
 import ast
+import builtins
 import inspect
 import logging
+import platform
 
 from textwrap import dedent
 from types import MethodType, FunctionType
@@ -21,6 +23,7 @@ from .utils import (
     _orig_len,
     _orig_dict,
     _orig_zip,
+    _orig_tuple,
 )
 
 _logger = logging.getLogger(__name__)
@@ -49,7 +52,16 @@ class TransformerOp(ast.NodeTransformer):
         return super().visit(node)
 
     def visit_Call(self, node: ast.Call):
-        if not isinstance(node.func, ast.Name) or node.func.id != 'patch_run':
+        if isinstance(node.func, ast.Name) and node.func.id == 'super' and len(node.args) == 0:
+            return self.generic_visit(ast.Call(
+                func=ast.Name(id='super', ctx=ast.Load()),
+                args=[
+                    ast.Attribute(value=ast.Name(id='self', ctx=ast.Load()), attr='__class__', ctx=ast.Load()),
+                    ast.Name(id='self', ctx=ast.Load()),
+                ],
+                keywords=node.keywords,
+            ))
+        elif not isinstance(node.func, ast.Name) or node.func.id != 'patch_run':
             self.is_transformed = True
             return self.generic_visit(ast.Call(
                 func=ast.Name(id='patch_run', ctx=ast.Load()),
@@ -226,20 +238,27 @@ class OperatorPatcher:
                 assert _orig_len(closures) == _orig_len(co_freevars)
                 closure_dict = _orig_dict(_orig_zip(co_freevars, [c.cell_contents for c in closures]))
 
-            var_dict = {}
-            exec(
-                # use func.__code__.co_filename to make the new function easily debuggable.
-                compile(new_tree, func_inner.__code__.co_filename, 'exec'),
-                {
-                    'patch_run': OperatorPatcherContext.patch_run,
-                    **func_inner.__globals__,
-                    **closure_dict,
-                },
-                var_dict)
-            if the_self is not None:
-                return var_dict['new_func'].__get__(the_self)
-            else:
-                return var_dict['new_func']
+            tuple_wrapped = tuple
+            try:
+                if platform.python_version_tuple() < ('3', '9'):
+                    setattr(builtins, 'tuple', _orig_tuple)
+                var_dict = {}
+                exec(
+                    # use func.__code__.co_filename to make the new function easily debuggable.
+                    compile(new_tree, func_inner.__code__.co_filename, 'exec'),
+                    {
+                        'patch_run': OperatorPatcherContext.patch_run,
+                        **func_inner.__globals__,
+                        **closure_dict,
+                    },
+                    var_dict)
+                if the_self is not None:
+                    return var_dict['new_func'].__get__(the_self)
+                else:
+                    return var_dict['new_func']
+            finally:
+                if platform.python_version_tuple() < ('3', '9'):
+                    setattr(builtins, 'tuple', tuple_wrapped)
 
 class OperatorPatcherContext:
     ctx_tracer: Optional['ConcreteTracer'] = None

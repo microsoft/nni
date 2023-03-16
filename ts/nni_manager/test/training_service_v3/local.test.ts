@@ -268,7 +268,7 @@ async function beforeHook(): Promise<void> {
 
 async function afterHook() {
     if (tmpDir !== null) {
-        await fs.rm(tmpDir, { force: true, recursive: true });
+        try { await fs.rm(tmpDir, { force: true, recursive: true }) } catch { };
     }
 
     if (server !== null) {
