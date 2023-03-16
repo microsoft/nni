@@ -5,6 +5,7 @@ from __future__ import annotations
 
 __all__ = ['BenchmarkEvaluator', 'NasBench101Benchmark', 'NasBench201Benchmark']
 
+import itertools
 import logging
 import random
 import warnings
@@ -25,7 +26,7 @@ def _report_intermediates_and_final(query_result: list[Any], metric: str, query:
 
     Utility function for :meth:`BenchmarkEvaluator.evaluate`.
     """
-    if not len(query_result):
+    if not query_result:
         raise ValueError('Invalid query. Results from benchmark is empty: ' + query)
     if len(query_result) > 1:
         query_result = random.choice(query_result)
@@ -172,7 +173,7 @@ class NasBench101Benchmark(BenchmarkEvaluator):
         constraint = NasBench101CellConstraint(9, num_nodes, ops, inputs)
 
         return SlimBenchmarkSpace({
-            mutable.label: mutable for mutable in ([num_nodes] + ops + inputs + [constraint])
+            mutable.label: mutable for mutable in itertools.chain([num_nodes], ops, inputs, [constraint])
         })
 
     def evaluate(self, sample: Sample) -> Any:
