@@ -61,6 +61,14 @@ class BenchmarkModelSpace(RawFormatModelSpace):
     def __init__(self, model_space: BenchmarkEvaluator):
         ...
 
+    @overload
+    def __init__(self, model_space: BaseModelSpace):
+        ...
+
+    @overload
+    def __init__(self, model_space: None, evaluator: BenchmarkEvaluator):
+        ...
+
     def __init__(self, model_space: BaseModelSpace | BenchmarkEvaluator | None, evaluator: BenchmarkEvaluator | None = None):
         from .evaluator import BenchmarkEvaluator
 

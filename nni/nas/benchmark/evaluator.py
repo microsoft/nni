@@ -8,10 +8,10 @@ __all__ = ['BenchmarkEvaluator', 'NasBench101Benchmark', 'NasBench201Benchmark']
 import logging
 import random
 import warnings
-from typing import Any, Iterable, cast
+from typing import Any, cast
 
 import nni
-from nni.mutable import Sample, Mutable, MutableDict, Categorical, CategoricalMultiple, label_scope
+from nni.mutable import Sample, Mutable, LabeledMutable, Categorical, CategoricalMultiple, label_scope
 from nni.nas.evaluator import Evaluator
 from nni.nas.space import ExecutableModelSpace
 
@@ -31,12 +31,12 @@ def _report_intermediates_and_final(query_result: list[Any], metric: str, query:
         query_result = random.choice(query_result)
     else:
         query_result = query_result[0]
-    query_result = cast(dict, query_result)
-    for i in query_result.get('intermediates', []):
+    query_dict = cast(dict, query_result)
+    for i in query_dict.get('intermediates', []):
         if i[metric] is not None:
             nni.report_intermediate_result(i[metric] * scale)
-    nni.report_final_result(query_result[metric] * scale)
-    return query_result[metric]
+    nni.report_final_result(query_dict[metric] * scale)
+    return query_dict[metric]
 
 
 def _common_label_scope(labels: list[str]) -> str:
@@ -76,7 +76,7 @@ class BenchmarkEvaluator(Evaluator):
         """
         raise NotImplementedError()
 
-    def validate_space(self, space: Mutable) -> SlimBenchmarkSpace:
+    def validate_space(self, space: Mutable) -> dict[str, LabeledMutable]:
         """Validate the search space. Raise exception if invalid. Returns the validated space.
 
         By default, it will cross-check with the :meth:`default_space`, and return the default space.
@@ -99,7 +99,7 @@ class BenchmarkEvaluator(Evaluator):
 
         return current_space
 
-    def evaluate(self, sample: Sample) -> float:
+    def evaluate(self, sample: Sample) -> Any:
         """:meth:`evaluate` receives a sample and returns a float score.
         It also reports intermediate and final results through NNI trial API.
 
@@ -109,13 +109,15 @@ class BenchmarkEvaluator(Evaluator):
         """
         raise NotImplementedError()
 
-    def _execute(self, model: ExecutableModelSpace) -> None:
+    def _execute(self, model: ExecutableModelSpace) -> Any:
         """Execute the model with the sample."""
 
         from .space import BenchmarkModelSpace
         if not isinstance(model, BenchmarkModelSpace):
             warnings.warn('It would be better to use BenchmarkModelSpace for benchmarking to avoid '
                           'unnecessary overhead and silent mistakes.')
+        if model.sample is None:
+            raise ValueError('Model can not be evaluted because it has not been sampled yet.')
 
         return self.evaluate(model.sample)
 
@@ -173,7 +175,7 @@ class NasBench101Benchmark(BenchmarkEvaluator):
             mutable.label: mutable for mutable in ([num_nodes] + ops + inputs + [constraint])
         })
 
-    def evaluate(self, sample: Sample) -> float:
+    def evaluate(self, sample: Sample) -> Any:
         sample = _sorted_dict(_strip_common_label_scope(sample))
         _logger.debug('NasBench101 sample submitted to query: %s', sample)
 
@@ -225,7 +227,7 @@ class NasBench201Benchmark(BenchmarkEvaluator):
         ]
         return SlimBenchmarkSpace({op.label: op for op in ops})
 
-    def evaluate(self, sample: Sample) -> float:
+    def evaluate(self, sample: Sample) -> Any:
         sample = _sorted_dict(_strip_common_label_scope(sample))
         _logger.debug('NasBench201 sample submitted to query: %s', sample)
 
