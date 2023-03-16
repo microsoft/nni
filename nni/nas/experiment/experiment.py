@@ -9,7 +9,7 @@ import atexit
 import logging
 import warnings
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 from typing_extensions import Literal
 
 import nni
@@ -17,14 +17,14 @@ from nni.experiment import Experiment, RunMode
 from nni.nas.evaluator import Evaluator
 from nni.nas.execution import ExecutionEngine, TrainingServiceExecutionEngine, SequentialExecutionEngine
 from nni.nas.space import ExecutableModelSpace, BaseModelSpace, GraphModelSpace
+from nni.nas.strategy import Strategy
+from nni.nas.utils.serializer import get_default_serializer
+from nni.tools.nnictl.config_utils import Experiments
 from .config import (
     NasExperimentConfig, ExecutionEngineConfig,
     TrainingServiceEngineConfig, CgoEngineConfig, SequentialEngineConfig,
     ModelFormatConfig, GraphModelFormatConfig, SimplifiedModelFormatConfig, RawModelFormatConfig
 )
-from nni.nas.strategy import Strategy
-from nni.nas.utils.serializer import get_default_serializer
-from nni.tools.nnictl.config_utils import Experiments
 
 _logger = logging.getLogger(__name__)
 
@@ -136,10 +136,11 @@ class NasExperiment(Experiment):
         if isinstance(config, TrainingServiceEngineConfig):
             return TrainingServiceExecutionEngine(self)
         elif isinstance(config, CgoEngineConfig):
+            from nni.experiment.config.training_services import RemoteConfig
             from nni.nas.execution.cgo import CrossGraphOptimization
             engine = TrainingServiceExecutionEngine(self)
+            assert isinstance(config.training_service, RemoteConfig)
             cgo_middleware = CrossGraphOptimization(
-                self,
                 config.training_service,
                 config.max_concurrency_cgo,
                 config.batch_waiting_time
@@ -191,7 +192,7 @@ class NasExperiment(Experiment):
             _get_current_timestamp(),
             'N/A',
             self.config.experiment_name,
-            None,
+            'N/A',
             status='RUNNING',
             tag=['retiarii'],
             logDir=str(self.config.experiment_working_directory)
@@ -287,7 +288,8 @@ class NasExperiment(Experiment):
 
         # NOTE: Engine is designed to be disposable.
         # It should never restart because one experiment can't run twice.
-        self._engine.shutdown()
+        if self._engine is not None:
+            self._engine.shutdown()
 
         _logger.debug('Stopping logging...')
         self._stop_logging()
@@ -325,7 +327,7 @@ class NasExperiment(Experiment):
         if formatter == 'code':
             if not all(isinstance(model, GraphModelSpace) for model in models):
                 raise ValueError('Formatter "code" is only supported for GraphModelSpace.')
-            return [model.to_code() for model in models]
+            return [cast(GraphModelSpace, model).to_code() for model in models]
         if formatter == 'dict':
             return [model.sample for model in models]
         if formatter == 'instance':
@@ -334,11 +336,14 @@ class NasExperiment(Experiment):
 
     def _wait_completion(self) -> bool:
         _logger.info('Waiting for models submitted to engine to finish...')
-        self._engine.wait_models()
+        if self._engine is not None:
+            self._engine.wait_models()
         _logger.info('Experiment is completed.')
         if self._nni_manager_required():
             _logger.info('Search process is done. You can put an `time.sleep(FOREVER)` '
                          'here to block the process if you want to continue viewing the experiment.')
+        # Always return true no matter successful or not.
+        return True
 
     def _nni_manager_required(self) -> bool:
         """Return whether NNI manager and training service are created.
@@ -443,11 +448,13 @@ class NasExperiment(Experiment):
 
         NOTE: This should only be called after the engine is created (i.e., after calling :meth:`start`).
         """
-        return {
+        result = {
             'version': self._state_dict_version,
-            'engine': self._engine.state_dict(),
             'strategy': self.strategy.state_dict(),
         }
+        if self._engine is not None:
+            result['engine'] = self._engine.state_dict()
+        return result
 
     def load_state_dict(self, state_dict: dict):
         """Load the state dict to recover the status of experiment.
@@ -457,6 +464,6 @@ class NasExperiment(Experiment):
         if state_dict['version'] != self._state_dict_version:
             _logger.warning(f'Incompatible state dict version: {state_dict["version"]} vs {self._state_dict_version}. '
                             'Some components may not be restored correctly.')
-
-        self._engine.load_state_dict(state_dict['engine'])
+        if self._engine is not None:
+            self._engine.load_state_dict(state_dict['engine'])
         self.strategy.load_state_dict(state_dict['strategy'])

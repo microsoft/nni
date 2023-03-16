@@ -7,8 +7,7 @@ __all__ = [
     'AutoFormer', 'RelativePositionSelfAttention', 'RelativePosition2D',
 ]
 
-from copy import deepcopy
-from typing import Optional, Tuple, cast, Any, Dict, Union
+from typing import Tuple, cast, Any, Dict
 
 import torch
 import torch.nn as nn
@@ -88,7 +87,7 @@ class RelativePositionSelfAttention(MutableModule):
     interacting with queries and keys in self-attention modules.
 
     This class is different from PyTorch's built-in ``nn.MultiheadAttention`` in:
-    
+
     1. It supports relative position embedding.
     2. It only supports self attention.
     3. It uses fixed dimension for each head, rather than fixed total dimension.
@@ -108,6 +107,8 @@ class RelativePositionSelfAttention(MutableModule):
     ):
         super().__init__()
 
+        # The self. attributes are only used for inspection.
+        # The actual values are stored in the submodules.
         if current_model() is not None:
             self.embed_dim = ensure_frozen(embed_dim)
             self.num_heads = ensure_frozen(num_heads)
@@ -117,30 +118,30 @@ class RelativePositionSelfAttention(MutableModule):
 
         # head_dim is fixed 64 in official AutoFormer. set head_dim = None to use flex head dim.
         self.head_dim = head_dim or (embed_dim // num_heads)
-        self.scale = qk_scale or head_dim ** -0.5
+        self.scale = qk_scale or cast(int, head_dim) ** -0.5
         self.qkv_bias = qkv_bias
 
         if isinstance(head_dim, Mutable) and isinstance(num_heads, Mutable):
             raise ValueError('head_dim and num_heads can not be both mutable.')
 
         # Please refer to MixedMultiheadAttention for details.
-        self.q = MutableLinear(embed_dim, head_dim * num_heads, bias=qkv_bias)
-        self.k = MutableLinear(embed_dim, head_dim * num_heads, bias=qkv_bias)
-        self.v = MutableLinear(embed_dim, head_dim * num_heads, bias=qkv_bias)
+        self.q = MutableLinear(cast(int, embed_dim), cast(int, head_dim) * num_heads, bias=qkv_bias)
+        self.k = MutableLinear(cast(int, embed_dim), cast(int, head_dim) * num_heads, bias=qkv_bias)
+        self.v = MutableLinear(cast(int, embed_dim), cast(int, head_dim) * num_heads, bias=qkv_bias)
 
         self.attn_drop = nn.Dropout(attn_drop)
-        self.proj = MutableLinear(head_dim * num_heads, embed_dim)
+        self.proj = MutableLinear(cast(int, head_dim) * num_heads, cast(int, embed_dim))
         self.proj_drop = nn.Dropout(proj_drop)
         self.rpe = rpe
 
         if self.rpe:
             if isinstance(head_dim, Mutable):
                 raise ValueError('head_dim must be a fixed integer when rpe is True.')
-            self.rel_pos_embed_k = RelativePosition2D(head_dim, rpe_length)
-            self.rel_pos_embed_v = RelativePosition2D(head_dim, rpe_length)
+            self.rel_pos_embed_k = RelativePosition2D(cast(int, head_dim), rpe_length)
+            self.rel_pos_embed_v = RelativePosition2D(cast(int, head_dim), rpe_length)
 
     def freeze(self, sample) -> RelativePositionSelfAttention:
-        new_module = super().freeze(sample)
+        new_module = cast(RelativePositionSelfAttention, super().freeze(sample))
         # Handle ad-hoc attributes.
         if isinstance(self.embed_dim, Mutable):
             assert new_module is not self
@@ -198,7 +199,8 @@ class RelativePositionSelfAttention(MutableModule):
         return x
 
     def _shape_forward(self, x: ShapeTensor) -> MutableShape:
-        return MutableShape(x.real_shape)
+        assert x.real_shape is not None
+        return MutableShape(*x.real_shape)
 
     def _count_flops(self, x: tuple[MutableShape], y: tuple[MutableShape]) -> FlopsResult:
         """Count the FLOPs of :class:`RelativePositionSelfAttention`.
@@ -256,7 +258,7 @@ class TransformerEncoderLayer(nn.Module):
         self,
         embed_dim: int | Categorical[int],
         num_heads: int | Categorical[int],
-        mlp_ratio: int | float | Categorical[int] = 4.,
+        mlp_ratio: int | float | Categorical[int] | Categorical[float] = 4.,
         drop_path: float = 0.,
         drop_rate: float = 0.,
         pre_norm: bool = True,
@@ -269,20 +271,20 @@ class TransformerEncoderLayer(nn.Module):
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         self.attn = RelativePositionSelfAttention(embed_dim=embed_dim, num_heads=num_heads, **kwargs)
 
-        self.attn_layer_norm = MutableLayerNorm(embed_dim)
-        self.ffn_layer_norm = MutableLayerNorm(embed_dim)
+        self.attn_layer_norm = MutableLayerNorm(cast(int, embed_dim))
+        self.ffn_layer_norm = MutableLayerNorm(cast(int, embed_dim))
 
         self.activation_fn = nn.GELU()
 
         self.dropout = nn.Dropout(drop_rate)
 
         self.fc1 = MutableLinear(
-            embed_dim,
-            MutableExpression.to_int(embed_dim * mlp_ratio)
+            cast(int, embed_dim),
+            cast(int, MutableExpression.to_int(embed_dim * mlp_ratio))
         )
         self.fc2 = MutableLinear(
-            MutableExpression.to_int(embed_dim * mlp_ratio),
-            embed_dim
+            cast(int, MutableExpression.to_int(embed_dim * mlp_ratio)),
+            cast(int, embed_dim)
         )
 
     def maybe_layer_norm(self, layer_norm, x, before=False, after=False):
@@ -346,6 +348,7 @@ class ClassToken(ParametrizedModule):
         return torch.cat((self.cls_token.expand(x.shape[0], -1, -1), x), dim=1)
 
     def _shape_forward(self, x: ShapeTensor) -> MutableShape:
+        assert x.real_shape is not None
         shape = list(x.real_shape)
         return MutableShape(shape[0], shape[1] + 1, shape[2])
 
@@ -362,6 +365,7 @@ class AbsolutePositionEmbedding(ParametrizedModule):
         return x + self.pos_embed
 
     def _shape_forward(self, x: ShapeTensor) -> MutableShape:
+        assert x.real_shape is not None
         return x.real_shape
 
 

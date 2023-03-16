@@ -10,7 +10,6 @@ from typing import (Dict)
 import torch
 
 import nni.nas.nn.pytorch.layers as nn
-from nni.nas.utils import original_state_dict_hooks
 
 from .convert_mixin import ConvertMixin, ConvertWithShapeMixin
 
@@ -594,6 +593,7 @@ class TestOperators(unittest.TestCase, ConvertMixin):
         x = torch.randn(1, 2, requires_grad=True)
         self.checkExportImport(SimpleOp(), (x, ))
 
+    @unittest.skip('Removed by PyTorch')
     def test_basic_norm_p1(self):
         class SimpleOp(nn.Module):
             def forward(self, x):
@@ -602,7 +602,7 @@ class TestOperators(unittest.TestCase, ConvertMixin):
         x = torch.randn(1, 2, 3, 4, requires_grad=True)
         self.checkExportImport(SimpleOp(), (x, ))
 
-
+    @unittest.skip('Removed by PyTorch')
     def test_basic_norm_p2(self):
         class SimpleOp(nn.Module):
             def forward(self, x):
@@ -972,7 +972,7 @@ class TestOperators(unittest.TestCase, ConvertMixin):
         x = torch.ones((2, 2), requires_grad=True)
         self.checkExportImport(SimpleOp(), (x, ))
 
-
+    @unittest.skip('Removed by PyTorch')
     def test_basic_det(self):
         class SimpleOp(nn.Module):
             def forward(self, x):

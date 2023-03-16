@@ -1,8 +1,7 @@
+import torch
 from torch import nn
 from torch.optim import SGD
-from torch.utils.data import DataLoader
-from torchvision import transforms
-from torchvision.datasets import MNIST
+from torch.utils.data import DataLoader, Dataset
 
 import nni
 from nni.nas.evaluator import FunctionalEvaluator
@@ -13,14 +12,22 @@ from nni.nas.strategy import RegularizedEvolution, PolicyBasedRL, DARTS, Random
 
 from ut.nas.nn.models import SimpleNet
 
+class RandomMnistDataset(Dataset):
+    def __init__(self, length):
+        self.len = length
+        self.inputs = torch.randn(length, 1, 28, 28)
+        self.targets = torch.randint(10, (length,))
+
+    def __getitem__(self, index):
+        return self.inputs[index], self.targets[index]
+
+    def __len__(self):
+        return self.len
+
 def simple_evaluation(model, num_batches=20):
-    transform = transforms.Compose([
-        transforms.Resize((28, 28)),
-        transforms.ToTensor(),
-    ])
-    train_dataset = MNIST('data/mnist', download=False, train=True, transform=transform)
+    train_dataset = RandomMnistDataset(1000)
     train_loader = DataLoader(train_dataset, 64, shuffle=True)
-    valid_dataset = MNIST('data/mnist', download=False, train=False, transform=transform)
+    valid_dataset = RandomMnistDataset(200)
     valid_loader = DataLoader(valid_dataset, 64, shuffle=True)
 
     optimizer = SGD(model.parameters(), lr=0.01, momentum=0.9)
@@ -52,16 +59,12 @@ def test_experiment_sanity():
 
 def test_oneshot_sanity():
     model_space = SimpleNet()
-    transform = transforms.Compose([
-        transforms.Resize((28, 28)),
-        transforms.ToTensor(),
-    ])
-    train_dataset = MNIST('data/mnist', download=False, train=True, transform=transform)
+    train_dataset = RandomMnistDataset(1000)
     train_loader = DataLoader(train_dataset, 64, shuffle=True)
-    valid_dataset = MNIST('data/mnist', download=False, train=False, transform=transform)
+    valid_dataset = RandomMnistDataset(200)
     valid_loader = DataLoader(valid_dataset, 64, shuffle=True)
 
-    evaluator = Classification(num_classes=10, limit_train_batches=10, limit_val_batches=10,
+    evaluator = Classification(num_classes=10,
                                train_dataloaders=train_loader,
                                val_dataloaders=valid_loader,
                                max_epochs=2)

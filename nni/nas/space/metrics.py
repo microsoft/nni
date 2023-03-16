@@ -9,6 +9,7 @@ from typing import Any, Sequence, cast
 
 from nni.typehint import TrialMetric
 
+
 class Metrics:
     """
     Data structure that manages the metric data (e.g., loss, accuracy, etc.).

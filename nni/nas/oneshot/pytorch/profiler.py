@@ -13,6 +13,7 @@ It might be moved to a more general place in the future.
 from __future__ import annotations
 
 import logging
+from typing import cast
 from typing_extensions import Literal
 
 import numpy as np
@@ -50,7 +51,7 @@ class RangeProfilerFilter(ProfilerFilter):
     """Give up the sample if the result of the profiler is out of range.
 
     ``min`` and ``max`` can't be both None.
-    
+
     Parameters
     ----------
     profiler
@@ -61,14 +62,14 @@ class RangeProfilerFilter(ProfilerFilter):
         The upper bound of the profiler result. None means no maximum.
     """
 
-    def __init__(self, profiler: Profiler, min: float | None = None, max: float | None = None):
+    def __init__(self, profiler: Profiler, min: float | None = None, max: float | None = None):  # pylint: disable=redefined-builtin
         super().__init__(profiler)
         self.min_value = min
         self.max_value = max
         if self.min_value is None and self.max_value is None:
             raise ValueError('min and max can\'t be both None')
 
-    def filter(self, sample: Sample) -> None:
+    def filter(self, sample: Sample) -> bool:
         value = self.profiler.profile(sample)
         if self.min_value is not None and value < self.min_value:
             _logger.debug('Profiler returns %f (smaller than %f) for sample: %s', value, self.min_value, sample)
@@ -181,7 +182,7 @@ class ExpectationProfilerPenalty(ProfilerPenalty):
 
     def profile(self, sample: Sample) -> float:
         """Profile based on a distribution of samples.
-        
+
         Each value in the sample must be a dict representation a categorical distribution.
         """
         if not isinstance(self.profiler, ExpressionProfiler):
@@ -204,18 +205,20 @@ class SampleProfilerPenalty(ProfilerPenalty):
 
 def _pow(x: float, y: float) -> float:
     if isinstance(x, torch.Tensor) or isinstance(y, torch.Tensor):
-        return torch.pow(x, y)
+        return cast(float, torch.pow(cast(torch.Tensor, x), y))
     else:
         return np.power(x, y)
 
+
 def _abs(x: float) -> float:
     if isinstance(x, torch.Tensor):
-        return torch.abs(x)
+        return cast(float, torch.abs(x))
     else:
         return np.abs(x)
 
+
 def _relu(x: float) -> float:
     if isinstance(x, torch.Tensor):
-        return nn.functional.relu(x)
+        return cast(float, nn.functional.relu(x))
     else:
         return np.maximum(x, 0)

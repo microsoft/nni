@@ -309,7 +309,7 @@ class RawFormatModelSpace(ExecutableModelSpace):
         Notes
         -----
         The potential issues with serialization are in two folds:
-        
+
         1. The model space could be a deep learning model, and have been arbitrarily mutated by the strategy (e.g., one-shot).
            For example, one submodule is replaced by another, or a layer is removed.
            In this case, we surely cannot use the init arguments to recover the model.

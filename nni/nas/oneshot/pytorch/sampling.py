@@ -6,7 +6,7 @@
 from __future__ import annotations
 import warnings
 import logging
-from typing import Any, TYPE_CHECKING, Callable, cast
+from typing import Any, Callable, TYPE_CHECKING
 
 import pytorch_lightning as pl
 import torch
@@ -44,7 +44,7 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
     _sampling_patience = 100  # number of resample before giving up
     _sampling_attempt = 0
 
-    def __init__(self, training_module: pl.LightningModule, filter: Callable[[Sample], bool] | None = None):
+    def __init__(self, training_module: pl.LightningModule, filter: Callable[[Sample], bool] | None = None):  # pylint: disable=redefined-builtin
         super().__init__(training_module)
         self.filter = filter
 
@@ -91,7 +91,7 @@ class EnasLightningModule(BaseOneShotLightningModule):
     """Sampling-based super-net training but using an RL agent to control the sampling.
 
     The default implementation for :class:`~nni.nas.strategy.ENAS`.
-    
+
     See Also
     --------
     nni.nas.strategy.ENAS

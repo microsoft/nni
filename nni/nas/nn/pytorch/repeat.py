@@ -10,7 +10,7 @@ from typing import Callable, List, Union, Tuple, Optional, cast
 import torch
 import torch.nn as nn
 
-from nni.mutable import Mutable, Categorical, LabeledMutable, Sample, SampleValidationError, auto_label, ensure_frozen
+from nni.mutable import Categorical, LabeledMutable, Mutable, Sample, SampleValidationError, ensure_frozen
 from nni.mutable.mutable import MutableExpression
 from nni.mutable.symbol import SymbolicExpression
 
@@ -188,7 +188,7 @@ class Repeat(MutableModule):
                 exception.paths.append(path)
                 return exception
         else:
-            for name, module in MutableModule.named_mutable_descendants(module):
+            for name, module in MutableModule.named_mutable_descendants(module):  # type: ignore
                 exception = module.check_contains(sample)
                 if exception is not None:
                     exception.paths.append(name)
@@ -244,6 +244,7 @@ def repeat_jit_forward_patch():
     Patch the forward method of Repeat to make it JIT friendly.
     Using ``if`` in forward will cause the graph to be nasty and hard to mutate.
     """
+
     def new_forward(self: Repeat, x):
         for block in self.blocks:
             x = block(x)

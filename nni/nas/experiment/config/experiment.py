@@ -1,13 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from __future__ import annotations
-
 import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Union, Optional, TYPE_CHECKING
+from typing import Any, Dict, Optional, TYPE_CHECKING, Union, List
 from typing_extensions import Literal
 
 from nni.experiment.config import utils, ExperimentConfig
@@ -17,7 +15,7 @@ from .format import ModelFormatConfig
 
 if TYPE_CHECKING:
     from nni.nas.evaluator import Evaluator
-    from nni.nas.nn.pytorch import ModelSpace
+    from nni.nas.space import BaseModelSpace
     from nni.nas.strategy import Strategy
 
 
@@ -48,7 +46,7 @@ class NasExperimentConfig(ExperimentConfig):
 
     2. Create an object by providing several required fields, and then set other fields.
        Though marked as optional in function signature, it's recommended to set all three fields.
-    
+
         config = NasExperimentConfig('ts', 'graph', 'local')
         config.experiment_name = 'hello'
         config.execution_engine.dummy_input = [1, 3, 224, 224]
@@ -82,9 +80,9 @@ class NasExperimentConfig(ExperimentConfig):
     _trial_command_params: Optional[Dict[str, Any]] = None
 
     def __init__(self,
-                 execution_engine: str | ExecutionEngineConfig | None = None,
-                 model_format: str | ModelFormatConfig | None = None,
-                 training_service_platform: str | list[str] | None = None,
+                 execution_engine: Union[str, ExecutionEngineConfig, None] = None,
+                 model_format: Union[str, ModelFormatConfig, None] = None,
+                 training_service_platform: Union[str, List[str], None] = None,
                  **kwargs):
         # `execution_engine` and `model_format` are two shortcuts for easy configuration.
         # We merge them into `kwargs` and let the parent class handle them.
@@ -105,7 +103,7 @@ class NasExperimentConfig(ExperimentConfig):
         super().__init__(training_service_platform=training_service_platform, **kwargs)
 
     @classmethod
-    def default(cls, model_space: ModelSpace, evaluator: Evaluator, strategy: Strategy) -> NasExperimentConfig:
+    def default(cls, model_space: 'BaseModelSpace', evaluator: 'Evaluator', strategy: 'Strategy') -> 'NasExperimentConfig':
         """Instantiate a default config. Infer from current setting of model space, evaluator and strategy.
 
         If the strategy is found to be a one-shot strategy, the execution engine will be set to "sequential" and
@@ -125,12 +123,13 @@ class NasExperimentConfig(ExperimentConfig):
 
         try:
             from nni.nas.oneshot.pytorch.strategy import OneShotStrategy, is_supernet
+            from nni.nas.nn.pytorch import ModelSpace
             if isinstance(strategy, OneShotStrategy):
                 _logger.info('Strategy is found to be a one-shot strategy. '
                              'Setting execution engine to "sequential" and format to "raw".')
                 execution_engine = 'sequential'
                 model_format = 'raw'
-            if is_supernet(model_space):
+            if isinstance(model_space, ModelSpace) and is_supernet(model_space):
                 _logger.info('Model space is found to be a one-shot supernet. '
                              'Setting execution engine to "sequential" and format to "raw" to preserve the weights.')
                 execution_engine = 'sequential'
@@ -165,8 +164,9 @@ class NasExperimentConfig(ExperimentConfig):
         return config
 
     def _canonicalize(self, parents):
-        if self.search_space != RESERVED:
+        if self.search_space != RESERVED and self.search_space != {}:
             raise ValueError('`search_space` field can not be customized in NAS experiment.')
+        self.search_space = {}
 
         if not Path(self.trial_code_directory).samefile(Path.cwd()):
             raise ValueError('`trial_code_directory` field can not be customized in NAS experiment.')
@@ -194,10 +194,8 @@ class NasExperimentConfig(ExperimentConfig):
             self.trial_concurrency = 1
 
             if not utils.is_missing(self.training_service):
-                _logger.warning('`training_service` will be overridden for sequential execution engine.')
+                _logger.warning('`training_service` will be ignored for sequential execution engine.')
 
             self.training_service = utils.training_service_config_factory('local')
 
         super()._canonicalize([self] + parents)
-
-        self._canonical = True
