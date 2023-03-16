@@ -634,7 +634,7 @@ def parametrized_module_init_wrapper(original_init_fn: Callable[..., None]) -> C
             if isinstance(arg, Mutable):
                 self.add_mutable(arg)
             else:
-                _warn_if_nested_mutable(arg)
+                _warn_if_nested_mutable(arg, self.__class__.__name__)
         # Sometimes, arguments will be hijacked to make the inner wrapped class happy.
         # For example Conv2d(choice([3, 5, 7])) should be Conv2d(3) instead,
         # because Conv2d doesn't recognize choice([3, 5, 7]).
@@ -644,12 +644,12 @@ def parametrized_module_init_wrapper(original_init_fn: Callable[..., None]) -> C
     return new_init
 
 
-def _warn_if_nested_mutable(obj: Any) -> None:
+def _warn_if_nested_mutable(obj: Any, cls_name: str) -> None:
     # Warn for cases like MutableConv2d(kernel_size=(nni.choice([3, 5]), nni.choice([3, 5])))
     # This is not designed to be reliable, but only to be user-friendly.
     def _iter(o):
         if isinstance(o, Mutable):
-            _logger.warning(f'Found a nested mutable {o} in parameter {obj}. '
+            _logger.warning(f'Found a nested mutable {o} in parameter {obj} of class {cls_name}. '
                             'This is not recommended, because the mutable will not be tracked. '
                             'Please use MutableList, MutableDict instead, or write every options in a `nni.choice`.')
         else:

@@ -424,9 +424,8 @@ class Preprocessor(nn.Module):
         # end token is used to avoid out-of-range of v_s_. Will not actually affect BP.
         seq = self.embedding(seq.long())
 
-        step_onehot = F.one_hot(torch.arange(self.step_dim)).unsqueeze(0).repeat(batch_size, 1, 1)
+        step_onehot = F.one_hot(torch.arange(self.step_dim, device=seq.device)).unsqueeze(0).repeat(batch_size, 1, 1)
 
-        # feature = self.rnn(torch.cat((seq, step_onehot), -1))
         feature, _ = self.rnn(torch.cat((seq, step_onehot), -1))
         feature = feature[torch.arange(len(feature), device=feature.device), obs['cur_step'].long()]
         return self.fc(feature)
@@ -443,7 +442,7 @@ class Actor(nn.Module):
         obs = to_torch(obs, device=self.linear.weight.device)
         out = self.linear(self.preprocess(obs))
         # to take care of choices with different number of options
-        mask = torch.arange(self.action_dim).expand(len(out), self.action_dim) >= obs['action_dim'].unsqueeze(1)
+        mask = torch.arange(self.action_dim, device=out.device).expand(len(out), self.action_dim) >= obs['action_dim'].unsqueeze(1)
         # NOTE: this could potentially be used for prior knowledge
         out_bias = torch.zeros_like(out)
         out_bias.masked_fill_(mask, float('-inf'))
