@@ -15,6 +15,7 @@ nn-meter
 lightgbm
 onnx
 onnxsim
+onnxruntime-gpu
 peewee
 graphviz
 gym

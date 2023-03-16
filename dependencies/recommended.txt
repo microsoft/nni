@@ -12,6 +12,7 @@ torchmetrics
 lightgbm
 onnx
 onnxsim
+onnxruntime
 peewee
 graphviz
 gym

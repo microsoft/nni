@@ -1,13 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from __future__ import annotations
-
 import logging
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, TYPE_CHECKING
+from typing import Any, Dict, Optional, TYPE_CHECKING, Union, List
 from typing_extensions import Literal
 
 from nni.experiment.config import utils, ExperimentConfig
@@ -82,9 +80,9 @@ class NasExperimentConfig(ExperimentConfig):
     _trial_command_params: Optional[Dict[str, Any]] = None
 
     def __init__(self,
-                 execution_engine: str | ExecutionEngineConfig | None = None,
-                 model_format: str | ModelFormatConfig | None = None,
-                 training_service_platform: str | list[str] | None = None,
+                 execution_engine: Union[str, ExecutionEngineConfig, None] = None,
+                 model_format: Union[str, ModelFormatConfig, None] = None,
+                 training_service_platform: Union[str, List[str], None] = None,
                  **kwargs):
         # `execution_engine` and `model_format` are two shortcuts for easy configuration.
         # We merge them into `kwargs` and let the parent class handle them.
@@ -105,7 +103,7 @@ class NasExperimentConfig(ExperimentConfig):
         super().__init__(training_service_platform=training_service_platform, **kwargs)
 
     @classmethod
-    def default(cls, model_space: BaseModelSpace, evaluator: Evaluator, strategy: Strategy) -> NasExperimentConfig:
+    def default(cls, model_space: 'BaseModelSpace', evaluator: 'Evaluator', strategy: 'Strategy') -> 'NasExperimentConfig':
         """Instantiate a default config. Infer from current setting of model space, evaluator and strategy.
 
         If the strategy is found to be a one-shot strategy, the execution engine will be set to "sequential" and
