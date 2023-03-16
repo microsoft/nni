@@ -18,6 +18,6 @@ graphviz
 gym
 tianshou >= 0.4.1
 matplotlib
-git+git://github.com/microsoft/nn-Meter.git#egg=nn_meter
+git+https://github.com/microsoft/nn-Meter.git#egg=nn_meter
 sympy
 timm >= 0.5.4
