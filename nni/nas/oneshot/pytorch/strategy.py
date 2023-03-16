@@ -194,8 +194,7 @@ class OneShotStrategy(Strategy):
         """
         One-shot strategy typically requires fusing train and validation dataloader in an ad-hoc way.
         As one-shot strategy doesn't try to open the blackbox of a batch,
-        theoretically, these dataloader can be
-        `any dataloader types supported by Lightning <https://pytorch-lightning.readthedocs.io/en/stable/guides/data.html>`__.
+        theoretically, these dataloader can be any dataloader types supported by Lightning.
 
         Parameters
         ----------

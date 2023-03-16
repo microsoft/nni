@@ -98,11 +98,11 @@ class Lightning(MutableEvaluator):
     train_dataloders
         Used in ``trainer.fit()``. A PyTorch DataLoader with training samples.
         If the ``lightning_module`` has a predefined train_dataloader method this will be skipped.
-        It can be `any types of dataloader supported by Lightning <https://pytorch-lightning.readthedocs.io/en/stable/guides/data.html>`__.
+        It can be any types of dataloader supported by Lightning.
     val_dataloaders
         Used in ``trainer.fit()``. Either a single PyTorch Dataloader or a list of them, specifying validation samples.
         If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
-        It can be `any types of dataloader supported by Lightning <https://pytorch-lightning.readthedocs.io/en/stable/guides/data.html>`__.
+        It can be any types of dataloader supported by Lightning.
     datamodule
         Used in ``trainer.fit()``. See `Lightning DataModule <https://pytorch-lightning.readthedocs.io/en/stable/data/datamodule.html>`__.
     fit_kwargs

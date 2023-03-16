@@ -11,7 +11,7 @@ pytorch-lightning >= 1.6.1
 mmcv-full == 1.7.1
 mmdet
 
-nn-meter
+git+git://github.com/microsoft/nn-Meter.git#egg=nn_meter
 lightgbm
 onnx
 onnxsim
