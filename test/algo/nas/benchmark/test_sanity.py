@@ -3,6 +3,8 @@ from nni.nas.benchmark import *
 
 from nni.nas.hub.pytorch import NasBench101, NasBench201
 
+from .prepare import *
+
 
 def test_nasbench101():
     benchmark = NasBench101Benchmark()
