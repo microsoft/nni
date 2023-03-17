@@ -42,6 +42,11 @@ stages:
 
     - script: |
         cd test
+        python algo/nas/benchmark/prepare.py
+      displayName: Prepare NAS benchmark
+
+    - script: |
+        cd test
         python -m pytest algo/nas
       displayName: NAS test
 
