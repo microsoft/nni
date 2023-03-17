@@ -63,7 +63,7 @@ def _load_custom_config():
     return [algo for algo in  _load_config_file(path) if not algo.is_builtin]
 
 def _load_config_file(path):
-    with open(path) as f:
+    with open(path, encoding='utf_8') as f:
         config = yaml.safe_load(f)
     algos = []
     for algo_type in ['tuner', 'assessor', 'advisor']:

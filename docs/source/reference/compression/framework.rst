@@ -4,48 +4,48 @@ Framework Related
 Pruner
 ------
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.base.Pruner
+.. autoclass:: nni.compression.pytorch.base.Pruner
     :members:
 
 PrunerModuleWrapper
 -------------------
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.base.PrunerModuleWrapper
+.. autoclass:: nni.compression.pytorch.base.PrunerModuleWrapper
 
 BasicPruner
 -----------
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.basic_pruner.BasicPruner
+.. autoclass:: nni.compression.pytorch.pruning.basic_pruner.BasicPruner
     :members:
 
 DataCollector
 -------------
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.tools.DataCollector
+.. autoclass:: nni.compression.pytorch.pruning.tools.DataCollector
     :members:
 
 MetricsCalculator
 -----------------
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.tools.MetricsCalculator
+.. autoclass:: nni.compression.pytorch.pruning.tools.MetricsCalculator
     :members:
 
 SparsityAllocator
 -----------------
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.tools.SparsityAllocator
+.. autoclass:: nni.compression.pytorch.pruning.tools.SparsityAllocator
     :members:
 
 BasePruningScheduler
 --------------------
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.base.BasePruningScheduler
+.. autoclass:: nni.compression.pytorch.base.BasePruningScheduler
     :members:
 
 TaskGenerator
 -------------
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.tools.TaskGenerator
+.. autoclass:: nni.compression.pytorch.pruning.tools.TaskGenerator
     :members:
 
 Quantizer

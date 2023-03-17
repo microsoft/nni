@@ -31,7 +31,7 @@ author = 'Microsoft'
 version = ''
 # The full version, including alpha/beta/rc tags
 # FIXME: this should be written somewhere globally
-release = 'v2.8'
+release = 'v2.10'
 
 # -- General configuration ---------------------------------------------------
 
@@ -59,6 +59,7 @@ extensions = [
     'IPython.sphinxext.ipython_console_highlighting',
     'sphinx_tabs.tabs',
     'sphinx_copybutton',
+    'sphinx_comments',
 
     # Custom extensions in extension/ folder.
     'tutorial_links',  # this has to be after sphinx-gallery
@@ -86,7 +87,7 @@ autodoc_mock_imports = [
 # Some of our modules cannot generate summary
 autosummary_mock_imports = [
     'nni.retiarii.codegen.tensorflow',
-    'nni.nas.benchmarks.nasbench101.db_gen',
+    'nni.nas.benchmark.nasbench101.db_gen',
     'nni.tools.jupyter_extension.management',
 ] + autodoc_mock_imports
 
@@ -113,6 +114,8 @@ linkcheck_ignore = [
     r'https://www\.openml\.org/',                           # OpenML
     r'https://ml\.informatik\.uni-freiburg\.de/',
     r'https://docs\.nvidia\.com/deeplearning/',
+    r'https://cla\.opensource\.microsoft\.com',
+    r'https://www\.docker\.com/',
 ]
 
 # Ignore all links located in release.rst

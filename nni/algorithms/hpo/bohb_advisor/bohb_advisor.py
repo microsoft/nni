@@ -648,8 +648,11 @@ class BOHB(MsgDispatcherBase):
             event: the job's state
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
-        logger.debug('Tuner handle trial end, result is %s', data)
         hyper_params = nni.load(data['hyper_params'])
+        if self.is_created_in_previous_exp(hyper_params['parameter_id']):
+            # The end of the recovered trial is ignored
+            return
+        logger.debug('Tuner handle trial end, result is %s', data)
         self._handle_trial_end(hyper_params['parameter_id'])
         if data['trial_job_id'] in self.job_id_para_id_map:
             del self.job_id_para_id_map[data['trial_job_id']]
@@ -695,6 +698,13 @@ class BOHB(MsgDispatcherBase):
         ValueError
             Data type not supported
         """
+        if self.is_created_in_previous_exp(data['parameter_id']):
+            if data['type'] == MetricType.FINAL:
+                # only deal with final metric using import data
+                param = self.get_previous_param(data['parameter_id'])
+                trial_data = [{'parameter': param, 'value': nni.load(data['value'])}]
+                self.handle_import_data(trial_data)
+            return
         logger.debug('handle report metric data = %s', data)
         if 'value' in data:
             data['value'] = nni.load(data['value'])
@@ -752,7 +762,10 @@ class BOHB(MsgDispatcherBase):
                     'Data type not supported: {}'.format(data['type']))
 
     def handle_add_customized_trial(self, data):
-        pass
+        global _next_parameter_id
+        # data: parameters
+        previous_max_param_id = self.recover_parameter_id(data)
+        _next_parameter_id = previous_max_param_id + 1
 
     def handle_import_data(self, data):
         """Import additional data for tuning

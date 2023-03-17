@@ -70,12 +70,27 @@ steps:
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'))
 
 - script: |
-    yarn --cwd ts/nni_manager install
+    cd ts/nni_manager
+    npm install
   displayName: Install NNI Manager dependencies
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'legacy')))
 
 - script: |
-    yarn --cwd ts/webui install
+    # make pack_dependencies.py happy
+    mkdir ts/nni_manager/node_modules
+  displayName: (Legacy) Skip NNI Manager dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
+
+- script: |
+    cd ts/webui
+    npm install
   displayName: Install Web UI dependencies
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'legacy')))
+
+- script: |
+    mkdir ts/webui/node_modules
+  displayName: (Legacy) Skip Web UI dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
 
 - script: |
     python test/vso_tools/pack_dependencies.py dependencies.zip

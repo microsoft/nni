@@ -1,12 +1,6 @@
 Compression Utilities
 =====================
 
-SensitivityAnalysis
--------------------
-
-.. autoclass:: nni.compression.pytorch.utils.SensitivityAnalysis
-    :members:
-
 ChannelDependency
 -----------------
 
@@ -39,4 +33,4 @@ count_flops_params
 compute_sparsity
 ----------------
 
-.. autofunction:: nni.algorithms.compression.v2.pytorch.utils.pruning.compute_sparsity
+.. autofunction:: nni.compression.pytorch.utils.pruning.compute_sparsity

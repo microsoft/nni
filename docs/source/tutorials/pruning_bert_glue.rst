@@ -200,6 +200,28 @@ Create dataloaders.
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Downloading:   0%|          | 0.00/28.0 [00:00<?, ?B/s]    Downloading: 100%|##########| 28.0/28.0 [00:00<00:00, 63.7kB/s]
+    Downloading:   0%|          | 0.00/232k [00:00<?, ?B/s]    Downloading:  18%|#8        | 42.0k/232k [00:00<00:00, 287kB/s]    Downloading:  46%|####6     | 108k/232k [00:00<00:00, 381kB/s]     Downloading: 100%|##########| 232k/232k [00:00<00:00, 785kB/s]
+    Downloading:   0%|          | 0.00/466k [00:00<?, ?B/s]    Downloading:   8%|7         | 36.9k/466k [00:00<00:01, 258kB/s]    Downloading:  29%|##9       | 135k/466k [00:00<00:00, 577kB/s]     Downloading:  75%|#######4  | 348k/466k [00:00<00:00, 1.19MB/s]    Downloading: 100%|##########| 466k/466k [00:00<00:00, 1.29MB/s]
+    Downloading:   0%|          | 0.00/570 [00:00<?, ?B/s]    Downloading: 100%|##########| 570/570 [00:00<00:00, 1.23MB/s]
+    Downloading builder script:   0%|          | 0.00/28.8k [00:00<?, ?B/s]    Downloading builder script: 100%|##########| 28.8k/28.8k [00:00<00:00, 392kB/s]
+    Downloading metadata:   0%|          | 0.00/28.7k [00:00<?, ?B/s]    Downloading metadata: 100%|##########| 28.7k/28.7k [00:00<00:00, 389kB/s]
+    Downloading and preparing dataset glue/mnli (download: 298.29 MiB, generated: 78.65 MiB, post-processed: Unknown size, total: 376.95 MiB) to /home/nishang/nni/examples/tutorials/data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad...
+    Downloading data:   0%|          | 0.00/313M [00:00<?, ?B/s]    Downloading data:   0%|          | 718k/313M [00:00<00:45, 6.84MB/s]    Downloading data:   1%|          | 2.51M/313M [00:00<00:24, 12.8MB/s]    Downloading data:   1%|1         | 4.16M/313M [00:00<00:21, 14.3MB/s]    Downloading data:   2%|1         | 5.70M/313M [00:00<00:21, 14.6MB/s]    Downloading data:   2%|2         | 7.33M/313M [00:00<00:20, 15.2MB/s]    Downloading data:   3%|2         | 8.85M/313M [00:00<00:20, 15.1MB/s]    Downloading data:   3%|3         | 10.5M/313M [00:00<00:19, 15.3MB/s]    Downloading data:   4%|3         | 12.1M/313M [00:00<00:19, 15.5MB/s]    Downloading data:   4%|4         | 13.7M/313M [00:00<00:19, 15.6MB/s]    Downloading data:   5%|4         | 15.3M/313M [00:01<00:18, 15.7MB/s]    Downloading data:   6%|5         | 18.7M/313M [00:01<00:13, 21.5MB/s]    Downloading data:   8%|7         | 24.6M/313M [00:01<00:08, 32.8MB/s]    Downloading data:  11%|#1        | 34.6M/313M [00:01<00:05, 53.1MB/s]    Downloading data:  15%|#4        | 45.7M/313M [00:01<00:03, 70.5MB/s]    Downloading data:  17%|#6        | 52.8M/313M [00:01<00:04, 53.5MB/s]    Downloading data:  20%|##        | 62.9M/313M [00:01<00:04, 51.8MB/s]    Downloading data:  23%|##3       | 72.8M/313M [00:01<00:03, 62.1MB/s]    Downloading data:  25%|##5       | 79.7M/313M [00:02<00:03, 60.2MB/s]    Downloading data:  29%|##9       | 91.3M/313M [00:02<00:03, 73.7MB/s]    Downloading data:  32%|###1      | 99.4M/313M [00:02<00:03, 69.3MB/s]    Downloading data:  35%|###5      | 110M/313M [00:02<00:02, 76.0MB/s]     Downloading data:  39%|###8      | 122M/313M [00:02<00:02, 87.0MB/s]    Downloading data:  42%|####1     | 131M/313M [00:02<00:02, 79.9MB/s]    Downloading data:  45%|####5     | 142M/313M [00:02<00:02, 73.7MB/s]    Downloading data:  49%|####9     | 153M/313M [00:02<00:01, 84.7MB/s]    Downloading data:  52%|#####1    | 162M/313M [00:03<00:01, 80.0MB/s]    Downloading data:  55%|#####4    | 171M/313M [00:03<00:03, 36.2MB/s]    Downloading data:  57%|#####6    | 177M/313M [00:03<00:04, 33.4MB/s]    Downloading data:  58%|#####8    | 182M/313M [00:03<00:03, 36.0MB/s]    Downloading data:  60%|######    | 189M/313M [00:04<00:03, 39.3MB/s]    Downloading data:  64%|######4   | 200M/313M [00:04<00:02, 53.6MB/s]    Downloading data:  66%|######6   | 207M/313M [00:04<00:02, 43.9MB/s]    Downloading data:  70%|#######   | 219M/313M [00:04<00:01, 58.0MB/s]    Downloading data:  73%|#######2  | 227M/313M [00:04<00:01, 63.3MB/s]    Downloading data:  75%|#######5  | 236M/313M [00:04<00:01, 55.5MB/s]    Downloading data:  78%|#######8  | 245M/313M [00:04<00:01, 63.9MB/s]    Downloading data:  82%|########1 | 256M/313M [00:05<00:00, 73.7MB/s]    Downloading data:  85%|########4 | 264M/313M [00:05<00:00, 63.7MB/s]    Downloading data:  87%|########6 | 272M/313M [00:05<00:00, 47.0MB/s]    Downloading data:  90%|######### | 283M/313M [00:05<00:00, 57.2MB/s]    Downloading data:  93%|#########2| 290M/313M [00:05<00:00, 50.2MB/s]    Downloading data:  96%|#########5| 299M/313M [00:05<00:00, 54.7MB/s]    Downloading data:  99%|#########9| 310M/313M [00:06<00:00, 67.6MB/s]    Downloading data: 100%|##########| 313M/313M [00:06<00:00, 51.7MB/s]
+    Generating train split:   0%|          | 0/392702 [00:00<?, ? examples/s]    Generating train split:   1%|          | 2477/392702 [00:00<00:15, 24761.40 examples/s]    Generating train split:   1%|1         | 4954/392702 [00:00<00:16, 24160.14 examples/s]    Generating train split:   2%|1         | 7372/392702 [00:00<00:16, 24024.43 examples/s]    Generating train split:   3%|2         | 9844/392702 [00:00<00:15, 24293.64 examples/s]    Generating train split:   3%|3         | 12274/392702 [00:01<00:50, 7567.28 examples/s]    Generating train split:   4%|3         | 14708/392702 [00:01<00:38, 9870.96 examples/s]    Generating train split:   4%|4         | 17144/392702 [00:01<00:30, 12247.55 examples/s]    Generating train split:   5%|5         | 19712/392702 [00:01<00:25, 14796.89 examples/s]    Generating train split:   6%|5         | 21979/392702 [00:01<00:22, 16474.78 examples/s]    Generating train split:   6%|6         | 24498/392702 [00:01<00:19, 18508.45 examples/s]    Generating train split:   7%|6         | 27053/392702 [00:01<00:18, 20268.73 examples/s]    Generating train split:   8%|7         | 29646/392702 [00:01<00:16, 21758.66 examples/s]    Generating train split:   8%|8         | 32107/392702 [00:01<00:16, 22502.23 examples/s]    Generating train split:   9%|8         | 34705/392702 [00:02<00:15, 23476.37 examples/s]    Generating train split:  10%|9         | 37321/392702 [00:02<00:14, 24241.84 examples/s]    Generating train split:  10%|#         | 39855/392702 [00:02<00:14, 24409.06 examples/s]    Generating train split:  11%|#         | 42373/392702 [00:02<00:14, 24029.97 examples/s]    Generating train split:  11%|#1        | 44965/392702 [00:02<00:14, 24574.30 examples/s]    Generating train split:  12%|#2        | 47548/392702 [00:02<00:13, 24939.00 examples/s]    Generating train split:  13%|#2        | 50072/392702 [00:02<00:14, 24228.50 examples/s]    Generating train split:  13%|#3        | 52657/392702 [00:02<00:13, 24697.19 examples/s]    Generating train split:  14%|#4        | 55277/392702 [00:02<00:13, 25135.96 examples/s]    Generating train split:  15%|#4        | 57848/392702 [00:02<00:13, 25304.01 examples/s]    Generating train split:  15%|#5        | 60389/392702 [00:03<00:13, 24185.74 examples/s]    Generating train split:  16%|#5        | 62825/392702 [00:03<00:13, 24064.60 examples/s]    Generating train split:  17%|#6        | 65243/392702 [00:03<00:13, 23934.12 examples/s]    Generating train split:  17%|#7        | 67817/392702 [00:03<00:13, 24458.33 examples/s]    Generating train split:  18%|#7        | 70270/392702 [00:03<00:13, 24091.01 examples/s]    Generating train split:  19%|#8        | 72865/392702 [00:03<00:12, 24633.02 examples/s]    Generating train split:  19%|#9        | 75334/392702 [00:03<00:12, 24642.55 examples/s]    Generating train split:  20%|#9        | 77802/392702 [00:03<00:13, 24197.32 examples/s]    Generating train split:  20%|##        | 80226/392702 [00:03<00:13, 23358.01 examples/s]    Generating train split:  21%|##1       | 82583/392702 [00:03<00:13, 23418.48 examples/s]    Generating train split:  22%|##1       | 84931/392702 [00:04<00:13, 23434.32 examples/s]    Generating train split:  22%|##2       | 87279/392702 [00:04<00:13, 23401.34 examples/s]    Generating train split:  23%|##2       | 89622/392702 [00:04<00:13, 23283.00 examples/s]    Generating train split:  23%|##3       | 91953/392702 [00:04<00:13, 22655.48 examples/s]    Generating train split:  24%|##4       | 94298/392702 [00:04<00:13, 22883.81 examples/s]    Generating train split:  25%|##4       | 96634/392702 [00:04<00:12, 23022.86 examples/s]    Generating train split:  25%|##5       | 98984/392702 [00:04<00:12, 23162.97 examples/s]    Generating train split:  26%|##5       | 101303/392702 [00:04<00:12, 22604.72 examples/s]    Generating train split:  26%|##6       | 103646/392702 [00:04<00:12, 22844.75 examples/s]    Generating train split:  27%|##6       | 105985/392702 [00:05<00:12, 23004.22 examples/s]    Generating train split:  28%|##7       | 108315/392702 [00:05<00:12, 23091.62 examples/s]    Generating train split:  28%|##8       | 110627/392702 [00:05<00:12, 22589.59 examples/s]    Generating train split:  29%|##8       | 113002/392702 [00:05<00:12, 22928.68 examples/s]    Generating train split:  29%|##9       | 115460/392702 [00:05<00:11, 23415.53 examples/s]    Generating train split:  30%|##9       | 117805/392702 [00:05<00:16, 17139.07 examples/s]    Generating train split:  31%|###       | 120089/392702 [00:05<00:14, 18488.39 examples/s]    Generating train split:  31%|###1      | 122676/392702 [00:05<00:13, 20353.59 examples/s]    Generating train split:  32%|###1      | 125291/392702 [00:05<00:12, 21888.35 examples/s]    Generating train split:  33%|###2      | 127897/392702 [00:06<00:11, 23034.40 examples/s]    Generating train split:  33%|###3      | 130313/392702 [00:06<00:11, 23167.64 examples/s]    Generating train split:  34%|###3      | 132715/392702 [00:06<00:11, 23410.85 examples/s]    Generating train split:  34%|###4      | 135147/392702 [00:06<00:10, 23672.39 examples/s]    Generating train split:  35%|###5      | 137722/392702 [00:06<00:10, 24280.14 examples/s]    Generating train split:  36%|###5      | 140180/392702 [00:06<00:10, 23695.95 examples/s]    Generating train split:  36%|###6      | 142574/392702 [00:06<00:10, 23714.07 examples/s]    Generating train split:  37%|###6      | 145123/392702 [00:06<00:10, 24232.43 examples/s]    Generating train split:  38%|###7      | 147723/392702 [00:06<00:09, 24751.28 examples/s]    Generating train split:  38%|###8      | 150208/392702 [00:06<00:09, 24489.24 examples/s]    Generating train split:  39%|###8      | 152799/392702 [00:07<00:09, 24906.19 examples/s]    Generating train split:  40%|###9      | 155296/392702 [00:07<00:09, 24767.77 examples/s]    Generating train split:  40%|####      | 157777/392702 [00:07<00:09, 24685.21 examples/s]    Generating train split:  41%|####      | 160249/392702 [00:07<00:09, 24263.44 examples/s]    Generating train split:  41%|####1     | 162781/392702 [00:07<00:09, 24572.49 examples/s]    Generating train split:  42%|####2     | 165242/392702 [00:07<00:09, 24402.94 examples/s]    Generating train split:  43%|####2     | 167830/392702 [00:07<00:09, 24835.71 examples/s]    Generating train split:  43%|####3     | 170316/392702 [00:07<00:09, 24394.30 examples/s]    Generating train split:  44%|####3     | 172781/392702 [00:07<00:08, 24467.75 examples/s]    Generating train split:  45%|####4     | 175230/392702 [00:07<00:08, 24331.75 examples/s]    Generating train split:  45%|####5     | 177665/392702 [00:08<00:09, 23799.25 examples/s]    Generating train split:  46%|####5     | 180048/392702 [00:08<00:09, 22921.96 examples/s]    Generating train split:  46%|####6     | 182489/392702 [00:08<00:09, 23346.72 examples/s]    Generating train split:  47%|####7     | 185052/392702 [00:08<00:08, 24008.98 examples/s]    Generating train split:  48%|####7     | 187494/392702 [00:08<00:08, 24128.72 examples/s]    Generating train split:  48%|####8     | 189913/392702 [00:08<00:08, 24066.62 examples/s]    Generating train split:  49%|####8     | 192324/392702 [00:08<00:08, 23775.61 examples/s]    Generating train split:  50%|####9     | 194894/392702 [00:08<00:08, 24339.27 examples/s]    Generating train split:  50%|#####     | 197332/392702 [00:08<00:08, 24140.19 examples/s]    Generating train split:  51%|#####     | 199858/392702 [00:09<00:07, 24469.54 examples/s]    Generating train split:  52%|#####1    | 202308/392702 [00:09<00:07, 24381.38 examples/s]    Generating train split:  52%|#####2    | 204748/392702 [00:09<00:07, 24117.89 examples/s]    Generating train split:  53%|#####2    | 207162/392702 [00:09<00:07, 23966.83 examples/s]    Generating train split:  53%|#####3    | 209621/392702 [00:09<00:07, 24148.88 examples/s]    Generating train split:  54%|#####3    | 212037/392702 [00:09<00:07, 23899.57 examples/s]    Generating train split:  55%|#####4    | 214457/392702 [00:09<00:07, 23987.91 examples/s]    Generating train split:  55%|#####5    | 216874/392702 [00:09<00:07, 24040.04 examples/s]    Generating train split:  56%|#####5    | 219436/392702 [00:09<00:07, 24509.83 examples/s]    Generating train split:  57%|#####6    | 221888/392702 [00:09<00:07, 23752.14 examples/s]    Generating train split:  57%|#####7    | 224269/392702 [00:10<00:07, 23602.20 examples/s]    Generating train split:  58%|#####7    | 226633/392702 [00:10<00:07, 23490.68 examples/s]    Generating train split:  58%|#####8    | 228985/392702 [00:10<00:06, 23392.40 examples/s]    Generating train split:  59%|#####8    | 231326/392702 [00:10<00:07, 22886.41 examples/s]    Generating train split:  59%|#####9    | 233635/392702 [00:10<00:06, 22944.67 examples/s]    Generating train split:  60%|######    | 236030/392702 [00:10<00:06, 23239.24 examples/s]    Generating train split:  61%|######    | 238356/392702 [00:10<00:06, 23207.14 examples/s]    Generating train split:  61%|######1   | 240708/392702 [00:10<00:06, 23298.05 examples/s]    Generating train split:  62%|######1   | 243286/392702 [00:10<00:06, 24036.66 examples/s]    Generating train split:  63%|######2   | 245751/392702 [00:10<00:06, 24217.44 examples/s]    Generating train split:  63%|######3   | 248174/392702 [00:11<00:08, 17662.89 examples/s]    Generating train split:  64%|######3   | 250269/392702 [00:11<00:07, 18442.01 examples/s]    Generating train split:  64%|######4   | 252697/392702 [00:11<00:07, 19920.24 examples/s]    Generating train split:  65%|######4   | 255079/392702 [00:11<00:06, 20954.25 examples/s]    Generating train split:  66%|######5   | 257426/392702 [00:11<00:06, 21643.87 examples/s]    Generating train split:  66%|######6   | 259761/392702 [00:11<00:06, 22123.64 examples/s]    Generating train split:  67%|######6   | 262045/392702 [00:11<00:05, 21896.71 examples/s]    Generating train split:  67%|######7   | 264550/392702 [00:11<00:05, 22799.37 examples/s]    Generating train split:  68%|######8   | 267090/392702 [00:11<00:05, 23552.75 examples/s]    Generating train split:  69%|######8   | 269654/392702 [00:12<00:05, 24163.06 examples/s]    Generating train split:  69%|######9   | 272093/392702 [00:12<00:05, 23589.17 examples/s]    Generating train split:  70%|######9   | 274470/392702 [00:12<00:05, 23591.03 examples/s]    Generating train split:  70%|#######   | 276842/392702 [00:12<00:04, 23480.89 examples/s]    Generating train split:  71%|#######1  | 279224/392702 [00:12<00:04, 23577.68 examples/s]    Generating train split:  72%|#######1  | 281589/392702 [00:12<00:04, 23387.85 examples/s]    Generating train split:  72%|#######2  | 283938/392702 [00:12<00:04, 23417.16 examples/s]    Generating train split:  73%|#######2  | 286283/392702 [00:12<00:04, 23389.83 examples/s]    Generating train split:  73%|#######3  | 288625/392702 [00:12<00:04, 23377.36 examples/s]    Generating train split:  74%|#######4  | 290965/392702 [00:12<00:04, 22969.87 examples/s]    Generating train split:  75%|#######4  | 293322/392702 [00:13<00:04, 23143.13 examples/s]    Generating train split:  75%|#######5  | 295656/392702 [00:13<00:04, 23199.61 examples/s]    Generating train split:  76%|#######5  | 298023/392702 [00:13<00:04, 23337.63 examples/s]    Generating train split:  76%|#######6  | 300358/392702 [00:13<00:04, 22983.28 examples/s]    Generating train split:  77%|#######7  | 302826/392702 [00:13<00:03, 23483.05 examples/s]    Generating train split:  78%|#######7  | 305377/392702 [00:13<00:03, 24082.07 examples/s]    Generating train split:  78%|#######8  | 307788/392702 [00:13<00:03, 23853.98 examples/s]    Generating train split:  79%|#######8  | 310176/392702 [00:13<00:03, 23184.23 examples/s]    Generating train split:  80%|#######9  | 312508/392702 [00:13<00:03, 23221.02 examples/s]    Generating train split:  80%|########  | 314905/392702 [00:14<00:03, 23439.87 examples/s]    Generating train split:  81%|########  | 317285/392702 [00:14<00:03, 23544.00 examples/s]    Generating train split:  81%|########1 | 319642/392702 [00:14<00:03, 23497.37 examples/s]    Generating train split:  82%|########1 | 321994/392702 [00:15<00:11, 5903.78 examples/s]     Generating train split:  83%|########2 | 324345/392702 [00:15<00:08, 7601.13 examples/s]    Generating train split:  83%|########3 | 326703/392702 [00:15<00:06, 9535.38 examples/s]    Generating train split:  84%|########3 | 329059/392702 [00:15<00:05, 11602.82 examples/s]    Generating train split:  84%|########4 | 331202/392702 [00:15<00:04, 13311.65 examples/s]    Generating train split:  85%|########4 | 333529/392702 [00:15<00:03, 15292.81 examples/s]    Generating train split:  86%|########5 | 335894/392702 [00:15<00:03, 17142.48 examples/s]    Generating train split:  86%|########6 | 338226/392702 [00:16<00:02, 18624.70 examples/s]    Generating train split:  87%|########6 | 340497/392702 [00:16<00:02, 19478.41 examples/s]    Generating train split:  87%|########7 | 342802/392702 [00:16<00:02, 20425.87 examples/s]    Generating train split:  88%|########7 | 345157/392702 [00:16<00:02, 21283.19 examples/s]    Generating train split:  88%|########8 | 347515/392702 [00:16<00:02, 21929.47 examples/s]    Generating train split:  89%|########9 | 349853/392702 [00:16<00:01, 22344.47 examples/s]    Generating train split:  90%|########9 | 352172/392702 [00:16<00:01, 22357.56 examples/s]    Generating train split:  90%|######### | 354549/392702 [00:16<00:01, 22766.94 examples/s]    Generating train split:  91%|######### | 356889/392702 [00:16<00:01, 22951.02 examples/s]    Generating train split:  92%|#########1| 359337/392702 [00:16<00:01, 23400.49 examples/s]    Generating train split:  92%|#########2| 361699/392702 [00:17<00:01, 22976.75 examples/s]    Generating train split:  93%|#########2| 364075/392702 [00:17<00:01, 23204.17 examples/s]    Generating train split:  93%|#########3| 366408/392702 [00:17<00:01, 23188.27 examples/s]    Generating train split:  94%|#########3| 368766/392702 [00:17<00:01, 23304.02 examples/s]    Generating train split:  94%|#########4| 371103/392702 [00:17<00:00, 22942.69 examples/s]    Generating train split:  95%|#########5| 373478/392702 [00:17<00:00, 23180.45 examples/s]    Generating train split:  96%|#########5| 375928/392702 [00:17<00:00, 23570.64 examples/s]    Generating train split:  96%|#########6| 378348/392702 [00:17<00:00, 23757.02 examples/s]    Generating train split:  97%|#########6| 380727/392702 [00:17<00:00, 23045.68 examples/s]    Generating train split:  98%|#########7| 383049/392702 [00:17<00:00, 23094.17 examples/s]    Generating train split:  98%|#########8| 385363/392702 [00:18<00:00, 16757.76 examples/s]    Generating train split:  99%|#########8| 387669/392702 [00:18<00:00, 18230.01 examples/s]    Generating train split:  99%|#########9| 390000/392702 [00:18<00:00, 19098.87 examples/s]    Generating train split: 100%|#########9| 392294/392702 [00:18<00:00, 20094.59 examples/s]                                                                                             Generating validation_matched split:   0%|          | 0/9815 [00:00<?, ? examples/s]    Generating validation_matched split:  24%|##3       | 2319/9815 [00:00<00:00, 23183.50 examples/s]    Generating validation_matched split:  47%|####7     | 4638/9815 [00:00<00:00, 22893.71 examples/s]    Generating validation_matched split:  71%|#######   | 6928/9815 [00:00<00:00, 22861.92 examples/s]    Generating validation_matched split:  94%|#########3| 9215/9815 [00:00<00:00, 22774.60 examples/s]                                                                                                      Generating validation_mismatched split:   0%|          | 0/9832 [00:00<?, ? examples/s]    Generating validation_mismatched split:  23%|##2       | 2236/9832 [00:00<00:00, 22352.19 examples/s]    Generating validation_mismatched split:  46%|####5     | 4498/9832 [00:00<00:00, 22504.63 examples/s]    Generating validation_mismatched split:  69%|######8   | 6752/9832 [00:00<00:00, 22519.91 examples/s]    Generating validation_mismatched split:  92%|#########1| 9012/9832 [00:00<00:00, 22548.18 examples/s]                                                                                                         Generating test_matched split:   0%|          | 0/9796 [00:00<?, ? examples/s]    Generating test_matched split:  25%|##5       | 2452/9796 [00:00<00:00, 24512.37 examples/s]    Generating test_matched split:  50%|#####     | 4938/9796 [00:00<00:00, 24712.62 examples/s]    Generating test_matched split:  76%|#######5  | 7422/9796 [00:00<00:00, 24770.46 examples/s]                                                                                                Generating test_mismatched split:   0%|          | 0/9847 [00:00<?, ? examples/s]    Generating test_mismatched split:  25%|##4       | 2439/9847 [00:00<00:00, 24382.52 examples/s]    Generating test_mismatched split:  51%|#####     | 4974/9847 [00:00<00:00, 24946.50 examples/s]    Generating test_mismatched split:  76%|#######5  | 7469/9847 [00:00<00:00, 24906.22 examples/s]                                                                                                   Dataset glue downloaded and prepared to /home/nishang/nni/examples/tutorials/data/glue/mnli/1.0.0/dacbe3125aa31d7f70367a07a8a9e72a5a0bfeb5fc42e75c9db75b96da6053ad. Subsequent calls will reuse this data.
+      0%|          | 0/5 [00:00<?, ?it/s]     20%|##        | 1/5 [00:05<00:23,  5.96s/it]    100%|##########| 5/5 [00:05<00:00,  1.19s/it]
+      0%|          | 0/393 [00:00<?, ?ba/s]      1%|1         | 4/393 [00:00<00:10, 37.37ba/s]      2%|2         | 9/393 [00:00<00:09, 40.03ba/s]      4%|3         | 14/393 [00:00<00:09, 41.19ba/s]      5%|4         | 19/393 [00:00<00:12, 29.13ba/s]      6%|6         | 24/393 [00:00<00:11, 32.72ba/s]      7%|7         | 29/393 [00:00<00:10, 35.53ba/s]      9%|8         | 34/393 [00:00<00:09, 37.13ba/s]     10%|9         | 39/393 [00:01<00:09, 38.81ba/s]     11%|#1        | 44/393 [00:01<00:08, 40.05ba/s]     12%|#2        | 49/393 [00:01<00:11, 30.69ba/s]     14%|#3        | 54/393 [00:01<00:10, 33.40ba/s]     15%|#5        | 59/393 [00:01<00:09, 35.37ba/s]     16%|#6        | 64/393 [00:01<00:08, 37.19ba/s]     18%|#7        | 69/393 [00:01<00:08, 38.21ba/s]     19%|#8        | 74/393 [00:02<00:08, 39.25ba/s]     20%|##        | 79/393 [00:02<00:10, 30.22ba/s]     21%|##1       | 84/393 [00:02<00:09, 33.09ba/s]     23%|##2       | 89/393 [00:02<00:08, 35.13ba/s]     24%|##3       | 94/393 [00:02<00:08, 36.86ba/s]     25%|##5       | 99/393 [00:02<00:07, 38.28ba/s]     26%|##6       | 103/393 [00:02<00:09, 29.07ba/s]     27%|##7       | 108/393 [00:03<00:08, 32.00ba/s]     29%|##8       | 113/393 [00:03<00:08, 34.45ba/s]     30%|###       | 118/393 [00:03<00:07, 36.01ba/s]     31%|###1      | 123/393 [00:03<00:07, 37.27ba/s]     32%|###2      | 127/393 [00:03<00:09, 28.64ba/s]     34%|###3      | 132/393 [00:03<00:08, 32.03ba/s]     35%|###4      | 137/393 [00:03<00:07, 34.86ba/s]     36%|###6      | 142/393 [00:04<00:06, 37.03ba/s]     37%|###7      | 147/393 [00:04<00:06, 38.52ba/s]     39%|###8      | 152/393 [00:04<00:06, 39.12ba/s]     40%|###9      | 157/393 [00:04<00:07, 30.16ba/s]     41%|####1     | 162/393 [00:04<00:07, 32.90ba/s]     42%|####2     | 167/393 [00:04<00:06, 35.04ba/s]     44%|####3     | 172/393 [00:04<00:05, 37.08ba/s]     45%|####5     | 177/393 [00:05<00:05, 38.29ba/s]     46%|####6     | 182/393 [00:05<00:05, 39.49ba/s]     48%|####7     | 187/393 [00:05<00:06, 30.36ba/s]     49%|####8     | 192/393 [00:05<00:06, 33.13ba/s]     50%|#####     | 197/393 [00:05<00:05, 35.58ba/s]     51%|#####1    | 202/393 [00:05<00:05, 37.50ba/s]     53%|#####2    | 207/393 [00:05<00:04, 38.75ba/s]     54%|#####3    | 212/393 [00:06<00:06, 29.57ba/s]     55%|#####5    | 217/393 [00:06<00:05, 32.62ba/s]     56%|#####6    | 222/393 [00:06<00:04, 35.03ba/s]     58%|#####7    | 227/393 [00:06<00:04, 37.01ba/s]     59%|#####9    | 232/393 [00:06<00:04, 38.34ba/s]     60%|######    | 237/393 [00:06<00:03, 39.52ba/s]     62%|######1   | 242/393 [00:06<00:04, 30.50ba/s]     63%|######2   | 247/393 [00:07<00:04, 33.08ba/s]     64%|######4   | 252/393 [00:07<00:04, 35.24ba/s]     65%|######5   | 257/393 [00:07<00:03, 37.00ba/s]     67%|######6   | 262/393 [00:07<00:03, 38.54ba/s]     68%|######7   | 267/393 [00:07<00:04, 29.80ba/s]     69%|######9   | 272/393 [00:07<00:03, 32.79ba/s]     70%|#######   | 277/393 [00:07<00:03, 35.37ba/s]     72%|#######1  | 282/393 [00:08<00:02, 37.15ba/s]     73%|#######3  | 287/393 [00:08<00:02, 38.36ba/s]     74%|#######4  | 292/393 [00:08<00:03, 29.86ba/s]     76%|#######5  | 297/393 [00:08<00:02, 32.73ba/s]     77%|#######6  | 302/393 [00:08<00:02, 34.93ba/s]     78%|#######8  | 307/393 [00:08<00:02, 36.64ba/s]     79%|#######9  | 312/393 [00:08<00:02, 37.74ba/s]     81%|########  | 317/393 [00:09<00:01, 38.95ba/s]     82%|########1 | 322/393 [00:09<00:02, 29.94ba/s]     83%|########3 | 327/393 [00:09<00:02, 32.59ba/s]     84%|########4 | 332/393 [00:09<00:01, 35.09ba/s]     86%|########5 | 337/393 [00:09<00:01, 36.80ba/s]     87%|########7 | 342/393 [00:09<00:01, 38.02ba/s]     88%|########8 | 347/393 [00:10<00:01, 29.66ba/s]     90%|########9 | 352/393 [00:10<00:01, 32.44ba/s]     91%|######### | 357/393 [00:10<00:01, 34.51ba/s]     92%|#########2| 362/393 [00:10<00:00, 36.56ba/s]     93%|#########3| 367/393 [00:10<00:00, 37.97ba/s]     95%|#########4| 372/393 [00:10<00:00, 38.81ba/s]     96%|#########5| 377/393 [00:10<00:00, 29.98ba/s]     97%|#########7| 382/393 [00:11<00:00, 32.52ba/s]     98%|#########8| 387/393 [00:11<00:00, 34.71ba/s]    100%|#########9| 392/393 [00:11<00:00, 36.52ba/s]    100%|##########| 393/393 [00:11<00:00, 34.83ba/s]
+      0%|          | 0/10 [00:00<?, ?ba/s]     50%|#####     | 5/10 [00:00<00:00, 43.46ba/s]    100%|##########| 10/10 [00:00<00:00, 43.33ba/s]    100%|##########| 10/10 [00:00<00:00, 43.30ba/s]
+      0%|          | 0/10 [00:00<?, ?ba/s]     20%|##        | 2/10 [00:00<00:00, 11.27ba/s]     70%|#######   | 7/10 [00:00<00:00, 26.35ba/s]    100%|##########| 10/10 [00:00<00:00, 27.33ba/s]
+
+
+
+
 .. GENERATED FROM PYTHON SOURCE LINES 153-154
 
 Training function & evaluation function.
@@ -342,7 +364,7 @@ Training function & evaluation function.
 
 Prepare pre-trained model and finetuning on downstream task.
 
-.. GENERATED FROM PYTHON SOURCE LINES 279-320
+.. GENERATED FROM PYTHON SOURCE LINES 279-319
 
 .. code-block:: default
 
@@ -361,12 +383,11 @@ Prepare pre-trained model and finetuning on downstream task.
 
 
     def create_finetuned_model():
-        finetuned_model = create_pretrained_model()
+        finetuned_model = create_pretrained_model().to(device)
         finetuned_model_state_path = Path(model_dir) / 'finetuned_model_state.pth'
 
         if finetuned_model_state_path.exists():
-            finetuned_model.load_state_dict(torch.load(finetuned_model_state_path, map_location='cpu'))
-            finetuned_model.to(device)
+            finetuned_model.load_state_dict(torch.load(finetuned_model_state_path, map_location=device))
         elif dev_mode:
             pass
         else:
@@ -390,7 +411,22 @@ Prepare pre-trained model and finetuning on downstream task.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 321-328
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Downloading:   0%|          | 0.00/440M [00:00<?, ?B/s]    Downloading:   2%|2         | 9.66M/440M [00:00<00:04, 96.6MB/s]    Downloading:   5%|4         | 21.3M/440M [00:00<00:03, 108MB/s]     Downloading:   7%|7         | 32.9M/440M [00:00<00:03, 112MB/s]    Downloading:  10%|#         | 44.5M/440M [00:00<00:03, 113MB/s]    Downloading:  13%|#2        | 56.3M/440M [00:00<00:03, 115MB/s]    Downloading:  15%|#5        | 68.1M/440M [00:00<00:03, 116MB/s]    Downloading:  18%|#8        | 79.8M/440M [00:00<00:03, 116MB/s]    Downloading:  21%|##        | 91.5M/440M [00:00<00:02, 117MB/s]    Downloading:  23%|##3       | 103M/440M [00:00<00:02, 117MB/s]     Downloading:  26%|##6       | 115M/440M [00:01<00:02, 117MB/s]    Downloading:  29%|##8       | 127M/440M [00:01<00:02, 117MB/s]    Downloading:  31%|###1      | 138M/440M [00:01<00:02, 117MB/s]    Downloading:  34%|###4      | 150M/440M [00:01<00:02, 117MB/s]    Downloading:  37%|###6      | 162M/440M [00:01<00:02, 117MB/s]    Downloading:  39%|###9      | 173M/440M [00:01<00:02, 117MB/s]    Downloading:  42%|####2     | 185M/440M [00:01<00:02, 117MB/s]    Downloading:  45%|####4     | 197M/440M [00:01<00:02, 117MB/s]    Downloading:  47%|####7     | 208M/440M [00:01<00:01, 116MB/s]    Downloading:  50%|####9     | 220M/440M [00:01<00:01, 116MB/s]    Downloading:  53%|#####2    | 232M/440M [00:02<00:01, 117MB/s]    Downloading:  55%|#####5    | 243M/440M [00:02<00:01, 117MB/s]    Downloading:  58%|#####7    | 255M/440M [00:02<00:01, 116MB/s]    Downloading:  61%|######    | 267M/440M [00:02<00:01, 116MB/s]    Downloading:  63%|######3   | 278M/440M [00:02<00:01, 116MB/s]    Downloading:  66%|######5   | 290M/440M [00:02<00:01, 116MB/s]    Downloading:  68%|######8   | 302M/440M [00:02<00:01, 116MB/s]    Downloading:  71%|#######1  | 313M/440M [00:02<00:01, 116MB/s]    Downloading:  74%|#######3  | 325M/440M [00:02<00:00, 116MB/s]    Downloading:  76%|#######6  | 337M/440M [00:02<00:00, 116MB/s]    Downloading:  79%|#######9  | 348M/440M [00:03<00:00, 116MB/s]    Downloading:  82%|########1 | 360M/440M [00:03<00:00, 117MB/s]    Downloading:  84%|########4 | 372M/440M [00:03<00:00, 116MB/s]    Downloading:  87%|########7 | 383M/440M [00:03<00:00, 116MB/s]    Downloading:  90%|########9 | 395M/440M [00:03<00:00, 116MB/s]    Downloading:  92%|#########2| 407M/440M [00:03<00:00, 116MB/s]    Downloading:  95%|#########4| 418M/440M [00:03<00:00, 116MB/s]    Downloading:  98%|#########7| 430M/440M [00:03<00:00, 116MB/s]    Downloading: 100%|##########| 440M/440M [00:03<00:00, 116MB/s]
+    Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertForSequenceClassification: ['cls.predictions.transform.LayerNorm.weight', 'cls.predictions.bias', 'cls.predictions.transform.dense.weight', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.seq_relationship.weight', 'cls.seq_relationship.bias', 'cls.predictions.transform.dense.bias']
+    - This IS expected if you are initializing BertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+    - This IS NOT expected if you are initializing BertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+    Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.weight', 'classifier.bias']
+    You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 320-327
 
 Pruning
 ^^^^^^^
@@ -400,7 +436,7 @@ So in this section, we do pruning in stages.
 
 First, we prune the attention layer with MovementPruner.
 
-.. GENERATED FROM PYTHON SOURCE LINES 328-388
+.. GENERATED FROM PYTHON SOURCE LINES 327-387
 
 .. code-block:: default
 
@@ -423,7 +459,7 @@ First, we prune the attention layer with MovementPruner.
     # Initialize evaluator used by MovementPruner.
 
     import nni
-    from nni.algorithms.compression.v2.pytorch import TorchEvaluator
+    from nni.compression.pytorch import TorchEvaluator
 
     movement_training = functools.partial(training, train_dataloader=train_dataloader,
                                           log_path=log_dir / 'movement_pruning.log',
@@ -467,14 +503,29 @@ First, we prune the attention layer with MovementPruner.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 389-393
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Did not bind any model, no need to unbind model.
+    Training 1 epochs, 3 steps...
+    You're using a BertTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+    /anaconda/lib/python3.9/site-packages/torch/optim/lr_scheduler.py:122: UserWarning: Seems like `optimizer.step()` has been overridden after learning rate scheduler initialization. Please, make sure to call `optimizer.step()` before `lr_scheduler.step()`. See more details at https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate
+      warnings.warn("Seems like `optimizer.step()` has been overridden after learning rate scheduler "
+    Did not bind any model, no need to unbind model.
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 388-392
 
 Load a new finetuned model to do speedup, you can think of this as using the finetuned state to initialize the pruned model weights.
 Note that nni speedup don't support replacing attention module, so here we manully replace the attention module.
 
 If the head is entire masked, physically prune it and create config_list for FFN pruning.
 
-.. GENERATED FROM PYTHON SOURCE LINES 393-423
+.. GENERATED FROM PYTHON SOURCE LINES 392-422
 
 .. code-block:: default
 
@@ -511,11 +562,37 @@ If the head is entire masked, physically prune it and create config_list for FFN
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 424-425
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertForSequenceClassification: ['cls.predictions.transform.LayerNorm.weight', 'cls.predictions.bias', 'cls.predictions.transform.dense.weight', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.seq_relationship.weight', 'cls.seq_relationship.bias', 'cls.predictions.transform.dense.bias']
+    - This IS expected if you are initializing BertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+    - This IS NOT expected if you are initializing BertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+    Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.weight', 'classifier.bias']
+    You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+    layer 0 prune 0 head: []
+    layer 1 prune 0 head: []
+    layer 2 prune 0 head: []
+    layer 3 prune 0 head: []
+    layer 4 prune 0 head: []
+    layer 5 prune 0 head: []
+    layer 6 prune 0 head: []
+    layer 7 prune 0 head: []
+    layer 8 prune 0 head: []
+    layer 9 prune 0 head: []
+    layer 10 prune 0 head: []
+    layer 11 prune 0 head: []
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 423-424
 
 Retrain the attention pruned model with distillation.
 
-.. GENERATED FROM PYTHON SOURCE LINES 425-451
+.. GENERATED FROM PYTHON SOURCE LINES 424-450
 
 .. code-block:: default
 
@@ -548,14 +625,29 @@ Retrain the attention pruned model with distillation.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 452-456
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Some weights of the model checkpoint at bert-base-uncased were not used when initializing BertForSequenceClassification: ['cls.predictions.transform.LayerNorm.weight', 'cls.predictions.bias', 'cls.predictions.transform.dense.weight', 'cls.predictions.decoder.weight', 'cls.predictions.transform.LayerNorm.bias', 'cls.seq_relationship.weight', 'cls.seq_relationship.bias', 'cls.predictions.transform.dense.bias']
+    - This IS expected if you are initializing BertForSequenceClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+    - This IS NOT expected if you are initializing BertForSequenceClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+    Some weights of BertForSequenceClassification were not initialized from the model checkpoint at bert-base-uncased and are newly initialized: ['classifier.weight', 'classifier.bias']
+    You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+    Training 1 epochs, 1 steps...
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 451-455
 
 Iterative pruning FFN with TaylorFOWeightPruner in 12 iterations.
 Finetuning 3000 steps after each pruning iteration, then finetuning 2 epochs after pruning finished.
 
 NNI will support per-step-pruning-schedule in the future, then can use an pruner to replace the following code.
 
-.. GENERATED FROM PYTHON SOURCE LINES 456-537
+.. GENERATED FROM PYTHON SOURCE LINES 455-536
 
 .. code-block:: default
 
@@ -643,7 +735,312 @@ NNI will support per-step-pruning-schedule in the future, then can use an pruner
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 538-607
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Did not bind any model, no need to unbind model.
+    Training 1 epochs, 2 steps...
+    no multi-dimension masks found.
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    /anaconda/lib/python3.9/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:417.)
+      return self._grad
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    Did not bind any model, no need to unbind model.
+    Training 1 epochs, 2 steps...
+    no multi-dimension masks found.
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+    throw some args away when calling the function "view"
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 537-606
 
 Result
 ------
@@ -718,7 +1115,7 @@ Setting 2: pytorch 1.10.0
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  20.822 seconds)
+   **Total running time of the script:** ( 1 minutes  32.808 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_bert_glue.py:

@@ -8,4 +8,5 @@ Python API Reference
     Neural Architecture Search <nas/toctree>
     Model Compression <compression/toctree>
     Experiment <experiment>
+    Mutable <mutable>
     Others <others>

@@ -137,7 +137,7 @@ class ConfigBase:
         cls
             An object of ConfigBase subclass.
         """
-        with open(path) as yaml_file:
+        with open(path, encoding='utf_8') as yaml_file:
             data = yaml.safe_load(yaml_file)
         if not isinstance(data, dict):
             raise TypeError(f'Conent of config file {path} is not a dict/object')
@@ -256,6 +256,9 @@ def _dict_factory(items):
     ret = {}
     for key, value in items:
         if value is not None:
+            # NOTE (zhe):
+            # It's hard for end users to set a field to missing, so I decided to treat None as "not set".
+            # If a field needs explicit "None", use something like magic string.
             k = utils.camel_case(key)
             v = str(value) if isinstance(value, Path) else value
             ret[k] = v

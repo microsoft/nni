@@ -29,23 +29,6 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip=" Introduction ------------">
-
-.. only:: html
-
-  .. image:: /tutorials/images/thumb/sphx_glr_quantization_speedup_thumb.png
-    :alt: SpeedUp Model with Calibration Config
-
-  :ref:`sphx_glr_tutorials_quantization_speedup.py`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">SpeedUp Model with Calibration Config</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Here is a four-minute video to get you started with model quantization.">
 
 .. only:: html
@@ -114,18 +97,18 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Users can easily customize a basic pruner in NNI. A large number of basic modules have been pro...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Quantization algorithms quantize a deep learning model usually in a simulated way. That is, to ...">
 
 .. only:: html
 
-  .. image:: /tutorials/images/thumb/sphx_glr_pruning_customize_thumb.png
-    :alt: Customize Basic Pruner
+  .. image:: /tutorials/images/thumb/sphx_glr_quantization_speedup_thumb.png
+    :alt: Speed Up Quantized Model with TensorRT
 
-  :ref:`sphx_glr_tutorials_pruning_customize.py`
+  :ref:`sphx_glr_tutorials_quantization_speedup.py`
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">Customize Basic Pruner</div>
+      <div class="sphx-glr-thumbnail-title">Speed Up Quantized Model with TensorRT</div>
     </div>
 
 
@@ -189,12 +172,11 @@ Tutorials
    :hidden:
 
    /tutorials/pruning_speedup
-   /tutorials/quantization_speedup
    /tutorials/quantization_quick_start_mnist
    /tutorials/pruning_quick_start_mnist
    /tutorials/quantization_customize
    /tutorials/nasbench_as_dataset
-   /tutorials/pruning_customize
+   /tutorials/quantization_speedup
    /tutorials/hello_nas
    /tutorials/darts
    /tutorials/pruning_bert_glue
