@@ -47,7 +47,7 @@ stages:
 
   - job: windows
     pool: nni-it-1es-windows
-    timeoutInMinutes: 90
+    timeoutInMinutes: 120
 
     steps:
     - template: templates/check-gpu-status.yml
