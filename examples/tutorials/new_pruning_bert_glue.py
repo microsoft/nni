@@ -145,13 +145,13 @@ def dynamic_distiller(student_model: BertForSequenceClassification, teacher_mode
     config_list = [{
         'op_names': [f'bert.encoder.layer.{i}'],
         'link': [f'bert.encoder.layer.{j}' for j in range(i, layer_num)],
-        'lambda': 0.9 / (layer_num + 1),
+        'lambda': 0.9 / layer_num,
         'apply_method': 'mse',
     } for i in range(layer_num)]
     config_list.append({
         'op_names': ['classifier'],
         'link': ['classifier'],
-        'lambda': 0.9 / (layer_num + 1),
+        'lambda': 0.9,
         'apply_method': 'kl',
     })
 
@@ -183,13 +183,13 @@ def adapt_distiller(student_model: BertForSequenceClassification, teacher_model:
     layer_num = len(student_model.bert.encoder.layer)
     config_list = [{
         'op_names': [f'bert.encoder.layer.{i}'],
-        'lambda': 0.9 / (layer_num + 1),
+        'lambda': 0.9 / layer_num,
         'apply_method': 'mse',
     } for i in range(layer_num)]
     config_list.append({
         'op_names': ['classifier'],
         'link': ['classifier'],
-        'lambda': 0.9 / (layer_num + 1),
+        'lambda': 0.9,
         'apply_method': 'kl',
     })
 
@@ -210,6 +210,10 @@ def adapt_distillation(student_model: BertForSequenceClassification, teacher_mod
     teacher_model.to(student_trainer.args.device).eval()
 
     distiller = adapt_distiller(student_model, teacher_model, student_trainer)
+    dummy_input = (torch.randint(0, 10000, [8, 128]), torch.randint(0, 2, [8, 128]), torch.randint(0, 2, [8, 128]))
+    dummy_input = [_.to(student_trainer.args.device) for _ in dummy_input]
+    distiller.track_forward(*dummy_input)
+
     distiller.compress(max_steps, max_epochs)
     distiller.unwrap_model()
 
@@ -245,8 +249,8 @@ def pruning_attn():
 
 
 def speedup_attn():
-    model = build_finetuning_model(task_name, f'./output/bert_finetuned/{task_name}.bin')
-    # model = torch.load('./output/pruning/attn_masked_model.pth', map_location='cpu')
+    # model = build_finetuning_model(task_name, f'./output/bert_finetuned/{task_name}.bin')
+    model = torch.load('./output/pruning/attn_masked_model.pth', map_location='cpu')
     masks = torch.load('./output/pruning/attn_masks.pth', map_location='cpu')
     dummy_input = (torch.randint(0, 10000, [8, 128]), torch.randint(0, 2, [8, 128]), torch.randint(0, 2, [8, 128]))
     replacer = TransformersAttentionReplacer(model)
@@ -327,7 +331,8 @@ def pruning_embedding():
         if isinstance(module, BertLayer):
             retained_head_num += module.attention.self.num_attention_heads
             ori_head_num += len(module.attention.pruned_heads) + retained_head_num
-    sparse_ratio = 1 - retained_head_num / ori_head_num
+    # sparse_ratio = 1 - retained_head_num / ori_head_num
+    sparse_ratio = 0.5
     config_list = [{
         'op_types': ['Embedding'],
         'op_names_re': ['bert\.embeddings.*'],
@@ -377,17 +382,25 @@ def pruning_embedding():
     torch.save(masks, './output/pruning/embedding_masks.pth')
     torch.save(model, './output/pruning/embedding_masked_model.pth')
 
-# Path('./output/bert_finetuned').mkdir(exist_ok=True, parents=True)
-# build_finetuning_model(task_name, f'./output/bert_finetuned/{task_name}.bin')
 
-# pruning_attn()
+def speedup_embedding():
+    model = torch.load('./output/pruning/embedding_masked_model.pth', map_location='cpu')
+    masks = torch.load('./output/pruning/embedding_masks.pth', map_location='cpu')
+    dummy_input = (torch.randint(0, 10000, [8, 128]), torch.randint(0, 2, [8, 128]), torch.randint(0, 2, [8, 128]))
+    ModelSpeedup(model, dummy_input, masks).speedup_model()
+
+    # finetuning
+    teacher_model = build_finetuning_model('mnli', f'./output/bert_finetuned/{task_name}.bin')
+    adapt_distillation(model, teacher_model, None, 3)
+    torch.save(model, './output/pruning/embedding_pruned_model.pth')
+
+
+Path('./output/bert_finetuned').mkdir(exist_ok=True, parents=True)
+build_finetuning_model(task_name, f'./output/bert_finetuned/{task_name}.bin')
+
+pruning_attn()
 speedup_attn()
-# pruning_ffn()
-# speedup_ffn()
-# pruning_embedding()
-
-# model = build_finetuning_model(task_name, f'./output/bert_finetuned/{task_name}.bin')
-# model = torch.load('./output/pruning/attn_pruned_model.pth')
-# model = torch.load('./output/pruning/ffn_pruned_model.pth')
-# trainer = prepare_traced_trainer(model, task_name)
-# print(trainer.evaluate())
+pruning_ffn()
+speedup_ffn()
+pruning_embedding()
+speedup_embedding()

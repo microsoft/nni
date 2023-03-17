@@ -214,7 +214,7 @@ class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
                             loss_list.append(target_space.lambda_ * \
                                 F.kl_div((stu_hs / 2).log_softmax(dim=-1), (tea_hs / 2).softmax(dim=-1), reduction='batchmean') * (2 ** 2))
                 if loss_list:
-                    distill_loss += min(loss_list)
+                    distill_loss = distill_loss + min(loss_list)
         for _, ts in self._target_spaces.items():
             for _, target_space in ts.items():
                 target_space.clean()
