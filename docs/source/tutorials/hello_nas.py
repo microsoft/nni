@@ -336,7 +336,7 @@ def evaluate_model_with_visualization(model_cls):
     model = model_cls()
     # dump the model into an onnx
     if 'NNI_OUTPUT_DIR' in os.environ:
-        dummy_input = torch.zeros(1, 3, 32, 32)
+        dummy_input = torch.zeros(1, 3, 28, 28)
         torch.onnx.export(model, (dummy_input, ),
                           Path(os.environ['NNI_OUTPUT_DIR']) / 'model.onnx')
     evaluate_model(model_cls)
