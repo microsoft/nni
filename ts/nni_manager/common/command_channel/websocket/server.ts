@@ -3,29 +3,6 @@
 
 /**
  *  WebSocket command channel server.
- *
- *  The server will specify a URL prefix like `ws://1.2.3.4:8080/SERVER_PREFIX`,
- *  and each client will append a channel ID, like `ws://1.2.3.4:8080/SERVER_PREFIX/CHANNEL_ID`.
- *
- *      const server = new WsChannelServer('example_server', '/SERVER_PREFIX');
- *      const url = server.getChannelUrl('CHANNEL_ID');
- *      const client = new WsChannelClient('example_client', url);
- *      await server.start();
- *      await client.connect();
- *
- *  There two styles to use the server:
- *
- *   1. Handle all clients' commands in one space:
- *
- *          server.onReceive((channelId, command) => { ... });
- *          server.send(channelId, command);
- *
- *   2. Maintain a `WsChannel` instance for each client:
- *
- *          server.onConnection((channelId, channel) => {
- *              channel.onCommand(command => { ... });
- *              channel.send(command);
- *          });
  **/
 
 import { EventEmitter } from 'events';

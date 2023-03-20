@@ -108,7 +108,14 @@ async function testReconnect(): Promise<void> {
     ws.terminate();
     ws.resume();
 
-    await setTimeout(heartbeat);
+    // mac pipeline can be slow
+    for (let i = 0; i < 10; i++) {
+        await setTimeout(heartbeat);
+        if (ut.events.length > 0) {
+            break;
+        }
+    }
+
     assert.ok(ut.countEvents('client_lost_1') >= 1);
     assert.ok(ut.countEvents('client_close_1') == 0);
     assert.ok(ut.countEvents('client_error_1') == 0);

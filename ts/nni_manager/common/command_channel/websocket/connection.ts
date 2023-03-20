@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  Internal helper class which handles one WebSocket connection.
+ **/
+
 import { EventEmitter } from 'node:events';
 import util from 'node:util';
 
@@ -15,11 +19,11 @@ interface ConnectionEvents {
     'error': (error: Error) => void;
 }
 
-export declare interface Connection {
+export declare interface WsConnection {
     on<E extends keyof ConnectionEvents>(event: E, listener: ConnectionEvents[E]): this;
 }
 
-export class Connection extends EventEmitter {
+export class WsConnection extends EventEmitter {
     private closing: boolean = false;
     private commandEmitter: EventEmitter;
     private heartbeatTimer: NodeJS.Timer | null = null;

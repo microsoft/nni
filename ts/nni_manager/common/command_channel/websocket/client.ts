@@ -3,15 +3,6 @@
 
 /**
  *  WebSocket command channel client.
- *
- *  Usage:
- *
- *      const client = new WsChannelClient('example', 'ws://1.2.3.4:8080/server/channel_id');
- *      await client.connect();
- *      client.send(command);
- *
- *  Most APIs are derived the base class `WsChannel`.
- *  See its doc for more details.
  **/
 
 import events from 'node:events';

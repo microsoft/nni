@@ -4,29 +4,19 @@
 /**
  *  WebSocket command channel.
  *
- *  This is the base class that used by both server and client.
+ *  A WsChannel operates on one WebSocket connection at a time.
+ *  But when the network is unstable, it may close the underlying connection and create a new one.
+ *  This is generally transparent to the user of this class, except that a "lost" event will be emitted.
  *
- *  For the server, channels can be got with `onConnection()` event listener.
- *  For the client, a channel can be created with `new WsChannelClient()` subclass.
- *  Do not use the constructor directly.
+ *  To distinguish intentional close from connection lost,
+ *  a "_bye_" command will be sent when `close()` or `disconnect()` is invoked.
  *
- *  The channel is fault tolerant to some extend. It has three different types of closing related events:
+ *  If the connection is closed before receiving "_bye_" command, a "lost" event will be emitted and:
  *
- *   1. "close": The channel is intentionally closed.
+ *    * The client will try to reconnect for severaly times in around 15s.
+ *    * The server will wait the client to reconnect for around 30s.
  *
- *      This is caused either by "close()" or "disconnect()" call, or by receiving a "_bye_" command from the peer.
- *
- *   2. "lost": The channel is temporarily unavailable and is trying to recover.
- *      (The high level class should examine the peer's status out-of-band when receiving this event.)
- *
- *      When the underlying socket is dead, this event is emitted.
- *      The client will try to reconnect in around 15s. If all attempts fail, an "error" event will be emitted.
- *      The server will wait the client for 30s. If it does not reconnect, an "error" event will be emitted.
- *      Successful recover will not emit command.
- *
- *   3. "error": The channel is dead and cannot recover.
- *
- *      A "close" event may or may not follow this event. Do not rely on that.
+ *  If the reconnecting attempt failed, both side will emit an "error" event.
  **/
 
 import { EventEmitter, once } from 'node:events';
@@ -37,7 +27,7 @@ import type { WebSocket } from 'ws';
 import type { Command, CommandChannel } from 'common/command_channel/interface';
 import { Deferred } from 'common/deferred';
 import { Logger, getLogger } from 'common/log';
-import { Connection } from './connection';
+import { WsConnection } from './connection';
 
 interface QueuedCommand {
     command: Command;
@@ -46,7 +36,7 @@ interface QueuedCommand {
 
 export class WsChannel implements CommandChannel {
     private closing: boolean = false;
-    private connection: Connection | null = null;  // NOTE: used in unit test
+    private connection: WsConnection | null = null;  // NOTE: used in unit test
     private epoch: number = -1;
     private heartbeatInterval: number | null = null;
     private log: Logger;
@@ -170,9 +160,9 @@ export class WsChannel implements CommandChannel {
         this.epoch += 1;
     }
 
-    private configConnection(ws: WebSocket): Connection {
+    private configConnection(ws: WebSocket): WsConnection {
         const connName = this.epoch ? `${this.name}.${this.epoch}` : this.name;
-        const conn = new Connection(connName, ws, this.emitter);
+        const conn = new WsConnection(connName, ws, this.emitter);
         if (this.heartbeatInterval) {
             conn.setHeartbeatInterval(this.heartbeatInterval);
         }
@@ -208,7 +198,7 @@ export class WsChannel implements CommandChannel {
         return true;
     }
 
-    private dropConnection(conn: Connection, reason: string): void {
+    private dropConnection(conn: WsConnection, reason: string): void {
         if (this.closing) {
             this.log.debug('Clean up:', reason);
             return;
