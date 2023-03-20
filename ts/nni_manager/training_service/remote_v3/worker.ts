@@ -57,7 +57,7 @@ export class Worker {
     public setChannel(channel: WsChannel): void {
         this.channel = channel;
         this.trialKeeper.setChannel(channel);
-        channel.on('lost', async () => {
+        channel.onLost(async () => {
             if (!await this.checkAlive()) {
                 this.log.error('Trial keeper failed');
                 channel.terminate('Trial keeper failed');  // MARK

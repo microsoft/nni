@@ -50,7 +50,7 @@ import { DefaultMap } from 'common/default_map';
 import { Deferred } from 'common/deferred';
 import { Logger, getLogger } from 'common/log';
 import type { TrialKeeper } from 'common/trial_keeper/keeper';
-import { WsChannel } from './websocket/channel';
+import type { CommandChannel } from './interface';
 
 interface RpcResponseCommand {
     type: 'rpc_response';
@@ -61,14 +61,14 @@ interface RpcResponseCommand {
 
 type Class = { new(...args: any[]): any; };
 
-const rpcHelpers: Map<WsChannel, RpcHelper> = new Map();
+const rpcHelpers: Map<CommandChannel, RpcHelper> = new Map();
 
 /**
  *  Enable RPC on a channel.
  *
  *  The channel does not need to be connected for calling this function.
  **/
-export function getRpcHelper(channel: WsChannel): RpcHelper {
+export function getRpcHelper(channel: CommandChannel): RpcHelper {
     if (!rpcHelpers.has(channel)) {
         rpcHelpers.set(channel, new RpcHelper(channel));
     }
@@ -76,7 +76,7 @@ export function getRpcHelper(channel: WsChannel): RpcHelper {
 }
 
 export class RpcHelper {
-    private channel: WsChannel;
+    private channel: CommandChannel;
     private lastId: number = 0;
     private localCtors: Map<string, Class> = new Map();
     private localObjs: Map<number, any> = new Map();
@@ -87,7 +87,7 @@ export class RpcHelper {
     /**
      *  NOTE: Don't use this constructor directly. Use `getRpcHelper()`.
      **/
-    constructor(channel: WsChannel) {
+    constructor(channel: CommandChannel) {
         this.log = getLogger(`RpcHelper.${channel.name}`);
         this.channel = channel;
         this.channel.onCommand('rpc_constructor', command => {
