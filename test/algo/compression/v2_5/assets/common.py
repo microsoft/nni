@@ -13,14 +13,14 @@ log_dir = Path(__file__).parent.parent / 'logs'
 
 
 def create_model(model_type: str):
-    pruning_torch_config_list = [{'op_types': ['Linear'], 'exclude_op_names': ['fc2'], 'sparse_ratio': 0.75},
-                                 {'op_names': ['conv1', 'conv2', 'conv3'], 'sparse_ratio': 0.75}]
+    pruning_torch_config_list = [{'op_types': ['Linear'], 'exclude_op_names': ['fc2'], 'sparse_ratio': 0.75, 'granularity': 'out_channel'},
+                                 {'op_names': ['conv1', 'conv2', 'conv3'], 'sparse_ratio': 0.75, 'granularity': 'out_channel'}]
 
     distil_torch_config_list = [{'op_types': ['Linear'], 'lambda': 0.75},
                                 {'op_names': ['conv1', 'conv2', 'conv3'], 'lambda': 0.75}]
 
-    pruning_lightning_config_list = [{'op_types': ['Linear'], 'exclude_op_names': ['model.fc2'], 'sparse_ratio': 0.75},
-                                     {'op_names': ['model.conv1', 'model.conv2', 'model.conv3'], 'sparse_ratio': 0.75}]
+    pruning_lightning_config_list = [{'op_types': ['Linear'], 'exclude_op_names': ['model.fc2'], 'sparse_ratio': 0.75, 'granularity': 'out_channel'},
+                                     {'op_names': ['model.conv1', 'model.conv2', 'model.conv3'], 'sparse_ratio': 0.75, 'granularity': 'out_channel'}]
 
     distil_lightning_config_list = [{'op_types': ['Linear'], 'lambda': 0.75},
                                     {'op_names': ['model.conv1', 'model.conv2', 'model.conv3'], 'lambda': 0.75}]

@@ -13,7 +13,7 @@ from ..base.compressor import Pruner
 from ..base.wrapper import ModuleWrapper
 from ..utils import Evaluator
 
-from .basic_pruner import LevelPruner, L1NormPruner, L2NormPruner
+from .basic_pruner import LevelPruner, L1NormPruner, L2NormPruner, FPGMPruner
 from .slim_pruner import SlimPruner
 from .taylor_pruner import TaylorPruner
 
@@ -56,7 +56,7 @@ class _ComboPruner(ScheduledPruner):
     def __init__(self, pruner: Pruner, interval_steps: int, total_times: int, evaluator: Evaluator | None = None):
         assert isinstance(pruner, Pruner)
         assert hasattr(pruner, 'interval_steps') and hasattr(pruner, 'total_times')
-        if not isinstance(pruner, (LevelPruner, L1NormPruner, L2NormPruner, SlimPruner, TaylorPruner)):
+        if not isinstance(pruner, (LevelPruner, L1NormPruner, L2NormPruner, FPGMPruner, SlimPruner, TaylorPruner)):
             warning_msg = f'Compatibility not tested with pruner type {pruner.__class__.__name__}.'
             _logger.warning(warning_msg)
         if pruner._is_wrapped:
