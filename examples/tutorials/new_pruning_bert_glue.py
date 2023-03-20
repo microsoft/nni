@@ -114,7 +114,8 @@ def prepare_traced_trainer(model, task_name, load_best_model_at_end=False):
                                       metric_for_best_model='default',
                                       load_best_model_at_end=load_best_model_at_end,
                                       disable_tqdm=True,
-                                      optim='adamw_torch')
+                                      optim='adamw_torch',
+                                      seed=1024)
     trainer = nni.trace(Trainer)(model=model,
                                  args=training_args,
                                  data_collator=data_collator,
@@ -145,7 +146,7 @@ def dynamic_distiller(student_model: BertForSequenceClassification, teacher_mode
     config_list = [{
         'op_names': [f'bert.encoder.layer.{i}'],
         'link': [f'bert.encoder.layer.{j}' for j in range(i, layer_num)],
-        'lambda': 0.9 / layer_num,
+        'lambda': 0.9,
         'apply_method': 'mse',
     } for i in range(layer_num)]
     config_list.append({
@@ -183,7 +184,7 @@ def adapt_distiller(student_model: BertForSequenceClassification, teacher_model:
     layer_num = len(student_model.bert.encoder.layer)
     config_list = [{
         'op_names': [f'bert.encoder.layer.{i}'],
-        'lambda': 0.9 / layer_num,
+        'lambda': 0.9,
         'apply_method': 'mse',
     } for i in range(layer_num)]
     config_list.append({
@@ -391,7 +392,7 @@ def speedup_embedding():
 
     # finetuning
     teacher_model = build_finetuning_model('mnli', f'./output/bert_finetuned/{task_name}.bin')
-    adapt_distillation(model, teacher_model, None, 3)
+    adapt_distillation(model, teacher_model, None, 4)
     torch.save(model, './output/pruning/embedding_pruned_model.pth')
 
 

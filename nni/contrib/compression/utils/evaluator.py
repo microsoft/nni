@@ -187,7 +187,7 @@ class Evaluator:
         raise NotImplementedError
 
     def _optimizer_add_param_group(self, model: Union[torch.nn.Module, pl.LightningModule],
-                                  module_name_param_dict: Dict[str, List[Tensor]], optimizers: Optimizer | List[Optimizer]):
+                                   module_name_param_dict: Dict[str, List[Tensor]], optimizers: Optimizer | List[Optimizer]):
         # used in the bind_model process
         def find_param_group(param_groups: List[Dict], module_name: str):
             for i, param_group in enumerate(param_groups):
@@ -217,13 +217,13 @@ class Evaluator:
                 # copyed from torch.optim to check the validation of param
                 if not isinstance(param, torch.Tensor):
                     raise TypeError("optimizer can only optimize Tensors, "
-                                "but one of the params is " + torch.typename(param))
+                                    "but one of the params is " + torch.typename(param))
                 if not optimizer.defaults.get('differentiable', None) \
-                    and not (param.is_leaf or param.retains_grad): # type: ignore
+                    and not (param.is_leaf or param.retains_grad):  # type: ignore
                     raise ValueError("can't optimize a non-leaf Tensor")
                 target_param_group['params'].append(param)
 
-        assert isinstance(model, (Module, pl.LightningModule))
+        assert isinstance(model, Module)
         param2name_dict = {id(p): name for name, p in model.named_parameters()}
         assert optimizers is not None, "Please provide optimizers for adding param_groups in optimizers"
         optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
@@ -817,7 +817,7 @@ class TorchEvaluator(Evaluator):
     def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
         assert isinstance(self.model, Module)
         assert module_name_param_dict is not None
-        self._optimizer_add_param_group(self.model, module_name_param_dict, self._optimizers) # type: ignore
+        self._optimizer_add_param_group(self.model, module_name_param_dict, self._optimizers)  # type: ignore
 
     def unbind_model(self):
         if self.model:
@@ -1011,7 +1011,6 @@ class TransformersEvaluator(Evaluator):
     def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
         assert isinstance(self.model, Module)
         assert module_name_param_dict is not None
-
         self._optimizer_add_param_group(self.model, module_name_param_dict, self.trainer.optimizer)
 
     def unbind_model(self):

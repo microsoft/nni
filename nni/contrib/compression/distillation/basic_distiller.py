@@ -291,23 +291,35 @@ class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
                     self.trans_linears[module_name][target_name] = torch.nn.Linear(stu_hs.shape[-1], tea_hs.shape[-1]).to(stu_hs.device)
 
     def _register_linears_optimization(self, evaluator: Evaluator):
-        linear_params = []
-        for _, linears in self.trans_linears.items():
+        linear_params = {}
+        for module_name, linears in self.trans_linears.items():
             for _, linear in linears.items():
                 if linear is not None:
-                    linear_params.extend(linear.parameters())
+                    linear_params[module_name] = list(linear.parameters())
 
         if not linear_params:
             return
 
-        params = [{"params": linear_params}]
-        optimizer = Adam(params, 1e-2)
+        evaluator.patch_optim_param_group(linear_params)
 
-        def optimizer_task():
-            optimizer.step()
-            optimizer.zero_grad()
+    # def _register_linears_optimization(self, evaluator: Evaluator):
+    #     linear_params = []
+    #     for _, linears in self.trans_linears.items():
+    #         for _, linear in linears.items():
+    #             if linear is not None:
+    #                 linear_params.extend(linear.parameters())
 
-        evaluator.patch_optimizer_step(before_step_tasks=[optimizer_task], after_step_tasks=[])
+    #     if not linear_params:
+    #         return
+
+    #     params = [{"params": linear_params}]
+    #     optimizer = Adam(params, 1e-5)
+
+    #     def optimizer_task():
+    #         optimizer.step()
+    #         optimizer.zero_grad()
+
+    #     evaluator.patch_optimizer_step(before_step_tasks=[optimizer_task], after_step_tasks=[])
 
     def compute_distill_loss(self):
         distill_loss = 0
