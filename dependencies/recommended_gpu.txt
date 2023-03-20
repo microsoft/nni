@@ -4,7 +4,7 @@
 tensorflow
 torch == 1.13.1+cu117
 torchvision == 0.14.1+cu117
-pytorch-lightning >= 1.6.1, < 2
+pytorch-lightning >= 1.6.1, < 2.0
 
 # for full-test-compression 
 -f https://download.openmmlab.com/mmcv/dist/cu117/torch1.13/index.html
