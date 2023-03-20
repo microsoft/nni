@@ -22,12 +22,12 @@ _logger = logging.getLogger(__name__)
 
 class TaylorPruner(Pruner):
     __doc__ = r"""
-    Taylor pruner is a pruner which prunes on the first weight dimension by default,
+    Taylor pruner is a pruner which prunes on the first weight dimension,
     based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity.
-    The estimated importance is defined as the paper
-    `Importance Estimation for Neural Network Pruning <http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf>`__.
+    The estimated importance is defined as the paper `Importance Estimation for Neural Network Pruning <http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf>`__.
 
     :math:`\widehat{\mathcal{I}}_{\mathcal{S}}^{(1)}(\mathbf{W}) \triangleq \sum_{s \in \mathcal{S}} \mathcal{I}_{s}^{(1)}(\mathbf{W})=\sum_{s \in \mathcal{S}}\left(g_{s} w_{s}\right)^{2}`
+    """ + r"""
 
     Parameters
     ----------
