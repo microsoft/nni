@@ -234,13 +234,13 @@ class FlopsResult(NamedTuple):
         return FlopsResult(flops, params)
 
 
-def _count_element_size(module: Any, input: tuple[MutableShape,], output: tuple[MutableShape,]) -> FlopsResult:
+def _count_element_size(module: Any, input: tuple[MutableShape, ], output: tuple[MutableShape, ]) -> FlopsResult:
     x = input[0]
     total_ops = x[1:].numel()
     return FlopsResult(total_ops, 0)
 
 
-def _count_activation(module: Any, input: tuple[MutableShape,], output: tuple[MutableShape,],
+def _count_activation(module: Any, input: tuple[MutableShape, ], output: tuple[MutableShape, ],
                       count_activation: bool = True) -> FlopsResult:
     if not count_activation:
         return FlopsResult(0., 0.)
@@ -249,7 +249,7 @@ def _count_activation(module: Any, input: tuple[MutableShape,], output: tuple[Mu
 
 def _count_convNd(
     module: nn.Conv1d | nn.Conv2d | nn.Conv3d | nas_nn.MutableConv1d | nas_nn.MutableConv2d | nas_nn.MutableConv3d,
-    input: tuple[MutableShape,], output: MutableShape, N: int, count_bias: bool = True
+    input: tuple[MutableShape, ], output: MutableShape, N: int, count_bias: bool = True
 ) -> FlopsResult:
     cin = _getattr(module, 'in_channels')
     cout = _getattr(module, 'out_channels')
@@ -266,7 +266,7 @@ def _count_convNd(
 
 def _count_linear(
     module: nn.Linear | nas_nn.Linear,
-    input: tuple[MutableShape,], output: MutableShape,
+    input: tuple[MutableShape, ], output: MutableShape,
     count_bias: bool = True
 ) -> FlopsResult:
     in_features = _getattr(module, 'in_features')
@@ -281,8 +281,8 @@ def _count_linear(
 
 
 def _count_bn(module: nn.BatchNorm1d | nn.BatchNorm2d | nn.BatchNorm3d |
-                      nas_nn.MutableBatchNorm1d | nas_nn.MutableBatchNorm2d | nas_nn.MutableBatchNorm3d,
-              input: tuple[MutableShape,], output: MutableShape,
+              nas_nn.MutableBatchNorm1d | nas_nn.MutableBatchNorm2d | nas_nn.MutableBatchNorm3d,
+              input: tuple[MutableShape, ], output: MutableShape,
               count_normalization: bool = True) -> FlopsResult:
     if not count_normalization:
         return FlopsResult(0., 0.)
@@ -338,7 +338,7 @@ def _count_mhattn(module: nn.MultiheadAttention | nas_nn.MultiheadAttention,
     return FlopsResult(flops, params)
 
 
-def _count_layerchoice(module: nas_nn.LayerChoice, input: tuple[MutableShape,], output: MutableShape,
+def _count_layerchoice(module: nas_nn.LayerChoice, input: tuple[MutableShape, ], output: MutableShape,
                        name: str, shapes: dict[str, tuple[MutableShape, MutableShape]],
                        config: FlopsParamsCounterConfig) -> FlopsResult:
     sub_results: dict[int | str, FlopsResult] = {}
@@ -355,7 +355,7 @@ def _count_layerchoice(module: nas_nn.LayerChoice, input: tuple[MutableShape,], 
     )
 
 
-def _count_repeat(module: nas_nn.Repeat, input: tuple[MutableShape,], output: MutableShape,
+def _count_repeat(module: nas_nn.Repeat, input: tuple[MutableShape, ], output: MutableShape,
                   name: str, shapes: dict[str, tuple[MutableShape, MutableShape]],
                   config: FlopsParamsCounterConfig) -> FlopsResult:
     if isinstance(module.depth_choice, int):

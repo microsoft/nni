@@ -26,6 +26,7 @@ def _to_hashable(obj):
 
 class DuplicationError(SampleValidationError):
     """Exception raised when a sample is duplicated."""
+
     def __init__(self, sample):
         super().__init__(f'Duplicated sample found: {sample}')
 

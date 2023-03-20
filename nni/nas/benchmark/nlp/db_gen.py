@@ -8,6 +8,7 @@ import tqdm
 
 from .schema import db, NlpTrialConfig, NlpTrialStats, NlpIntermediateStats
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('input_dir', help='Path to extracted NLP data dir.')
@@ -35,10 +36,10 @@ def main():
                     intermediate_stats = []
                     for epoch in range(epochs):
                         epoch_res = {
-                            'train_loss' : cur['train_losses'][epoch],
-                            'val_loss' : cur['val_losses'][epoch],
-                            'test_loss' : cur['test_losses'][epoch],
-                            'training_time' : cur['wall_times'][epoch]
+                            'train_loss': cur['train_losses'][epoch],
+                            'val_loss': cur['val_losses'][epoch],
+                            'test_loss': cur['test_losses'][epoch],
+                            'training_time': cur['wall_times'][epoch]
                         }
                         epoch_res.update(current_epoch=epoch + 1, trial=trial_stats)
                         intermediate_stats.append(epoch_res)

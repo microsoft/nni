@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import torchvision
 
 import nni.nas.nn.pytorch.layers as nn
-from nni.nas.nn.pytorch import BasicUnit
+from nni.nas.nn.pytorch import ParametrizedModule
 
 from .convert_mixin import ConvertMixin, ConvertWithShapeMixin
 
@@ -32,7 +32,7 @@ class MnistNet(nn.Module):
         return F.log_softmax(x, dim=1)
 
 # NOTE: serialize module cannot be placed within class or function
-class Linear(BasicUnit):
+class Linear(ParametrizedModule):
     def __init__(self, d_embed, d_proj):
         super().__init__()
         self.linear = nn.Linear(d_embed, d_proj)

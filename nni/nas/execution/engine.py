@@ -10,7 +10,7 @@ from typing import Any, Iterable, NewType, Callable, Type, overload
 
 from nni.nas.space import ExecutableModelSpace, ModelStatus
 
-from .event import ModelEventCallbacks, ModelEvent, ModelEventType, FinalMetricEvent, IntermediateMetricEvent, TrainingEndEvent
+from .event import ModelEvent, ModelEventType, FinalMetricEvent, IntermediateMetricEvent, TrainingEndEvent
 
 __all__ = [
     'WorkerInfo', 'ExecutionEngine', 'Middleware',
@@ -54,7 +54,7 @@ class ExecutionEngine:
     """
 
     def __init__(self) -> None:
-        self._callbacks: ModelEventCallbacks = defaultdict(list)
+        self._callbacks: dict[ModelEventType, list] = defaultdict(list)
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.extra_repr()})'
@@ -68,10 +68,12 @@ class ExecutionEngine:
         If no models are given, wait for all models to complete.
         """
         if not models:
-            models = self.list_models()
+            model_iterator = self.list_models()
+        else:
+            model_iterator = models
 
         while True:
-            left_models = [g for g in models if not g.status.completed()]
+            left_models = [g for g in model_iterator if not g.status.completed()]
             if not left_models:
                 break
             time.sleep(1)
@@ -121,7 +123,7 @@ class ExecutionEngine:
         """
         raise NotImplementedError()
 
-    def register_model_event_callback(self, event_type: ModelEventType, callback: Callable[[ModelEvent], None]) -> None:
+    def register_model_event_callback(self, event_type: ModelEventType, callback: Callable[..., None]) -> None:
         """
         Register a callback to receive model event.
 
@@ -131,12 +133,13 @@ class ExecutionEngine:
             The type of event that is to listen.
         callback
             The callback to receive the event.
+            It receives a :class:`~nni.nas.execution.ModelEvent` object, and is expected to return nothing.
         """
         if not isinstance(event_type, ModelEventType):
             event_type = ModelEventType(event_type)
         self._callbacks[event_type].append(callback)
 
-    def unregister_model_event_callback(self, event_type: ModelEventType, callback: Callable[[ModelEvent], None]) -> None:
+    def unregister_model_event_callback(self, event_type: ModelEventType, callback: Callable[..., None]) -> None:
         """
         Unregister a callback.
 
@@ -146,6 +149,7 @@ class ExecutionEngine:
             The type of event that is to listen.
         callback
             The callback to receive the event.
+            The event must have been registered before.
         """
         if not isinstance(event_type, ModelEventType):
             event_type = ModelEventType(event_type)
@@ -154,7 +158,7 @@ class ExecutionEngine:
     @overload
     def dispatch_model_event(self, event: ModelEventType, **kwargs: Any) -> None:
         ...
-    
+
     @overload
     def dispatch_model_event(self, event: str, **kwargs: Any) -> None:
         ...

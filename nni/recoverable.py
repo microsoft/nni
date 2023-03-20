@@ -43,7 +43,9 @@ class Recoverable:
         self.recovered_max_param_id = previous_max_param_id
         return previous_max_param_id
 
-    def is_created_in_previous_exp(self, param_id: int) -> bool:
+    def is_created_in_previous_exp(self, param_id: int | None) -> bool:
+        if param_id is None:
+            return False
         return param_id <= self.recovered_max_param_id
 
     def get_previous_param(self, param_id: int) -> dict:

@@ -440,7 +440,7 @@ class ShapeTensor(torch.Tensor):
 
 
 def submodule_input_output_shapes(
-    model: nn.Module, *args: ShapeTensor, 
+    model: nn.Module, *args: ShapeTensor,
     is_leaf: Callable[[nn.Module], bool] | None = None, **kwargs: ShapeTensor
 ) -> dict[str, tuple[MutableShape, MutableShape]]:
     """Get the dict of all the symbolic shapes of the inputs and outputs of all the submodules.

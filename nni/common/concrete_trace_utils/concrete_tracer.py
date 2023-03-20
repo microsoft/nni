@@ -85,14 +85,23 @@ class ConcreteTracer(TracerBase):
         _orig_contains:             ([], False, None),
         _orig_index:                ([], False, None),
 
-        # force-traced function
+        # force-traced function (the factory functions of tensor creation)
+        torch.arange:               ([], True, None),
+        torch.empty:                ([], True, None),
+        torch.eye:                  ([], True, None),
+        torch.full:                 ([], True, None),
+        torch.linspace:             ([], True, None),
+        torch.logspace:             ([], True, None),
+        torch.ones:                 ([], True, None),
         torch.rand:                 ([], True, None),
-        torch.randn:                ([], True, None),
         torch.randint:              ([], True, None),
-        torch.rand_like:            ([], True, None),
-        torch.randn_like:           ([], True, None),
-        torch.randint_like:         ([], True, None),
+        torch.randn:                ([], True, None),
+        # torch.rand_like:          ([], True, None),  # seems that xxx_like will not directly call torch._TensorBase.xxx
+        # torch.randn_like:         ([], True, None),
+        # torch.randint_like:       ([], True, None),
         torch.randperm:             ([], True, None),
+        torch.tensor:               ([], True, None),
+        torch.zeros:                ([], True, None),
 
         # method
         Sequential.__getitem__:     ([], False, operator.getitem),
@@ -276,13 +285,6 @@ class ConcreteTracer(TracerBase):
         similar to _symbolic_trace.Tracer.create_proxy.
         use the 'run_target' to actually execute the code, and store the value in 'value' field.
         """
-        args_ = self.create_arg(args)
-        kwargs_ = self.create_arg(kwargs)
-        assert isinstance(args_, tuple)
-        assert isinstance(kwargs_, dict)
-
-        node = self.create_node(kind, target, args_, kwargs_, name, type_expr)
-
         def upwrapper(obj: Any):
             while _orig_isinstance(obj, ep.ConcreteProxy):
                 obj = obj.value
@@ -292,6 +294,13 @@ class ConcreteTracer(TracerBase):
 
         # real value by execution
         value_unwrapped = self.run_target(kind, target, args_unwrapped, kwargs_unwrapped)
+
+        args_ = self.create_arg(args)
+        kwargs_ = self.create_arg(kwargs)
+        assert isinstance(args_, tuple)
+        assert isinstance(kwargs_, dict)
+
+        node = self.create_node(kind, target, args_, kwargs_, name, type_expr)
 
         proxy = self.proxy(value_unwrapped, node)
         self.node_to_originating_module[proxy.node] = self.current_module_qualified_name
@@ -526,6 +535,19 @@ class ConcreteTracer(TracerBase):
                 such as '__main__.FooModel' or '__main__.bar_func'. the namespace is
                 always needed.
         """
+        # fill default values
+        args = inspect.getfullargspec(root.forward).args[1:]
+        defaults = inspect.getfullargspec(root.forward).defaults
+        defaults = tuple() if defaults is None else defaults
+        if isinstance(concrete_args, (tuple, list)):
+            concrete_args = (*concrete_args, *defaults[len(concrete_args) + len(defaults) - len(args):])
+        else:
+            kv_default = {k: v for k, v in zip(args[-len(defaults):], defaults)}
+            concrete_args = {
+                **concrete_args,
+                **{n: kv_default[n] for n in args if n not in concrete_args}
+            }
+
         # preprocess arguments
         autowrap_modules = autowrap_modules if autowrap_modules is not None else tuple()
         autowrap_leaf_function = autowrap_leaf_function if autowrap_leaf_function is not None else {}
@@ -1396,6 +1418,7 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         fx.GraphModule: a Module created from the recorded operations from ``root``.
     """
     tracer = ConcreteTracer()
+
     graph = tracer.trace(root,
         autowrap_leaf_function = autowrap_leaf_function,
         autowrap_leaf_class = autowrap_leaf_class,

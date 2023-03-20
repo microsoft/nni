@@ -163,9 +163,8 @@ class RegularizedEvolution(Strategy):
 
     def best_parent(self) -> Sample:
         """Get the best individual from a randomly sampled subset of the population."""
-        samples = copy.copy(self._population)
-        self._random_state.shuffle(samples)
-        samples = list(samples)[:self.sample_size]
+        samples = list(self._population)
+        samples = [samples[i] for i in self._random_state.permutation(len(samples))[:self.sample_size]]
         parent = max(samples, key=lambda sample: sample.y).x
         _logger.debug('Parent picked: %s', parent)
         return parent
@@ -236,7 +235,9 @@ class RegularizedEvolution(Strategy):
         if event.model in self._running_models:
             self._running_models.remove(event.model)
             if event.model.metric is not None:
+                _logger.info('[Metric] %f Sample: %s', event.model.metric, event.model.sample)
                 # Even if it fails, as long as it has a metric, we add it to the population.
+                assert event.model.sample is not None
                 self._population.append(Individual(event.model.sample, event.model.metric))
                 _logger.debug('New individual added to population: %s', self._population[-1])
                 if len(self._population) > self.population_size:

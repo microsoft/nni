@@ -163,6 +163,7 @@ class NasBench201(ModelSpace):
     num_labels
         Number of categories for classification.
     """
+
     def __init__(self,
                  stem_out_channels: int = 16,
                  num_modules_per_stack: int = 5,

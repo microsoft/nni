@@ -98,13 +98,19 @@ class Lightning(MutableEvaluator):
     train_dataloders
         Used in ``trainer.fit()``. A PyTorch DataLoader with training samples.
         If the ``lightning_module`` has a predefined train_dataloader method this will be skipped.
-        It can be `any types of dataloader supported by Lightning <https://pytorch-lightning.readthedocs.io/en/stable/guides/data.html>`__.
+        It can be any types of dataloader supported by Lightning.
     val_dataloaders
         Used in ``trainer.fit()``. Either a single PyTorch Dataloader or a list of them, specifying validation samples.
         If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
-        It can be `any types of dataloader supported by Lightning <https://pytorch-lightning.readthedocs.io/en/stable/guides/data.html>`__.
+        It can be any types of dataloader supported by Lightning.
+    datamodule
+        Used in ``trainer.fit()``. See `Lightning DataModule <https://pytorch-lightning.readthedocs.io/en/stable/data/datamodule.html>`__.
     fit_kwargs
         Keyword arguments passed to ``trainer.fit()``.
+    detect_interrupt
+        Lightning has a `graceful shutdown <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__
+        mechanism. It does not terminate the whole program (but only the training) when a KeyboardInterrupt is received.
+        Setting this to ``True`` will raise the KeyboardInterrupt to the main process, so that the whole program can be terminated.
 
     Examples
     --------
@@ -114,14 +120,15 @@ class Lightning(MutableEvaluator):
 
         import nni
         from nni.nas.evaluator.pytorch.lightning import Lightning, LightningModule, Trainer, DataLoader
-
     """
 
     def __init__(self, lightning_module: LightningModule, trainer: Trainer,
                  train_dataloaders: Optional[Any] = None,
                  val_dataloaders: Optional[Any] = None,
                  train_dataloader: Optional[Any] = None,
-                 fit_kwargs: Optional[Dict[str, Any]] = None):
+                 datamodule: Optional[pl.LightningDataModule] = None,
+                 fit_kwargs: Optional[Dict[str, Any]] = None,
+                 detect_interrupt: bool = True):
         assert isinstance(lightning_module, LightningModule), f'Lightning module must be an instance of {__name__}.LightningModule.'
         if train_dataloader is not None:
             warnings.warn('`train_dataloader` is deprecated and replaced with `train_dataloaders`.', DeprecationWarning)
@@ -129,18 +136,20 @@ class Lightning(MutableEvaluator):
         if not (isinstance(trainer, pl.Trainer) and is_traceable(trainer)):
             raise TypeError(f'Trainer must be imported from {__name__}, but found {trainer.__class__.__qualname__}')
         if not _check_dataloader(train_dataloaders):
-            warnings.warn(f'Please try to wrap PyTorch DataLoader with nni.trace or '
+            warnings.warn(f'When using training service to spawn trials, please try to wrap PyTorch DataLoader with nni.trace or '
                           f'import DataLoader from {__name__}: {train_dataloaders}',
                           RuntimeWarning)
         if not _check_dataloader(val_dataloaders):
-            warnings.warn(f'Please try to wrap PyTorch DataLoader with nni.trace or '
+            warnings.warn(f'When using training service to spawn trials, please try to wrap PyTorch DataLoader with nni.trace or '
                           f'import DataLoader from {__name__}: {val_dataloaders}',
                           RuntimeWarning)
         self.module = lightning_module
         self.trainer = trainer
         self.train_dataloaders = train_dataloaders
         self.val_dataloaders = val_dataloaders
+        self.datamodule = datamodule
         self.fit_kwargs = fit_kwargs or {}
+        self.detect_interrupt = detect_interrupt
 
     def evaluate(self, model):
         """
@@ -156,13 +165,24 @@ class Lightning(MutableEvaluator):
             raise RuntimeError('Mutable evaluator must first be `freeze()` before evaluation.')
 
         self.module.set_model(model)
-        if self.train_dataloaders is None:
-            _logger.info('Train dataloaders are missing. Skip to validation.')
-            return self.trainer.validate(self.module, self.val_dataloaders, **self.fit_kwargs)
+        if self.datamodule is not None:
+            _logger.info('Fit with datamodule. Train and valid dataloaders will be ignored.')
+            rv = self.trainer.fit(self.module, self.datamodule, **self.fit_kwargs)
+        elif self.train_dataloaders is None and self.val_dataloaders is not None:
+            _logger.info('Only validation dataloaders are available. Skip to validation.')
+            rv = self.trainer.validate(self.module, self.val_dataloaders, **self.fit_kwargs)
         else:
             if self.val_dataloaders is None:
-                _logger.warning('Validation dataloaders are missing.')
-            return self.trainer.fit(self.module, self.train_dataloaders, self.val_dataloaders, **self.fit_kwargs)
+                _logger.warning('Validation dataloaders are missing. Safe to ignore this warning when using one-shot strategy.')
+            rv = self.trainer.fit(self.module, self.train_dataloaders, self.val_dataloaders, **self.fit_kwargs)
+
+        if self.detect_interrupt:
+            from pytorch_lightning.trainer.states import TrainerStatus
+            if self.trainer.state.status == TrainerStatus.INTERRUPTED:
+                _logger.warning('Trainer status is detected to be interrupted.')
+                raise KeyboardInterrupt('Trainer status is detected to be interrupted.')
+
+        return rv
 
     @property
     def train_dataloader(self):
@@ -350,6 +370,8 @@ class Classification(Lightning):
     val_dataloaders : DataLoader or List of DataLoader
         Used in ``trainer.fit()``. Either a single PyTorch Dataloader or a list of them, specifying validation samples.
         If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
+    datamodule
+        Used in ``trainer.fit()``. See `Lightning DataModule <https://pytorch-lightning.readthedocs.io/en/stable/data/datamodule.html>`__.
     export_onnx : bool
         If true, model will be exported to ``model.onnx`` before training starts. default true
     num_classes : int
@@ -378,6 +400,7 @@ class Classification(Lightning):
                  optimizer: Type[optim.Optimizer] = optim.Adam,
                  train_dataloaders: Optional[DataLoader] = None,
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None,
+                 datamodule: Optional[pl.LightningDataModule] = None,
                  export_onnx: bool = False,
                  train_dataloader: Optional[DataLoader] = None,
                  num_classes: Optional[int] = None,
@@ -389,7 +412,8 @@ class Classification(Lightning):
                                       weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx,
                                       num_classes=num_classes)
         super().__init__(module, Trainer(**trainer_kwargs),
-                         train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
+                         train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders,
+                         datamodule=datamodule)
 
 
 @nni.trace
@@ -432,6 +456,8 @@ class Regression(Lightning):
     val_dataloaders : DataLoader or List of DataLoader
         Used in ``trainer.fit()``. Either a single PyTorch Dataloader or a list of them, specifying validation samples.
         If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
+    datamodule
+        Used in ``trainer.fit()``. See `Lightning DataModule <https://pytorch-lightning.readthedocs.io/en/stable/data/datamodule.html>`__.
     export_onnx : bool
         If true, model will be exported to ``model.onnx`` before training starts. default: true
     trainer_kwargs : dict
@@ -453,6 +479,7 @@ class Regression(Lightning):
                  optimizer: Type[optim.Optimizer] = optim.Adam,
                  train_dataloaders: Optional[DataLoader] = None,
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None,
+                 datamodule: Optional[pl.LightningDataModule] = None,
                  export_onnx: bool = False,
                  train_dataloader: Optional[DataLoader] = None,
                  **trainer_kwargs):
@@ -462,7 +489,8 @@ class Regression(Lightning):
         module = RegressionModule(criterion=criterion, learning_rate=learning_rate,
                                   weight_decay=weight_decay, optimizer=optimizer, export_onnx=export_onnx)
         super().__init__(module, Trainer(**trainer_kwargs),
-                         train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders)
+                         train_dataloaders=train_dataloaders, val_dataloaders=val_dataloaders,
+                         datamodule=datamodule)
 
 
 # Alias for backwards compatibility

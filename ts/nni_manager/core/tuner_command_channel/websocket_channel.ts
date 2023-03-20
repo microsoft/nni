@@ -163,10 +163,10 @@ class WebSocketChannelImpl implements WebSocketChannel {
     }
 
     private heartbeat(): void {
-        if (this.waitingPong) {
-            this.ws.terminate();  // this will trigger "close" event
-            this.handleError(new Error('tuner_command_channel: Tuner loses responsive'));
-        }
+        // if (this.waitingPong) {
+        //     this.ws.terminate();  // this will trigger "close" event
+        //     this.handleError(new Error('tuner_command_channel: Tuner loses responsive'));
+        // }
 
         this.waitingPong = true;
         this.ws.ping();
@@ -190,12 +190,17 @@ class WebSocketChannelImpl implements WebSocketChannel {
     }
 }
 
-const channelSingleton: WebSocketChannelImpl = new WebSocketChannelImpl();
+let channelSingleton: WebSocketChannelImpl = new WebSocketChannelImpl();
 
 let heartbeatInterval: number = 5000;
 
 export namespace UnitTestHelpers {
     export function setHeartbeatInterval(ms: number): void {
         heartbeatInterval = ms;
+    }
+    // NOTE: this function is only for unittest of nnimanager,
+    // because resuming an experiment should reset websocket channel.
+    export function resetChannelSingleton(): void {
+        channelSingleton = new WebSocketChannelImpl();
     }
 }

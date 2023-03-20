@@ -23,6 +23,7 @@ from .event import FinalMetricEvent, IntermediateMetricEvent, TrainingEndEvent
 
 _logger = logging.getLogger(__name__)
 
+
 class SequentialTrialCommandChannel(TrialCommandChannel):
 
     def __init__(self, engine: SequentialExecutionEngine, model: ExecutableModelSpace):
@@ -116,7 +117,7 @@ class SequentialExecutionEngine(ExecutionEngine):
             # Sometimes, callbacks could do heavy things here, e.g., retry the model.
             # So the callback should only be done at the very very end.
             # And we don't catch exceptions happen inside.
-            self.dispatch_model_event(TrainingEndEvent(model, status))
+            self.dispatch_model_event(TrainingEndEvent(model, status))  # pylint: disable=used-before-assignment
             _logger.debug('Training end callbacks of model %d are done.', self._model_count)
 
     def submit_models(self, *models: ExecutableModelSpace) -> None:
@@ -145,8 +146,8 @@ class SequentialExecutionEngine(ExecutionEngine):
         return self._history
 
     def idle_worker_available(self) -> bool:
-        """Return 1 because this engine will run models sequentially."""
-        return 1
+        """Return true because this engine will run models sequentially and never invokes this method when running the model."""
+        return True
 
     def budget_available(self) -> bool:
         return (self.max_model_count is None or self._model_count < self.max_model_count) \

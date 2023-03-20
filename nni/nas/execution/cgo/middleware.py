@@ -13,7 +13,7 @@ from typing import List, Dict, Tuple, cast
 
 from nni.common.device import GPUDevice, Device
 from nni.experiment.config.training_services import RemoteConfig
-from nni.nas.space import GraphModelSpace, Node, ModelStatus, ExecutableModelSpace
+from nni.nas.space import GraphModelSpace, Node, ModelStatus
 from nni.nas.execution.engine import Middleware, ExecutionEngine
 from nni.nas.execution.event import ModelEventType, IntermediateMetricEvent, FinalMetricEvent, TrainingEndEvent
 from nni.typehint import TrialMetric
@@ -80,10 +80,10 @@ class CrossGraphOptimization(Middleware):
         self._optimizers = [DedupInputOptimizer()]
         self._original_models: Dict[int, GraphModelSpace] = {}
         self._original_model_to_multi_model: Dict[int, GraphModelSpace] = {}
-        self._trial_to_original_models: Dict[int, List[GraphModelSpace]] = {}
+        self._trial_to_original_models: Dict[int, List[int]] = {}
         self._trial_used_devices: Dict[int, List[Device]] = {}
 
-        self._queuing_models: List[GraphModelSpace] = []
+        self._queuing_models: List[Tuple[float, GraphModelSpace]] = []
         self._models_to_retry: List[GraphModelSpace] = []
         self._queue_lock = threading.Lock()
 
@@ -106,11 +106,15 @@ class CrossGraphOptimization(Middleware):
         self._stopped = True
         self._consumer_thread.join()
 
-        self.engine.unregister_model_event_callback(ModelEventType.TrainingEnd, self._training_end_callback)
-        self.engine.unregister_model_event_callback(ModelEventType.FinalMetric, self._final_metric_callback)
-        self.engine.unregister_model_event_callback(ModelEventType.IntermediateMetric, self._intermediate_metric_callback)
+        if self._engine is None:
+            _logger.warning('Underlying engine is not set. Skip shutdown.')
 
-        self.engine.shutdown()
+        else:
+            self.engine.unregister_model_event_callback(ModelEventType.TrainingEnd, self._training_end_callback)
+            self.engine.unregister_model_event_callback(ModelEventType.FinalMetric, self._final_metric_callback)
+            self.engine.unregister_model_event_callback(ModelEventType.IntermediateMetric, self._intermediate_metric_callback)
+
+            self.engine.shutdown()
 
     def load_state_dict(self, state_dict: dict) -> None:
         _logger.info('Cross graph optimization does not preserve any states by itself. Loading the state of inner engine: %s', self.engine)
@@ -189,7 +193,7 @@ class CrossGraphOptimization(Middleware):
         _logger.debug('Scheduled model ids: %s', [m.model_id for m in models])
         for model in models:
             model.status = ModelStatus.Training
-        logical = self._build_logical(models)
+        logical = self._build_logical(list(models))
 
         for opt in self._optimizers:
             opt.convert(logical)
@@ -222,7 +226,7 @@ class CrossGraphOptimization(Middleware):
         # the _queuing_models need to use available_devices first
         with self._queue_lock:
             available_for_more_models = len(self.available_devices) - len(self._queuing_models) - len(self._models_to_retry)
-        return available_for_more_models
+        return bool(available_for_more_models)
 
     def budget_available(self) -> bool:
         return self.engine.budget_available()
@@ -232,10 +236,12 @@ class CrossGraphOptimization(Middleware):
         Return the assembled models as a list of tuple.
         Each tuple contains the assembled model, the device placement of graph nodes, and the original models.
         """
+        grouped_models: List[Dict[GraphModelSpace, Device]] = []
+
         # try to use the available_devices first so that it can be launched as early as possible
         # if free devices are not enough to assemble all models in one trial, try all devices
         if len(self.available_devices) > 0:
-            grouped_models: List[Dict[GraphModelSpace, Device]] = AssemblePolicy().group(logical_plan, self.available_devices)
+            grouped_models = AssemblePolicy().group(logical_plan, self.available_devices)
 
         if len(self.available_devices) == 0 or len(grouped_models) > 1:
             grouped_models: List[Dict[GraphModelSpace, Device]] = AssemblePolicy().group(logical_plan, self.all_devices)
@@ -260,7 +266,7 @@ class CrossGraphOptimization(Middleware):
             model.placement = model_placement
             model.metrics.strict = False
 
-            yield model, multi_model.keys()
+            yield model, list(multi_model.keys())
 
     def _build_logical(self, models: List[GraphModelSpace]) -> LogicalPlan:
         assert len(models) > 0
@@ -312,9 +318,9 @@ class CrossGraphOptimization(Middleware):
         for model_id in merged_metrics:
             self.dispatch_model_event(IntermediateMetricEvent(self._original_models[model_id], merged_metrics[model_id]))
 
-    def _final_metric_callback(self, event: GraphModelSpace) -> None:
+    def _final_metric_callback(self, event: FinalMetricEvent) -> None:
         model = cast(GraphModelSpace, event.model)
-        metrics = cast(List[TrialMetric], event.metric.final)
+        metrics = cast(List[TrialMetric], event.metric)
         _logger.debug(f'Received final metrics for merged model {model.model_id}: {metrics}')
         if not isinstance(metrics, Iterable):
             raise TypeError('Final metrics must be a list of TrialMetric.')

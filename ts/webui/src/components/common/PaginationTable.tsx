@@ -86,7 +86,7 @@ const PaginationTable = (props: IDetailsListProps): any => {
                     pageRangeDisplayed={2}
                     onPageChange={_onPageSelect.bind(this)}
                     containerClassName={itemsCount === 0 ? 'pagination hidden' : 'pagination'}
-                    subContainerClassName={'pages pagination'}
+                    //subContainerClassName={'pages pagination'}
                     disableInitialCallback={false}
                     activeClassName={'active'}
                 />
