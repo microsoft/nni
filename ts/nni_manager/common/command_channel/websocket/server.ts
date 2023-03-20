@@ -3,29 +3,6 @@
 
 /**
  *  WebSocket command channel server.
- *
- *  The server will specify a URL prefix like `ws://1.2.3.4:8080/SERVER_PREFIX`,
- *  and each client will append a channel ID, like `ws://1.2.3.4:8080/SERVER_PREFIX/CHANNEL_ID`.
- *
- *      const server = new WsChannelServer('example', 'SERVER_PREFIX');
- *      const url = server.getChannelUrl('CHANNEL_ID');
- *      const client = new WsChannelClient(url);
- *      await server.start();
- *      await client.connect();
- *
- *  There two styles to use the server:
- *
- *   1. Handle all clients' commands in one space:
- *
- *          server.onReceive((channelId, command) => { ... });
- *          server.send(channelId, command);
- *
- *   2. Maintain a `WsChannel` instance for each client:
- *
- *          server.onConnection((channelId, channel) => {
- *              channel.onCommand(command => { ... });
- *              channel.send(command);
- *          });
  **/
 
 import { EventEmitter } from 'events';
@@ -39,22 +16,18 @@ import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
 import { WsChannel } from './channel';
 
-let heartbeatInterval: number = 5000;
-
 type ReceiveCallback = (channelId: string, command: Command) => void;
 
 export class WsChannelServer extends EventEmitter {
     private channels: Map<string, WsChannel> = new Map();
-    private ip: string;
     private log: Logger;
     private path: string;
     private receiveCallbacks: ReceiveCallback[] = [];
 
-    constructor(name: string, urlPath: string, ip?: string) {
+    constructor(name: string, urlPath: string) {
         super();
         this.log = getLogger(`WsChannelServer.${name}`);
         this.path = urlPath;
-        this.ip = ip ?? 'localhost';
     }
 
     public async start(): Promise<void> {
@@ -67,7 +40,7 @@ export class WsChannelServer extends EventEmitter {
         const deferred = new Deferred<void>();
 
         this.channels.forEach((channel, channelId) => {
-            channel.on('close', (_reason) => {
+            channel.onClose(_reason => {
                 this.channels.delete(channelId);
                 if (this.channels.size === 0) {
                     deferred.resolve();
@@ -77,17 +50,16 @@ export class WsChannelServer extends EventEmitter {
         });
 
         // wait for at most 5 seconds
-        // use heartbeatInterval here for easier unit test
         setTimeout(() => {
             this.log.debug('Shutdown timeout. Stop waiting following channels:', Array.from(this.channels.keys()));
             deferred.resolve();
-        }, heartbeatInterval);
+        }, 5000);
 
         return deferred.promise;
     }
 
-    public getChannelUrl(channelId: string): string {
-        return globals.rest.getFullUrl('ws', this.ip, this.path, channelId);
+    public getChannelUrl(channelId: string, ip?: string): string {
+        return globals.rest.getFullUrl('ws', ip ?? 'localhost', this.path, channelId);
     }
 
     public send(channelId: string, command: Command): void {
@@ -104,7 +76,7 @@ export class WsChannelServer extends EventEmitter {
         // because by this way it can detect and warning if a command is never listened
         this.receiveCallbacks.push(callback);
         for (const [channelId, channel] of this.channels) {
-            channel.onCommand(command => { callback(channelId, command); });
+            channel.onReceive(command => { callback(channelId, command); });
         }
     }
 
@@ -118,33 +90,30 @@ export class WsChannelServer extends EventEmitter {
 
         if (this.channels.has(channelId)) {
             this.log.warning(`Channel ${channelId} reconnecting, drop previous connection`);
-            this.channels.get(channelId)!.setConnection(ws);
+            this.channels.get(channelId)!.setConnection(ws, false);
             return;
         }
 
-        const channel = new WsChannel(channelId, ws, heartbeatInterval);
+        const channel = new WsChannel(channelId);
         this.channels.set(channelId, channel);
 
-        channel.on('close', reason => {
+        channel.onClose(reason => {
             this.log.debug(`Connection ${channelId} closed:`, reason);
             this.channels.delete(channelId);
         });
 
-        channel.on('error', error => {
+        channel.onError(error => {
             this.log.error(`Connection ${channelId} error:`, error);
             this.channels.delete(channelId);
         });
 
         for (const cb of this.receiveCallbacks) {
-            channel.on('command', command => { cb(channelId, command); });
+            channel.onReceive(command => { cb(channelId, command); });
         }
 
-        this.emit('connection', channelId, channel);
-    }
-}
+        channel.enableHeartbeat();
+        channel.setConnection(ws, false);
 
-export namespace UnitTestHelpers {
-    export function setHeartbeatInterval(ms: number): void {
-        heartbeatInterval = ms;
+        this.emit('connection', channelId, channel);
     }
 }
