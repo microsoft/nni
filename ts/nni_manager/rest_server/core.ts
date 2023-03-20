@@ -61,7 +61,7 @@ export class RestServerCore {
         return deferred.promise;
     }
 
-    public shutdown(): Promise<void> {
+    public shutdown(timeoutMilliseconds?: number): Promise<void> {
         logger.info('Stopping REST server.');
         if (this.server === null) {
             logger.warning('REST server is not running.');
@@ -77,7 +77,7 @@ export class RestServerCore {
                 logger.debug('Killing connections');
                 this.server?.closeAllConnections();
             }
-        }, 5000);
+        }, timeoutMilliseconds ?? 5000);
         return deferred.promise;
     }
 }

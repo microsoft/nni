@@ -39,16 +39,16 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         this.log = getLogger(`RemoteV3.${this.id}`);
         this.log.debug('Training sevice config:', config);
 
-        this.server = new WsChannelServer('RemoteTrialKeeper', `platform/${this.id}`, config.nniManagerIp);
+        this.server = new WsChannelServer(this.id, `/platform/${this.id}`);
 
         this.server.on('connection', (channelId: string, channel: WsChannel) => {
             const worker = this.workersByChannel.get(channelId);
             if (worker) {
                 worker.setChannel(channel);
-                channel.on('close', reason => {
+                channel.onClose(reason => {
                     this.log.error('Worker channel closed unexpectedly:', reason);
                 });
-                channel.on('error', error => {
+                channel.onError(error => {
                     this.log.error('Worker channel error:', error);
                     this.restartWorker(worker);
                 });
@@ -190,7 +190,7 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
             this.id,
             channelId,
             config,
-            this.server.getChannelUrl(channelId),
+            this.server.getChannelUrl(channelId, this.config.nniManagerIp),
             Boolean(this.config.trialGpuNumber)
         );
 
