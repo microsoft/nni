@@ -13,7 +13,7 @@ import torch
 from .config import trans_legacy_config_list, default_config_schema
 from .target_space import TargetSpace, TargetType, DistillationTargetSpace, PruningTargetSpace, QuantizationTargetSpace
 from .wrapper import ModuleWrapper, register_wrappers
-from ..utils import Evaluator, Scaling
+from ..utils import Evaluator, Scaling, _EVALUATOR_DOCSTRING
 
 _logger = logging.getLogger(__name__)
 
@@ -24,24 +24,24 @@ _DISTILLATION_TARGET_SPACES = Dict[str, Dict[str, DistillationTargetSpace]]
 
 
 class Compressor:
+    __doc__ = r"""Compressor base class.
+
+    Parameters
+    ----------
+    model
+        Model to be compressed.
+    config_list
+        Config list. Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
+    evaluator
+        {evaluator_docstring}
+    existed_wrappers
+        Use by class method ``from_compressor`` to inherit another compressor's wrapper.
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     mode: Literal['pruning', 'quantization', 'distillation']
 
     def __init__(self, model: torch.nn.Module, config_list: List[Dict],
                  evaluator: Evaluator | None = None, existed_wrappers: Dict[str, ModuleWrapper] | None = None):
-        """
-        Compressor base class.
-
-        Parameters
-        ----------
-        model
-            Model to be compressed.
-        config_list
-            Config list. Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
-        evaluator
-            TODO: please refer.
-        existed_wrappers
-            Use by class method ``from_compressor`` to inherit another compressor's wrapper.
-        """
         assert self.mode in ['pruning', 'quantization', 'distillation']
         self.bound_model = model
         self.config_list = trans_legacy_config_list(deepcopy(config_list))

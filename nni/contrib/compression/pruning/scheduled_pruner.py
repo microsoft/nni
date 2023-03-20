@@ -11,7 +11,7 @@ import torch
 
 from ..base.compressor import Pruner
 from ..base.wrapper import ModuleWrapper
-from ..utils import Evaluator
+from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 
 from .basic_pruner import LevelPruner, L1NormPruner, L2NormPruner, FPGMPruner
 from .slim_pruner import SlimPruner
@@ -127,7 +127,7 @@ class _ComboPruner(ScheduledPruner):
 
 
 class LinearPruner(_ComboPruner):
-    """
+    __doc__ = r"""
     The sparse ratio or sparse threshold in the bound pruner will increase in a linear way from 0. to final::
 
         current_sparse = (1 - initial_ratio) * current_times / total_times * final_sparse
@@ -145,12 +145,12 @@ class LinearPruner(_ComboPruner):
     total_times
         A integer number, how many times to update the sparse goal in total.
     evaluator
-        TODO
+        {evaluator_docstring}
 
     Examples
     --------
         TODO
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     def update_sparse_goals(self, current_times: int):
         ratio = (1 - self._initial_ratio) * current_times / self.total_times
@@ -158,7 +158,7 @@ class LinearPruner(_ComboPruner):
 
 
 class AGPPruner(_ComboPruner):
-    """
+    __doc__ = r"""
     The sparse ratio or sparse threshold in the bound pruner will increase in a AGP way from 0. to final::
 
         current_sparse =  (1 - (1 - self._initial_ratio) * (1 - current_times / self.total_times) ** 3) * final_sparse
@@ -176,12 +176,13 @@ class AGPPruner(_ComboPruner):
     total_times
         A integer number, how many times to update the sparse goal in total.
     evaluator
-        TODO
+        {evaluator_docstring}
 
     Examples
     --------
         TODO
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     def update_sparse_goals(self, current_times: int):
         ratio = 1 - (1 - self._initial_ratio) * (1 - current_times / self.total_times) ** 3
         self._update_sparse_goals_by_ratio(ratio)

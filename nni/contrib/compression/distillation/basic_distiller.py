@@ -13,14 +13,13 @@ from torch.optim import Adam
 
 from ..base.compressor import Compressor, Distiller, _DISTILLATION_TARGET_SPACES
 from ..base.wrapper import ModuleWrapper, register_wrappers
-from ..utils.evaluator import Evaluator
+from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 
 _logger = logging.getLogger(__name__)
 
 
 class TeacherModelBasedDistiller(Distiller):
-    """
-    The base class that the distiller need a teacher model.
+    __doc__ = r"""The base class that the distiller need a teacher model.
 
     Parameters
     ----------
@@ -30,7 +29,7 @@ class TeacherModelBasedDistiller(Distiller):
         A list of dict, each dict configure which module need to be distilled, and how to distill.
         Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
-        Please refer TODO.
+        {evaluator_docstring}
     teacher_model
         The distillation teacher model.
     teacher_predict
@@ -43,7 +42,7 @@ class TeacherModelBasedDistiller(Distiller):
 
     origin_loss_lambda
         A scaling factor to control the original loss scale.
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
@@ -152,7 +151,7 @@ class TeacherModelBasedDistiller(Distiller):
 
 
 class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
-    """
+    __doc__ = r"""
     Each student model distillation target (i.e., the output of a layer in the student model) will link to a list of
     teacher model distillation targets in this distiller.
     During distillation, a student target will compute a list of distillation losses with each of its linked teacher targets,
@@ -182,7 +181,7 @@ class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
               'mse' and 'kl' are supported right now. 'mse' means the MSE loss, usually used to distill hidden states.
               'kl' means the KL loss, usually used to distill logits.
     evaluator
-        Please refer TODO.
+        {evaluator_docstring}
     teacher_model
         The distillation teacher model.
     teacher_predict
@@ -195,7 +194,7 @@ class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
 
     origin_loss_lambda
         A scaling factor to control the original loss scale.
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     def compute_distill_loss(self):
         distill_loss = 0
@@ -225,7 +224,7 @@ class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
 
 
 class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
-    """
+    __doc__ = r"""
     This distiller will adaptively align the last dimension between student distillation target and teacher distillation target
     by adding a trainable ``torch.nn.Linear`` between them.
     (If the last dimensions between student and teacher have already aligned, won't add a new linear layer.)
@@ -255,7 +254,7 @@ class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
               'mse' and 'kl' are supported right now. 'mse' means the MSE loss, usually used to distill hidden states.
               'kl' means the KL loss, usually used to distill logits.
     evaluator
-        Please refer TODO.
+        {evaluator_docstring}
     teacher_model
         The distillation teacher model.
     teacher_predict
@@ -268,7 +267,8 @@ class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
 
     origin_loss_lambda
         A scaling factor to control the original loss scale.
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     def track_forward(self, *args, **kwargs):
         super().track_forward(*args, **kwargs)
         self.teacher_model(*args, **kwargs)

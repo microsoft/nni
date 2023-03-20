@@ -14,20 +14,20 @@ from .tools import _METRICS, _MASKS, norm_metrics, generate_sparsity, is_active_
 from ..base.compressor import Compressor, Pruner
 from ..base.target_space import TargetType
 from ..base.wrapper import ModuleWrapper
+from ..utils.docstring import _EVALUATOR_DOCSTRING
 from ..utils.evaluator import Evaluator, TensorHook
 
 _logger = logging.getLogger(__name__)
 
 
 class TaylorPruner(Pruner):
-    r"""
+    __doc__ = r"""
     Taylor pruner is a pruner which prunes on the first weight dimension by default,
     based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity.
     The estimated importance is defined as the paper
     `Importance Estimation for Neural Network Pruning <http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf>`__.
 
-    :math:`\widehat{\mathcal{I}}_{\mathcal{S}}^{(1)}(\mathbf{W}) \triangleq
-    \sum_{s \in \mathcal{S}} \mathcal{I}_{s}^{(1)}(\mathbf{W})=\sum_{s \in \mathcal{S}}\left(g_{s} w_{s}\right)^{2}`
+    :math:`\widehat{\mathcal{I}}_{\mathcal{S}}^{(1)}(\mathbf{W}) \triangleq \sum_{s \in \mathcal{S}} \mathcal{I}_{s}^{(1)}(\mathbf{W})=\sum_{s \in \mathcal{S}}\left(g_{s} w_{s}\right)^{2}`
 
     Parameters
     ----------
@@ -37,14 +37,14 @@ class TaylorPruner(Pruner):
         A list of dict, each dict configure which module need to be pruned, and how to prune.
         Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
-        TODO: {evaluator_docstring}
+        {evaluator_docstring}
     training_steps
         The step number used to collect gradients, the masks will be generated after training_steps training.
 
     Examples
     --------
         TODO
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, training_steps: int):
