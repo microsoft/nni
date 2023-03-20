@@ -203,7 +203,8 @@ class Evaluator:
 
                 for name in name_lis:
                     # match module_name
-                    prefix_name = ".".join(name.strip().split(".")[:-1])
+                    prefix_name = name.strip().split(".")[:-1]
+                    prefix_name = ".".join(prefix_name[:-1]) if prefix_name[-1] == '_nni_wrapper' else ".".join(prefix_name)
                     if module_name == prefix_name:
                         return i
 
@@ -238,6 +239,15 @@ class Evaluator:
                     break
             if not is_find_param_group:
                 add_param(param_lis, 0, optimizers[0])
+    
+    def test(self, optimizers):
+        param2name_dict = {id(p): name for name, p in self.model.named_parameters()}
+        for optimizer in optimizers:
+            param_groups = optimizer.param_groups
+            for param_group in param_groups:
+                params = list(param_group["params"])
+                name_lis = [param2name_dict[id(p)] for p in params]
+                print(f"name_lis={name_lis}")
 
     def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]] | None = None):
         '''
@@ -1012,6 +1022,8 @@ class TransformersEvaluator(Evaluator):
         assert module_name_param_dict is not None
 
         self._optimizer_add_param_group(self.model, module_name_param_dict, self.trainer.optimizer)
+        self.test([self.trainer.optimizer])
+        exit()
 
     def unbind_model(self):
         if self.model:
