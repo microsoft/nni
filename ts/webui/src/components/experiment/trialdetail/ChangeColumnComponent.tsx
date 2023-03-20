@@ -1,15 +1,12 @@
-import * as React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Dialog, DialogType, DialogFooter, Checkbox, PrimaryButton, DefaultButton } from '@fluentui/react';
+import { EXPERIMENT } from '@static/datamodel';
+import { Storage } from '@model/localStorage';
 
 /**
  * changeColumnComponent file is for [customized table column, customized hyper-parameter graph yAxis]
  * and currently it uses localstorage to store the customized results
  */
-
-interface ChangeColumnState {
-    // buffer, not saved yet
-    currentSelected: string[];
-}
 
 interface ChangeColumnProps {
     allColumns: SimpleColumn[]; // all column List
@@ -25,107 +22,126 @@ interface SimpleColumn {
     name: string; // name to display
 }
 
-//interface CheckBoxItems {
-//    label: string;
-//    checked: boolean;
-//    onChange: () => void;
-//}
-
-class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeColumnState> {
-    constructor(props: ChangeColumnProps) {
-        super(props);
-        this.state = {
-            currentSelected: this.props.selectedColumns
-        };
-    }
-
-    makeChangeHandler = (label: string): any => {
-        return (ev: any, checked: boolean): void => this.onCheckboxChange(ev, label, checked);
-    };
-
-    onCheckboxChange = (
+const ChangeColumnComponent = (props: ChangeColumnProps): any => {
+    const { selectedColumns, allColumns, minSelected, onHideDialog } = props;
+    const [isSelectAllChecked, setSelectAllChecked] = useState(
+        selectedColumns.length === allColumns.length ? true : false
+    );
+    const [currentSelected, setCurrentSelected] = useState(selectedColumns as string[]);
+    const onCheckboxChange = (
         ev: React.FormEvent<HTMLElement | HTMLInputElement> | undefined,
         label: string,
         val?: boolean
     ): void => {
-        const source: string[] = [...this.state.currentSelected];
+        const source: string[] = [...currentSelected];
         if (val === true) {
             if (!source.includes(label)) {
                 source.push(label);
-                this.setState({ currentSelected: source });
+                setCurrentSelected(source);
             }
         } else {
             // remove from source
             const result = source.filter(item => item !== label);
-            this.setState({ currentSelected: result });
+            setCurrentSelected(result);
+            setSelectAllChecked(false);
         }
     };
+    const makeChangeHandler = (label: string): any => {
+        return (ev: any, checked: boolean): void => onCheckboxChange(ev, label, checked);
+    };
 
-    saveUserSelectColumn = (): void => {
-        const { currentSelected } = this.state;
-        const { allColumns, onSelectedChange, whichComponent } = this.props;
+    const saveUserSelectColumn = (): void => {
+        const { allColumns, onSelectedChange, whichComponent } = props;
         const selectedColumns = allColumns.map(column => column.key).filter(key => currentSelected.includes(key));
         onSelectedChange(selectedColumns);
         if (whichComponent === 'table') {
-            localStorage.setItem('columns', JSON.stringify(selectedColumns));
+            const storage = new Storage(
+                `${EXPERIMENT.profile.id}_columns`,
+                JSON.stringify(selectedColumns),
+                30 * 24 * 60 * 60 * 1000,
+                isSelectAllChecked
+            );
+            storage.setValue();
         } else {
-            localStorage.setItem('paraColumns', JSON.stringify(selectedColumns));
+            const storage = new Storage(
+                `${EXPERIMENT.profile.id}_paraColumns`,
+                JSON.stringify(selectedColumns),
+                30 * 24 * 60 * 60 * 1000,
+                isSelectAllChecked
+            );
+            storage.setValue();
         }
-        this.hideDialog();
+        onHideDialog();
     };
 
     // user exit dialog
-    cancelOption = (): void => {
+    const cancelOption = (): void => {
         // reset select column
-        this.setState({ currentSelected: this.props.selectedColumns }, () => {
-            this.hideDialog();
-        });
+        setCurrentSelected(selectedColumns);
+        onHideDialog();
     };
 
-    private hideDialog = (): void => {
-        this.props.onHideDialog();
-    };
+    const selectAllCheckboxOnChange = useCallback(
+        (ev?: React.FormEvent<HTMLElement | HTMLInputElement>, checked?: boolean): void => {
+            if (checked === false) {
+                // select none
+                setCurrentSelected([]);
+            } else {
+                setCurrentSelected(
+                    allColumns.map(item => {
+                        return item.key;
+                    })
+                );
+            }
+            setSelectAllChecked(!!checked);
+        },
+        []
+    );
 
-    render(): React.ReactNode {
-        const { allColumns, minSelected } = this.props;
-        const { currentSelected } = this.state;
-        return (
-            <div>
-                <Dialog
-                    hidden={false}
-                    dialogContentProps={{
-                        type: DialogType.largeHeader,
-                        title: 'Customize columns',
-                        subText: 'You can choose which columns you wish to see.'
-                    }}
-                    modalProps={{
-                        isBlocking: false,
-                        styles: { main: { maxWidth: 450 } }
-                    }}
-                >
-                    <div className='columns-height'>
-                        {allColumns.map(item => (
-                            <Checkbox
-                                key={item.key}
-                                label={item.name}
-                                checked={currentSelected.includes(item.key)}
-                                onChange={this.makeChangeHandler(item.key)}
-                                styles={{ root: { marginBottom: 8 } }}
-                            />
-                        ))}
-                    </div>
-                    <DialogFooter>
-                        <PrimaryButton
-                            text='Save'
-                            onClick={this.saveUserSelectColumn}
-                            disabled={currentSelected.length < (minSelected ?? 1)}
+    return (
+        <div>
+            <Dialog
+                hidden={false}
+                dialogContentProps={{
+                    type: DialogType.largeHeader,
+                    title: 'Customize columns',
+                    subText: 'You can choose which columns you wish to see.'
+                }}
+                modalProps={{
+                    isBlocking: false,
+                    styles: { main: { maxWidth: 450 } }
+                }}
+            >
+                <div className='columns-height'>
+                    {/* checkbox for select all or select none */}
+                    <Checkbox
+                        key='selectAll'
+                        label='Select all'
+                        checked={isSelectAllChecked}
+                        onChange={selectAllCheckboxOnChange.bind('selectAll')}
+                        styles={{ root: { marginBottom: 8 } }}
+                    />
+                    {allColumns.map(item => (
+                        <Checkbox
+                            key={item.key}
+                            label={item.name}
+                            checked={currentSelected.includes(item.key)}
+                            onChange={makeChangeHandler(item.key)}
+                            styles={{ root: { marginBottom: 8 } }}
                         />
-                        <DefaultButton text='Cancel' onClick={this.cancelOption} />
-                    </DialogFooter>
-                </Dialog>
-            </div>
-        );
-    }
-}
+                    ))}
+                </div>
+                <DialogFooter>
+                    <PrimaryButton
+                        text='Save'
+                        onClick={saveUserSelectColumn}
+                        disabled={currentSelected.length < (minSelected ?? 1)}
+                    />
+                    <DefaultButton text='Cancel' onClick={cancelOption} />
+                </DialogFooter>
+            </Dialog>
+        </div>
+    );
+};
 
 export default ChangeColumnComponent;

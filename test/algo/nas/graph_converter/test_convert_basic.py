@@ -1,48 +1,14 @@
-import os
-import sys
 import unittest
 
-import numpy as np
 import torch
-import torch.nn.functional as F
-import torchvision
 
-import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import basic_unit
+import nni.nas.nn.pytorch.layers as nn
 
 from .convert_mixin import ConvertMixin, ConvertWithShapeMixin
-from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.utils import original_state_dict_hooks
 
 # following pytorch v1.7.1
 
 class TestConvert(unittest.TestCase, ConvertMixin):
-
-    def checkExportImport(self, model, input, check_value=True):
-        model_ir = self._convert_model(model, input)
-        model_code = model_to_pytorch_script(model_ir)
-        print(model_code)
-
-        exec_vars = {}
-        exec(model_code + '\n\nconverted_model = _model()', exec_vars)
-        converted_model = exec_vars['converted_model']
-
-        with original_state_dict_hooks(converted_model):
-            converted_model.load_state_dict(model.state_dict())
-
-        with torch.no_grad():
-            expected_output = model.eval()(*input)
-            converted_output = converted_model.eval()(*input)
-        if check_value:
-            self.assertEqual(len(converted_output), len(expected_output))
-            for a, b in zip(converted_output, expected_output):
-                if hasattr(a, 'dtype') and a.dtype == torch.bool:
-                    self.assertEqual((a ^ b), False)
-                elif isinstance((a - b), int):
-                    self.assertEqual((a - b), 0)
-                else:
-                    self.assertLess((a - b).abs().max().item(), 1E-4)
-        return converted_model
 
     # skip torch.Tensor.new_tensor as it is not supported by jit
 
@@ -275,4 +241,6 @@ class TestConvert(unittest.TestCase, ConvertMixin):
 
 
 class TestConvertWithShape(TestConvert, ConvertWithShapeMixin):
-    pass
+    @unittest.skip(reason='Bool is not supported in trace.')
+    def test_basic_allclose(self):
+        ...

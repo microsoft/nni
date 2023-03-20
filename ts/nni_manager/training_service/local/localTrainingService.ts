@@ -10,7 +10,7 @@ import tkill from 'tree-kill';
 import { NNIError, NNIErrorNames } from 'common/errors';
 import { getExperimentId } from 'common/experimentStartupInfo';
 import { getLogger, Logger } from 'common/log';
-import { powershellString, shellString } from 'common/shellUtils';
+import { powershellString, shellString, createScriptFile } from 'common/shellUtils';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
@@ -106,7 +106,7 @@ class LocalTrainingService implements TrainingService {
             this.gpuScheduler = new GPUScheduler();
         }
 
-        if (this.config.gpuIndices === []) {
+        if (this.config.gpuIndices && this.config.gpuIndices.length === 0) {
             throw new Error('gpuIndices cannot be empty when specified.');
         }
 
@@ -458,8 +458,8 @@ class LocalTrainingService implements TrainingService {
         await execMkdir(path.join(trialJobDetail.workingDirectory, '.nni'));
         await execNewFile(path.join(trialJobDetail.workingDirectory, '.nni', 'metrics'));
         const scriptName: string = getScriptName('run');
-        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, scriptName),
-                                    runScriptContent.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
+        await createScriptFile(path.join(trialJobDetail.workingDirectory, scriptName),
+                runScriptContent.join(getNewLine()));
         await this.writeParameterFile(trialJobDetail.workingDirectory, trialJobDetail.form.hyperParameters);
         const trialJobProcess: cp.ChildProcess = runScript(path.join(trialJobDetail.workingDirectory, scriptName));
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');

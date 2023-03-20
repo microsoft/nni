@@ -50,11 +50,11 @@ def get_query_type(key):
     '''get update query type'''
     if key == 'trialConcurrency':
         return '?update_type=TRIAL_CONCURRENCY'
-    if key == 'maxExecDuration':
+    if key == 'maxExperimentDuration':
         return '?update_type=MAX_EXEC_DURATION'
     if key == 'searchSpace':
         return '?update_type=SEARCH_SPACE'
-    if key == 'maxTrialNum':
+    if key == 'maxTrialNumber':
         return '?update_type=MAX_TRIAL_NUM'
 
 def update_experiment_profile(args, key, value):
@@ -100,14 +100,14 @@ def update_duration(args):
     args.value = parse_time(args.value)
     args.port = get_experiment_port(args)
     if args.port is not None:
-        if update_experiment_profile(args, 'maxExecDuration', int(args.value)):
+        if update_experiment_profile(args, 'maxExperimentDuration', int(args.value)):
             print_normal('Update %s success!' % 'duration')
         else:
             print_error('Update %s failed!' % 'duration')
 
 def update_trialnum(args):
     validate_digit(args.value, 1, 999999999)
-    if update_experiment_profile(args, 'maxTrialNum', int(args.value)):
+    if update_experiment_profile(args, 'maxTrialNumber', int(args.value)):
         print_normal('Update %s success!' % 'trialnum')
     else:
         print_error('Update %s failed!' % 'trialnum')

@@ -97,7 +97,7 @@ export abstract class ClusterJobRestServer extends LegacyRestServer {
                 } catch (err) {
                     this.log.error(`json parse metrics error: ${err}`);
                     res.status(500);
-                    res.send(err.message);
+                    res.send((err as any).message);
                 }
             } else {
                 this.log.info(`Skipping version check!`);
@@ -116,7 +116,7 @@ export abstract class ClusterJobRestServer extends LegacyRestServer {
             } catch (err) {
                 this.log.error(`json parse metrics error: ${err}`);
                 res.status(500);
-                res.send(err.message);
+                res.send((err as any).message);
             }
         });
 
@@ -155,7 +155,7 @@ export abstract class ClusterJobRestServer extends LegacyRestServer {
             } catch (err) {
                 this.log.error(`json parse stdout data error: ${err}`);
                 res.status(500);
-                res.send(err.message);
+                res.send((err as any).message);
             }
         });
 

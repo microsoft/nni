@@ -1,3 +1,82 @@
+.bottomval {
+    margin-bottom: 20px;
+}
+
+.experimentHead {
+    .icon {
+        width: 48px;
+        height: 48px;
+        margin: 4px 16px 0 0;
+        background: #3582ec;
+        text-align: center;
+
+        img {
+            margin-top: 12.5px;
+        }
+    }
+
+    .id {
+        width: 85px;
+        height: 20px;
+        margin-top: 8px;
+        background: #f1f9ff;
+        text-align: center;
+    }
+
+    /* for Config.tsx file style */
+
+    .small-icon {
+        width: 32px;
+        height: 32px;
+        margin-right: 8px;
+    }
+
+    .basic {
+        line-height: 12px;
+        margin-bottom: 3px;
+        font-size: 12px;
+    }
+
+    .name {
+        color: #707070;
+    }
+}
+
+.focus-status-metric > div {
+    width: 136px;
+    height: 78px;
+    margin: 32px 0;
+    padding-top: 12px;
+    box-sizing: border-box;
+    text-align: center;
+
+    .focus-text {
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .NO_MORE_TRIAL,
+    .TUNER_NO_MORE_TRIAL {
+        font-size: 14px;
+    }
+
+    .NO_MORE_TRIAL {
+        position: relative;
+        top: 7px;
+    }
+
+    .TUNER_NO_MORE_TRIAL {
+        word-wrap: break-word;
+    }
+
+    .description {
+        font-size: 14px;
+        font-weight: 400;
+        color: #9ca3af;
+        margin-top: 7px;
+    }
+}
+
 .status {
     height: 21px;
     color: #0573bc;

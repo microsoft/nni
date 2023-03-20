@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
 import nni
-from nni.algorithms.compression.v2.pytorch import TorchEvaluator
+from nni.compression.pytorch import TorchEvaluator
 
 import sys
 from pathlib import Path

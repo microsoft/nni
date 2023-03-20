@@ -1,11 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import os
 import argparse
-import logging
-import json
 import base64
+import json
+import logging
+import os
+import traceback
 
 from .runtime.msg_dispatcher import MsgDispatcher
 from .runtime.msg_dispatcher_base import MsgDispatcherBase
@@ -65,6 +66,7 @@ def main():
         tuner._on_error()
         if assessor is not None:
             assessor._on_error()
+        dispatcher.report_error(traceback.format_exc())
         raise
 
 

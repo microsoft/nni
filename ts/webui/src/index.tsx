@@ -9,7 +9,6 @@ const ExperimentManagerIndex = lazy(() => import('./components/experimentManagem
 import '@style/index.css';
 import '@style/loading.scss';
 import * as serviceWorker from './serviceWorker';
-
 const path = getPrefix();
 
 ReactDOM.render(

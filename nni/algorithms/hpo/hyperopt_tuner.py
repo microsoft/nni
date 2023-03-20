@@ -198,6 +198,12 @@ class HyperoptTuner(Tuner):
     This algorithm is a simple variation of random search that leverages smoothness in the response surface.
     The annealing rate is not adaptive.
 
+    Note that it needs additional installation using the following command:
+
+    .. code-block:: bash
+
+        pip install nni[Anneal]
+
     Examples
     --------
 

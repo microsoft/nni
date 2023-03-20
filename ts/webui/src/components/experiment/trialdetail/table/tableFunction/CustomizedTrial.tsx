@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Stack, StackItem, PrimaryButton, DefaultButton } from '@fluentui/react';
 import { Dialog, DialogType, DialogFooter } from '@fluentui/react/lib/Dialog';
@@ -19,41 +19,54 @@ interface CustomizeProps {
     closeCustomizeModal: () => void;
 }
 
-interface CustomizeState {
-    isShowSubmitSucceed: boolean;
-    isShowSubmitFailed: boolean;
-    isShowWarning: boolean;
-    searchSpace: object;
-    copyTrialParameter: object; // user click the trial's parameters
-    customParameters: object; // customized trial, maybe user change trial's parameters
-    customID: number; // submit customized trial succeed, return the new customized trial id
-    changeMap: Map<string, string | number>; // store change key: value
-}
+const warning =
+    'The parameters you set are not in our search space, this may cause the tuner to crash, Are' +
+    ' you sure you want to continue submitting?';
 
-class Customize extends React.Component<CustomizeProps, CustomizeState> {
-    constructor(props: CustomizeProps) {
-        super(props);
-        this.state = {
-            isShowSubmitSucceed: false,
-            isShowSubmitFailed: false,
-            isShowWarning: false,
-            searchSpace: EXPERIMENT.searchSpace,
-            copyTrialParameter: {},
-            customParameters: {},
-            customID: NaN,
-            changeMap: new Map()
-        };
-    }
+const Customize = (props: CustomizeProps): any => {
+    const { closeCustomizeModal, copyTrialId, visible } = props;
+    const searchSpace = EXPERIMENT.searchSpace;
+    const [isShowSubmitSucceed, setIsShowSubmitSucceed] = useState(false);
+    const [isShowSubmitFailed, setIsShowSubmitFailed] = useState(false);
+    const [isShowWarning, setIsShowWarning] = useState(false);
+    const [copyTrialParameter, setCopyTrialParameter] = useState({}); // origin trial's parameter
+    const [customParameters, setCustomParameters] = useState({}); // edited trial's parameter
+    const [customID, setCustomID] = useState(NaN); // submit customized trial successfully and get a new trial No.
+    const [changeMap, setChangeMap] = useState(new Map()); // store change key: value
 
-    getFinalVal = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    const getFinalVal = (event: React.ChangeEvent<HTMLInputElement>): void => {
         const { name, value } = event.target;
-        const { changeMap } = this.state;
-        this.setState({ changeMap: changeMap.set(name, value) });
+        setChangeMap(changeMap.set(name, value));
+    };
+
+    const submitCustomize = (customized: Record<string, any>): void => {
+        // delete `tag` key
+        for (const i in customized) {
+            if (i === 'tag') {
+                delete customized[i];
+            }
+        }
+        axios(`${MANAGER_IP}/trial-jobs`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            data: customized
+        })
+            .then(res => {
+                if (res.status === 200) {
+                    setIsShowSubmitSucceed(true);
+                    setCustomID(res.data.sequenceId);
+                    closeCustomizeModal();
+                } else {
+                    setIsShowSubmitFailed(true);
+                }
+            })
+            .catch(() => {
+                setIsShowSubmitFailed(true);
+            });
     };
 
     // [submit click] user add a new trial [submit a trial]
-    addNewTrial = (): void => {
-        const { searchSpace, copyTrialParameter, changeMap } = this.state;
+    const addNewTrial = (): void => {
         // get user edited hyperParameter, ps: will change data type if you modify the input val
         const customized = JSON.parse(JSON.stringify(copyTrialParameter));
         // changeMap: user changed keys: values
@@ -97,188 +110,147 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         });
         if (parametersIllegal !== false) {
             // open the warning modal
-            this.setState(() => ({ isShowWarning: true, customParameters: customized }));
+            setIsShowWarning(true);
+            setCustomParameters(customized);
         } else {
             // submit a customized job
-            this.submitCustomize(customized);
+            submitCustomize(customized);
         }
     };
 
-    warningConfirm = (): void => {
-        this.setState(() => ({ isShowWarning: false }));
-        const { customParameters } = this.state;
-        this.submitCustomize(customParameters);
+    const warningConfirm = (): void => {
+        setIsShowWarning(false);
+        submitCustomize(customParameters);
     };
 
-    warningCancel = (): void => {
-        this.setState(() => ({ isShowWarning: false }));
+    const warningCancel = (): void => {
+        setIsShowWarning(false);
     };
 
-    submitCustomize = (customized: Record<string, any>): void => {
-        // delete `tag` key
-        for (const i in customized) {
-            if (i === 'tag') {
-                delete customized[i];
-            }
-        }
-        axios(`${MANAGER_IP}/trial-jobs`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            data: customized
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    this.setState(() => ({ isShowSubmitSucceed: true, customID: res.data.sequenceId }));
-                    this.props.closeCustomizeModal();
-                } else {
-                    this.setState(() => ({ isShowSubmitFailed: true }));
-                }
-            })
-            .catch(() => {
-                this.setState(() => ({ isShowSubmitFailed: true }));
-            });
-    };
-
-    closeSucceedHint = (): void => {
+    const closeSucceedHint = (): void => {
         // also close customized trial modal
-        this.setState(() => ({ isShowSubmitSucceed: false, changeMap: new Map() }));
-        this.props.closeCustomizeModal();
+        setIsShowSubmitSucceed(false);
+        setChangeMap(new Map());
+        closeCustomizeModal();
     };
 
-    closeFailedHint = (): void => {
+    const closeFailedHint = (): void => {
         // also close customized trial modal
-        this.setState(() => ({ isShowSubmitFailed: false, changeMap: new Map() }));
-        this.props.closeCustomizeModal();
+        setIsShowSubmitFailed(false);
+        setChangeMap(new Map());
+        closeCustomizeModal();
     };
 
-    componentDidMount(): void {
-        const { copyTrialId } = this.props;
+    useEffect(() => {
         if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
             const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
-            this.setState(() => ({ copyTrialParameter: originCopyTrialPara }));
+            setCopyTrialParameter(originCopyTrialPara);
         }
-    }
+    }, [copyTrialId]);
 
-    componentDidUpdate(prevProps: CustomizeProps): void {
-        if (this.props.copyTrialId !== prevProps.copyTrialId) {
-            const { copyTrialId } = this.props;
-            if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
-                const originCopyTrialPara = TRIALS.getTrial(copyTrialId).parameter;
-                this.setState(() => ({ copyTrialParameter: originCopyTrialPara }));
-            }
-        }
-    }
+    return (
+        <Stack>
+            <Dialog
+                hidden={!visible} // required field!
+                dialogContentProps={{
+                    type: DialogType.largeHeader,
+                    title: 'Customized trial setting',
+                    subText: 'You can submit a customized trial.'
+                }}
+                modalProps={{
+                    isBlocking: false,
+                    styles: { main: { maxWidth: 450 } }
+                }}
+            >
+                <form className='hyper-box'>
+                    {Object.keys(copyTrialParameter).map(item => (
+                        <Stack horizontal key={item} className='hyper-form'>
+                            <StackItem styles={{ root: { minWidth: 100 } }} className='title'>
+                                {item}
+                            </StackItem>
+                            <StackItem className='inputs'>
+                                <input
+                                    type='text'
+                                    name={item}
+                                    defaultValue={copyTrialParameter[item]}
+                                    onChange={getFinalVal}
+                                />
+                            </StackItem>
+                        </Stack>
+                    ))}
+                </form>
+                <DialogFooter>
+                    <PrimaryButton text='Submit' onClick={addNewTrial} />
+                    <DefaultButton text='Cancel' onClick={closeCustomizeModal} />
+                </DialogFooter>
+            </Dialog>
 
-    render(): React.ReactNode {
-        const { closeCustomizeModal, visible } = this.props;
-        const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning, customID, copyTrialParameter } = this.state;
-        const warning =
-            'The parameters you set are not in our search space, this may cause the tuner to crash, Are' +
-            ' you sure you want to continue submitting?';
-        return (
-            <Stack>
-                <Dialog
-                    hidden={!visible} // required field!
-                    dialogContentProps={{
-                        type: DialogType.largeHeader,
-                        title: 'Customized trial setting',
-                        subText: 'You can submit a customized trial.'
-                    }}
-                    modalProps={{
-                        isBlocking: false,
-                        styles: { main: { maxWidth: 450 } }
-                    }}
-                >
-                    <form className='hyper-box'>
-                        {Object.keys(copyTrialParameter).map(item => (
-                            <Stack horizontal key={item} className='hyper-form'>
-                                <StackItem styles={{ root: { minWidth: 100 } }} className='title'>
-                                    {item}
-                                </StackItem>
-                                <StackItem className='inputs'>
-                                    <input
-                                        type='text'
-                                        name={item}
-                                        defaultValue={copyTrialParameter[item]}
-                                        onChange={this.getFinalVal}
-                                    />
-                                </StackItem>
-                            </Stack>
-                        ))}
-                    </form>
-                    <DialogFooter>
-                        <PrimaryButton text='Submit' onClick={this.addNewTrial} />
-                        <DefaultButton text='Cancel' onClick={closeCustomizeModal} />
-                    </DialogFooter>
-                </Dialog>
+            {/* clone: prompt succeed or failed */}
+            <Dialog
+                hidden={!isShowSubmitSucceed}
+                onDismiss={closeSucceedHint}
+                dialogContentProps={{
+                    type: DialogType.normal,
+                    title: (
+                        <div className='icon-color'>
+                            {completed}
+                            <b>Submit successfully</b>
+                        </div>
+                    ),
+                    closeButtonAriaLabel: 'Close',
+                    subText: `You can find your customized trial by Trial No.${customID}`
+                }}
+                modalProps={{
+                    isBlocking: false,
+                    styles: { main: { minWidth: 500 } }
+                }}
+            >
+                <DialogFooter>
+                    <PrimaryButton onClick={closeSucceedHint} text='OK' />
+                </DialogFooter>
+            </Dialog>
 
-                {/* clone: prompt succeed or failed */}
-                <Dialog
-                    hidden={!isShowSubmitSucceed}
-                    onDismiss={this.closeSucceedHint}
-                    dialogContentProps={{
-                        type: DialogType.normal,
-                        title: (
-                            <div className='icon-color'>
-                                {completed}
-                                <b>Submit successfully</b>
-                            </div>
-                        ),
-                        closeButtonAriaLabel: 'Close',
-                        subText: `You can find your customized trial by Trial No.${customID}`
-                    }}
-                    modalProps={{
-                        isBlocking: false,
-                        styles: { main: { minWidth: 500 } }
-                    }}
-                >
-                    <DialogFooter>
-                        <PrimaryButton onClick={this.closeSucceedHint} text='OK' />
-                    </DialogFooter>
-                </Dialog>
+            <Dialog
+                hidden={!isShowSubmitFailed}
+                onDismiss={closeSucceedHint}
+                dialogContentProps={{
+                    type: DialogType.normal,
+                    title: <div className='icon-error'>{errorBadge}Submit Failed</div>,
+                    closeButtonAriaLabel: 'Close',
+                    subText: 'Unknown error.'
+                }}
+                modalProps={{
+                    isBlocking: false,
+                    styles: { main: { minWidth: 500 } }
+                }}
+            >
+                <DialogFooter>
+                    <PrimaryButton onClick={closeFailedHint} text='OK' />
+                </DialogFooter>
+            </Dialog>
 
-                <Dialog
-                    hidden={!isShowSubmitFailed}
-                    onDismiss={this.closeSucceedHint}
-                    dialogContentProps={{
-                        type: DialogType.normal,
-                        title: <div className='icon-error'>{errorBadge}Submit Failed</div>,
-                        closeButtonAriaLabel: 'Close',
-                        subText: 'Unknown error.'
-                    }}
-                    modalProps={{
-                        isBlocking: false,
-                        styles: { main: { minWidth: 500 } }
-                    }}
-                >
-                    <DialogFooter>
-                        <PrimaryButton onClick={this.closeFailedHint} text='OK' />
-                    </DialogFooter>
-                </Dialog>
-
-                {/* hyperParameter not match search space, warning modal */}
-                <Dialog
-                    hidden={!isShowWarning}
-                    onDismiss={this.closeSucceedHint}
-                    dialogContentProps={{
-                        type: DialogType.normal,
-                        title: <div className='icon-error'>{warining}Warning</div>,
-                        closeButtonAriaLabel: 'Close',
-                        subText: `${warning}`
-                    }}
-                    modalProps={{
-                        isBlocking: false,
-                        styles: { main: { minWidth: 500 } }
-                    }}
-                >
-                    <DialogFooter>
-                        <PrimaryButton onClick={this.warningConfirm} text='Confirm' />
-                        <DefaultButton onClick={this.warningCancel} text='Cancel' />
-                    </DialogFooter>
-                </Dialog>
-            </Stack>
-        );
-    }
-}
+            {/* hyperParameter not match search space, warning modal */}
+            <Dialog
+                hidden={!isShowWarning}
+                onDismiss={closeSucceedHint}
+                dialogContentProps={{
+                    type: DialogType.normal,
+                    title: <div className='icon-error'>{warining}Warning</div>,
+                    closeButtonAriaLabel: 'Close',
+                    subText: `${warning}`
+                }}
+                modalProps={{
+                    isBlocking: false,
+                    styles: { main: { minWidth: 500 } }
+                }}
+            >
+                <DialogFooter>
+                    <PrimaryButton onClick={warningConfirm} text='Confirm' />
+                    <DefaultButton onClick={warningCancel} text='Cancel' />
+                </DialogFooter>
+            </Dialog>
+        </Stack>
+    );
+};
 
 export default Customize;
