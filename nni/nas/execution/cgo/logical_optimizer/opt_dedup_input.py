@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, cast
 
 from nni.mutable.utils import uid
 from nni.common.device import GPUDevice
@@ -19,7 +19,7 @@ class DedupInputNode(AbstractLogicalNode):
     """
 
     def __init__(self, logical_graph: LogicalGraph, node_id: int,
-                 nodes_to_dedup: List[Node], _internal=False):
+                 nodes_to_dedup: List[OriginNode], _internal=False):
         super().__init__(logical_graph, node_id,
                          "Dedup_" + nodes_to_dedup[0].name,
                          nodes_to_dedup[0].operation)
@@ -36,7 +36,7 @@ class DedupInputNode(AbstractLogicalNode):
         raise ValueError(f'DedupInputNode {self.name} does not contain nodes from multi_model')
 
     def _fork_to(self, graph: Graph):
-        DedupInputNode(graph, self.id, self.origin_nodes)._register()
+        DedupInputNode(cast(LogicalGraph, graph), self.id, self.origin_nodes)._register()
 
     def __repr__(self) -> str:
         return f'DedupNode(id={self.id}, name={self.name}, \

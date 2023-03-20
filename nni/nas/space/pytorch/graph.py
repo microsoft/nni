@@ -47,10 +47,13 @@ class PytorchGraphModelSpace(GraphModelSpace):
     @classmethod
     @repeat_jit_forward_patch()
     def from_model(cls, model_space: ModelSpace, evaluator: Evaluator | None = None,
-                   dummy_input: tuple[int, ...] | tuple[torch.Tensor, ...] | None = None) -> GraphModelSpace:
+                   dummy_input: tuple[int, ...] | tuple[torch.Tensor, ...] | list[int] | None = None) -> GraphModelSpace:
         """Create a GraphModelSpace instance based on a model and evaluator.
         Model-to-IR conversion happens here.
         """
+        if isinstance(dummy_input, list):
+            dummy_input = tuple(dummy_input)
+
         try:
             script_module = torch.jit.script(model_space)
         except:
@@ -112,9 +115,13 @@ class PytorchGraphModelSpace(GraphModelSpace):
         converter.convert_module(script_module, module, module_name, model, **kwargs)
         return model
 
+    def to_code(self) -> str:
+        """Convert the model to Python code."""
+        return model_to_pytorch_script(self)
+
     def executable_model(self) -> Any:
         """Convert the model to Python code, and execute the code to get the model."""
-        model_code = model_to_pytorch_script(self)
+        model_code = self.to_code()
         _logger.debug('Generated model code:')
         _logger.debug(model_code)
         exec_vars = {}

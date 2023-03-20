@@ -64,7 +64,8 @@ class RemoteMachineConfig(ConfigBase):
 class RemoteConfig(TrainingServiceConfig):
     platform: Literal['remote'] = 'remote'
     machine_list: List[RemoteMachineConfig]
-    reuse_mode: bool = True
+    reuse_mode: bool = False
+    #log_collection: Literal['on_error', 'always', 'never'] = 'on_error'  # TODO: NNI_OUTPUT_DIR?
 
     def _validate_canonical(self):
         super()._validate_canonical()
@@ -72,3 +73,5 @@ class RemoteConfig(TrainingServiceConfig):
             raise ValueError(f'RemoteConfig: must provide at least one machine in machine_list')
         if not self.trial_gpu_number and any(machine.max_trial_number_per_gpu != 1 for machine in self.machine_list):
             raise ValueError('RemoteConfig: max_trial_number_per_gpu does not work without trial_gpu_number')
+        #if self.reuse_mode and self.log_collection != 'on_error':
+        #    raise ValueError('RemoteConfig: log_collection is not supported in reuse mode')

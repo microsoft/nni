@@ -61,4 +61,10 @@ export class TaskSchedulerClient {
             await this.server.release(globals.args.experimentId, trialId);
         }
     }
+
+    public onUtilityUpdate(callback: (info: Record<string, any>) => void): void {
+        if (this.server !== null) {
+            this.server.onUtilityUpdate(callback);
+        }
+    }
 }

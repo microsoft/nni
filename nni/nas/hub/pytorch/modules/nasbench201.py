@@ -69,7 +69,7 @@ class NasBench201Cell(MutableModule):
                 for j in range(tid):
                     inp = in_features if j == 0 else out_features
                     op_choices = OrderedDict([(key, cls(inp, out_features))
-                                            for key, cls in op_candidates.items()])
+                                              for key, cls in op_candidates.items()])
                     node_ops.append(LayerChoice(op_choices, label=f'{j}_{tid}'))
                 self.layers.append(node_ops)
 

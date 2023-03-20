@@ -15,7 +15,6 @@ __all__ = [
     'fields', 'is_instance', 'validate_type', 'is_path_like',
     'guess_config_type', 'guess_list_config_type',
     'training_service_config_factory', 'load_training_service_config',
-    'load_experiment_config', 'get_experiment_cls_using_config',
     'get_ipv4_address', 'diff'
 ]
 
@@ -26,7 +25,7 @@ import json
 import os.path
 from pathlib import Path
 import socket
-from typing import Tuple, TYPE_CHECKING, get_type_hints
+from typing import TYPE_CHECKING, get_type_hints
 
 import typeguard
 
@@ -90,8 +89,8 @@ def fields(config: ConfigBase) -> list[dataclasses.Field]:
 
 def is_instance(value, type_hint) -> bool:
     try:
-        typeguard.check_type('_', value, type_hint)
-    except TypeError:
+        typeguard.check_type(value, type_hint)
+    except typeguard.TypeCheckError:
         return False
     return True
 
@@ -191,7 +190,7 @@ def _get_ts_config_class(platform: str) -> type[TrainingServiceConfig] | None:
         pkg = importlib.import_module(custom_ts_pkg)
         _config_class = pkg.nni_training_service_info.config_class
 
-    for cls in TrainingServiceConfig.__subclasses__():
+    for cls in _all_subclasses(TrainingServiceConfig):
         if cls.platform == platform:
             return cls
     return None
@@ -217,31 +216,3 @@ def diff(config1: ConfigBase, config2: ConfigBase, from_: str = '', to_: str = '
     str1, str2 = pprint.pformat(config1.json()), pprint.pformat(config2.json())
 
     return '\n'.join(difflib.unified_diff(str1.splitlines(), str2.splitlines(), from_, to_, lineterm=''))
-
-def load_experiment_config(config_json: dict) -> ExperimentConfig | NasExperimentConfig:
-    _, exp_conf_cls = get_experiment_cls_using_config(config_json)
-    return exp_conf_cls(**config_json)
-
-def get_experiment_cls_using_config(config_json: dict) -> Tuple[type[Experiment] | type[RetiariiExperiment],
-                                                                type[ExperimentConfig] | type[NasExperimentConfig]]:
-    # avoid circular import and unnecessary dependency on pytorch
-    if 'experimentType' in config_json:
-        if config_json['experimentType'] == 'hpo':
-            from ...experiment import Experiment
-            from ..experiment_config import ExperimentConfig
-            return Experiment, ExperimentConfig
-        elif config_json['experimentType'] == 'nas':
-            from nni.nas.experiment.pytorch import RetiariiExperiment
-            from nni.nas.experiment.config import NasExperimentConfig
-            return RetiariiExperiment, NasExperimentConfig
-        else:
-            raise ValueError(f'Unknown experiment_type: {config_json["experimentType"]}')
-    else:
-        if 'executionEngine' in config_json:
-            from nni.nas.experiment.pytorch import RetiariiExperiment
-            from nni.nas.experiment.config import NasExperimentConfig
-            return RetiariiExperiment, NasExperimentConfig
-        else:
-            from ...experiment import Experiment
-            from ..experiment_config import ExperimentConfig
-            return Experiment, ExperimentConfig

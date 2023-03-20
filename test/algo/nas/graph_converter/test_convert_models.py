@@ -3,7 +3,6 @@ import unittest
 import torch
 
 import nni.nas.nn.pytorch.layers as nn
-from nni.nas.utils import original_state_dict_hooks
 
 from .convert_mixin import ConvertMixin, ConvertWithShapeMixin
 

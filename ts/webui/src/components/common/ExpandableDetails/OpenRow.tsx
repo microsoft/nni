@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Stack, PrimaryButton, Pivot, PivotItem, DefaultButton } from '@fluentui/react';
 import * as copy from 'copy-to-clipboard';
-import JSONTree from 'react-json-tree';
+import { JSONTree } from 'react-json-tree';
 import { Trial } from '@model/trial';
 import { MANAGER_IP, RETIARIIPARAMETERS } from '@static/const';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
@@ -85,7 +85,7 @@ const OpenRow = (props: OpenRowProps): any => {
                                 <Stack className='bgHyper'>
                                     <JSONTree
                                         hideRoot={true}
-                                        shouldExpandNode={() => true} // default expandNode
+                                        shouldExpandNodeInitially={() => true} // default expandNode
                                         getItemString={() => null} // remove the {} items
                                         data={reformatRetiariiParameter(originParameters as any)}
                                     />

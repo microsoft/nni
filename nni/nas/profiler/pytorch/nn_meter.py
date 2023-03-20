@@ -191,7 +191,7 @@ class NnMeterProfiler(ExpressionProfiler):
 
     def estimate_layerchoice_latency(self, name: str, module: LayerChoice, shapes: dict[str, Any]) -> MutableExpression[float]:
         """Estimate the latency of a layer choice.
-        
+
         Profile each choice block and merge them into a switch-case expression.
         """
         sub_results: dict[int | str, MutableExpression[float] | float] = {}
@@ -202,7 +202,7 @@ class NnMeterProfiler(ExpressionProfiler):
 
     def estimate_repeat_latency(self, name: str, module: Repeat, shapes: dict[str, Any]) -> MutableExpression[float] | float:
         """Estimate the latency of a Repeat.
-        
+
         Profile each block and merge possibilities at different depths into a switch-case expression.
         """
         if isinstance(module.depth_choice, int):

@@ -121,11 +121,11 @@ class SlimPruner(Pruner):
 
     def _patch_loss(self, evaluator: Evaluator):
         def loss_patch(original_loss, batch):
-            reg_loss = 0.
+            reg_loss = torch.tensor(0., device=original_loss.device)
             count = 0
             for _, target_scaling_factor in self.scaling_factors.items():
                 for _, scaling_factor in target_scaling_factor.items():
-                    reg_loss += scaling_factor.norm(p=1)  # type: ignore
+                    reg_loss = reg_loss + scaling_factor.norm(p=1)  # type: ignore
                     count += 1
             if count > 0:
                 reg_loss = self.regular_scale * reg_loss / count

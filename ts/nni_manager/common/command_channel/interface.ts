@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-export interface Command {
-    type: string;
-}
+//export interface Command {
+//    type: string;
+//    [key: string]: any;
+//}
+export type Command = any;
  
 /**
  *  A command channel server serves one or more command channels.

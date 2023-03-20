@@ -14,6 +14,7 @@ from nni.typehint import TrialMetric
 
 _logger = logging.getLogger(__name__)
 
+
 class StrategyStatus(str, Enum):
     """Status of a strategy.
 
@@ -58,7 +59,7 @@ class Strategy:
         # Status is internal for now.
         self._status = StrategyStatus.EMPTY
         if engine is not None and model_space is not None:
-            self.initialize(engine, model_space)
+            self.initialize(model_space, engine)
         elif engine is not None or model_space is not None:
             raise ValueError('Both engine and model_space should be provided, or both should be None.')
 
@@ -82,7 +83,7 @@ class Strategy:
     @property
     def model_space(self) -> ExecutableModelSpace:
         """The model space that strategy is currently exploring.
-        
+
         It should be the same one as the input argument of :meth:`run`,
         but the property exists for convenience.
 
@@ -156,7 +157,7 @@ class Strategy:
         try:
             if self._status == StrategyStatus.RUNNING:
                 raise RuntimeError('Strategy is already running.')
-            
+
             if self._status == StrategyStatus.INTERRUPTED:
                 raise RuntimeError('Strategy is interrupted. Please resume by creating a new strategy and load_state_dict.')
 

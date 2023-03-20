@@ -16,6 +16,7 @@ class TrialTestCase(TestCase):
         self._default_channel = get_default_trial_command_channel()
         self.channel = TestHelperTrialCommandChannel()
         set_default_trial_command_channel(self.channel)
+        nni.trial.overwrite_intermediate_seq(0)
 
         self._trial_params = { 'msg': 'hi', 'x': 123, 'dict': { 'key': 'value', 'y': None } }
         self.channel.init_params({

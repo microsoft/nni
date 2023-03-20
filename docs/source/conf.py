@@ -87,7 +87,7 @@ autodoc_mock_imports = [
 # Some of our modules cannot generate summary
 autosummary_mock_imports = [
     'nni.retiarii.codegen.tensorflow',
-    'nni.nas.benchmarks.nasbench101.db_gen',
+    'nni.nas.benchmark.nasbench101.db_gen',
     'nni.tools.jupyter_extension.management',
 ] + autodoc_mock_imports
 

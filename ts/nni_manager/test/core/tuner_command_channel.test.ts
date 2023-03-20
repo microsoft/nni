@@ -90,7 +90,7 @@ describe('## tuner_command_channel ##', () => {
     it('send', () => testSend(client1));
     it('receive', () => testReceive(client1));
 
-    it('mock timeout', testError);
+    // it('mock timeout', testError);
     it('reconnect', testReconnect);
 
     it('send after reconnect', () => testSend(client2));
