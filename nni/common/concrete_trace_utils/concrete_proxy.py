@@ -58,6 +58,7 @@ class ConcreteProxy(Proxy):
     op_call_ex = dis.opmap['CALL_FUNCTION_EX']
     op_not = dis.opmap['UNARY_NOT']
     op_unpack_sequence = dis.opmap['UNPACK_SEQUENCE']
+    op_dict_merge = dis.opmap['DICT_MERGE']
     jump_before_opcodes = (op_compare, op_not)
 
     # occurred in different python versions
@@ -197,7 +198,7 @@ class ConcreteProxy(Proxy):
         while insts[cur].opcode == self.op_extended_arg:
             cur += 1
 
-        if insts[cur].opcode == self.op_call_ex:
+        if insts[cur].opcode == self.op_call_ex or insts[cur].opcode == self.op_dict_merge:
             # in executing `**proxy`
             return self.value.keys()
         else:
