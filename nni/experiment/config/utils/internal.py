@@ -89,8 +89,8 @@ def fields(config: ConfigBase) -> list[dataclasses.Field]:
 
 def is_instance(value, type_hint) -> bool:
     try:
-        typeguard.check_type('_', value, type_hint)
-    except TypeError:
+        typeguard.check_type(value, type_hint)
+    except typeguard.TypeCheckError:
         return False
     return True
 
@@ -190,7 +190,7 @@ def _get_ts_config_class(platform: str) -> type[TrainingServiceConfig] | None:
         pkg = importlib.import_module(custom_ts_pkg)
         _config_class = pkg.nni_training_service_info.config_class
 
-    for cls in TrainingServiceConfig.__subclasses__():
+    for cls in _all_subclasses(TrainingServiceConfig):
         if cls.platform == platform:
             return cls
     return None

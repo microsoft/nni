@@ -23,7 +23,7 @@ import os from 'os';
 import path from 'path';
 
 import type { NniManagerArgs } from './arguments';
-import type { LogStream } from './log_stream';
+import { LogStream } from './log_stream';
 import { NniPaths, createPaths } from './paths';
 import { RestManager } from './rest';
 
@@ -98,5 +98,5 @@ if (isUnitTest()) {
     resetGlobals();
 }
 
-const globals: MutableGlobals = (global as any).nni;
+export const globals: MutableGlobals = (global as any).nni;
 export default globals;

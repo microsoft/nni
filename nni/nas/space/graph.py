@@ -116,6 +116,10 @@ class GraphModelSpace(ExecutableModelSpace):
         model.sample = sample
         return model
 
+    def to_code(self) -> str:
+        """Convert the model to code."""
+        raise NotImplementedError(f'{self.__class__.__name__} does not support to_code()')
+
     @property
     def root_graph(self) -> Graph:
         return self.graphs[self._root_graph_name]

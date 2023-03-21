@@ -1,161 +1,209 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import assert from 'assert/strict';
-import { setTimeout } from 'timers/promises';
+import assert from 'node:assert/strict';
+import { setTimeout } from 'node:timers/promises';
 
-import WebSocket from 'ws';
-
-import { WebSocketChannelServer, UnitTestHelpers } from 'common/command_channel/websocket';
-import { DefaultMap } from 'common/default_map';
-import { Deferred } from 'common/deferred';
-import globals from 'common/globals/unittest';
-import type { Command } from 'common/command_channel/interface';
-import { RestServer, UnitTestHelpers as RestServerHelpers } from 'rest_server';
+import type {
+    Command, CommandChannel, CommandChannelClient, CommandChannelServer
+} from 'common/command_channel/interface';
+import { UnitTestHelper as Helper } from 'common/command_channel/websocket/channel';
+import { WsChannelClient, WsChannelServer } from 'common/command_channel/websocket/index';
+import { globals } from 'common/globals/unittest';
+import { RestServerCore } from 'rest_server/core';
 
 describe('## websocket command channel ##', () => {
     before(beforeHook);
 
-    it('start', () => testStart());
+    it('start', testServerStart);
 
-    /* send and receive messages on normal connections */
-    it('connect', () => testConnect());
-    it('message', () => testMessage());
+    it('connect', testClientStart);
+    it('message', testMessage);
 
-    /* client 1 proactively reconnect */
-    it('reconnect', () => testReconnect());
-    it('message', () => testMessage());
+    it('reconnect', testReconnect);
+    it('message', testMessage);
 
-    /* client 2 loses responsive */
-    it('no response', () => testNoResponse());
-    it('message', () => testMessage());
-
-    it('shutdown', () => testShutdown());
+    it('handle error', testError);
+    it('shutdown', testShutdown);
 
     after(afterHook);
 });
 
-/* global states */
-
-const heartbeatInterval: number = 10;  // NOTE: increase this if the pipeline fails randomly
-UnitTestHelpers.setHeartbeatInterval(heartbeatInterval);
-
-let server!: WebSocketChannelServer;
-let client1!: Client;
-let client2!: Client;
-const serverReceivedCommands: DefaultMap<string, Command[]> = new DefaultMap(Array) as any;
-
-let restServer!: RestServer;
-
 /* test cases */
 
-async function testStart(): Promise<void> {
-    server = new WebSocketChannelServer('ut', 'ut', 2);
-    server.onReceive((channelId, command) => {
-        serverReceivedCommands.get(channelId).push(unpackCommand(command));
+async function testServerStart(): Promise<void> {
+    ut.server = new WsChannelServer('ut_server', 'ut');
+
+    ut.server.onReceive((channelId, command) => {
+        if (channelId === '1') {
+            ut.events.push({ event: 'server_receive_1', command });
+        }
     });
-    await server.start();
-    assert.equal(server.getChannelUrl('1'), `ws://localhost:${globals.args.port}/ut/1`);
+
+    ut.server.onConnection((channelId, channel) => {
+        ut.events.push({ event: 'connect', channelId, channel });
+
+        channel.onClose(reason => {
+            ut.events.push({ event: `client_close_${channelId}`, reason });
+        });
+        channel.onError(error => {
+            ut.events.push({ event: `client_error_${channelId}`, error });
+        });
+        channel.onLost(() => {
+            ut.events.push({ event: `client_lost_${channelId}` });
+        });
+
+        if (channelId === '1') {
+            ut.serverChannel1 = channel;
+        }
+
+        if (channelId === '2') {
+            ut.serverChannel2 = channel;
+            channel.onReceive(command => {
+                ut.events.push({ event: 'server_receive_2', command });
+            });
+        }
+    });
+
+    await ut.server.start();
 }
 
-async function testConnect(): Promise<void> {
-    client1 = new Client(server.getChannelUrl('1'));
-    client2 = new Client(server.getChannelUrl('2'));
-    await Promise.all([ client1.opened.promise, client2.opened.promise ]);
+async function testClientStart(): Promise<void> {
+    const url1 = ut.server.getChannelUrl('1');
+    const url2 = ut.server.getChannelUrl('2', '127.0.0.1');
+    assert.equal(url1, `ws://localhost:${globals.args.port}/ut/1`);
+    assert.equal(url2, `ws://127.0.0.1:${globals.args.port}/ut/2`);
+
+    ut.client1 = new WsChannelClient('ut_client_1', url1);
+    ut.client2 = new WsChannelClient('ut_client_2', url2);
+
+    ut.client1.onReceive(command => {
+        ut.events.push({ event: 'client_receive_1', command });
+    });
+    ut.client2.onCommand('ut_command', command => {
+        ut.events.push({ event: 'client_receive_2', command });
+    });
+
+    ut.client2.onClose(reason => {
+        ut.events.push({ event: 'server_close_2', reason });
+    });
+
+    await Promise.all([
+        ut.client1.connect(),
+        ut.client2.connect(),
+    ]);
+
+    assert.equal(ut.events[0].event, 'connect');
+    assert.equal(ut.events[1].event, 'connect');
+    assert.equal(Number(ut.events[0].channelId) + Number(ut.events[1].channelId), 3);
+    assert.equal(ut.events.length, 2);
+
+    ut.events.length = 0;
 }
 
 async function testReconnect(): Promise<void> {
-    const oldClient = client1;
-    client1 = new Client(server.getChannelUrl('1'));
-    await Promise.all([ oldClient.closed.promise, client1.opened.promise ]);
-}
+    const ws = (ut.client1 as any).connection.ws;  // NOTE: private api
+    ws.pause();
+    await setTimeout(heartbeatTimeout);
+    ws.terminate();
+    ws.resume();
 
-async function testNoResponse(): Promise<void> {
-    await client2.mockNoResponse(heartbeatInterval * 5);
-    client2 = new Client(server.getChannelUrl('2'));
-    await client2.opened.promise;
+    // mac pipeline can be slow
+    for (let i = 0; i < 10; i++) {
+        await setTimeout(heartbeat);
+        if (ut.events.length > 0) {
+            break;
+        }
+    }
+
+    assert.ok(ut.countEvents('client_lost_1') >= 1);
+    assert.ok(ut.countEvents('client_close_1') == 0);
+    assert.ok(ut.countEvents('client_error_1') == 0);
+    assert.ok(ut.countEvents('connect') == 0);  // reconnect is not connect
+
+    ut.events.length = 0;
 }
 
 async function testMessage(): Promise<void> {
-    serverReceivedCommands.forEach(commands => { commands.length = 0; });
-    client1.received.length = 0;
-    client2.received.length = 0;
+    ut.server.send('1', ut.packCommand(1));
+    await ut.client2.sendAsync(ut.packCommand(2));
+    ut.client2.send(ut.packCommand('三'));
+    ut.server.send('2', ut.packCommand('4'));
+    ut.client1.send(ut.packCommand(5));
+    ut.server.send('1', ut.packCommand(6));
 
-    server.send('1', packCommand(1));       // server -> 1
-    client2.send(packCommand('二'));        // server <- 2
-    client2.send(packCommand(3));           // server <- 2
-    server.send('2', packCommand('四'));    // server -> 2
-    client1.send(packCommand(5));           // server <- 1
-    server.send('1', packCommand(6));       // server -> 1
+    await setTimeout(heartbeat);
 
-    await setTimeout(heartbeatInterval);
+    assert.deepEqual(ut.filterCommands('client_receive_1'), [ 1, 6 ]);
+    assert.deepEqual(ut.filterCommands('client_receive_2'), [ '4' ]);
+    assert.deepEqual(ut.filterCommands('server_receive_1'), [ 5 ]);
+    assert.deepEqual(ut.filterCommands('server_receive_2'), [ 2, '三' ]);
 
-    assert.deepEqual(client1.received, [ 1, 6 ]);
-    assert.deepEqual(client2.received, [ '四' ]);
-    assert.deepEqual(serverReceivedCommands.get('1'), [ 5 ]);
-    assert.deepEqual(serverReceivedCommands.get('2'), [ '二', 3 ]);
+    ut.events.length = 0;
+}
+
+async function testError(): Promise<void> {
+    ut.client2.terminate('client 2 terminate');
+    await setTimeout(terminateTimeout * 1.1);
+
+    assert.ok(ut.countEvents('client_close_2') == 0);
+    assert.ok(ut.countEvents('client_error_2') == 1);
+
+    ut.events.length = 0;
 }
 
 async function testShutdown(): Promise<void> {
-    await server.shutdown();
-    await Promise.all([ client1.closed.promise, client2.closed.promise ]);
+    await ut.server.shutdown();
+
+    assert.equal(ut.countEvents('client_close_1'), 1);
+
+    ut.events.length = 0;
 }
 
-/* helpers */
+/* helpers and states */
+
+// NOTE: Increase these numbers if it fails randomly
+const heartbeat = 10;
+const heartbeatTimeout = 50;
+const terminateTimeout = 100;
 
 async function beforeHook(): Promise<void> {
     globals.reset();
-    //globals.showLog();
-    restServer = new RestServer(0, '');
-    await restServer.start();
-    globals.args.port = RestServerHelpers.getPort(restServer);
+
+    ut.rest = new RestServerCore();
+    await ut.rest.start();
+
+    Helper.setHeartbeatInterval(heartbeat);
+    Helper.setTerminateTimeout(terminateTimeout);
 }
 
-async function afterHook() {
-    if (restServer) {
-        await restServer.shutdown();
-    }
+async function afterHook(): Promise<void> {
+    Helper.reset();
+    await ut.rest?.shutdown();
     globals.reset();
-    RestServerHelpers.reset();
 }
 
-function packCommand(value: any): Command {
-    return { type: 'ut', value } as Command;
-}
+class UnitTestStates {
+    server!: CommandChannelServer;
+    client1!: CommandChannelClient;
+    client2!: CommandChannelClient;
+    serverChannel1!: CommandChannel;
+    serverChannel2!: CommandChannel;
+    events: any[] = [];
 
-function unpackCommand(command: Command): any {
-    assert.equal(command.type, 'ut');
-    return (command as any).value;
-}
+    rest!: RestServerCore;
 
-class Client {
-    ws: WebSocket;
-    received: any[] = [];
-    opened: Deferred<void> = new Deferred();
-    closed: Deferred<void> = new Deferred();
-
-    constructor(url: string) {
-        this.ws = new WebSocket(url);
-        this.ws.on('message', (data, _isBinary) => {
-            const command = JSON.parse(data.toString());
-            this.received.push(unpackCommand(command));
-        });
-        this.ws.on('open', () => {
-            this.opened.resolve();
-        });
-        this.ws.on('close', () => {
-            this.closed.resolve();
-        });
+    countEvents(event: string): number {
+        return this.events.filter(e => (e.event === event)).length;
     }
 
-    send(command: Command): void {
-        this.ws.send(JSON.stringify(command));
+    filterCommands(event: string): any[] {
+        return this.events.filter(e => (e.event === event)).map(e => e.command.value);
     }
 
-    async mockNoResponse(time: number): Promise<void> {
-        this.ws.pause();
-        await setTimeout(time);
-        this.ws.terminate();
-        this.ws.resume();
+    packCommand(value: any): Command {
+        return { type: 'ut_command', value };
     }
 }
+
+const ut = new UnitTestStates();

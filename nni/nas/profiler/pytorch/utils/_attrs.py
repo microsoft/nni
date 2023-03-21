@@ -20,6 +20,7 @@ tuple_n_t = {
     3: tuple_3_t,
 }
 
+
 def _getitem(obj: Any, index: int) -> Any:
     if not isinstance(index, int):
         raise TypeError('Index must be an integer.')

@@ -26,10 +26,14 @@ import { EventEmitter } from 'events';
 import fs from 'fs/promises';
 import path from 'path';
 
+import tar from 'tar';
+
 import type { Command } from 'common/command_channel/interface';
 import { HttpChannelServer } from 'common/command_channel/http';
 import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
+import type { EnvironmentInfo } from 'common/training_service_v3';
+import { collectPlatformInfo } from './collect_platform_info';
 import { TrialProcess, TrialProcessOptions } from './process';
 import { TaskSchedulerClient } from './task_scheduler_client';
 
@@ -52,6 +56,7 @@ export declare namespace TrialKeeper {
 
 export class TrialKeeper {
     private envId: string;
+    private envInfo!: EnvironmentInfo;
     private channels: HttpChannelServer;
     private dirs: Map<string, string> = new Map();
     private emitter: EventEmitter = new EventEmitter();
@@ -59,13 +64,19 @@ export class TrialKeeper {
     private log: Logger;
     private platform: string;
     private trials: Map<string, TrialProcess> = new Map();
+    private gpuEnabled: boolean;
 
     constructor(environmentId: string, platform: string, enableGpuScheduling: boolean) {
         this.envId = environmentId;
         this.platform = platform;
+        this.gpuEnabled = enableGpuScheduling;
         this.log = getLogger(`TrialKeeper.${environmentId}`);
 
         this.scheduler = new TaskSchedulerClient(enableGpuScheduling);
+        this.scheduler.onUtilityUpdate(info => {
+            Object.assign(this.envInfo, info);
+            this.emitter.emit('env_update', this.envInfo);
+        });
 
         this.channels = new HttpChannelServer(this.envId, `/env/${this.envId}`);
         this.channels.onReceive((trialId, command) => {
@@ -77,11 +88,15 @@ export class TrialKeeper {
     }
 
     // TODO: support user configurable init command
-    public async start(): Promise<void> {
+    public async start(): Promise<EnvironmentInfo> {
         await Promise.all([
             this.scheduler.start(),
             this.channels.start(),
         ]);
+
+        this.envInfo = { id: this.envId, type: 'hot' } as EnvironmentInfo;
+        Object.assign(this.envInfo, await collectPlatformInfo(this.gpuEnabled));
+        return this.envInfo;
     }
 
     public async shutdown(): Promise<void> {
@@ -98,6 +113,20 @@ export class TrialKeeper {
 
     public registerDirectory(name: string, path: string): void {
         this.dirs.set(name, path);
+    }
+
+    public async unpackDirectory(name: string, tarPath: string): Promise<void> {
+        const extractDir = path.join(
+            globals.paths.experimentRoot, 
+            'environments',
+            (globals.args as any).environmentId,
+            'upload',
+            name
+        );
+        await fs.mkdir(extractDir, { recursive: true });
+        await tar.extract({ cwd: extractDir, file: tarPath });
+
+        this.registerDirectory(name, extractDir);
     }
 
     // FIXME: the method name will be changed when we support distributed trials
@@ -117,10 +146,10 @@ export class TrialKeeper {
 
         const trial = new TrialProcess(trialId);
         trial.onStart(timestamp => {
-            this.emitter.emit('trial-start', trialId, timestamp);
+            this.emitter.emit('trial_start', trialId, timestamp);
         });
         trial.onStop((timestamp, exitCode, _signal) => {
-            this.emitter.emit('trial-stop', trialId, timestamp, exitCode);
+            this.emitter.emit('trial_stop', trialId, timestamp, exitCode);
             this.scheduler.release(trialId);  // TODO: fire and forget, handle exception?
         });
 
@@ -152,18 +181,29 @@ export class TrialKeeper {
     }
 
     public onTrialStart(callback: (trialId: string, timestamp: number) => void): void {
-        this.emitter.on('trial-start', callback);
+        this.emitter.on('trial_start', callback);
     }
 
     public onTrialStop(callback: (trialId: string, timestamp: number, exitCode: number | null) => void): void {
-        this.emitter.on('trial-stop', callback);
+        this.emitter.on('trial_stop', callback);
     }
 
-    public onReceiveCommand(commandType: string, callback: (trialId: string, command: Command) => void): void {
-        this.emitter.on('command', (trialId, command) => {
-            if (command.type === commandType) {
-                callback(trialId, command);
-            }
-        });
+    public onReceiveCommand(callback: (trialId: string, command: Command) => void): void;
+    public onReceiveCommand(commandType: string, callback: (trialId: string, command: Command) => void): void;
+
+    public onReceiveCommand(commandTypeOrCallback: any, callbackOrNone?: any): void {
+        if (callbackOrNone) {
+            this.emitter.on('command', (trialId, command) => {
+                if (command.type === commandTypeOrCallback) {
+                    callbackOrNone(trialId, command);
+                }
+            });
+        } else {
+            this.emitter.on('command', commandTypeOrCallback);
+        }
+    }
+
+    public onEnvironmentUpdate(callback: (info: EnvironmentInfo) => void): void {
+        this.emitter.on('env_update', callback);
     }
 }

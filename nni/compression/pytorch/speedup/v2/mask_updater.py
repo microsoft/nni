@@ -12,6 +12,7 @@ import operator
 import torch
 from torch.nn import functional as F
 from torch.fx.node import Node
+from torch.utils._pytree import tree_flatten, tree_unflatten
 
 from .utils import randomize_tensor_inplace, randomize_if_tensor, tree_map_zip, torch_float_dtype
 
@@ -398,7 +399,26 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
         assert len(node.args) == 2
         input_grad = tree_map_zip(lambda t, m: (t * m).type_as(t) if isinstance(m, torch.Tensor) else t, \
             model_speedup.node_infos[node].output_grad, model_speedup.node_infos[node].output_masks)
-        model_speedup.indirect_pass_grad(node.args[0], input_grad)
+        arg_1_val = model_speedup.node_infos[node.args[1]].output_randomize if isinstance(node.args[1], Node) else node.args[1]
+
+        input_node_info = model_speedup.node_infos[node.args[0]]
+        flat_args, spec = tree_flatten(input_node_info.output_grad)
+        flat_grads = [None for _ in range(len(flat_args))]
+        flat_grads[arg_1_val] = input_grad
+        input_grads = tree_unflatten(flat_grads, spec)
+
+        def add_grad(grad, input_grad):
+            if isinstance(input_grad, torch.Tensor):
+                if grad is not None and input_grad is not None:
+                    return grad + input_grad
+                elif grad is None:
+                    return input_grad
+                else:
+                    return grad
+            else:
+                return grad
+
+        model_speedup.node_infos[node].output_grad = tree_map_zip(add_grad, model_speedup.node_infos[node.args[0]].output_grad, input_grads)
 
     def detect(self, model_speedup: 'ModelSpeedup', node: Node) -> bool:
         return self.detect_helper(model_speedup, node) is not None

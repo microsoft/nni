@@ -88,7 +88,7 @@ export class ShutdownManager {
 
         const timeoutTimer = setTimeout(async () => {
             try {
-                logger.error('Following modules failed to shut down in time:', this.modules.keys());
+                logger.error('Following modules failed to shut down in time:', Array.from(this.modules.keys()));
                 await global.nni.logStream.close();
             } finally {
                 process.exit(1);

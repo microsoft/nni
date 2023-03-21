@@ -5,6 +5,8 @@
  *  A simple GPU scheduler used by local and remote training services.
  **/
 
+import { EventEmitter } from 'node:events';
+
 import { getLogger } from 'common/log';
 import type { TrialKeeper } from 'common/trial_keeper/keeper';
 import { GpuSystemInfo, collectGpuInfo as origCollectGpuInfo } from './collect_info';
@@ -30,6 +32,7 @@ interface SchedulerTrialInfo {
 }
 
 export class TaskScheduler {
+    private emitter: EventEmitter = new EventEmitter();
     private gpus: SchedulerGpuInfo[] = [];
     private trials: SchedulerTrialInfo[] = [];
 
@@ -139,6 +142,7 @@ export class TaskScheduler {
             gpu.util += gpuNumber;
             this.trials.push({ gpuIndex: gpu.index, experimentId, trialId, util: gpuNumber });
             logger.debug(`Scheduled ${experimentId}/${trialId} -> ${gpu.index}`);
+            this.emitUpdate();
             return { 'CUDA_VISIBLE_DEVICES': String(gpu.index) };
 
         } else {
@@ -177,7 +181,13 @@ export class TaskScheduler {
         this.releaseByFilter(trial => (trial.experimentId === experimentId));
     }
 
+    public onUtilityUpdate(callback: (info: Record<string, any>) => void): void {
+        this.emitter.on('update', callback);
+    }
+
     private updateGpus(info: GpuSystemInfo): void {
+        const prev = structuredClone(this.gpus);
+
         for (const gpu of info.gpus) {
             const index = gpu.index;
             this.gpus[index].coreUtil = gpu.gpuCoreUtilization ?? 0;
@@ -191,6 +201,22 @@ export class TaskScheduler {
             this.gpus[index].active = true;
             if (proc.type === 'compute') {
                 this.gpus[index].computeActive = true;
+            }
+        }
+
+        for (let i = 0; i < this.gpus.length; i++) {
+            const prevUtil = Math.max(prev[i].util, prev[i].coreUtil, prev[i].memUtil);
+            const curUtil = Math.max(this.gpus[i].util, this.gpus[i].coreUtil, this.gpus[i].memUtil);
+            if (Math.abs(prevUtil - curUtil) > 0.5) {
+                this.emitUpdate(info);
+                return;
+            }
+
+            const prevActive = prev[i].util > 0 || prev[i].active;
+            const curActive = this.gpus[i].util > 0 || this.gpus[i].active;
+            if (prevActive !== curActive) {
+                this.emitUpdate(info);
+                break;
             }
         }
     }
@@ -238,6 +264,19 @@ export class TaskScheduler {
             this.gpus[trial.gpuIndex].util -= trial.util;
         });
         this.trials = this.trials.filter(trial => !filter(trial));
+        if (trials) {
+            this.emitUpdate();
+        }
+    }
+
+    private async emitUpdate(info?: GpuSystemInfo): Promise<void> {
+        const copy = structuredClone(info ?? await collectGpuInfo());
+        if (copy) {
+            for (const gpu of copy.gpus) {
+                (gpu as any).nomialUtilization = this.gpus[gpu.index].util;
+            }
+            this.emitter.emit('update', { gpu: copy });
+        }
     }
 }
 

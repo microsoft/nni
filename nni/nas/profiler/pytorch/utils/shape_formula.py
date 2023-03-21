@@ -6,7 +6,6 @@ from __future__ import annotations
 __all__ = ['register_shape_inference_formula', 'find_shape_inference_formula']
 
 import logging
-import functools
 import warnings
 from typing import Callable, Type, Tuple, Any, cast
 
@@ -16,7 +15,7 @@ from torch import nn
 import nni.nas.nn.pytorch as nas_nn
 from nni.mutable import MutableExpression
 from .shape import Formula, ShapeTensor, MutableShape, extract_shape_info, switch_case_shape_info, shape_inference
-from ._attrs import tuple_2_t, _getattr, _getitem
+from ._attrs import _getattr, tuple_2_t
 
 _logger = logging.getLogger(__name__)
 
@@ -91,7 +90,7 @@ def find_shape_inference_formula(module_or_func: Any) -> Formula | None:
 
 def _safe_register_aten_formula(name: str, formula: Formula) -> None:
     """Register a shape inference formula for an aten operator.
-    
+
     Some aten operators are internal and not trusted to be stable.
     This function will raise a warning if the operator is not found.
     """
@@ -103,9 +102,14 @@ def _safe_register_aten_formula(name: str, formula: Formula) -> None:
     names = name.split('.')
     object = torch.ops.aten
     for name in names:
-        if not hasattr(object, name):
-            warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
-                          'Skip registering the shape inference formula.')
+        try:
+            if not hasattr(object, name):
+                warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+                              'Skip registering the shape inference formula.')
+                return
+        except RuntimeError as e:
+            # Some pytorch version will raise RuntimeError when using hasattr
+            warnings.warn(f'Fail to register shape inference formula for aten operator {name} because: {e}')
             return
         object = getattr(object, name)
     register_shape_inference_formula(object, formula)

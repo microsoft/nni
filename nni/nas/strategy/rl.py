@@ -4,9 +4,8 @@
 from __future__ import annotations
 
 import logging
-import threading
 import warnings
-from typing import Optional, Callable, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING
 
 from nni.mutable import SampleValidationError
 from nni.nas.execution import ExecutionEngine
@@ -17,7 +16,7 @@ from .base import Strategy
 try:
     has_tianshou = True
     from tianshou.data import ReplayBuffer
-    from ._rl_impl import PolicyFactory, TuningEnvironment, TuningTrajectoryGenerator, default_policy_fn
+    from ._rl_impl import PolicyFactory, TuningTrajectoryGenerator, default_policy_fn
 except ImportError:
     has_tianshou = False
 
