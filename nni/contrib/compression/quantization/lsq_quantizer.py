@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
+import logging
 from typing import List, Dict, overload
 
 import torch
@@ -10,6 +11,10 @@ from torch import Tensor
 from ..base.compressor import Quantizer
 from ..base.wrapper import ModuleWrapper
 from ..utils.evaluator import Evaluator
+from ..base.target_space import TargetType
+
+
+_logger = logging.getLogger(__name__)
 
 
 class LsqQuantizer(Quantizer):
@@ -58,9 +63,20 @@ class LsqQuantizer(Quantizer):
         self.evaluator: Evaluator
         self.is_init = False
 
+        self.check_validation()
         self.register_scale()
         self.register_lsq_apply_method()
         self.register_track_func()
+
+    def check_validation(self):
+        for _, ts in self._target_spaces.items():
+            for _, target_space in ts.items():
+                if target_space.quant_scheme != 'symmetric':
+                    warn_msg = f"LsqQuantizer only supports symmetric mode, but got {target_space.quant_scheme}"
+                    _logger.warning(warn_msg)
+                if  target_space.quant_dtype.startswith("uint") and target_space.type is TargetType.PARAMETER:
+                    warn_msg = f"In the LsqQuantizer, quantization of parameters only supports int type"
+                    _logger.warning(warn_msg)
 
     def register_track_func(self):
         for module_name, _ in self._target_spaces.items():
