@@ -79,7 +79,7 @@ def prepare_dataloaders(task_name: str, cache_dir: str, train_batch_size: int = 
     data_collator = DataCollatorWithPadding(tokenizer)
     train_dataloader = DataLoader(train_dataset, shuffle=True, collate_fn=data_collator, batch_size=train_batch_size)
     validation_dataloaders = {
-        val_name: DataLoader(val_dataset, collate_fn=data_collator, batch_size=eval_batch_size) \
+        val_name: DataLoader(val_dataset, collate_fn=data_collator, batch_size=eval_batch_size)
             for val_name, val_dataset in validation_datasets.items()
     }
     return train_dataloader, validation_dataloaders
@@ -339,7 +339,7 @@ def pruning_embedding():
         'op_names_re': ['bert\.embeddings.*'],
         'sparse_ratio': sparse_ratio,
         'dependency_group_id': 1,
-        'granularity': 'in_channel',
+        'granularity': [-1, 1],
     }, {
         'op_names_re': ['bert\.encoder\.layer\.[0-9]*\.attention$',
                         'bert\.encoder\.layer\.[0-9]*\.output$'],
@@ -396,6 +396,16 @@ def speedup_embedding():
     torch.save(model, './output/pruning/embedding_pruned_model.pth')
 
 
+def evaluate_pruned_model():
+    model: BertForSequenceClassification = torch.load('./output/pruning/embedding_pruned_model.pth')
+    trainer = prepare_traced_trainer(model, task_name)
+    metric = trainer.evaluate()
+    pruned_num_params = sum(param.numel() for param in model.parameters()) + sum(buffer.numel() for buffer in model.buffers())
+
+    model = build_finetuning_model(task_name, f'./output/bert_finetuned/{task_name}.bin')
+    ori_num_params = sum(param.numel() for param in model.parameters()) + sum(buffer.numel() for buffer in model.buffers())
+    print(f'Metric: {metric}\nSparsity: {1 - pruned_num_params / ori_num_params}')
+
 Path('./output/bert_finetuned').mkdir(exist_ok=True, parents=True)
 build_finetuning_model(task_name, f'./output/bert_finetuned/{task_name}.bin')
 
@@ -405,3 +415,4 @@ pruning_ffn()
 speedup_ffn()
 pruning_embedding()
 speedup_embedding()
+evaluate_pruned_model()
