@@ -168,8 +168,13 @@ class EnasLightningModule(BaseOneShotLightningModule):
         return super().set_model(model)
 
     def training_step(self, batch_packed, batch_idx):
-        # The received batch is a tuple of (data, "train" | "val")
-        batch, mode = batch_packed
+        if len(batch_packed) == 2:
+            # Legacy (pytorch-lightning 1.x): The received batch is a tuple of (data, "train" | "val")
+            batch, mode = batch_packed
+        else:
+            # New (pytorch-lightning 2.0+): a tuple of data, batch_idx, and dataloader_idx
+            batch, _, dataloader_idx = batch_packed
+            mode = 'train' if dataloader_idx == 0 else 'val'
 
         assert self._replay_buffer is not None
 

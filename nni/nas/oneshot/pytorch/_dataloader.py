@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# pylint: skip-file
+# type: ignore
+
 from __future__ import annotations
 
 from typing import Any

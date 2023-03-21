@@ -942,12 +942,16 @@ class ENAS(RandomOneShot):
         )
 
     def train_dataloader(self, train_dataloader_fn, val_dataloader_fn):
-        # Import locally to avoid import error on legacy PL version
-        from .dataloader import ConcatLoader
-        return ConcatLoader({
-            'train': train_dataloader_fn(),
-            'val': val_dataloader_fn()
-        })
+        import pytorch_lightning
+        if pytorch_lightning.__version__.startswith('1.'):
+            from .dataloader import ConcatLoader
+            return ConcatLoader({
+                'train': train_dataloader_fn(),
+                'val': val_dataloader_fn()
+            })
+        else:
+            from pytorch_lightning.utilities.combined_loader import CombinedLoader
+            return CombinedLoader([train_dataloader_fn(), val_dataloader_fn()], 'sequential')
 
     def val_dataloader(self, train_dataloader_fn, val_dataloader_fn):
         return None
