@@ -203,7 +203,8 @@ class Evaluator:
 
                 for name in name_lis:
                     # match module_name
-                    prefix_name = ".".join(name.strip().split(".")[:-1])
+                    prefix_name = name.strip().split(".")[:-1]
+                    prefix_name = ".".join(prefix_name[:-1]) if prefix_name[-1] == '_nni_wrapper' else ".".join(prefix_name)
                     if module_name == prefix_name:
                         return i
 
