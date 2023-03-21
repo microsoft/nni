@@ -3,11 +3,11 @@
 -f https://download.pytorch.org/whl/torch_stable.html
 tensorflow >= 2.7.0
 tensorboard >= 2.7.0
-torch == 1.13.1+cpu ; sys_platform != "darwin"
-torch == 1.13.1 ; sys_platform == "darwin"
-torchvision == 0.14.1+cpu ; sys_platform != "darwin"
-torchvision == 0.14.1 ; sys_platform == "darwin"
-pytorch-lightning >= 1.6.1, < 2.0
+torch == 2.0.0+cpu ; sys_platform != "darwin"
+torch == 2.0.0 ; sys_platform == "darwin"
+torchvision == 0.15.0+cpu ; sys_platform != "darwin"
+torchvision == 0.15.0 ; sys_platform == "darwin"
+pytorch-lightning >= 2.0
 torchmetrics
 lightgbm
 onnx
