@@ -644,6 +644,8 @@ class ConcreteTracer(TracerBase):
                 if attr_val in self.wrapped_leaf:
                     return self.wrapped_leaf[attr_val][1]
                 return attr_val
+            elif attr == 'training':
+                return self.create_proxy('get_attr', f'{self.the_path_of_middle_class[id(mod)]}.{attr}', (), {}) 
             elif _orig_isinstance(attr_val, (_orig_tuple, _orig_list)):
                 if self.the_path_of_middle_class[id(mod)] == '':
                     return self.create_proxy('get_attr', f'{attr}', (), {})
