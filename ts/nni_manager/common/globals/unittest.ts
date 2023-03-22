@@ -98,5 +98,5 @@ if (isUnitTest()) {
     resetGlobals();
 }
 
-const globals: MutableGlobals = (global as any).nni;
+export const globals: MutableGlobals = (global as any).nni;
 export default globals;

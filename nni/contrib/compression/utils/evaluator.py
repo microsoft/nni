@@ -199,13 +199,13 @@ class Evaluator:
                                     'the ordering of tensors in sets will change between runs. Please use a list instead.')
                 else:
                     params = list(params)
-                name_lis = [param2name_dict[id(p)] for p in params]
-                target_prefix_name = ".".join(module_name.strip().split(".")[:-1])
+                name_lis = [param2name_dict[id(p)] for p in params if id(p) in param2name_dict]
 
                 for name in name_lis:
                     # match module_name
-                    prefix_name = ".".join(name.strip().split(".")[:-1])
-                    if target_prefix_name == prefix_name:
+                    prefix_name = name.strip().split(".")[:-1]
+                    prefix_name = ".".join(prefix_name[:-1]) if prefix_name[-1] == '_nni_wrapper' else ".".join(prefix_name)
+                    if module_name == prefix_name:
                         return i
 
             return -1
