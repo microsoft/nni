@@ -277,7 +277,7 @@ class ModuleWrapper(torch.nn.Module):
                 return pruning_apply_methods[target_space.apply_method](target, target_space)
             else:
                 raise TypeError(f'Only {list(pruning_apply_methods.keys())} are supported for mask `apply_method`.')
-        elif target_space.type is TargetType.PARAMETER:
+        elif target_space.type is TargetType.PARAMETER and target is not None:
             # Prevent registering buffer as a parameter
             return target * 1.
         else:

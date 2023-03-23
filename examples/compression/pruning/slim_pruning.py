@@ -13,15 +13,10 @@ from mobilenet_v3 import (
     device
 )
 
-from nni.contrib.compression.pruning import (
-    L1NormPruner,
-    L2NormPruner,
-    FPGMPruner
-)
+from nni.contrib.compression import TorchEvaluator
+from nni.contrib.compression.pruning import SlimPruner
 from nni.contrib.compression.utils import auto_set_denpendency_group_ids
 from nni.compression.pytorch.speedup.v2 import ModelSpeedup
-
-prune_type = 'l1'
 
 
 if __name__ == '__main__':
@@ -41,13 +36,9 @@ if __name__ == '__main__':
     dummy_input = torch.rand(8, 3, 224, 224).to(device)
     config_list = auto_set_denpendency_group_ids(model, config_list, dummy_input)
     optimizer = prepare_optimizer(model)
+    evaluator = TorchEvaluator(train, optimizer, training_step)
 
-    if prune_type == 'l1':
-        pruner = L1NormPruner(model, config_list)
-    elif prune_type == 'l2':
-        pruner = L2NormPruner(model, config_list)
-    else:
-        pruner = FPGMPruner(model, config_list)
+    pruner = SlimPruner(model, config_list, evaluator, training_steps=1000)
 
     _, masks = pruner.compress()
     pruner.unwrap_model()

@@ -13,15 +13,12 @@ from mobilenet_v3 import (
     device
 )
 
-from nni.contrib.compression.pruning import (
-    L1NormPruner,
-    L2NormPruner,
-    FPGMPruner
-)
+from nni.contrib.compression import TorchEvaluator
+from nni.contrib.compression.pruning import TaylorPruner, LinearPruner, AGPPruner
 from nni.contrib.compression.utils import auto_set_denpendency_group_ids
 from nni.compression.pytorch.speedup.v2 import ModelSpeedup
 
-prune_type = 'l1'
+schedule_type = 'agp'
 
 
 if __name__ == '__main__':
@@ -41,16 +38,16 @@ if __name__ == '__main__':
     dummy_input = torch.rand(8, 3, 224, 224).to(device)
     config_list = auto_set_denpendency_group_ids(model, config_list, dummy_input)
     optimizer = prepare_optimizer(model)
+    evaluator = TorchEvaluator(train, optimizer, training_step)
 
-    if prune_type == 'l1':
-        pruner = L1NormPruner(model, config_list)
-    elif prune_type == 'l2':
-        pruner = L2NormPruner(model, config_list)
-    else:
-        pruner = FPGMPruner(model, config_list)
+    sub_pruner = TaylorPruner(model, config_list, evaluator, training_steps=100)
+    if schedule_type == 'agp':
+        scheduled_pruner = AGPPruner(sub_pruner, interval_steps=100, total_times=10)
+    elif schedule_type == 'linear':
+        scheduled_pruner = LinearPruner(sub_pruner, interval_steps=100, total_times=10)
 
-    _, masks = pruner.compress()
-    pruner.unwrap_model()
+    _, masks = scheduled_pruner.compress(max_steps=100 * 10, max_epochs=None)
+    scheduled_pruner.unwrap_model()
 
     model = ModelSpeedup(model, dummy_input, masks).speedup_model()
     print('Pruned model paramater number: ', sum([param.numel() for param in model.parameters()]))
