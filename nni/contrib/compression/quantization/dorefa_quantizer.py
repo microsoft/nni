@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 from __future__ import annotations
+import logging
 from typing import List, Dict, Union, overload
 
 import torch
@@ -11,6 +12,9 @@ from ..base.compressor import Quantizer
 from ..base.wrapper import ModuleWrapper
 from ..utils.evaluator import Evaluator
 from ..base.target_space import TargetType
+
+
+_logger = logging.getLogger(__name__)
 
 
 class DoReFaQuantizer(Quantizer):
@@ -55,8 +59,16 @@ class DoReFaQuantizer(Quantizer):
         self.evaluator: Evaluator
         self.is_init = False
 
+        self.check_validation()
         self.register_dorefa_apply_method()
         self.register_track_func()
+
+    def check_validation(self):
+        for _, ts in self._target_spaces.items():
+            for _, target_space in ts.items():
+                if target_space.quant_scheme != 'affine':
+                    warn_msg = f"Only supports affine mode, bug got {target_space.quant_scheme}"
+                    _logger.warning(warn_msg)
 
     def register_dorefa_apply_method(self):
         for _, ts in self._target_spaces.items():
