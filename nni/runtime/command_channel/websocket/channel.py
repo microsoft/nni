@@ -29,7 +29,8 @@ class WsChannelClient(CommandChannel):
             _logger.debug('Already closing')
         else:
             try:
-                self._conn.send({'type': '_bye_'})
+                if self._conn is not None:
+                    self._conn.send(nni.dump({'type': '_bye_'}))
             except Exception as e:
                 _logger.debug(f'Failed to send bye: {repr(e)}')
             self._closing = True

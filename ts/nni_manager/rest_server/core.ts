@@ -38,9 +38,6 @@ export class RestServerCore {
         logger.info(`Starting REST server at port ${this.port}, URL prefix: "/${this.urlPrefix}"`);
 
         const app = globals.rest.getExpressApp();
-        //const app = express();
-        //expressWs(app, undefined, { wsOptions: { maxPayload: 4 * 1024 * 1024 * 1024 }});
-
         app.use('/' + this.urlPrefix, globals.rest.getExpressRouter());
         app.all('/' + this.urlPrefix, (_req, res) => { res.status(404).send('Not Found'); });
         app.all('*', (_req, res) => { res.status(404).send(`Outside prefix "/${this.urlPrefix}"`); });
