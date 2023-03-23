@@ -32,7 +32,7 @@ export class WsChannelServer extends EventEmitter {
     public async start(): Promise<void> {
         const channelPath = globals.rest.urlJoin(this.path, ':channel');
         globals.rest.registerWebSocketHandler(this.path, (ws, _req) => {
-            this.handleConnection('__default__', ws);
+            this.handleConnection('__default__', ws);  // TODO: only used by tuner
         });
         globals.rest.registerWebSocketHandler(channelPath, (ws, req) => {
             this.handleConnection(req.params['channel'], ws);

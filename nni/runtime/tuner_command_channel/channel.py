@@ -11,7 +11,6 @@ __all__ = ['TunerCommandChannel']
 
 import logging
 import os
-import time
 from collections import defaultdict
 from threading import Event
 from typing import Any, Callable
