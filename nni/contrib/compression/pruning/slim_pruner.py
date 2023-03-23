@@ -144,7 +144,7 @@ class SlimPruner(Pruner):
         return data
 
     def _calculate_metrics(self, data: Dict[str, Dict[str, torch.Tensor]]) -> _METRICS:
-        return norm_metrics(p=1, data=data, target_spaces=self._target_spaces)
+        return {k: {p: q.abs() for p, q in v.items()} for k, v in data.items()}
 
     def _generate_sparsity(self, metrics: _METRICS) -> _MASKS:
         return generate_sparsity(metrics, self._target_spaces)
