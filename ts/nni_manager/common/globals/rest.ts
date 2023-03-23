@@ -6,8 +6,8 @@
  *  Functions will be added when used.
  **/
 
-import express, { Request, Response, Router } from 'express';
-import type { Router as WsRouter } from 'express-ws';
+import express, { Express, Request, Response, Router } from 'express';
+import expressWs, { Router as WsRouter } from 'express-ws';
 import type { WebSocket } from 'ws';
 
 type HttpMethod = 'GET' | 'PUT';
@@ -16,11 +16,18 @@ type ExpressCallback = (req: Request, res: Response) => void;
 type WebSocketCallback = (ws: WebSocket, req: Request) => void;
 
 export class RestManager {
+    private app: Express;
     private router: Router;
 
     constructor() {
+        this.app = express();
+        expressWs(this.app, undefined, { wsOptions: { maxPayload: 4 * 1024 * 1024 * 1024 }});
         this.router = Router();
         this.router.use(express.json({ limit: '50mb' }));
+    }
+
+    public getExpressApp(): Express {
+        return this.app;
     }
 
     public getExpressRouter(): Router {

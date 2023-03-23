@@ -45,11 +45,9 @@
 
 import util from 'node:util';
 
-import type { Command } from 'common/command_channel/interface';
 import { DefaultMap } from 'common/default_map';
 import { Deferred } from 'common/deferred';
 import { Logger, getLogger } from 'common/log';
-import type { TrialKeeper } from 'common/trial_keeper/keeper';
 import type { CommandChannel } from './interface';
 
 interface RpcResponseCommand {

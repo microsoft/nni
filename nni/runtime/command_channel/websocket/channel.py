@@ -25,9 +25,15 @@ class WsChannelClient(CommandChannel):
 
     def disconnect(self) -> None:
         _logger.debug(f'Disconnect from {self._url}')
-        self.send({'type': '_bye_'})
-        self._closing = True
-        self._close_conn('client intentionally close')
+        if self._closing:
+            _logger.debug('Already closing')
+        else:
+            try:
+                self._conn.send({'type': '_bye_'})
+            except Exception as e:
+                _logger.debug(f'Failed to send bye: {repr(e)}')
+            self._closing = True
+            self._close_conn('client intentionally close')
 
     def send(self, command: Command) -> None:
         if self._closing:
