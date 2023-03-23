@@ -10,7 +10,7 @@ from typing import Dict, List, Literal, Tuple, overload
 import torch
 from torch.optim import Adam
 
-from .tools import _METRICS, _MASKS, norm_metrics, generate_sparsity, is_active_target
+from .tools import _METRICS, _MASKS, generate_sparsity, is_active_target
 from ..base.compressor import Compressor, Pruner
 from ..base.target_space import TargetType
 from ..base.wrapper import ModuleWrapper
