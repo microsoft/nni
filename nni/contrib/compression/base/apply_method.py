@@ -199,9 +199,9 @@ quant_apply_methods = {
     'bypass': bypass,
     'clamp_round': ClampRound.apply,
     'qat_clamp_round': QATClampRound.apply,
-    'dofera_clamp_round_weight': DoferaGradClampRound.dorefa_clamp_round_weight,
-    'dofera_clamp_round_input': DoferaGradClampRound.dorefa_clamp_round_input,
-    'dofera_clamp_round_output': DoferaGradClampRound.apply,
+    'dorefa_clamp_round_weight': DoferaGradClampRound.dorefa_clamp_round_weight,
+    'dorefa_clamp_round_input': DoferaGradClampRound.dorefa_clamp_round_input,
+    'dorefa_clamp_round_output': DoferaGradClampRound.apply,
     "lsq_clamp_round": lsq_clamp_round,
     'bnn_clamp_round': BNNClampRound.apply,
 }
