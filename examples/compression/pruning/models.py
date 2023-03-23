@@ -8,7 +8,8 @@ from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 
 from torchvision import datasets, transforms
-from torchvision.models.mobilenetv3 import mobilenet_v3_small, MobileNetV3
+from torchvision.models.mobilenetv3 import mobilenet_v3_small
+from torchvision.models.resnet import resnet18
 
 import nni
 
@@ -21,15 +22,10 @@ def build_mobilenet_v3():
     return model.to(device)
 
 
-def set_parameter_requires_grad(model: MobileNetV3, feature_extracting: bool):
-    if feature_extracting:
-        for param in model.parameters():
-            param.requires_grad = False
-        for param in model.classifier[-1].parameters():
-            param.requires_grad = True
-    else:
-        for param in model.parameters():
-            param.requires_grad = True
+def build_resnet18():
+    model = resnet18(pretrained=True)
+    model.fc = torch.nn.Linear(512, 10)
+    return model.to(device)
 
 
 def prepare_dataloader():

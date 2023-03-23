@@ -3,8 +3,8 @@
 
 import torch
 
-from mobilenet_v3 import (
-    build_mobilenet_v3,
+from examples.compression.pruning.models import (
+    build_resnet18,
     prepare_dataloader,
     prepare_optimizer,
     train,
@@ -20,8 +20,8 @@ from nni.compression.pytorch.speedup.v2 import ModelSpeedup
 
 
 if __name__ == '__main__':
-    # finetuning mobilenet v3 on Cifar10
-    model = build_mobilenet_v3()
+    # finetuning resnet18 on Cifar10
+    model = build_resnet18()
     optimizer = prepare_optimizer(model)
     train(model, optimizer, training_step, lr_scheduler=None, max_steps=None, max_epochs=10)
     _, test_loader = prepare_dataloader()
