@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import assert from 'assert';
-
 import { KubeflowOperator, OperatorApiVersion } from '../training_service/kubernetes/kubeflow/kubeflowConfig'
-import { KubernetesStorageKind } from '../training_service/kubernetes/kubernetesConfig';
 
 export interface TrainingServiceConfig {
     platform: string;

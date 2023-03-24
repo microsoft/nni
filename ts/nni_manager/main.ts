@@ -21,13 +21,13 @@
 
 import 'app-module-path/register';  // so we can use absolute path to import
 
-import fs from 'fs';
-
 import { Container, Scope } from 'typescript-ioc';
+
+import { globals, initGlobals } from 'common/globals';
+initGlobals();
 
 import * as component from 'common/component';
 import { Database, DataStore } from 'common/datastore';
-import globals, { initGlobals } from 'common/globals';
 import { Logger, getLogger } from 'common/log';
 import { Manager } from 'common/manager';
 import { TensorboardManager } from 'common/tensorboardManager';
@@ -70,8 +70,6 @@ process.on('SIGBREAK', () => { globals.shutdown.initiate('SIGBREAK'); });
 process.on('SIGINT', () => { globals.shutdown.initiate('SIGINT'); });
 
 /* main */
-
-initGlobals();
 
 start().then(() => {
     logger.debug('start() returned.');

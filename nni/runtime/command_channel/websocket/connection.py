@@ -18,6 +18,9 @@ from typing import Any, Type
 
 import websockets
 
+import nni
+from ..base import Command
+
 _logger = logging.getLogger(__name__)
 
 # the singleton event loop
@@ -81,17 +84,17 @@ class WsConnection:
             return
         self.disconnect(reason, 4001)
 
-    def send(self, message: str) -> None:
+    def send(self, message: Command) -> None:
         _logger.debug(f'Sending {message}')
         try:
-            _wait(self._ws.send(message))
+            _wait(self._ws.send(nni.dump(message)))
         except websockets.ConnectionClosed:  # type: ignore
             _logger.debug('Connection closed by server.')
             self._ws = None
             _decrease_refcnt()
             raise
 
-    def receive(self) -> str | None:
+    def receive(self) -> Command | None:
         """
         Return received message;
         or return ``None`` if the connection has been closed by peer.
@@ -105,11 +108,12 @@ class WsConnection:
             _decrease_refcnt()
             raise
 
+        if msg is None:
+            return None
         # seems the library will inference whether it's text or binary, so we don't have guarantee
         if isinstance(msg, bytes):
-            return msg.decode()
-        else:
-            return msg
+            msg = msg.decode()
+        return nni.load(msg)
 
 def _wait(coro):
     # Synchronized version of "await".

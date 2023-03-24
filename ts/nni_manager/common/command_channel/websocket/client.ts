@@ -5,7 +5,6 @@
  *  WebSocket command channel client.
  **/
 
-import events from 'node:events';
 import { setTimeout } from 'node:timers/promises';
 
 import { WebSocket } from 'ws';
