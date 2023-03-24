@@ -18,7 +18,6 @@ from torch.utils.hooks import RemovableHandle
 
 try:
     import pytorch_lightning as pl
-    from pytorch_lightning.callbacks import Callback
 except ImportError:
     LIGHTNING_INSTALLED = False
 else:
