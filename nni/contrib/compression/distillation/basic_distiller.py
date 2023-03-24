@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict, List, overload
 import torch
 import torch.nn.functional as F
 from torch.optim import Adam
+from torch.utils._pytree import tree_map
 
 from ..base.compressor import Compressor, Distiller, _DISTILLATION_TARGET_SPACES
 from ..base.wrapper import ModuleWrapper, register_wrappers
@@ -271,7 +272,11 @@ class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
 
     def track_forward(self, *args, **kwargs):
         super().track_forward(*args, **kwargs)
-        self.teacher_model(*args, **kwargs)
+        with torch.no_grad():
+            model_device = next(iter(self.teacher_model.parameters())).device
+            args = tree_map(lambda x: x.to(model_device) if isinstance(x, torch.Tensor) else x, args)
+            kwargs = tree_map(lambda x: x.to(model_device) if isinstance(x, torch.Tensor) else x, kwargs)
+            self.teacher_model(*args, **kwargs)
 
     def _register_trans_linear(self):
         self.trans_linears = defaultdict(dict)

@@ -9,6 +9,7 @@ import logging
 from typing import Any, Dict, List, Literal, Callable
 
 import torch
+from torch.utils._pytree import tree_map
 
 from .config import trans_legacy_config_list, default_config_schema
 from .target_space import TargetSpace, TargetType, DistillationTargetSpace, PruningTargetSpace, QuantizationTargetSpace
@@ -132,6 +133,9 @@ class Compressor:
         """
         assert self._is_wrapped, 'The bound model is not wrapped, can not track information with an unwrapped model.'
         with torch.no_grad():
+            model_device = next(iter(self.bound_model.parameters())).device
+            args = tree_map(lambda x: x.to(model_device) if isinstance(x, torch.Tensor) else x, args)
+            kwargs = tree_map(lambda x: x.to(model_device) if isinstance(x, torch.Tensor) else x, kwargs)
             self.bound_model(*args, **kwargs)
 
     def _get_param_names_map(self) -> Dict[str, str]:
