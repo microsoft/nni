@@ -1,3 +1,48 @@
+"""
+Pruning Bert on Task MNLI
+=========================
+
+This is a new tutorial on pruning transformer in nni v3.0 (`old tutorial <https://nni.readthedocs.io/en/v2.9/tutorials/pruning_bert_glue.html>`__).
+The main difference between this tutorial and the previous is that it integrates the feature of fusion compression (pruning + distillation) in nni,
+uses a new more powerful and stable pruning speedup tool,
+and additionally prunes the whole model hidden dimensions which greatly reduces the model size (pruning embedding layers).
+
+At the same time, the huggingface `transformers.Trainer <https://huggingface.co/docs/transformers/main_classes/trainer>`__ is used in this tutorial
+to reduce the burden of user writing training and evaluation logic.
+
+Workable Pruning Process
+------------------------
+
+The whole pruning process is divided into three steps:
+
+1. pruning attention layers,
+2. pruning feed forward layers,
+3. pruning embedding layers.
+
+In each step, the pruner is first used for simulated pruning to generate masks corresponding to the module pruning targets (weight, input, output).
+After that comes the speedup stage, sparsity propagation is used to explore the global redundancy due to the local masks,
+then modify the original model into a smaller one by replacing the sub module in the model.
+
+The compression of the model naturally applies the distillation method,
+so in this tutorial, distillers will also be used to help restore the model accuracy.
+
+Experiment
+----------
+
+Preparations
+^^^^^^^^^^^^
+
+The preparations mainly includes preparing the transformers trainer and model.
+
+This is generally consistent with the preparations required to normally train a Bert model.
+The only difference is that the ``transformers.Trainer`` is needed to wrap by ``nni.trace`` to trace the init arguments,
+this is because nni need re-create trainer during training aware pruning and distilling.
+
+.. note::
+
+    Please set ``skip_exec`` to ``False`` to run this tutorial. Here ``skip_exec`` is ``True`` by default is for generating documents.
+"""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -5,7 +50,7 @@ from pathlib import Path
 import numpy as np
 
 import torch
-from torch.utils.data import ConcatDataset, DataLoader
+from torch.utils.data import ConcatDataset
 
 import nni
 
@@ -14,8 +59,16 @@ from transformers import BertTokenizerFast, DataCollatorWithPadding, BertForSequ
 from transformers.trainer import Trainer
 from transformers.training_args import TrainingArguments
 
+skip_exec = True
+
+# %%
+# Set the downstream task name here, you could replace the task with the task in GLUE.
+
 task_name = 'mnli'
 
+# %%
+# Here using BertForSequenceClassification as the base model for show case.
+# If you want to prune other kind of transformer model, you could replace the base model here.
 
 def build_model(pretrained_model_name_or_path: str, task_name: str):
     is_regression = task_name == 'stsb'
@@ -23,6 +76,9 @@ def build_model(pretrained_model_name_or_path: str, task_name: str):
     model = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path, num_labels=num_labels)
     return model
 
+
+# %%
+# Prepare the GLUE train & validation datasets, if the task has multi validation datasets, concat the datasets by ``ConcatDataset``.
 
 def prepare_datasets(task_name: str, tokenizer: BertTokenizerFast, cache_dir: str):
     task_to_keys = {
@@ -73,16 +129,8 @@ def prepare_datasets(task_name: str, tokenizer: BertTokenizerFast, cache_dir: st
     return train_dataset, validation_datasets
 
 
-def prepare_dataloaders(task_name: str, cache_dir: str, train_batch_size: int = 32, eval_batch_size: int = 32):
-    tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
-    train_dataset, validation_datasets = prepare_datasets(task_name, tokenizer, cache_dir)
-    data_collator = DataCollatorWithPadding(tokenizer)
-    train_dataloader = DataLoader(train_dataset, shuffle=True, collate_fn=data_collator, batch_size=train_batch_size)
-    validation_dataloaders = {
-        val_name: DataLoader(val_dataset, collate_fn=data_collator, batch_size=eval_batch_size)
-            for val_name, val_dataset in validation_datasets.items()
-    }
-    return train_dataloader, validation_dataloaders
+# %%
+# Prepare the trainer, note that the ``Trainer`` class is wrapped by ``nni.trace``.
 
 
 def prepare_traced_trainer(model, task_name, load_best_model_at_end=False):
@@ -126,6 +174,11 @@ def prepare_traced_trainer(model, task_name, load_best_model_at_end=False):
     return trainer
 
 
+# %%
+# If the finetuned model is existed, directly load it.
+# If the finetuned model is not existed, train the pretrained model with the trainer.
+
+
 def build_finetuning_model(task_name: str, state_dict_path: str):
     model = build_model('bert-base-uncased', task_name)
     if Path(state_dict_path).exists():
@@ -137,8 +190,23 @@ def build_finetuning_model(task_name: str, state_dict_path: str):
     return model
 
 
+if not skip_exec:
+    Path('./output/bert_finetuned').mkdir(exist_ok=True, parents=True)
+    build_finetuning_model(task_name, f'./output/bert_finetuned/{task_name}.bin')
+
+
+# %%
+# The following code creates distillers for distillation.
+
+
 from nni.contrib.compression.distillation import DynamicLayerwiseDistiller, Adaptive1dLayerwiseDistiller
 from nni.contrib.compression.utils import TransformersEvaluator
+
+# %%
+# Dynamic distillation is suitable for the situation where the distillation states dimension of the student and the teacher match.
+# A student state can try to distill on multiple teacher states, and finally select the teacher state with the smallest distillation loss as the target for distillation.
+#
+# In this tutorial, dynamic distillation is applied before speedup the embedding pruning.
 
 def dynamic_distiller(student_model: BertForSequenceClassification, teacher_model: BertForSequenceClassification,
                       student_trainer: Trainer):
@@ -177,6 +245,15 @@ def dynamic_distillation(student_model: BertForSequenceClassification, teacher_m
     distiller.unwrap_model()
 
     teacher_model.to(ori_teacher_device).train(training)
+
+
+# %%
+# Adapt distillation is applied after pruning embedding layers.
+# The hidden states dimension will mismatch between student model and teacher model after pruning embedding layers,
+# then adapt distiller will add a linear layer for each distillation module pair to align dimension.
+# For example, pruning hidden dimension from 768 to 384, then for each student transformer block,
+# will add a ``Linear(in_features=384, out_features=768)`` for shifting dimention 384 to 768,
+# aligned with the teacher model transformer block output.
 
 
 def adapt_distiller(student_model: BertForSequenceClassification, teacher_model: BertForSequenceClassification,
@@ -221,6 +298,20 @@ def adapt_distillation(student_model: BertForSequenceClassification, teacher_mod
     teacher_model.to(ori_teacher_device).train(training)
 
 
+# %%
+# Pruning Attention Layers
+# ^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Here using ``MovementPruner`` to generate block sparse masks. Choosing ``64 x 64`` block is because the head width is 64,
+# this is a kind of coarse grained between head pruning and finegrained pruning, also you can have a try with ``64 x 32``,
+# ``32 x 32`` or any other granularity here.
+#
+# We use ``sparse_threshold`` instead of ``sparse_ratio`` here to apply adaptive sparse allocation.
+# ``sparse_threshold`` here is a float number between 0. and 1., but its value has little effect on the final sparse ratio.
+# If you want a more sparse model, you could set a larger ``regular_scale`` in ``MovementPruner``.
+# You could refer to the experiment results to choose a appropriate ``regular_scale`` you like.
+
+
 from nni.contrib.compression.pruning import MovementPruner
 from nni.compression.pytorch.speedup.v2 import ModelSpeedup
 from nni.compression.pytorch.speedup.v2.external_replacer import TransformersAttentionReplacer
@@ -249,8 +340,16 @@ def pruning_attn():
     torch.save(model, './output/pruning/attn_masked_model.pth')
 
 
+if not skip_exec:
+    pruning_attn()
+
+
+# %%
+# We apply head pruning during the speedup stage, if the head is fully masked it will be pruned,
+# if the header is partially masked, it will be restored.
+
+
 def speedup_attn():
-    # model = build_finetuning_model(task_name, f'./output/bert_finetuned/{task_name}.bin')
     model = torch.load('./output/pruning/attn_masked_model.pth', map_location='cpu')
     masks = torch.load('./output/pruning/attn_masks.pth', map_location='cpu')
     dummy_input = (torch.randint(0, 10000, [8, 128]), torch.randint(0, 2, [8, 128]), torch.randint(0, 2, [8, 128]))
@@ -263,8 +362,24 @@ def speedup_attn():
     torch.save(model, './output/pruning/attn_pruned_model.pth')
 
 
+if not skip_exec:
+    speedup_attn()
+
+
+# %%
+# Pruning Feed Forward Layers
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# Here using ``TaylorPruner`` for pruning feed forward layers,
+# and the sparse ratio related to the pruned head number in the same transformer block.
+# The more heads are pruned, the higher the sparse ratio is set for feed forward layers.
+#
+# Note that ``TaylorPruner`` has no schedule sparse ratio function,
+# so we use ``AGPPruner`` to schedule the sparse ratio to achieve better pruning performance.
+
+
 from nni.contrib.compression.pruning import TaylorPruner, AGPPruner
-from transformers.models.bert.modeling_bert import BertAttention, BertLayer
+from transformers.models.bert.modeling_bert import BertLayer
 
 
 def pruning_ffn():
@@ -281,8 +396,11 @@ def pruning_ffn():
 
     trainer = prepare_traced_trainer(model, task_name)
     teacher_model.eval().to(trainer.args.device)
+    # create a distiller for restoring the accuracy
     distiller = dynamic_distiller(model, teacher_model, trainer)
+    # fusion compress: TaylorPruner + DynamicLayerwiseDistiller
     taylor_pruner = TaylorPruner.from_compressor(distiller, config_list, 1000)
+    # fusion compress: AGPPruner(TaylorPruner) + DynamicLayerwiseDistiller
     agp_pruner = AGPPruner(taylor_pruner, 1000, 36)
     agp_pruner.compress(None, 3)
     agp_pruner.unwrap_model()
@@ -292,6 +410,14 @@ def pruning_ffn():
     Path('./output/pruning/').mkdir(parents=True, exist_ok=True)
     torch.save(masks, './output/pruning/ffn_masks.pth')
     torch.save(model, './output/pruning/ffn_masked_model.pth')
+
+
+if not skip_exec:
+    pruning_ffn()
+
+
+# %%
+# Speedup the feed forward layers.
 
 
 def speedup_ffn():
@@ -304,6 +430,18 @@ def speedup_ffn():
     teacher_model = build_finetuning_model('mnli', f'./output/bert_finetuned/{task_name}.bin')
     dynamic_distillation(model, teacher_model, None, 3)
     torch.save(model, './output/pruning/ffn_pruned_model.pth')
+
+
+if not skip_exec:
+    speedup_ffn()
+
+
+# %%
+# Pruning Embedding Layers
+# ^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# We want to simulate the pruning effect better, so we register the output mask setting for ``BertAttention`` and ``BertOutput``.
+# The output masks can be generated and applied after register the setting template for them.
 
 
 from nni.contrib.compression.base.setting import PruningSetting
@@ -322,17 +460,16 @@ PruningSetting.register('BertAttention', output_align_setting)
 PruningSetting.register('BertOutput', output_align_setting)
 
 
+# %%
+# Similar to prune feed forward layers, we also use ``AGPPruner + TaylorPruner + DynamicLayerwiseDistiller`` here.
+# For the better pruning effect simulation, set output ``align`` mask generation in ``config_list``,
+# then the relevant layers will generate its own output masks according to the embedding masks.
+
+
 def pruning_embedding():
     model: BertForSequenceClassification = torch.load('./output/pruning/ffn_pruned_model.pth')
     teacher_model: BertForSequenceClassification = build_finetuning_model('mnli', f'./output/bert_finetuned/{task_name}.bin')
 
-    ori_head_num = 0
-    retained_head_num = 0
-    for _, module in model.named_modules():
-        if isinstance(module, BertLayer):
-            retained_head_num += module.attention.self.num_attention_heads
-            ori_head_num += len(module.attention.pruned_heads) + retained_head_num
-    # sparse_ratio = 1 - retained_head_num / ori_head_num
     sparse_ratio = 0.5
     config_list = [{
         'op_types': ['Embedding'],
@@ -384,6 +521,14 @@ def pruning_embedding():
     torch.save(model, './output/pruning/embedding_masked_model.pth')
 
 
+if not skip_exec:
+    pruning_embedding()
+
+
+# %%
+# Speedup the embedding layers.
+
+
 def speedup_embedding():
     model = torch.load('./output/pruning/embedding_masked_model.pth', map_location='cpu')
     masks = torch.load('./output/pruning/embedding_masks.pth', map_location='cpu')
@@ -396,6 +541,17 @@ def speedup_embedding():
     torch.save(model, './output/pruning/embedding_pruned_model.pth')
 
 
+if not skip_exec:
+    speedup_embedding()
+
+
+# %%
+# Evaluation
+# ^^^^^^^^^^
+#
+# Evaluate the pruned model size and accuracy.
+
+
 def evaluate_pruned_model():
     model: BertForSequenceClassification = torch.load('./output/pruning/embedding_pruned_model.pth')
     trainer = prepare_traced_trainer(model, task_name)
@@ -406,13 +562,31 @@ def evaluate_pruned_model():
     ori_num_params = sum(param.numel() for param in model.parameters()) + sum(buffer.numel() for buffer in model.buffers())
     print(f'Metric: {metric}\nSparsity: {1 - pruned_num_params / ori_num_params}')
 
-Path('./output/bert_finetuned').mkdir(exist_ok=True, parents=True)
-build_finetuning_model(task_name, f'./output/bert_finetuned/{task_name}.bin')
 
-pruning_attn()
-speedup_attn()
-pruning_ffn()
-speedup_ffn()
-pruning_embedding()
-speedup_embedding()
-evaluate_pruned_model()
+if not skip_exec:
+    evaluate_pruned_model()
+
+
+# %%
+# Results
+# -------
+#
+# .. list-table:: Prune Bert-base-uncased on MNLI
+#     :header-rows: 1
+#     :widths: auto
+#
+#     * - Total Sparsity
+#       - Accuracy
+#       - Acc. Drop
+#     * - 57.76%
+#       - 84.42%
+#       - ?
+#     * - 68.31%
+#       - 83.33%
+#       - ?
+#     * - 81.65%
+#       - 82.08%
+#       - ?
+#     * - 84.32%
+#       - 81.35%
+#       - ?
