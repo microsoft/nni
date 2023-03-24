@@ -58,7 +58,7 @@ class ConcreteProxy(Proxy):
     op_call_ex = dis.opmap['CALL_FUNCTION_EX']
     op_not = dis.opmap['UNARY_NOT']
     op_unpack_sequence = dis.opmap['UNPACK_SEQUENCE']
-    op_dict_merge = dis.opmap['DICT_MERGE']
+    op_dict_merge = dis.opmap.get('DICT_MERGE', None)  # DICT_MERGE is new in python 3.9
     jump_before_opcodes = (op_compare, op_not)
 
     # occurred in different python versions
