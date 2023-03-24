@@ -5,10 +5,10 @@
 
 Computation times
 =================
-**06:12.568** total execution time for **tutorials** files:
+**00:01.790** total execution time for **tutorials** files:
 
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_quantization_speedup.py` (``quantization_speedup.py``)                     | 06:12.568 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_new_pruning_bert_glue.py` (``new_pruning_bert_glue.py``)                   | 00:01.790 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_tutorials_darts.py` (``darts.py``)                                                   | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
@@ -25,4 +25,6 @@ Computation times
 | :ref:`sphx_glr_tutorials_quantization_customize.py` (``quantization_customize.py``)                 | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_tutorials_quantization_quick_start_mnist.py` (``quantization_quick_start_mnist.py``) | 00:00.000 | 0.0 MB |
++-----------------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_tutorials_quantization_speedup.py` (``quantization_speedup.py``)                     | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+

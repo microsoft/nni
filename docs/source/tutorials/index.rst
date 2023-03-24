@@ -148,6 +148,23 @@ Tutorials
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="This is a new tutorial on pruning transformer in nni v3.0 (`old tutorial &lt;https://nni.readthedo...">
+
+.. only:: html
+
+  .. image:: /tutorials/images/thumb/sphx_glr_new_pruning_bert_glue_thumb.png
+    :alt: Pruning Bert on Task MNLI
+
+  :ref:`sphx_glr_tutorials_new_pruning_bert_glue.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Pruning Bert on Task MNLI</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Workable Pruning Process ------------------------">
 
 .. only:: html
@@ -179,6 +196,7 @@ Tutorials
    /tutorials/quantization_speedup
    /tutorials/hello_nas
    /tutorials/darts
+   /tutorials/new_pruning_bert_glue
    /tutorials/pruning_bert_glue
 
 
