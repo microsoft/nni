@@ -3,8 +3,6 @@
 
 import assert from 'assert/strict';
 import fs from 'fs';
-import os from 'os';
-import path from 'path';
 import * as timersPromises from 'timers/promises';
 
 import { Deferred } from 'ts-deferred';

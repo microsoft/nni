@@ -7,7 +7,6 @@
 
 import { EventEmitter } from 'events';
 
-import type { Request } from 'express';
 import type { WebSocket } from 'ws';
 
 import type { Command } from 'common/command_channel/interface';
@@ -32,7 +31,12 @@ export class WsChannelServer extends EventEmitter {
 
     public async start(): Promise<void> {
         const channelPath = globals.rest.urlJoin(this.path, ':channel');
-        globals.rest.registerWebSocketHandler(channelPath, this.handleConnection.bind(this));
+        globals.rest.registerWebSocketHandler(this.path, (ws, _req) => {
+            this.handleConnection('__default__', ws);  // TODO: only used by tuner
+        });
+        globals.rest.registerWebSocketHandler(channelPath, (ws, req) => {
+            this.handleConnection(req.params['channel'], ws);
+        });
         this.log.debug('Start listening', channelPath);
     }
 
@@ -84,8 +88,7 @@ export class WsChannelServer extends EventEmitter {
         this.on('connection', callback);
     }
 
-    private handleConnection(ws: WebSocket, req: Request): void {
-        const channelId = req.params['channel'];
+    private handleConnection(channelId: string, ws: WebSocket): void {
         this.log.debug('Incoming connection', channelId);
 
         if (this.channels.has(channelId)) {

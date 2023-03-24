@@ -26,7 +26,7 @@ import util from 'util';
 
 import { Logger, getLogger } from 'common/log';
 
-const logger = getLogger('common.deferred');
+const logger: Logger = getLogger('common.deferred');
 
 export class Deferred<T> {
     private resolveCallbacks: any[] = [];

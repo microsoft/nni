@@ -12,9 +12,8 @@ import { ExperimentStartupInfo } from '../../../../common/experimentStartupInfo'
 import { EnvironmentInformation } from '../../environment';
 import { KubernetesEnvironmentService } from './kubernetesEnvironmentService';
 import { FrameworkControllerClientFactory } from '../../../kubernetes/frameworkcontroller/frameworkcontrollerApiClient';
-import { FrameworkControllerClusterConfigAzure, FrameworkControllerJobStatus, FrameworkControllerTrialConfigTemplate,
+import { FrameworkControllerJobStatus, FrameworkControllerTrialConfigTemplate,
      FrameworkControllerJobCompleteStatus } from '../../../kubernetes/frameworkcontroller/frameworkcontrollerConfig';
-import { KeyVaultConfig, AzureStorage } from '../../../kubernetes/kubernetesConfig';
 
 @component.Singleton
 export class FrameworkControllerEnvironmentService extends KubernetesEnvironmentService {

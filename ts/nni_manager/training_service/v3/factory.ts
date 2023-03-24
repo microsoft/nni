@@ -7,7 +7,7 @@
  *  For now we only have "local_v3" and "remote_v3" as PoC.
  **/
 
-import type { LocalConfig, RemoteConfig, TrainingServiceConfig } from 'common/experimentConfig';
+import type { TrainingServiceConfig } from 'common/experimentConfig';
 import type { TrainingServiceV3 } from 'common/training_service_v3';
 import { LocalTrainingServiceV3 } from '../local_v3';
 import { RemoteTrainingServiceV3 } from '../remote_v3';
