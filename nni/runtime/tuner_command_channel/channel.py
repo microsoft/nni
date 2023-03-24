@@ -11,19 +11,18 @@ __all__ = ['TunerCommandChannel']
 
 import logging
 import os
-import time
 from collections import defaultdict
 from threading import Event
 from typing import Any, Callable
 
 from nni.common.serializer import dump, load, PayloadTooLarge
+from nni.runtime.command_channel.websocket import WsChannelClient
 from nni.typehint import Parameters
 
 from .command_type import (
     CommandType, TunerIncomingCommand,
     Initialize, RequestTrialJobs, UpdateSearchSpace, ReportMetricData, TrialEnd, Terminate
 )
-from .websocket import WebSocket
 
 _logger = logging.getLogger(__name__)
 
@@ -52,10 +51,7 @@ class TunerCommandChannel:
     """
 
     def __init__(self, url: str):
-        self._url = url
-        self._channel = WebSocket(url)
-        self._retry_intervals = [0, 1, 10]
-
+        self._channel = WsChannelClient(url)
         self._callbacks: dict[CommandType, list[Callable[..., None]]] = defaultdict(list)
 
     def connect(self) -> None:
@@ -268,61 +264,14 @@ class TunerCommandChannel:
         self._callbacks[TrialEnd.command_type].append(callback)
 
     def _send(self, command_type: CommandType, data: str) -> None:
-        command = command_type.value.decode() + data
-        try:
-            self._channel.send(command)
-        except Exception as e:
-            _logger.warning('Exception on sending: %r', e)
-            if not isinstance(e, WebSocket.ConnectionClosed):
-                _logger.exception(e)
-            self._retry_send(command)
-
-    def _retry_send(self, command: str) -> None:
-        _logger.warning('Connection lost. Trying to reconnect...')
-        for i, interval in enumerate(self._retry_intervals):
-            _logger.info(f'Attempt #{i}, wait {interval} seconds...')
-            time.sleep(interval)
-            self._channel = WebSocket(self._url)
-            self._channel.connect()
-            try:
-                self._channel.send(command)
-                _logger.info('Reconnected.')
-                return
-            except Exception as e:
-                _logger.exception(e)
-        _logger.error('Failed to reconnect.')
-        raise RuntimeError('Connection lost')
+        self._channel.send({'type': command_type.value, 'content': data})
 
     def _receive(self) -> tuple[CommandType, str] | tuple[None, None]:
-        try:
-            command = self._channel.receive()
-        except Exception as e:
-            _logger.warning('Exception on receiving: %r', e)
-            if not isinstance(e, WebSocket.ConnectionClosed):
-                _logger.exception(e)
-            command = None
+        command = self._channel.receive()
         if command is None:
-            command = self._retry_receive()
-        command_type = CommandType(command[:2].encode())
-        return command_type, command[2:]
-
-    def _retry_receive(self) -> str:
-        _logger.warning('Connection lost. Trying to reconnect...')
-        for i, interval in enumerate(self._retry_intervals):
-            _logger.info(f'Attempt #{i}, wait {interval} seconds...')
-            time.sleep(interval)
-            self._channel = WebSocket(self._url)
-            self._channel.connect()
-            try:
-                command = self._channel.receive()
-            except Exception as e:
-                _logger.exception(e)
-                command = None  # for robustness
-            if command is not None:
-                _logger.info('Reconnected')
-                return command
-        _logger.error('Failed to reconnect.')
-        raise RuntimeError('Connection lost')
+            return None, None
+        else:
+            return CommandType(command['type']), command.get('content', '')
 
 
 def _validate_placement_constraint(placement_constraint):

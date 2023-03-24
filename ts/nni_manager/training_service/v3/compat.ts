@@ -11,7 +11,7 @@ import type { TrainingServiceConfig } from 'common/experimentConfig';
 import globals from 'common/globals';
 import { getLogger } from 'common/log';
 import {
-    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
+    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from 'common/trainingService';
 import type { EnvironmentInfo, Parameter, TrainingServiceV3 } from 'common/training_service_v3';
 import { trainingServiceFactoryV3 } from './factory';

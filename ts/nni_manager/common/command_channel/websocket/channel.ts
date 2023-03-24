@@ -155,6 +155,11 @@ export class WsChannel implements CommandChannel {
         this.emitter.on('__lost', callback);
     }
 
+    // TODO: temporary api for tuner command channel
+    public getBufferedAmount(): number {
+        return this.connection?.ws.bufferedAmount ?? 0;
+    }
+
     private newEpoch(): void {
         this.connection = null;
         this.epoch += 1;

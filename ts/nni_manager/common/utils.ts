@@ -9,7 +9,6 @@ import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import dgram from 'dgram';
 import fs from 'fs';
 import net from 'net';
-import os from 'os';
 import path from 'path';
 import * as timersPromises from 'timers/promises';
 import { Deferred } from 'ts-deferred';
