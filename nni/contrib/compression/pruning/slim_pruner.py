@@ -10,7 +10,7 @@ from typing import Dict, List, Literal, Tuple, overload
 import torch
 from torch.optim import Adam
 
-from .tools import _METRICS, _MASKS, norm_metrics, generate_sparsity, is_active_target
+from .tools import _METRICS, _MASKS, generate_sparsity, is_active_target
 from ..base.compressor import Compressor, Pruner
 from ..base.target_space import TargetType
 from ..base.wrapper import ModuleWrapper
@@ -144,7 +144,7 @@ class SlimPruner(Pruner):
         return data
 
     def _calculate_metrics(self, data: Dict[str, Dict[str, torch.Tensor]]) -> _METRICS:
-        return norm_metrics(p=1, data=data, target_spaces=self._target_spaces)
+        return {k: {p: q.abs() for p, q in v.items()} for k, v in data.items()}
 
     def _generate_sparsity(self, metrics: _METRICS) -> _MASKS:
         return generate_sparsity(metrics, self._target_spaces)
