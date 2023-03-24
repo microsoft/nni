@@ -805,7 +805,7 @@ Evaluate the pruned model size and accuracy.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 571-593
+.. GENERATED FROM PYTHON SOURCE LINES 571-608
 
 Results
 -------
@@ -815,25 +815,40 @@ Results
     :widths: auto
 
     * - Total Sparsity
-      - Accuracy
-      - Acc. Drop
+      - Embedding Sparsity
+      - Encoder Sparsity
+      - Pooler Sparsity
+      - Acc. (m/mm avg.)
+    * - 0.%
+      - 0.%
+      - 0.%
+      - 0.%
+      - 84.95%
     * - 57.76%
+      - 33.33% (15.89M)
+      - 64.78% (29.96M)
+      - 33.33% (0.39M)
       - 84.42%
-      - ?
-    * - 68.31%
+    * - 68.31% (34.70M)
+      - 50.00% (11.92M)
+      - 73.57% (22.48M)
+      - 50.00% (0.30M)
       - 83.33%
-      - ?
-    * - 81.65%
+    * - 81.65% (20.12M)
+      - 50.00% (11.92M)
+      - 90.71% (7.90M)
+      - 50.00% (0.30M)
       - 82.08%
-      - ?
-    * - 84.32%
+    * - 84.32% (17.17M)
+      - 50.00% (11.92M)
+      - 94.18% (4.95M)
+      - 50.00% (0.30M)
       - 81.35%
-      - ?
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.790 seconds)
+   **Total running time of the script:** ( 0 minutes  1.667 seconds)
 
 
 .. _sphx_glr_download_tutorials_new_pruning_bert_glue.py:
