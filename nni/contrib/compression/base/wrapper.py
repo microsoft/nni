@@ -299,7 +299,7 @@ class ModuleWrapper(torch.nn.Module):
 
     def _distil_observe_helper(self, target: Tensor, target_space: DistillationTargetSpace) -> Tensor:
         # NOTE: here will have a risk, we don't know if target will be inplace changed in the following.
-        target_space.hidden_state = target.clone().detach()
+        target_space.hidden_state = target
         return target
 
     def _track_info(self, target_name: str, target: Tensor):
