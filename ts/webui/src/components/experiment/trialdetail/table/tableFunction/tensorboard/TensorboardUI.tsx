@@ -38,7 +38,6 @@ function TensorboardUI(props: TensorboardUIProps): any {
                 startTensorboard
                     .then(res => {
                         if (res.status === 200) {
-                            console.info(res.data);
                             setSelectedTensorboard(res.data);
                             closeTimer();
                             queryAllTensorboard();
@@ -120,7 +119,6 @@ function TensorboardUI(props: TensorboardUIProps): any {
         <React.Fragment>
             <DefaultButton
                 text='TensorBoard'
-                className='elementMarginLeft'
                 split
                 splitButtonAriaLabel='See 2 options'
                 aria-roledescription='split button'

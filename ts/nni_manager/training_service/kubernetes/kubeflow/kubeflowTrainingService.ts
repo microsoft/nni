@@ -163,7 +163,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 } catch (error) {
                     this.log.error(error);
 
-                    return Promise.reject(new Error(error));
+                    return Promise.reject(new Error(error as any));
                 }
                 break;
             }
