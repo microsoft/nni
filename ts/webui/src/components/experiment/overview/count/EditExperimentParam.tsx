@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useContext } from 'react';
 import axios from 'axios';
-import { Stack, Dropdown, IStackTokens } from '@fluentui/react';
+import { Stack, Dropdown, IStackTokens, MessageBar, MessageBarType } from '@fluentui/react';
 import { MotionAnimations, MotionDurations, MotionTimings } from '@fluentui/theme'; // fluentMotion.js
 import { AppContext } from '@/App';
 import { MANAGER_IP, MAX_TRIAL_NUMBERS } from '@static/const';
@@ -9,7 +9,6 @@ import { toSeconds } from '@static/experimentConfig';
 import { EditExpeParamContext } from './context';
 import { durationUnit } from '../overviewConst';
 import { CheckMark, Cancel } from '@components/fluent/Icon';
-import MessageInfo from '@components/common/MessageInfo';
 import '@style/experiment/overview/count.scss';
 
 const editElementGap: IStackTokens = {
@@ -226,7 +225,10 @@ export const EditExperimentParam = (): any => {
                         </span>
                     </Stack>
                 )}
-                {isShowSucceedInfo && <MessageInfo className='info' typeInfo={typeInfo} info={info} />}
+                {isShowSucceedInfo && <div className='info'>
+                    <MessageBar messageBarType={MessageBarType[typeInfo]} style={{ maxWidth: 313, minWidth: 272 }} >
+                        {info}
+                    </MessageBar></div>}
             </Stack>
         </React.Fragment>
     );
