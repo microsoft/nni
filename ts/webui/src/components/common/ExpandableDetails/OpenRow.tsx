@@ -126,25 +126,25 @@ const OpenRow = (props: OpenRowProps): any => {
                                 <div>
                                     <TrialLog logStr={logPathRow} logName='LogPath:' />
                                     {/* view trial log */}
-                                    <div className='copy' style={{ marginTop: 4 }}>
-                                        <PrimaryButton
-                                            onClick={openTrialLog.bind(this, 'trial.log')}
-                                            text='View trial log'
-                                        />
-                                        <PrimaryButton
-                                            onClick={openTrialLog.bind(this, 'stderr')}
-                                            text='View trial error'
-                                            styles={{ root: { marginLeft: 15 } }}
-                                        />
-                                        <PrimaryButton
-                                            onClick={openTrialLog.bind(this, 'stdout')}
-                                            text='View trial stdout'
-                                            styles={{ root: { marginLeft: 15 } }}
-                                        />
-                                    </div>
                                 </div>
                             )
                         }
+                        <div className='copy' style={{ marginTop: 4 }}>
+                            <PrimaryButton
+                                onClick={openTrialLog.bind(this, 'trial.log')}
+                                text='View trial log'
+                            />
+                            <PrimaryButton
+                                onClick={openTrialLog.bind(this, 'stderr')}
+                                text='View trial error'
+                                styles={{ root: { marginLeft: 15 } }}
+                            />
+                            <PrimaryButton
+                                onClick={openTrialLog.bind(this, 'stdout')}
+                                text='View trial stdout'
+                                styles={{ root: { marginLeft: 15 } }}
+                            />
+                        </div>
                     </PivotItem>
                     {EXPERIMENT.metadata.tag.includes('retiarii') ? (
                         <PivotItem headerText='Visualization' key='3' itemIcon='FlowChart'>
