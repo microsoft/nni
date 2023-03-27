@@ -1519,10 +1519,8 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
     # else:
         # assert check_correctness(orig_forward_func, traced, concrete_args), 'correctness check failed'
 
-    # TODO: better infomation
-    # # assert root(**concrete_args) == traced(**concrete_args)
     if check_args is not None:
-        assert root(**check_args) == traced(**check_args)
+        assert root(**check_args) == traced(**check_args), 'check_args check equal failed'
 
     # before returning the traced GraphModule, store module path info
     setattr(traced, 'module_path', tracer.node_to_originating_module.copy())
