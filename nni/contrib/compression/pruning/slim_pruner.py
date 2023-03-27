@@ -14,7 +14,7 @@ from .tools import _METRICS, _MASKS, generate_sparsity, is_active_target
 from ..base.compressor import Compressor, Pruner
 from ..base.target_space import TargetType
 from ..base.wrapper import ModuleWrapper
-from ..utils.evaluator import Evaluator
+from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 
 _logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ SLIM_SCALING_FACTOR_PNAME = '{}_slim_factor'
 
 
 class SlimPruner(Pruner):
-    """
+    __doc__ = r"""
     Slim pruner adds sparsity regularization on the scaling factors of batch normalization (BN) layers during training
     to identify unimportant channels. The channels with small scaling factor values will be pruned.
 
@@ -38,12 +38,12 @@ class SlimPruner(Pruner):
         A list of dict, each dict configure which module need to be pruned, and how to prune.
         Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
-        TODO: {evaluator_docstring}
+        {evaluator_docstring}
     training_steps
         An integer to control steps of training the model and scale factors. Masks will be generated after ``training_steps``.
     regular_scale
         ``regular_scale`` controls the scale factors' penalty.
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, training_steps: int,
