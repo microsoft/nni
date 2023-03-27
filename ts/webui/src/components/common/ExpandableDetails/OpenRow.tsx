@@ -100,9 +100,11 @@ const OpenRow = (props: OpenRowProps): any => {
                                     )}
                                     {/* copy success | failed message info */}
                                     {/* isMultiline={true}   */}
-                                    {!isHidenInfo && <MessageBar messageBarType={MessageBarType[typeInfo]} style={{ width: 349 }}>
-                                        {info}
-                                    </MessageBar>}
+                                    {!isHidenInfo && (
+                                        <MessageBar messageBarType={MessageBarType[typeInfo]} style={{ width: 349 }}>
+                                            {info}
+                                        </MessageBar>
+                                    )}
                                     {showRetiaParamPanel && (
                                         <PanelMonacoEditor
                                             hideConfigPanel={hideRetiaParam}

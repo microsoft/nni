@@ -225,10 +225,13 @@ export const EditExperimentParam = (): any => {
                         </span>
                     </Stack>
                 )}
-                {isShowSucceedInfo && <div className='info'>
-                    <MessageBar messageBarType={MessageBarType[typeInfo]} style={{ maxWidth: 313, minWidth: 272 }} >
-                        {info}
-                    </MessageBar></div>}
+                {isShowSucceedInfo && (
+                    <div className='info'>
+                        <MessageBar messageBarType={MessageBarType[typeInfo]} style={{ maxWidth: 313, minWidth: 272 }}>
+                            {info}
+                        </MessageBar>
+                    </div>
+                )}
             </Stack>
         </React.Fragment>
     );

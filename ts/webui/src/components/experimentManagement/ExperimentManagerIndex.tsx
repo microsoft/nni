@@ -1,5 +1,15 @@
 import * as React from 'react';
-import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn, IStackTokens, MessageBar, MessageBarType } from '@fluentui/react';
+import {
+    Stack,
+    DetailsList,
+    DefaultButton,
+    Icon,
+    SearchBox,
+    IColumn,
+    IStackTokens,
+    MessageBar,
+    MessageBarType
+} from '@fluentui/react';
 import { ExperimentsManager } from '@model/experimentsManager';
 import { expformatTimestamp, copyAndSort } from '@static/function';
 import { AllExperimentList, SortInfo } from '@static/interface';
@@ -88,8 +98,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                             {errorMessage}
                         </MessageBar>
                     </div>
-                ) : null
-                }
+                ) : null}
                 <Stack className='contentBox expBackground'>
                     {/* 56px: navBarHeight; 48: marginTop & Bottom */}
                     <Stack className='content' styles={{ root: { minHeight: window.innerHeight - 104 } }}>
