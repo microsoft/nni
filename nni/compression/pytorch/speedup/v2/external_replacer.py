@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections import defaultdict
 import logging
 import re
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, List
 
 import torch
 from torch.utils._pytree import tree_map
