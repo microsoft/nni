@@ -130,10 +130,7 @@ const OpenRow = (props: OpenRowProps): any => {
                             )
                         }
                         <div className='copy' style={{ marginTop: 4 }}>
-                            <PrimaryButton
-                                onClick={openTrialLog.bind(this, 'trial.log')}
-                                text='View trial log'
-                            />
+                            <PrimaryButton onClick={openTrialLog.bind(this, 'trial.log')} text='View trial log' />
                             <PrimaryButton
                                 onClick={openTrialLog.bind(this, 'stderr')}
                                 text='View trial error'
