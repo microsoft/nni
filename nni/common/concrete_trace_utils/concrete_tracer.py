@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import sys
 import inspect
+import logging
 import operator
 import functools
 import builtins
@@ -62,6 +63,7 @@ from .utils import (
     _orig_index,
 )
 
+_logger = logging.getLogger(__name__)
 HAS_VARSTUFF = inspect.CO_VARARGS | inspect.CO_VARKEYWORDS
 
 @compatibility(is_backward_compatible=True)
@@ -86,15 +88,7 @@ class ConcreteTracer(TracerBase):
         _orig_contains:             ([], False, None),
         _orig_index:                ([], False, None),
 
-        # force-traced function
-        torch.rand:                 ([], True, None),
-        torch.randn:                ([], True, None),
-        torch.randint:              ([], True, None),
-        torch.rand_like:            ([], True, None),
-        torch.randn_like:           ([], True, None),
-        torch.randint_like:         ([], True, None),
-        torch.randperm:             ([], True, None),
-        torch.tensor:               ([], True, None),
+        # force-traced function (the factory functions of tensor creation)
         torch.arange:               ([], True, None),
         torch.empty:                ([], True, None),
         torch.eye:                  ([], True, None),
@@ -102,6 +96,14 @@ class ConcreteTracer(TracerBase):
         torch.linspace:             ([], True, None),
         torch.logspace:             ([], True, None),
         torch.ones:                 ([], True, None),
+        torch.rand:                 ([], True, None),
+        torch.randn:                ([], True, None),
+        torch.randint:              ([], True, None),
+        # torch.rand_like:            ([], True, None), # seems that xxx_like will not directly call torch._TensorBase.xxx
+        # torch.randn_like:           ([], True, None),
+        # torch.randint_like:         ([], True, None),
+        torch.randperm:             ([], True, None),
+        torch.tensor:               ([], True, None),
         torch.zeros:                ([], True, None),
 
         # method
@@ -298,7 +300,8 @@ class ConcreteTracer(TracerBase):
 
     @compatibility(is_backward_compatible=True)
     def create_proxy(self, kind: str, target: Target, args: Tuple[Any, ...], kwargs: Dict[str, Any],
-                     name: Optional[str] = None, type_expr: Optional[Any] = None):
+                     name: Optional[str] = None, type_expr: Optional[Any] = None,
+                     proxy_factory_fn: Optional[Callable[[Node], Any]] = None):
         """
         similar to _symbolic_trace.Tracer.create_proxy.
         use the 'run_target' to actually execute the code, and store the value in 'value' field.
@@ -313,13 +316,12 @@ class ConcreteTracer(TracerBase):
         # real value by execution
         value_unwrapped = self.run_target(kind, target, args_unwrapped, kwargs_unwrapped)
 
-        args_noded = self.create_arg(args)
-        kwargs_noded = self.create_arg(kwargs)
+        args_ = self.create_arg(args)
+        kwargs_ = self.create_arg(kwargs)
+        assert isinstance(args_, tuple)
+        assert isinstance(kwargs_, dict)
 
-        assert isinstance(args_noded, tuple)
-        assert isinstance(kwargs_noded, dict)
-
-        node = self.create_node(kind, target, args_noded, kwargs_noded, name, type_expr)
+        node = self.create_node(kind, target, args_, kwargs_, name, type_expr)
         proxy = self.proxy(value_unwrapped, node)
         self.node_to_originating_module[proxy.node] = self.current_module_qualified_name
         return proxy
@@ -552,6 +554,19 @@ class ConcreteTracer(TracerBase):
                 such as '__main__.FooModel' or '__main__.bar_func'. the namespace is
                 always needed.
         """
+        # fill default values
+        args = inspect.getfullargspec(root.forward).args[1:]
+        defaults = inspect.getfullargspec(root.forward).defaults
+        defaults = tuple() if defaults is None else defaults
+        if isinstance(concrete_args, (tuple, list)):
+            concrete_args = (*concrete_args, *defaults[len(concrete_args) + len(defaults) - len(args):])
+        else:
+            kv_default = {k: v for k, v in zip(args[-len(defaults):], defaults)}
+            concrete_args = {
+                **concrete_args,
+                **{n: kv_default[n] for n in args if n not in concrete_args}
+            }
+
         # preprocess arguments
         autowrap_modules = autowrap_modules if autowrap_modules is not None else tuple()
         autowrap_leaf_function = autowrap_leaf_function if autowrap_leaf_function is not None else {}
@@ -941,6 +956,7 @@ class ConcreteTracer(TracerBase):
         finally:
             # for cuda versions of pytorch, autograd.Function.apply should be reverted manually
             delattr(torch.autograd.Function, 'apply')
+            _retain_weight_consistency(self.root)
             pass
 
         self.submodule_paths = None
@@ -1265,6 +1281,26 @@ def _create_wrapped_attr_for_middle_class(tracer: ConcreteTracer, clz, the_path_
             return tracer.create_proxy('get_attr', f'{the_path_of_middle_class[id(obj)]}.{attr}', (), {})
     return clz_getattr_wrapper
 
+def _retain_weight_consistency(root: torch.nn.Module):
+    _flag = 0
+    for module in root.modules():
+        for name, param in module.named_parameters():
+            if _orig_isinstance(param, ep.ConcreteProxy):
+                param: ep.ConcreteProxy     # pyright: reportGeneralTypeIssues=false
+                _logger.warning(f'Parameter {name} of {module} is a ConcreteProxy. Some weight may be modified inplace within forward().')
+                setattr(module, name, param.value)
+                _flag |= 1
+        for name, buffer in module.named_buffers():
+            if _orig_isinstance(buffer, ep.ConcreteProxy):
+                buffer: ep.ConcreteProxy    # pyright: reportGeneralTypeIssues=false
+                _logger.warning(f'Buffer {name} of {module} is a ConcreteProxy. Some buffer may be modified inplace within forward().')
+                setattr(module, name, buffer.value)
+                _flag |= 1
+    if _flag:
+        _logger.warning('Some weight or buffer is modified inplace within forward(). This may cause unexpected behavior.'
+                        ' ``concrete_trace`` may not guarantee the consistency of the traced graph.')
+    return root
+
 def check_correctness(root: Union[torch.nn.Module, Callable[..., Any]], 
                       traced_gm: torch.fx.GraphModule, 
                       concrete_args: Union[Dict[str, Any], Tuple]) -> bool:
@@ -1438,6 +1474,7 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         fx.GraphModule: a Module created from the recorded operations from ``root``.
     """
     tracer = ConcreteTracer()
+
     graph = tracer.trace(root,
         autowrap_leaf_function = autowrap_leaf_function,
         autowrap_leaf_class = autowrap_leaf_class,
@@ -1527,5 +1564,4 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
     # before returning the traced GraphModule, store module path info
     setattr(traced, 'module_path', tracer.node_to_originating_module.copy())
 
-    # return traced, tracer
     return traced
