@@ -1,7 +1,7 @@
 ---
 name: Create a model compression/speedup issue
 about: Report an issue or question while using nni instance (deployment).
-
+labels: 'ModelSpeedup, bug'
 
 ---
 

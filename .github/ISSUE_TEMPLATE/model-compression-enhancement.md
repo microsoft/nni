@@ -1,7 +1,7 @@
 ---
 name: Enhancement Request(model compression/speedup)
 about: Suggest an enhancement to the nni project
-
+labels: 'ModelSpeedup, enhancement'
 ---
 <!-- Please only use this template for submitting model compression/speedup enhancement requests -->
 

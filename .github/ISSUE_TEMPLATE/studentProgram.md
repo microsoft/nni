@@ -1,7 +1,7 @@
 ---
 name: Question for NNI Student Program China / NNI 学生项目问题表单
 about: NNI Student Program China issue template on Github
-
+labels: 'student program'
 ---
 <!--
     Here is an issue template for NNI student program China. You are encouraged to raise concerns about any issue and share your ideas of NNI or our student program. Both Chinese and English are acceptable.

@@ -1,6 +1,8 @@
 ---
 name: Enhancement Request
 about: Suggest an enhancement to the nni project
+title: 'Enhancement Request: '
+labels: 'enhancement'
 
 ---
 <!-- Please only use this template for submitting enhancement requests -->
