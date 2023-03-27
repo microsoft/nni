@@ -8,8 +8,6 @@ import * as timersPromises from 'timers/promises';
 import glob from 'glob';
 import lockfile from 'lockfile';
 
-import globals from 'common/globals';
-
 const lockStale: number = 2000;
 const retry: number = 100;
 

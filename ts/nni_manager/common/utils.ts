@@ -9,7 +9,6 @@ import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import dgram from 'dgram';
 import fs from 'fs';
 import net from 'net';
-import os from 'os';
 import path from 'path';
 import * as timersPromises from 'timers/promises';
 import { Deferred } from 'ts-deferred';
@@ -208,7 +207,7 @@ function countFilesRecursively(directory: string): Promise<number> {
     const deferred: Deferred<number> = new Deferred<number>();
 
     let timeoutId: NodeJS.Timer
-    const delayTimeout: Promise<number> = new Promise((_resolve: Function, reject: Function): void => {
+    const delayTimeout: Promise<number> = new Promise((_resolve: any, reject: (reason: Error) => any): void => {
         // Set timeout and reject the promise once reach timeout (5 seconds)
         timeoutId = setTimeout(() => {
             reject(new Error(`Timeout: path ${directory} has too many files`));

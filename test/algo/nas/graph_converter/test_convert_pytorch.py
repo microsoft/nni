@@ -3,50 +3,19 @@ The tests in this file is copied and transformed from
 https://github.com/pytorch/pytorch/blob/master/test/onnx/test_pytorch_onnx_onnxruntime.py
 '''
 
-import os
-import sys
 import unittest
-from typing import (Dict)
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 import torchvision
 
-import nni.retiarii.nn.pytorch as nn
-from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.utils import original_state_dict_hooks
+import nni.nas.nn.pytorch.layers as nn
 
 from .convert_mixin import ConvertMixin, ConvertWithShapeMixin
 
 
 class TestPytorch(unittest.TestCase, ConvertMixin):
-
-    def run_test(self, model, input, check_value=True, strict_load=True):
-        model_ir = self._convert_model(model, input)
-        model_code = model_to_pytorch_script(model_ir)
-
-        from .inject_nn import remove_inject_pytorch_nn
-        remove_inject_pytorch_nn()
-
-        exec_vars = {}
-        exec(model_code + '\n\nconverted_model = _model()', exec_vars)
-        converted_model = exec_vars['converted_model']
-
-        with original_state_dict_hooks(converted_model):
-            converted_model.load_state_dict(model.state_dict(), strict=strict_load)
-
-        with torch.no_grad():
-            expected_output = model.eval()(*input)
-            converted_output = converted_model.eval()(*input)
-        if check_value:
-            try:
-                self.assertEqual(len(converted_output), len(expected_output))
-                for a, b in zip(converted_output, expected_output):
-                    torch.eq(a, b)
-            except:
-                self.assertEqual(converted_output, expected_output)
-        return converted_model
 
     def test_embedding_model_with_external_data(self):
         class LargeModel(nn.Module):
@@ -203,51 +172,63 @@ class TestPytorch(unittest.TestCase, ConvertMixin):
 
     @unittest.skip('does not support `if A and/or B`')
     def test_faster_rcnn(self):
-        from .inject_nn import inject_pytorch_nn
-        inject_pytorch_nn()
+        from .inject_nn import inject_pytorch_nn, remove_inject_pytorch_nn
+        try:
+            inject_pytorch_nn()
 
-        model = torchvision.models.detection.faster_rcnn.fasterrcnn_resnet50_fpn(pretrained=True, min_size=200,
-                                                                                 max_size=300)
-        model.eval()
-        x = torch.randn(2, 3, 200, 300, requires_grad=True)
-        self.run_test(model, (x,))
-        dummy_image = [torch.ones(3, 100, 100) * 0.3]
-        images, test_images = self.get_test_images()
-        self.run_test(model, (images,))
-        self.run_test(model, (dummy_image,))
+            model = torchvision.models.detection.faster_rcnn.fasterrcnn_resnet50_fpn(pretrained=True, min_size=200,
+                                                                                    max_size=300)
+            model.eval()
+            x = torch.randn(2, 3, 200, 300, requires_grad=True)
+            self.run_test(model, (x,))
+            dummy_image = [torch.ones(3, 100, 100) * 0.3]
+            images, test_images = self.get_test_images()
+            self.run_test(model, (images,))
+            self.run_test(model, (dummy_image,))
+        finally:
+            remove_inject_pytorch_nn()
 
     @unittest.skip('does not support `if A and/or B`')
     def test_mask_rcnn(self):
-        from .inject_nn import inject_pytorch_nn
-        inject_pytorch_nn()
+        from .inject_nn import inject_pytorch_nn, remove_inject_pytorch_nn
+        try:
+            inject_pytorch_nn()
 
-        model = torchvision.models.detection.mask_rcnn.maskrcnn_resnet50_fpn(pretrained=True, min_size=200,
-                                                                             max_size=300)
-        images, test_images = self.get_test_images()
-        self.run_test(model, (images,))
-        dummy_image = [torch.ones(3, 100, 100) * 0.3]
-        self.run_test(model, (dummy_image,))
+            model = torchvision.models.detection.mask_rcnn.maskrcnn_resnet50_fpn(pretrained=True, min_size=200,
+                                                                                max_size=300)
+            images, test_images = self.get_test_images()
+            self.run_test(model, (images,))
+            dummy_image = [torch.ones(3, 100, 100) * 0.3]
+            self.run_test(model, (dummy_image,))
+        finally:
+            remove_inject_pytorch_nn()
 
     @unittest.skip('does not support `if A and/or B`')
     def test_keypoint_rcnn(self):
-        from .inject_nn import inject_pytorch_nn
-        inject_pytorch_nn()
+        from .inject_nn import inject_pytorch_nn, remove_inject_pytorch_nn
+        try:
+            inject_pytorch_nn()
 
-        model = torchvision.models.detection.keypoint_rcnn.keypointrcnn_resnet50_fpn(pretrained=True, min_size=200,
-                                                                                     max_size=300)
-        images, test_images = self.get_test_images()
-        self.run_test(model, (images,))
-        dummy_images = [torch.ones(3, 100, 100) * 0.3]
-        self.run_test(model, (dummy_images,))
+            model = torchvision.models.detection.keypoint_rcnn.keypointrcnn_resnet50_fpn(pretrained=True, min_size=200,
+                                                                                        max_size=300)
+            images, test_images = self.get_test_images()
+            self.run_test(model, (images,))
+            dummy_images = [torch.ones(3, 100, 100) * 0.3]
+            self.run_test(model, (dummy_images,))
+        finally:
+            remove_inject_pytorch_nn()
 
     def test_shufflenet_v2_dynamic_axes(self):
-        from .inject_nn import inject_pytorch_nn
-        inject_pytorch_nn()
+        from .inject_nn import inject_pytorch_nn, remove_inject_pytorch_nn
+        try:
+            inject_pytorch_nn()
 
-        model = torchvision.models.shufflenet_v2_x0_5(pretrained=True)
-        dummy_input = torch.randn(1, 3, 224, 224, requires_grad=True)
-        test_inputs = torch.randn(3, 3, 224, 224, requires_grad=True)
-        self.run_test(model, (dummy_input,))
+            model = torchvision.models.shufflenet_v2_x0_5(pretrained=True)
+            dummy_input = torch.randn(1, 3, 224, 224, requires_grad=True)
+            test_inputs = torch.randn(3, 3, 224, 224, requires_grad=True)
+            self.run_test(model, (dummy_input,))
+        finally:
+            remove_inject_pytorch_nn()
 
     @unittest.skip('')
     def test_word_language_model_RNN_TANH(self):
@@ -1221,7 +1202,7 @@ class TestPytorch(unittest.TestCase, ConvertMixin):
                     return torch.arange(input.size(0)), torch.arange(input.size(-1)), torch.ones(input.shape)
 
         x = torch.randn(5, 3, 2)
-        self.run_test(SizeModel(10, 5), (x, ))
+        self.run_test(SizeModel(5, 10), (x, ))
 
     def test_python_name(self):
         from .inject_nn import inject_pytorch_nn, remove_inject_pytorch_nn
@@ -1252,4 +1233,7 @@ class TestPytorch(unittest.TestCase, ConvertMixin):
             remove_inject_pytorch_nn()
 
 class TestPytorchWithShape(TestPytorch, ConvertWithShapeMixin):
-    pass
+
+    @unittest.skip(reason='trace fails because type is not supported.')
+    def test_optional_inputs_with_mixed_optionals(self):
+        ...
