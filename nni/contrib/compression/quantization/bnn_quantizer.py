@@ -76,6 +76,8 @@ class BNNQuantizer(Quantizer):
                 if target_space.quant_dtype is not None:
                     warn_msg = "BNNQuantizer will only quantize the value to 1 or -1; the quant_dtype value will not work"
                     _logger.warning(warn_msg)
+                if target_space._scaler is not None:
+                    raise ValueError("BNNQauntizer doesn't support for granularity, please set it to False")
 
     def register_track_func(self):
         for module_name, _ in self._target_spaces.items():
@@ -88,7 +90,7 @@ class BNNQuantizer(Quantizer):
                 target_space.apply_method = 'bnn_clamp_round'
 
     def init_scale_zp(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
-        if self.is_init or target_name not in wrapper.quantization_target_spaces:
+        if self.is_init or not self.check_target(wrapper, target_name):
             return
         target_space = wrapper.quantization_target_spaces[target_name]
         target_space.zero_point = torch.tensor(0.0).to(target.device)

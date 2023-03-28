@@ -69,8 +69,8 @@ class LsqQuantizer(Quantizer):
         self.register_track_func()
 
     def check_validation(self):
-        for _, ts in self._target_spaces.items():
-            for _, target_space in ts.items():
+        for ts in self._target_spaces.values():
+            for target_space in ts.values():
                 if target_space.quant_scheme != 'symmetric':
                     warn_msg = f"LsqQuantizer only supports symmetric mode, but got {target_space.quant_scheme}"
                     _logger.warning(warn_msg)
@@ -84,12 +84,21 @@ class LsqQuantizer(Quantizer):
             wrapper.register_track_func(self.init_scale)
 
     def init_scale(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
-        if self.is_init or target_name not in wrapper.quantization_target_spaces:
+        def mean_reduce_func(converted_target: Tensor):
+            return converted_target.detach().mean(dim=-1)
+
+        if self.is_init or not self.check_target(wrapper, target_name):
             return
         target_space = wrapper.quantization_target_spaces[target_name]
         init_target = target.data.detach().abs().mean() * 2 / (target_space.qmax ** 0.5)
-        target_space.scale.data = init_target # type: ignore
-        target_space.zero_point = torch.tensor(0.0).to(target.device)
+        if not target_space._scaler:
+            target_space.scale.data = init_target # type: ignore
+            target_space.zero_point = torch.tensor(0.0).to(target.device)
+        else:
+            new_target = init_target.expand(target.shape).to(target.device)
+            new_target_scale = target_space._scaler.shrink(new_target, mean_reduce_func, keepdim=True)
+            target_space.scale.data = new_target_scale # type: ignore
+            target_space.zero_point = torch.zeros_like(new_target_scale)
 
     def register_lsq_apply_method(self):
         for _, ts in self._target_spaces.items():
@@ -102,15 +111,7 @@ class LsqQuantizer(Quantizer):
             for target_name, _ in ts.items():
                 if hasattr(wrapper, f"{target_name}_scale"):
                     delattr(wrapper, f"{target_name}_scale")
-                try:
-                    device = next(wrapper.parameters()).device
-                except StopIteration:
-                    try:
-                        device = next(wrapper.buffers()).device
-                    except StopIteration:
-                        # NOTE: this will have risk in model parallel
-                        device = next(self.bound_model.parameters()).device
-                param = torch.nn.Parameter(torch.Tensor([1.0]).to(device))
+                param = torch.nn.Parameter()
                 wrapper.register_parameter(f"{target_name}_scale", param)
 
     def patch_optimizer_param_group(self):

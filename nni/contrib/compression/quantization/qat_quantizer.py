@@ -102,12 +102,13 @@ class QATQuantizer(Quantizer):
 
     def track_min_max_val(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
         # in a fused compression pipeline, the target name may be another compressor's target name
-        if not wrapper.training or target_name not in wrapper.quantization_target_spaces:
+        if not wrapper.training or not self.check_target(wrapper, target_name):
             return
         return track_min_max_val(wrapper, target_name, target)
 
     def update_scale_zp(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
-        if not wrapper.training or self.current_step < self.quant_start_step:
+        if not wrapper.training or self.current_step < self.quant_start_step \
+            or not self.check_target(wrapper, target_name):
             return
         if target_name in wrapper.quantization_target_spaces:
             target_space = wrapper.quantization_target_spaces[target_name]

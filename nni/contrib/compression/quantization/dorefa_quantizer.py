@@ -6,15 +6,25 @@ import logging
 from typing import List, Dict, Union, overload
 
 import torch
+import torch.nn as nn
 from torch import Tensor
+
+from nni.common.version import check_torch_version
 
 from ..base.compressor import Quantizer
 from ..base.wrapper import ModuleWrapper
 from ..utils.evaluator import Evaluator
-from ..base.target_space import TargetType
+from ..base.target_space import TargetType, QuantizationTargetSpace
+
+ACTIVATION_LIST = [
+    nn.ReLU, nn.RReLU, nn.LeakyReLU, nn.PReLU, nn.Softplus, nn.ELU, nn.CELU, nn.SELU, nn.GELU, \
+    nn.ReLU6, nn.Sigmoid, nn.Tanh, nn.Softsign, nn.Hardtanh, nn.Threshold, nn.Tanhshrink, \
+    nn.Softshrink, nn.Hardshrink, nn.LogSigmoid, nn.Softmin, nn.Softmax, nn.LogSoftmax, nn.Hardswish,
+]
 
 
 _logger = logging.getLogger(__name__)
+is_proper_torch_version = check_torch_version()
 
 
 class DoReFaQuantizer(Quantizer):
@@ -47,43 +57,91 @@ class DoReFaQuantizer(Quantizer):
         >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
     '''
     @overload
-    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, input_layers: List):
+    def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator):
         ...
 
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
-                 input_layers: List=[], existed_wrappers: Dict[str, ModuleWrapper] | None = None):
+                 existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         ...
 
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, \
-                 input_layers: List=[], existed_wrappers: Dict[str, ModuleWrapper] | None = None):
+                 existed_wrappers: Dict[str, ModuleWrapper] | None = None):
         super().__init__(model, config_list, evaluator, existed_wrappers=existed_wrappers)
         self.evaluator: Evaluator
         self.is_init = False
-        self.input_layers = input_layers if input_layers is not None else []
-
         self.check_validation()
         self.register_dorefa_apply_method()
         self.register_track_func()
 
     def check_validation(self):
-        for module_name, ts in self._target_spaces.items():
+        for _, ts in self._target_spaces.items():
             for _, target_space in ts.items():
-                is_input_check = module_name in self.input_layers and target_space.type is TargetType.INPUT
-                if target_space.quant_scheme != 'affine' and not is_input_check:
-                    warn_msg = f"Only supports affine mode for middle layers, bug got {target_space.quant_scheme}"
+                assert target_space.quant_scheme != None
+                if target_space.type is TargetType.PARAMETER and target_space.quant_scheme != 'affine':
+                    warn_msg = f"Only supports affine mode for weight quantization, bug got {target_space.quant_scheme}"
+                    _logger.warning(warn_msg)
+                elif target_space.type is TargetType.OUTPUT:
+                    module = target_space._wrapper.module
+                    # case 1: activation module
+                    # case 2: module with activation fused_modules
+                    fused_modules = target_space._wrapper.fused_modules if target_space._wrapper.fused_modules else []
+                    if not isinstance(module, tuple(ACTIVATION_LIST)) and not (len(fused_modules) > 0 and # type: ignore
+                        any([isinstance(item, tuple(ACTIVATION_LIST)) for item in fused_modules[1:]])): # type: ignore
+                        raise ValueError("Output quantization is only supported for activation function or" + \
+                                          f"activation module fusion, but got {type(module)}")
+                    if target_space.quant_scheme != 'affine':
+                        warn_msg = f"Only supports affine mode for output quantization, bug got {target_space.quant_scheme}"
+                        _logger.warning(warn_msg)
+                if target_space._scaler is not None:
+                    raise ValueError("DoRefa Qauntizer doesn't support for granularity, please set it to False")
+
+    def _quant_dequant_gradient_hook(self, target_space: QuantizationTargetSpace):
+        def quant_dequant_gradient(module: nn.Module, grad_output):
+            tracked_max = torch.tensor(1.0 + 0.5 / (2**target_space.quant_bits - 1)).to(grad_output[0].device)
+            tracked_min = torch.tensor(0 - 0.5 / (2**target_space.quant_bits - 1)).to(grad_output[0].device)
+            scale, zero_point = init_scale_zp(tracked_max, tracked_min, target_space.qmax, \
+                                target_space.qmin, 'affine')
+            new_grad_output = []
+            for g_o in grad_output:
+                grad_o = torch.abs(g_o.clone().detach())
+                dim_lis = list(range(len(grad_o.shape)))
+                dim_lis.pop(0)
+                max_grad = torch.amax(grad_o, dim=dim_lis, keepdim=True)
+                # generate uniform noise
+                uniform_k = torch.zeros_like(max_grad).to(g_o.device)
+                N_k = uniform_k.uniform_(-0.5, 0.5) / (2**(target_space.quant_bits) - 1)
+                q_grad_o = g_o / (2 * max_grad) + 0.5 + N_k
+                quantized_grad = zero_point + q_grad_o / scale
+                quantized_grad = torch.round(torch.clamp(quantized_grad, target_space.qmin, target_space.qmax))
+                dequantized_grad = (quantized_grad - zero_point) * scale
+                new_grad_output.append((dequantized_grad - 0.5) * 2 * max_grad)
+
+            return tuple(new_grad_output)
+
+        target_space._wrapper.module.register_full_backward_pre_hook(quant_dequant_gradient) # type: ignore
+
+    def register_output_backward_hook(self):
+        for _, ts in self._target_spaces.items():
+            is_output = any([target_space.type is TargetType.OUTPUT for target_space in ts.values()])
+            is_param = any([target_space.type is TargetType.PARAMETER for target_space in ts.values()])
+            if is_param and not is_output:
+                if is_proper_torch_version: # torch version >= 2.0.0
+                    for _, target_space in ts.items():
+                        if target_space.type is TargetType.PARAMETER:
+                            self._quant_dequant_gradient_hook(target_space)
+                            break
+                else:
+                    warn_msg = f"Gradient quantization is only supported for torch version >= 2.0.0"
                     _logger.warning(warn_msg)
 
     def register_dorefa_apply_method(self):
-        for module_name, ts in self._target_spaces.items():
+        for _, ts in self._target_spaces.items():
             for _, target_space in ts.items():
                 if target_space.type is TargetType.PARAMETER:
                     target_space.apply_method = 'dorefa_clamp_round_weight'
                 elif target_space.type is TargetType.INPUT:
-                    if module_name in self.input_layers:
-                        target_space.apply_method = 'clamp_round'
-                    else:
-                        target_space.apply_method = "dorefa_clamp_round_input"
+                    target_space.apply_method = 'clamp_round'
                 elif target_space.type is TargetType.OUTPUT:
                     target_space.apply_method = "dorefa_clamp_round_output"
 
@@ -94,14 +152,14 @@ class DoReFaQuantizer(Quantizer):
             wrapper.register_track_func(self.update_scale_zp)
 
     def update_scale_zp(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
-        if target_name not in wrapper.quantization_target_spaces or \
-            wrapper.name not in self.input_layers:
+        if not self.check_target(wrapper, target_name):
             return
         target_space = wrapper.quantization_target_spaces[target_name]
         if target_space.type is not TargetType.INPUT:
             return
         # track min max values
-        current_amax, current_amin = track_max_min(wrapper, target_name, target)
+        current_amin = target.detach().reshape(-1).amin(-1)
+        current_amax = target.detach().reshape(-1).amax(-1)
         # update scale and zero_point
         tracked_min = torch.min(current_amin, torch.zeros_like(current_amin))
         tracked_max = torch.max(current_amax, torch.zeros_like(current_amax))
@@ -125,20 +183,14 @@ class DoReFaQuantizer(Quantizer):
         target_space.scale, target_space.zero_point = scale, zero_point
 
     def initialize_scale_zp(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
-        if self.is_init or target_name not in wrapper.quantization_target_spaces:
+        if self.is_init or not self.check_target(wrapper, target_name):
             return
         target_space = wrapper.quantization_target_spaces[target_name]
-        if (target_space.type is TargetType.INPUT and wrapper.name \
-            not in self.input_layers) or target_space.type is TargetType.PARAMETER: #zero_point and scale don't change anymore
+        if target_space.type is TargetType.INPUT:
+            return
+        elif target_space.type in [TargetType.OUTPUT, TargetType.PARAMETER]:
             tracked_max = torch.tensor(1.0).to(target.device)
             tracked_min = torch.tensor(0.0).to(target.device)
-            scale, zero_point = init_scale_zp(tracked_max, tracked_min, target_space.qmax, \
-                                target_space.qmin, 'affine')
-        elif target_space.type is TargetType.INPUT and wrapper.name in self.input_layers:
-            return
-        elif target_space.type is TargetType.OUTPUT:
-            tracked_max = torch.tensor(1.0 + 0.5 / (2**target_space.quant_bits - 1)).to(target.device)
-            tracked_min = torch.tensor(0 - 0.5 / (2**target_space.quant_bits - 1)).to(target.device)
             scale, zero_point = init_scale_zp(tracked_max, tracked_min, target_space.qmax, \
                                 target_space.qmin, 'affine')
         else:
@@ -156,6 +208,7 @@ class DoReFaQuantizer(Quantizer):
         self._fusion_compress(max_steps, max_epochs)
 
     def _fuse_preprocess(self, evaluator: Evaluator) -> None:
+        self.register_output_backward_hook()
         module_name_param_dict = self.patch_optimizer_param_group()
         if len(module_name_param_dict) > 0:
             evaluator.patch_optim_param_group(module_name_param_dict)
@@ -180,21 +233,3 @@ def init_scale_zp(tracked_max: Tensor, tracked_min: Tensor, qmax: int, qmin: int
 
     zero_point = torch.clamp(zero_point, qmin, qmax)
     return scale, zero_point
-
-
-def track_max_min(wrapper: ModuleWrapper, target_name: str, target: Tensor):
-    def amin_reduce_func(converted_target: Tensor):
-        return converted_target.detach().amin(dim=-1)
-
-    def amax_reduce_func(converted_target: Tensor):
-        return converted_target.detach().amax(dim=-1)
-
-    target_space = wrapper.quantization_target_spaces[target_name]
-    if target_space._scaler:
-        current_amin = target_space._scaler.shrink(target, amin_reduce_func, keepdim=True)
-        current_amax = target_space._scaler.shrink(target, amax_reduce_func, keepdim=True)
-    else:
-        current_amin = target.detach().reshape(-1).amin(-1)
-        current_amax = target.detach().reshape(-1).amax(-1)
-
-    return current_amax, current_amin

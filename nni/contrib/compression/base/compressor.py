@@ -294,6 +294,16 @@ class Quantizer(Compressor):
         # scalers are used to support different sparse/quant granularity
         register_scalers(self._target_spaces, self._set_default_sparse_granularity)  # type: ignore
 
+    def check_target(self, wrapper: ModuleWrapper, target_name: str):
+        module_name = wrapper.name
+        if module_name not in self._target_spaces:
+            return False
+        ts = self._target_spaces[module_name]
+        if target_name not in ts:
+            return False
+
+        return True
+
     def _set_default_sparse_granularity(self, target_space: PruningTargetSpace) -> List[int] | str | None:
         return None
 
