@@ -18,7 +18,6 @@ from contextlib import contextmanager
 import torch
 from torch._C import ScriptObject
 from torch.nn.modules.container import Sequential, ModuleList, ModuleDict, ParameterList, ParameterDict
-from torch.utils._pytree import tree_map
 
 import torch.fx
 from torch.fx import GraphModule
@@ -249,15 +248,7 @@ class ConcreteTracer(TracerBase):
             if _orig_getattr(fn, '__module__', None) != 'nni.common.concrete_trace_utils.concrete_tracer' and hasattr(fn, '__globals__'):
                 _autowrap_check(self, fn.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs, self.agfunc_dict)
             with self.do_temp_disable(call=True):
-                to_cuda = lambda t: t.cuda() if _orig_isinstance(t, torch.Tensor) else t
-                args = tree_map(to_cuda, args)
-                kwargs = tree_map(to_cuda, kwargs)
-                result = OperatorPatcherContext.patch_run(fn, *args, **kwargs)
-                if isinstance(result, torch.Tensor):
-                    return result.cpu()
-                to_cpu = lambda t: t.cpu() if _orig_isinstance(t, torch.Tensor) else t
-                result = tree_map(to_cpu, result)
-                return result
+                return OperatorPatcherContext.patch_run(fn, *args, **kwargs)
         elif kind == 'call_method':
             self_obj, *args_tail = args
             fn = _orig_getattr(self_obj, target)
@@ -268,20 +259,10 @@ class ConcreteTracer(TracerBase):
         elif kind == 'call_module':
             assert isinstance(target, str)
             mod = self.fetch_attr(target)
-            mod.cuda()
             if _orig_getattr(mod, '__module__', None) != 'nni.common.concrete_trace_utils.concrete_tracer' and hasattr(mod, '__globals__'):
                 _autowrap_check(self, mod.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs, self.agfunc_dict)
             with self.do_temp_disable(call=True):
-                to_cuda = lambda t: t.cuda() if _orig_isinstance(t, torch.Tensor) else t
-                args = tree_map(to_cuda, args)
-                kwargs = tree_map(to_cuda, kwargs)
-                result = OperatorPatcherContext.patch_run(mod, *args, **kwargs)
-                mod.cpu()
-                if isinstance(result, torch.Tensor):
-                    return result.cpu()
-                to_cpu = lambda t: t.cpu() if _orig_isinstance(t, torch.Tensor) else t
-                result = tree_map(to_cpu, result)
-                return result
+                return OperatorPatcherContext.patch_run(mod, *args, **kwargs)
         elif kind == 'get_attr':
             assert isinstance(target, str)
             return self.fetch_attr(target)
