@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from nni.common.version import check_torch_version
+from nni.common.version import torch_version_is_2
 
 from ..base.compressor import Quantizer
 from ..base.wrapper import ModuleWrapper
@@ -24,7 +24,7 @@ ACTIVATION_LIST = [
 
 
 _logger = logging.getLogger(__name__)
-is_proper_torch_version = check_torch_version()
+is_proper_torch_version = torch_version_is_2()
 
 
 class DoReFaQuantizer(Quantizer):

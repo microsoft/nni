@@ -26,9 +26,7 @@ def lsq_clamp_round(target: torch.Tensor, target_space: QuantizationTargetSpace)
     qmax: int = target_space.qmax
     qmin: int = target_space.qmin
     if target_space._scaler is not None:
-        assert target_space.scale is not None
-        assert target_space.shape is not None
-        scale = target_space._scaler.expand(target_space.scale, target_space.shape, keepdim=True)
+        scale = target_space._scaler.expand(target_space.scale, target_space.shape, keepdim=True) # type: ignore
     else:
         scale = target_space.scale
     #Quantize
@@ -78,11 +76,8 @@ class ClampRound(torch.autograd.Function):
     @staticmethod
     def forward(ctx: Any, target: torch.Tensor, target_space: QuantizationTargetSpace) -> Any:
         if target_space._scaler is not None:
-            assert target_space.zero_point is not None
-            assert target_space.scale is not None
-            assert target_space.shape is not None
-            zero_point = target_space._scaler.expand(target_space.zero_point, target_space.shape, keepdim=True)
-            scale = target_space._scaler.expand(target_space.scale, target_space.shape, keepdim=True)
+            zero_point = target_space._scaler.expand(target_space.zero_point, target_space.shape, keepdim=True) # type: ignore
+            scale = target_space._scaler.expand(target_space.scale, target_space.shape, keepdim=True) # type: ignore
         else:
             zero_point = target_space.zero_point
             scale = target_space.scale
@@ -100,11 +95,8 @@ class QATClampRound(torch.autograd.Function):
     @staticmethod
     def forward(ctx: Any, target: torch.Tensor, target_space: QuantizationTargetSpace) -> Any:
         if target_space._scaler is not None:
-            assert target_space.zero_point is not None
-            assert target_space.scale is not None
-            assert target_space.shape is not None
-            zero_point = target_space._scaler.expand(target_space.zero_point, target_space.shape, keepdim=True)
-            scale = target_space._scaler.expand(target_space.scale, target_space.shape, keepdim=True)
+            zero_point = target_space._scaler.expand(target_space.zero_point, target_space.shape, keepdim=True) # type: ignore
+            scale = target_space._scaler.expand(target_space.scale, target_space.shape, keepdim=True) # type: ignore
         else:
             zero_point = target_space.zero_point
             scale = target_space.scale
