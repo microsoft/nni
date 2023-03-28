@@ -6,6 +6,7 @@ import { Trial } from '@model/trial';
 import { MANAGER_IP, RETIARIIPARAMETERS } from '@static/const';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { reformatRetiariiParameter } from '@static/function';
+import { buttonsGap } from '@components/common/Gap';
 import PaiTrialLog from './PaiTrialLog';
 import TrialLog from './TrialLog';
 import MessageInfo from '../MessageInfo';
@@ -125,23 +126,18 @@ const OpenRow = (props: OpenRowProps): any => {
                             ) : (
                                 <div>
                                     <TrialLog logStr={logPathRow} logName='LogPath:' />
-                                    {/* view trial log */}
                                 </div>
                             )
                         }
-                        <div className='copy' style={{ marginTop: 4 }}>
-                            <PrimaryButton onClick={openTrialLog.bind(this, 'trial.log')} text='View trial log' />
-                            <PrimaryButton
-                                onClick={openTrialLog.bind(this, 'stderr')}
-                                text='View trial error'
-                                styles={{ root: { marginLeft: 15 } }}
-                            />
-                            <PrimaryButton
-                                onClick={openTrialLog.bind(this, 'stdout')}
-                                text='View trial stdout'
-                                styles={{ root: { marginLeft: 15 } }}
-                            />
-                        </div>
+                        {/* view trial log */}
+                        {EXPERIMENT.trainingServicePlatform === 'local' ||
+                        EXPERIMENT.trainingServicePlatform === 'remote' ? (
+                            <Stack horizontal tokens={buttonsGap} style={{ marginTop: 8 }}>
+                                <PrimaryButton onClick={openTrialLog.bind(this, 'trial.log')} text='View trial log' />
+                                <PrimaryButton onClick={openTrialLog.bind(this, 'stderr')} text='View trial error' />
+                                <PrimaryButton onClick={openTrialLog.bind(this, 'stdout')} text='View trial stdout' />
+                            </Stack>
+                        ) : null}
                     </PivotItem>
                     {EXPERIMENT.metadata.tag.includes('retiarii') ? (
                         <PivotItem headerText='Visualization' key='3' itemIcon='FlowChart'>
@@ -149,7 +145,7 @@ const OpenRow = (props: OpenRowProps): any => {
                                 <div id='visualizationText'>Visualize models with 3rd-party tools.</div>
                                 <PrimaryButton
                                     onClick={openModelOnnx.bind(this)}
-                                    text='Netron'
+                             ,       text='Netron'
                                     styles={{ root: { marginLeft: 15 } }}
                                 />
                             </div>
