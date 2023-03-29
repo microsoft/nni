@@ -82,7 +82,8 @@ class QATQuantizer(Quantizer):
         self.register_track_func()
 
     @classmethod
-    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], quant_start_step: int = 0, evaluator: Evaluator | None = None):
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict],
+                        quant_start_step: int = 0, evaluator: Evaluator | None = None):
         return super().from_compressor(compressor, new_config_list, quant_start_step=quant_start_step, evaluator=evaluator)
 
     def register_qat_apply_method(self):
