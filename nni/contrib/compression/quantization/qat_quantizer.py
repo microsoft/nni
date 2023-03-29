@@ -8,7 +8,7 @@ from typing import Dict, List, overload
 import torch
 from torch import Tensor
 
-from ..base.compressor import Quantizer
+from ..base.compressor import Compressor, Quantizer
 from ..base.wrapper import ModuleWrapper
 from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 
@@ -80,6 +80,10 @@ class QATQuantizer(Quantizer):
         self.current_step = 0
         self.register_qat_apply_method()
         self.register_track_func()
+
+    @classmethod
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], quant_start_step: int = 0, evaluator: Evaluator | None = None):
+        return super().from_compressor(compressor, new_config_list, quant_start_step=quant_start_step, evaluator=evaluator)
 
     def register_qat_apply_method(self):
         if self.current_step < self.quant_start_step:

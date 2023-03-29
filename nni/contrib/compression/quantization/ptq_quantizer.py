@@ -56,8 +56,8 @@ class PtqQuantizer(Quantizer):
         self.register_track_func()
 
     @classmethod
-        def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], evaluator: Evaluator | None = None):
-            return super().from_compressor(compressor, new_config_list, evaluator=evaluator)
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], evaluator: Evaluator | None = None):
+        return super().from_compressor(compressor, new_config_list, evaluator=evaluator)
 
     def register_ptq_apply_method(self):
         for _, ts in self._target_spaces.items():
