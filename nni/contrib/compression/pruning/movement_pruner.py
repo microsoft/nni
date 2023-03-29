@@ -15,14 +15,14 @@ from .tools import is_active_target, generate_sparsity
 from ..base.compressor import Compressor
 from ..base.target_space import TargetType
 from ..base.wrapper import ModuleWrapper
-from ..utils import Evaluator
+from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 
 MOVEMENT_SCORE_PNAME = '{}_mvp_score'
 _logger = logging.getLogger(__name__)
 
 
 class MovementPruner(ScheduledPruner):
-    """
+    __doc__ = r"""
     Movement pruner is an implementation of movement pruning.
     This is a "fine-pruning" algorithm, which means the masks may change during each fine-tuning step.
     Each weight element will be scored by the opposite of the sum of the product of weight and its gradient during each step.
@@ -46,7 +46,7 @@ class MovementPruner(ScheduledPruner):
         A list of dict, each dict configure which module need to be pruned, and how to prune.
         Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
-        TODO: {evaluator_docstring}
+        {evaluator_docstring}
     warmup_step
         The total `optimizer.step()` number before start pruning for warm up.
         Make sure ``warmup_step`` is smaller than ``cooldown_begin_step``.
@@ -63,7 +63,8 @@ class MovementPruner(ScheduledPruner):
     Examples
     --------
         TODO
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, warmup_step: int,
                  cooldown_begin_step: int, regular_scale: float = 1.):

@@ -9,11 +9,11 @@ from torch import Tensor
 
 from ..base.compressor import Quantizer
 from ..base.wrapper import ModuleWrapper
-from ..utils.evaluator import Evaluator
+from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 
 
 class LsqQuantizer(Quantizer):
-    '''
+    __doc__ = r'''
     LsqQuantizer, as defined in: `LEARNED STEP SIZE QUANTIZATION <https://arxiv.org/pdf/1902.08153.pdf>`__,
     authors Steven K. Esser and Jeffrey L. McKinstry provide an algorithm to train the scales with gradients.
 
@@ -42,7 +42,8 @@ class LsqQuantizer(Quantizer):
         >>> evaluator = TorchEvaluator(train, optimizer, training_step)
         >>> quantizer = LsqQuantizer(model, configure_list, evaluator)
         >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
-    '''
+    '''.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator):
         ...
