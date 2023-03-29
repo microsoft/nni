@@ -82,3 +82,11 @@ More examples can be found in our :githublink:`GitHub repository <examples>`.
    :image: ../img/thumbnails/pruning-tutorial.svg
    :background: indigo
    :tags: Compression
+
+.. cardlinkitem::
+   :header: Quantize Bert on Task MNLI
+   :description: An end to end example for how to using NNI to quantize transformer and show the real speedup number
+   :link: tutorials/quantization_bert_glue
+   :image: ../img/thumbnails/quantization-tutorial.svg
+   :background: indigo
+   :tags: Compression
