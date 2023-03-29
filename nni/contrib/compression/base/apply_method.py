@@ -4,7 +4,6 @@
 from typing import Any
 
 import torch
-from torch import Tensor
 
 from .target_space import PruningTargetSpace, QuantizationTargetSpace, TargetSpace, TargetType
 
