@@ -56,7 +56,7 @@ from .utils import (
     _orig_slice,
     _orig_reversed,
     _orig_torch_size,
- 
+
     _orig_len,
     _orig_not,
     _orig_is,
