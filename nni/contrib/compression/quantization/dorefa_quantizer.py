@@ -23,7 +23,6 @@ ACTIVATION_LIST = [
     nn.Softshrink, nn.Hardshrink, nn.LogSigmoid, nn.Softmin, nn.Softmax, nn.LogSoftmax, nn.Hardswish,
 ]
 
-
 _logger = logging.getLogger(__name__)
 is_proper_torch_version = torch_version_is_2()
 
