@@ -29,7 +29,8 @@ export class WsConnection extends EventEmitter {
     private heartbeatTimer: NodeJS.Timer | null = null;
     private log: Logger;
     private missingPongs: number = 0;
-    private ws: WebSocket;  // NOTE: used in unit test
+
+    public readonly ws: WebSocket;
 
     constructor(name: string, ws: WebSocket, commandEmitter: EventEmitter) {
         super();

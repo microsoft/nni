@@ -150,7 +150,7 @@ stages:
 
     - script: |
         set -e
-        npm --prefix ts/nni_manager run test -- --exclude test/core/nnimanager.test.ts
+        npm --prefix ts/nni_manager run test
         npm --prefix ts/nni_manager run test_nnimanager
         cp ts/nni_manager/coverage/cobertura-coverage.xml coverage/typescript.xml
       displayName: TypeScript unit test
@@ -198,7 +198,7 @@ stages:
 
     - script: |
         export PATH=${PWD}/toolchain/node/bin:$PATH
-        npm --prefix ts/nni_manager run test -- --exclude test/core/nnimanager.test.ts
+        npm --prefix ts/nni_manager run test
         npm --prefix ts/nni_manager run test_nnimanager
       displayName: TypeScript unit test
 
@@ -223,7 +223,7 @@ stages:
 
     # temporarily disable this test, add it back after bug fixed
     - script: |
-        npm --prefix ts/nni_manager run test -- --exclude test/core/nnimanager.test.ts
+        npm --prefix ts/nni_manager run test
         npm --prefix ts/nni_manager run test_nnimanager
       displayName: TypeScript unit test
 
@@ -249,7 +249,7 @@ stages:
       displayName: Python unit test
 
     - script: |
-        CI=true npm --prefix ts/nni_manager run test -- --exclude test/core/nnimanager.test.ts
+        CI=true npm --prefix ts/nni_manager run test
         # # exclude nnimanager's ut because macos in pipeline is pretty slow
         # CI=true npm --prefix ts/nni_manager run test_nnimanager
       displayName: TypeScript unit test

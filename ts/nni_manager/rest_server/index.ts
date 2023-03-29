@@ -26,13 +26,11 @@ import type { AddressInfo } from 'net';
 import path from 'path';
 
 import express, { Request, Response, Router } from 'express';
-import expressWs from 'express-ws';
 import httpProxy from 'http-proxy';
 
 import { Deferred } from 'common/deferred';
 import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
-import * as tunerCommandChannel from 'core/tuner_command_channel';
 
 const logger: Logger = getLogger('RestServer');
 
@@ -60,9 +58,7 @@ export class RestServer {
     public start(): Promise<void> {
         logger.info(`Starting REST server at port ${this.port}, URL prefix: "/${this.urlPrefix}"`);
 
-        const app = express();
-        expressWs(app, undefined, { wsOptions: { maxPayload: 4 * 1024 * 1024 * 1024 }});
-
+        const app = globals.rest.getExpressApp();
         app.use('/' + this.urlPrefix, mainRouter());
         app.use('/' + this.urlPrefix, fallbackRouter());
         app.all('*', (_req: Request, res: Response) => { res.status(404).send(`Outside prefix "/${this.urlPrefix}"`); });
@@ -110,10 +106,7 @@ export class RestServer {
  *  In fact experiments management should have a separate prefix and module.
  **/
 function mainRouter(): Router {
-    const router = globals.rest.getExpressRouter() as expressWs.Router;
-
-    /* WebSocket APIs */
-    router.ws('/tuner', (ws, _req, _next) => { tunerCommandChannel.serveWebSocket(ws); });
+    const router = globals.rest.getExpressRouter();
 
     /* Download log files */
     // The REST API path "/logs" does not match file system path "/log".
@@ -142,6 +135,9 @@ function fallbackRouter(): Router {
 
     /* 404 as catch-all */
     router.all('*', (_req: Request, res: Response) => { res.status(404).send('Not Found'); });
+
+    // TODO: websocket 404
+
     return router;
 }
 

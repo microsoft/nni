@@ -238,7 +238,7 @@ class ChannelDependency(Dependency):
             leaf_module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d))
         group = leaf_module.groups
         n_filter = leaf_module.out_channels
-        return n_filter == group
+        return n_filter == group and group != 1
 
     def _group_norm_condition(self, node_group) -> int:
         node_name = node_group.name

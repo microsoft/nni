@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import collections
 import sys
 import inspect
 import logging
@@ -26,6 +27,19 @@ from torch.fx._symbolic_trace import _Patcher, _proxyable_classes
 from torch.fx.graph import Graph
 from torch.fx.node import Target, Node
 from torch.fx.proxy import TracerBase
+
+try:
+    # Scope is a new class to record module path in pytorch 2.0
+    from torch.fx.proxy import Scope
+except ImportError:
+    # copy from pytorch 2.0
+    @compatibility(is_backward_compatible=False)
+    class Scope:
+        def __init__(self, module_path: str, module_type: Any):
+            super().__init__()
+            self.module_path = module_path
+            self.module_type = module_type
+
 
 from . import concrete_proxy as ep
 from .operator_patcher import OperatorPatcherContext
@@ -73,6 +87,9 @@ class ConcreteTracer(TracerBase):
     and go into correct brunches.
     """
 
+    default_module_getattr = (
+        'training',
+    )
     default_autowrap_modules = (
         'math',
     )
@@ -187,6 +204,9 @@ class ConcreteTracer(TracerBase):
         remove the 'param_shapes_constant' because we can get real shape when executing.
         """
         super().__init__()
+        self.scope = Scope("", None)
+        self.module_stack = collections.OrderedDict()
+        self.node_name_to_scope = {}
 
     @contextmanager
     def do_temp_disable(self, call=False, attr=False, agfunc_apply=False):
@@ -644,6 +664,8 @@ class ConcreteTracer(TracerBase):
                 if attr_val in self.wrapped_leaf:
                     return self.wrapped_leaf[attr_val][1]
                 return attr_val
+            elif attr in self.default_module_getattr:
+                return self.create_proxy('get_attr', f'{self.the_path_of_middle_class[id(mod)]}.{attr}', (), {})
             elif _orig_isinstance(attr_val, (_orig_tuple, _orig_list)):
                 if self.the_path_of_middle_class[id(mod)] == '':
                     return self.create_proxy('get_attr', f'{attr}', (), {})

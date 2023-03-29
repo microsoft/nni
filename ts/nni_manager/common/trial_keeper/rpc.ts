@@ -24,7 +24,6 @@
  **/
 
 import { EventEmitter } from 'node:events';
-import util from 'node:util';
 
 import type { Command } from 'common/command_channel/interface';
 import { RpcHelper, getRpcHelper } from 'common/command_channel/rpc_util';

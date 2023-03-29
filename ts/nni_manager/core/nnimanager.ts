@@ -15,7 +15,7 @@ import {
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
 import {
-    ExperimentConfig, LocalConfig, TrainingServiceConfig, toSeconds, toCudaVisibleDevices
+    ExperimentConfig, TrainingServiceConfig, toSeconds, toCudaVisibleDevices
 } from '../common/experimentConfig';
 import { getExperimentsManager } from 'extensions/experiments_manager';
 import { TensorboardManager } from '../common/tensorboardManager';
