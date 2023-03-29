@@ -1,7 +1,7 @@
 $tableHeight: 520px;
 
 .scrollPanel {
-    height: $tableHeight;
+    height: $tableHeight - 20px;
 }
 
 #succTable {
