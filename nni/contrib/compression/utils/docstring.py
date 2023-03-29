@@ -24,6 +24,18 @@ _EVALUATOR_DOCSTRING = r"""NNI will use the evaluator to intervene in the model 
             import torch
             import torch.nn.functional as F
 
+            # The user customized `training_step` should follow this paramter signature,
+            # the first is `batch`, the second is `model`,
+            # and the return value of `training_step` should be loss, or tuple with the first element is loss,
+            # or dict with key 'loss'.
+            def training_step(batch, model, *args, **kwargs):
+                input_data, target = batch
+                result = model(input_data)
+                return F.nll_loss(result, target)
+
+            # The user customized `training_model` should follow this paramter signature,
+            # (model, optimizer, `training_step`, lr_scheduler, max_steps, max_epochs, ...),
+            # and note that `training_step`` should be defined out of `training_model`.
             def training_model(model, optimizer, training_step, lr_scheduler, max_steps, max_epochs, *args, **kwargs):
                 # max_steps, max_epochs might be None, which means unlimited training time,
                 # so here we need set a default termination condition (by default, total_epochs=10, total_steps=100000).
@@ -48,11 +60,6 @@ _EVALUATOR_DOCSTRING = r"""NNI will use the evaluator to intervene in the model 
 
             import nni
             traced_optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01)
-
-            def training_step(batch, model, *args, **kwargs):
-                input_data, target = batch
-                result = model(input_data)
-                return F.nll_loss(result, target)
 
             from nni.contrib.compression import TorchEvaluator
             evaluator = TorchEvaluator(training_func=training_model, optimziers=traced_optimizer, training_step=training_step)
