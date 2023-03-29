@@ -186,7 +186,7 @@ class ConcreteTracer(TracerBase):
         _orig_dict:                 ([], True),
         _orig_reversed:             ((), False),
 
-        _orig_torch_size:                 ((), False),
+        _orig_torch_size:           ((), False),
     }
 
     # add these to record module path information during tracing
