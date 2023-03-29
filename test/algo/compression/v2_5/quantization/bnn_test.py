@@ -11,13 +11,13 @@ from typing import Callable, Union, List, Dict, Tuple
 import torch
 import torch.nn.functional as F
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from torch import Tensor
 
 import nni
 from nni.contrib.compression.quantization import BNNQuantizer
 from nni.contrib.compression.utils import TorchEvaluator
+from nni.common.version import torch_version_is_2
 
 from ..assets.simple_mnist import (
     SimpleTorchModel, 
@@ -26,6 +26,14 @@ from ..assets.simple_mnist import (
     create_pytorch_evaluator,
 )
 from ..assets.device import device
+
+
+if torch_version_is_2():
+    from torch.optim.lr_scheduler import LRScheduler
+    SCHEDULER = LRScheduler
+else:
+    from torch.optim.lr_scheduler import _LRScheduler
+    SCHEDULER = _LRScheduler
 
 
 def test_bnn_forward_with_torch_model():

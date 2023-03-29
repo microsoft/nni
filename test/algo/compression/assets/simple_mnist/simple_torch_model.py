@@ -10,12 +10,21 @@ import torch
 from torch.nn import Module
 import torch.nn.functional as F
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from torchvision.datasets import MNIST
 from torchvision import transforms
 
 from ..device import device
+
+from nni.common.version import torch_version_is_2
+
+
+if torch_version_is_2():
+    from torch.optim.lr_scheduler import LRScheduler
+    SCHEDULER = LRScheduler
+else:
+    from torch.optim.lr_scheduler import _LRScheduler
+    SCHEDULER = _LRScheduler
 
 
 class SimpleTorchModel(torch.nn.Module):
@@ -37,7 +46,7 @@ class SimpleTorchModel(torch.nn.Module):
         return F.log_softmax(x, -1)
 
 
-def training_model(model: Module, optimizer: Optimizer, criterion: Callable, scheduler: _LRScheduler = None,
+def training_model(model: Module, optimizer: Optimizer, criterion: Callable, scheduler: SCHEDULER = None, # type: ignore
                    max_steps: int | None = None, max_epochs: int | None = None, device: torch.device = device):
     model.train()
 

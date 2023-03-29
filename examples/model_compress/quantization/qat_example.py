@@ -9,7 +9,6 @@ from typing import Callable
 import torch
 import torch.nn.functional as F
 from torch.optim import Optimizer, SGD
-from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import MNIST
@@ -17,6 +16,15 @@ from torchvision.datasets import MNIST
 import nni
 from nni.contrib.compression.quantization import QATQuantizer
 from nni.contrib.compression.utils import TorchEvaluator
+from nni.common.version import torch_version_is_2
+
+
+if torch_version_is_2():
+    from torch.optim.lr_scheduler import LRScheduler
+    SCHEDULER = LRScheduler
+else:
+    from torch.optim.lr_scheduler import _LRScheduler
+    SCHEDULER = _LRScheduler
 
 torch.manual_seed(1024)
 device = 'cuda'
@@ -62,7 +70,7 @@ def training_step(batch, model):
     return loss
 
 
-def training_model(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: _LRScheduler | None = None,
+def training_model(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: SCHEDULER | None = None, # type: ignore
                    max_steps: int | None = None, max_epochs: int | None = None):
     model.train()
     max_epochs = max_epochs if max_epochs else 1 if max_steps is None else 100

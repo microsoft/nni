@@ -8,12 +8,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
-from torch.optim.lr_scheduler import _LRScheduler
 from torchvision import datasets, transforms
 
 import nni
 from nni.contrib.compression.quantization import BNNQuantizer
 from nni.contrib.compression.utils import TorchEvaluator
+from nni.common.version import torch_version_is_2
+
+
+if torch_version_is_2():
+    from torch.optim.lr_scheduler import LRScheduler
+    SCHEDULER = LRScheduler
+else:
+    from torch.optim.lr_scheduler import _LRScheduler
+    SCHEDULER = _LRScheduler
 
 
 torch.manual_seed(0)
@@ -108,7 +116,7 @@ def test(model: nn.Module):
     return acc
 
 
-def train(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: Union[_LRScheduler, None] = None,
+def train(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: Union[SCHEDULER, None] = None, # type: ignore
           max_steps: Union[int, None] = None, max_epochs: Union[int, None] = 400):
     best_top1 = 0
     max_epochs = max_epochs or (40 if max_steps is None else 400)
@@ -120,7 +128,7 @@ def train(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable,
             loss = training_step(batch, model)
             loss.backward()
             optimizer.step()
-            if isinstance(scheduler, _LRScheduler):
+            if isinstance(scheduler, SCHEDULER):
                 scheduler.step()
             if batch_idx % 100 == 0:
                 print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))

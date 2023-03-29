@@ -13,7 +13,6 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.hooks import RemovableHandle
 
 try:
@@ -32,8 +31,16 @@ else:
 
 import nni
 from nni.common import is_traceable
+from nni.common.version import torch_version_is_2
 from .constructor_helper import OptimizerConstructHelper, LRSchedulerConstructHelper
 from .check_ddp import check_ddp_model, reset_ddp_model
+
+if torch_version_is_2():
+    from torch.optim.lr_scheduler import LRScheduler
+    SCHEDULER = LRScheduler
+else:
+    from torch.optim.lr_scheduler import _LRScheduler
+    SCHEDULER = _LRScheduler
 
 _logger = logging.getLogger(__name__)
 
@@ -656,7 +663,7 @@ class LightningEvaluator(Evaluator):
 
 _OPTIMIZERS = Union[Optimizer, List[Optimizer]]
 _TRAINING_STEP = Callable[..., Union[Tensor, Tuple[Tensor], Dict[str, Tensor]]]
-_SCHEDULERS = Union[None, _LRScheduler, List[_LRScheduler]]
+_SCHEDULERS = Union[None, SCHEDULER, List[SCHEDULER]] # type: ignore
 _EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
 _TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, Optional[_SCHEDULERS], Optional[int], Optional[int]], None]
 
@@ -765,7 +772,7 @@ class TorchEvaluator(Evaluator):
     """
 
     def __init__(self, training_func: _TRAINING_FUNC, optimizers: Optimizer | List[Optimizer], training_step: _TRAINING_STEP,
-                 lr_schedulers: _LRScheduler | List[_LRScheduler] | None = None, dummy_input: Any | None = None,
+                 lr_schedulers: SCHEDULER | List[SCHEDULER] | None = None, dummy_input: Any | None = None, # type: ignore
                  evaluating_func: _EVALUATING_FUNC | None = None):
         self.training_func = training_func
         self._ori_training_step = training_step
@@ -774,11 +781,11 @@ class TorchEvaluator(Evaluator):
         self.evaluating_func = evaluating_func
 
         self._train_with_single_optimizer = isinstance(optimizers, Optimizer)
-        self._train_with_single_scheduler = isinstance(lr_schedulers, _LRScheduler)
+        self._train_with_single_scheduler = isinstance(lr_schedulers, SCHEDULER)
 
         self.model: Module | None = None
         self._optimizers: List[Optimizer] | None = None
-        self._lr_schedulers: List[_LRScheduler] | None = None
+        self._lr_schedulers: List[SCHEDULER] | None = None # type: ignore
         self._first_optimizer_step: Callable | None = None
         self._param_names_map: Dict[str, str] | None = None
 
@@ -786,7 +793,7 @@ class TorchEvaluator(Evaluator):
         self._tmp_optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
         assert all(isinstance(optimizer, Optimizer) and is_traceable(optimizer) for optimizer in self._tmp_optimizers)
         self._tmp_lr_schedulers = lr_schedulers if isinstance(lr_schedulers, (list, tuple)) else [lr_schedulers] if lr_schedulers else []
-        assert all(isinstance(lr_scheduler, _LRScheduler) and is_traceable(lr_scheduler) for lr_scheduler in self._tmp_lr_schedulers)
+        assert all(isinstance(lr_scheduler, SCHEDULER) and is_traceable(lr_scheduler) for lr_scheduler in self._tmp_lr_schedulers)
         self._initialization_complete = False
 
     def _init_optimizer_helpers(self, pure_model: Module):

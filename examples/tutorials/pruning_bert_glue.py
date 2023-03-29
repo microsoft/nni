@@ -159,11 +159,21 @@ import torch.nn.functional as F
 from datasets import load_metric
 from transformers.modeling_outputs import SequenceClassifierOutput
 
+from nni.common.version import torch_version_is_2
+
+
+if torch_version_is_2():
+    from torch.optim.lr_scheduler import LRScheduler
+    SCHEDULER = LRScheduler
+else:
+    from torch.optim.lr_scheduler import _LRScheduler
+    SCHEDULER = _LRScheduler
+
 
 def training(model: torch.nn.Module,
              optimizer: torch.optim.Optimizer,
              criterion: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-             lr_scheduler: torch.optim.lr_scheduler._LRScheduler = None,
+             lr_scheduler: SCHEDULER = None, # type: ignore
              max_steps: int = None,
              max_epochs: int = None,
              train_dataloader: DataLoader = None,
