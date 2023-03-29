@@ -36,7 +36,7 @@ from .constructor_helper import OptimizerConstructHelper, LRSchedulerConstructHe
 from .check_ddp import check_ddp_model, reset_ddp_model
 
 if torch_version_is_2():
-    from torch.optim.lr_scheduler import LRScheduler
+    from torch.optim.lr_scheduler import LRScheduler # type: ignore
     SCHEDULER = LRScheduler
 else:
     from torch.optim.lr_scheduler import _LRScheduler
