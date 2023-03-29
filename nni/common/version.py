@@ -83,7 +83,7 @@ def version_check(expect: dict, raise_error: bool = False) -> None:
                 warnings.warn('Version check with warning: ' + err_message)
 
 
-def torch_version_is_2():
+def torch_version_is_2() -> bool:
     if TORCH_VERSION is None:
         return False
     if TORCH_VERSION < (2, 0):

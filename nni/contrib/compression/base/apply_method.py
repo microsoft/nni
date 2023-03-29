@@ -4,6 +4,7 @@
 from typing import Any
 
 import torch
+from torch import Tensor
 
 from .target_space import PruningTargetSpace, QuantizationTargetSpace, TargetSpace, TargetType
 
@@ -39,7 +40,7 @@ def lsq_clamp_round(target: torch.Tensor, target_space: QuantizationTargetSpace)
 
 class DoferaGradClampRound(torch.autograd.Function):
     @staticmethod
-    def dorefa_clamp_round_weight(target: torch.Tensor, target_space: QuantizationTargetSpace):
+    def dorefa_clamp_round_weight(target: torch.Tensor, target_space: QuantizationTargetSpace) -> Any:
         # TODO process special case: quant_bit == 1
         target = target.tanh()
         target = target / (2 * target.abs().max()) + 0.5
@@ -48,7 +49,7 @@ class DoferaGradClampRound(torch.autograd.Function):
         return 2 * dequantized_target - 1 # type: ignore
 
     @staticmethod
-    def dorefa_clamp_round_output(target: torch.Tensor, target_space: QuantizationTargetSpace):
+    def dorefa_clamp_round_output(target: torch.Tensor, target_space: QuantizationTargetSpace) -> Any:
         target = torch.clamp(target, 0, 1)
         return ClampRound.apply(target, target_space)
 
@@ -152,7 +153,7 @@ def movement_mul_mask(target: torch.Tensor, target_space: PruningTargetSpace):
         assert target_space.mask is not None and target_space.shape is not None
         if target_space._scaler is not None:
             score = target_space._scaler.expand(score, target_space.shape)
-        return torch.mul(target, _StraightThrough.apply(score, target_space.mask))
+        return torch.mul(target, _StraightThrough.apply(score, target_space.mask)) # type: ignore
 
 
 def movement_add_mask(target: torch.Tensor, target_space: PruningTargetSpace):

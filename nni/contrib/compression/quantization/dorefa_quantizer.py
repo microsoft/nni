@@ -96,7 +96,7 @@ class DoReFaQuantizer(Quantizer):
                 if target_space._scaler is not None:
                     raise ValueError('DoRefa Qauntizer doesn\'t support for granularity, please set it to False')
 
-    def _quant_dequant_gradient_hook(self, target_space: QuantizationTargetSpace):
+    def _quant_dequant_gradient_hook(self, target_space: QuantizationTargetSpace) -> None:
         def quant_dequant_gradient(module: nn.Module, grad_output):
             tracked_max = torch.tensor(1.0 + 0.5 / (2**target_space.quant_bits - 1)).to(grad_output[0].device)
             tracked_min = torch.tensor(0 - 0.5 / (2**target_space.quant_bits - 1)).to(grad_output[0].device)
@@ -151,7 +151,7 @@ class DoReFaQuantizer(Quantizer):
             wrapper.register_track_func(self.initialize_scale_zp)
             wrapper.register_track_func(self.update_scale_zp)
 
-    def update_scale_zp(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
+    def update_scale_zp(self, wrapper: ModuleWrapper, target_name: str, target: Tensor) -> None:
         if not self.check_target(wrapper, target_name):
             return
         target_space = wrapper.quantization_target_spaces[target_name]
