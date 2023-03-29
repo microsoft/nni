@@ -1,7 +1,6 @@
 ---
 name: Create an issue
 about: Report an issue or question while using nni instance (deployment).
-title: 'Bug: '
 labels: 'Status: Unconfirmed'
 
 ---
