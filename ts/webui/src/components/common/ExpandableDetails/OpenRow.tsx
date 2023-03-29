@@ -145,7 +145,7 @@ const OpenRow = (props: OpenRowProps): any => {
                                 <div id='visualizationText'>Visualize models with 3rd-party tools.</div>
                                 <PrimaryButton
                                     onClick={openModelOnnx.bind(this)}
-                             ,       text='Netron'
+                                    text='Netron'
                                     styles={{ root: { marginLeft: 15 } }}
                                 />
                             </div>
