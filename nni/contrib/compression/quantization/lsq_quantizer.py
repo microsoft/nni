@@ -8,7 +8,7 @@ from typing import List, Dict, overload
 import torch
 from torch import Tensor
 
-from ..base.compressor import Quantizer
+from ..base.compressor import Compressor, Quantizer
 from ..base.wrapper import ModuleWrapper
 from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 from ..base.target_space import TargetType
@@ -68,6 +68,10 @@ class LsqQuantizer(Quantizer):
         self.register_scale()
         self.register_lsq_apply_method()
         self.register_track_func()
+
+    @classmethod
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], evaluator: Evaluator | None = None):
+        return super().from_compressor(compressor, new_config_list, evaluator=evaluator)
 
     def check_validation(self) -> None:
         for ts in self._target_spaces.values():

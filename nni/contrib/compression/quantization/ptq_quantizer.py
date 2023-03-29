@@ -7,7 +7,7 @@ from typing import List, Dict, Union, overload
 import torch
 from torch import Tensor
 
-from ..base.compressor import Quantizer
+from ..base.compressor import Compressor, Quantizer
 from ..base.wrapper import ModuleWrapper
 from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 
@@ -54,6 +54,10 @@ class PtqQuantizer(Quantizer):
         self.is_compressed = False
         self.register_ptq_apply_method()
         self.register_track_func()
+
+    @classmethod
+        def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], evaluator: Evaluator | None = None):
+            return super().from_compressor(compressor, new_config_list, evaluator=evaluator)
 
     def register_ptq_apply_method(self):
         for _, ts in self._target_spaces.items():

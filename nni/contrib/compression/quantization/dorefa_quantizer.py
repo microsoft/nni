@@ -11,7 +11,7 @@ from torch import Tensor
 
 from nni.common.version import torch_version_is_2
 
-from ..base.compressor import Quantizer
+from ..base.compressor import Compressor, Quantizer
 from ..base.wrapper import ModuleWrapper
 from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 from ..base.target_space import TargetType, QuantizationTargetSpace
@@ -72,6 +72,10 @@ class DoReFaQuantizer(Quantizer):
         self.check_validation()
         self.register_dorefa_apply_method()
         self.register_track_func()
+
+    @classmethod
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], evaluator: Evaluator | None = None):
+        return super().from_compressor(compressor, new_config_list, evaluator=evaluator)
 
     def check_validation(self) -> None:
         for ts in self._target_spaces.values():

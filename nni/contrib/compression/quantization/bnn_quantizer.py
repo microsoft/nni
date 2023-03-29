@@ -9,7 +9,7 @@ from typing import List, Dict, overload
 import torch
 from torch import Tensor
 
-from ..base.compressor import Quantizer
+from ..base.compressor import Compressor, Quantizer
 from ..base.wrapper import ModuleWrapper
 from ..base.target_space import TargetType
 from ..utils import Evaluator, _EVALUATOR_DOCSTRING
@@ -70,6 +70,10 @@ class BNNQuantizer(Quantizer):
         self.is_init = False
         self.register_bnn_apply_method()
         self.register_track_func()
+
+    @classmethod
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], evaluator: Evaluator | None = None):
+        return super().from_compressor(compressor, new_config_list, evaluator=evaluator)
 
     def check_validation(self):
         for _, ts in self._target_spaces.items():
