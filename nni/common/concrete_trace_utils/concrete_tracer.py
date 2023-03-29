@@ -56,14 +56,14 @@ from .utils import (
     _orig_slice,
     _orig_reversed,
     _orig_torch_size,
-    
+ 
     _orig_len,
     _orig_not,
     _orig_is,
     _orig_is_not,
     _orig_contains,
     _orig_index,
-    
+
     _orig_all,
     _orig_min,
     _orig_max,
@@ -185,7 +185,7 @@ class ConcreteTracer(TracerBase):
         _orig_frozenset:            ([], True),
         _orig_dict:                 ([], True),
         _orig_reversed:             ((), False),
-        
+
         _orig_torch_size:                 ((), False),
     }
 
@@ -898,7 +898,7 @@ class ConcreteTracer(TracerBase):
                 if _orig_isinstance(instance, ep.ConcreteProxy):
                     instance = instance.value
                 return _orig_isinstance(instance, clz)
-            
+
         @functools.wraps(_orig_issubclass)
         def issubclass_wrapper(subclass, clz):
             if _orig_type(clz) in (slice, tuple, list, _orig_slice, _orig_tuple, _orig_list):
