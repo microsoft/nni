@@ -17,8 +17,8 @@ from ..utils.evaluator import Evaluator
 from ..base.target_space import TargetType, QuantizationTargetSpace
 
 ACTIVATION_LIST = [
-    nn.ReLU, nn.RReLU, nn.LeakyReLU, nn.PReLU, nn.Softplus, nn.ELU, nn.CELU, nn.SELU, nn.GELU, \
-    nn.ReLU6, nn.Sigmoid, nn.Tanh, nn.Softsign, nn.Hardtanh, nn.Threshold, nn.Tanhshrink, \
+    nn.ReLU, nn.RReLU, nn.LeakyReLU, nn.PReLU, nn.Softplus, nn.ELU, nn.CELU, nn.SELU, nn.GELU,
+    nn.ReLU6, nn.Sigmoid, nn.Tanh, nn.Softsign, nn.Hardtanh, nn.Threshold, nn.Tanhshrink,
     nn.Softshrink, nn.Hardshrink, nn.LogSigmoid, nn.Softmin, nn.Softmax, nn.LogSoftmax, nn.Hardswish,
 ]
 
@@ -74,27 +74,27 @@ class DoReFaQuantizer(Quantizer):
         self.register_dorefa_apply_method()
         self.register_track_func()
 
-    def check_validation(self):
-        for _, ts in self._target_spaces.items():
-            for _, target_space in ts.items():
+    def check_validation(self) -> None:
+        for ts in self._target_spaces.values():
+            for target_space in ts.values():
                 assert target_space.quant_scheme != None
                 if target_space.type is TargetType.PARAMETER and target_space.quant_scheme != 'affine':
-                    warn_msg = f"Only supports affine mode for weight quantization, bug got {target_space.quant_scheme}"
+                    warn_msg = f'Only supports affine mode for weight quantization, bug got {target_space.quant_scheme}'
                     _logger.warning(warn_msg)
                 elif target_space.type is TargetType.OUTPUT:
                     module = target_space._wrapper.module
                     # case 1: activation module
                     # case 2: module with activation fused_modules
-                    fused_modules = target_space._wrapper.fused_modules if target_space._wrapper.fused_modules else []
-                    if not isinstance(module, tuple(ACTIVATION_LIST)) and not (len(fused_modules) > 0 and # type: ignore
+                    fused_modules = target_space._wrapper.fused_modules
+                    if not isinstance(module, tuple(ACTIVATION_LIST)) and not (fused_modules and # type: ignore
                         any([isinstance(item, tuple(ACTIVATION_LIST)) for item in fused_modules[1:]])): # type: ignore
-                        raise ValueError("Output quantization is only supported for activation function or" + \
-                                          f"activation module fusion, but got {type(module)}")
+                        raise ValueError('Output quantization is only supported for activation function or' + \
+                                          f'activation module fusion, but got {type(module)}')
                     if target_space.quant_scheme != 'affine':
-                        warn_msg = f"Only supports affine mode for output quantization, bug got {target_space.quant_scheme}"
+                        warn_msg = f'Only supports affine mode for output quantization, bug got {target_space.quant_scheme}'
                         _logger.warning(warn_msg)
                 if target_space._scaler is not None:
-                    raise ValueError("DoRefa Qauntizer doesn't support for granularity, please set it to False")
+                    raise ValueError('DoRefa Qauntizer doesn\'t support for granularity, please set it to False')
 
     def _quant_dequant_gradient_hook(self, target_space: QuantizationTargetSpace):
         def quant_dequant_gradient(module: nn.Module, grad_output):
@@ -122,17 +122,17 @@ class DoReFaQuantizer(Quantizer):
         target_space._wrapper.module.register_full_backward_pre_hook(quant_dequant_gradient) # type: ignore
 
     def register_output_backward_hook(self):
-        for _, ts in self._target_spaces.items():
+        for ts in self._target_spaces.values():
             is_output = any([target_space.type is TargetType.OUTPUT for target_space in ts.values()])
             is_param = any([target_space.type is TargetType.PARAMETER for target_space in ts.values()])
             if is_param and not is_output:
                 if is_proper_torch_version: # torch version >= 2.0.0
-                    for _, target_space in ts.items():
+                    for target_space in ts.values():
                         if target_space.type is TargetType.PARAMETER:
                             self._quant_dequant_gradient_hook(target_space)
                             break
                 else:
-                    warn_msg = f"Gradient quantization is only supported for torch version >= 2.0.0"
+                    warn_msg = f'Gradient quantization is only supported for torch version >= 2.0.0'
                     _logger.warning(warn_msg)
 
     def register_dorefa_apply_method(self):
@@ -143,7 +143,7 @@ class DoReFaQuantizer(Quantizer):
                 elif target_space.type is TargetType.INPUT:
                     target_space.apply_method = 'clamp_round'
                 elif target_space.type is TargetType.OUTPUT:
-                    target_space.apply_method = "dorefa_clamp_round_output"
+                    target_space.apply_method = 'dorefa_clamp_round_output'
 
     def register_track_func(self):
         for module_name, _ in self._target_spaces.items():
@@ -227,7 +227,7 @@ def init_scale_zp(tracked_max: Tensor, tracked_min: Tensor, qmax: int, qmin: int
         scale = torch.max(scale, torch.full_like(scale, torch.finfo(torch.float32).eps))
         zero_point = qmin - torch.round(tracked_min / scale)
     elif quant_scheme in ['symmetric', None]:
-        raise ValueError(f"Unsupported quant_scheme {quant_scheme}")
+        raise ValueError(f'Unsupported quant_scheme {quant_scheme}')
     else:
         raise RuntimeError(f'Unknown quant_scheme {quant_scheme}')
 
