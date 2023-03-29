@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Stack, PrimaryButton, Pivot, PivotItem, DefaultButton } from '@fluentui/react';
+import { Stack, PrimaryButton, Pivot, PivotItem, DefaultButton, MessageBar, MessageBarType } from '@fluentui/react';
 import * as copy from 'copy-to-clipboard';
 import { JSONTree } from 'react-json-tree';
 import { Trial } from '@model/trial';
@@ -8,7 +8,6 @@ import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { reformatRetiariiParameter } from '@static/function';
 import PaiTrialLog from './PaiTrialLog';
 import TrialLog from './TrialLog';
-import MessageInfo from '../MessageInfo';
 import PanelMonacoEditor from '../PanelMonacoEditor';
 import '@style/experiment/overview/overview.scss';
 
@@ -100,7 +99,12 @@ const OpenRow = (props: OpenRowProps): any => {
                                         <DefaultButton onClick={isshowRetiaParamPanel} text='Original parameters' />
                                     )}
                                     {/* copy success | failed message info */}
-                                    {!isHidenInfo && <MessageInfo typeInfo={typeInfo} info={info} />}
+                                    {/* isMultiline={true}   */}
+                                    {!isHidenInfo && (
+                                        <MessageBar messageBarType={MessageBarType[typeInfo]} style={{ width: 349 }}>
+                                            {info}
+                                        </MessageBar>
+                                    )}
                                     {showRetiaParamPanel && (
                                         <PanelMonacoEditor
                                             hideConfigPanel={hideRetiaParam}
