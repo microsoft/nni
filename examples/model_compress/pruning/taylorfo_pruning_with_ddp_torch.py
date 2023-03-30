@@ -25,15 +25,7 @@ from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils import count_flops_params
 from nni.compression.pytorch.pruning import TaylorFOWeightPruner
 from nni.compression.pytorch.utils import TorchEvaluator
-from nni.common.version import torch_version_is_2
-
-
-if torch_version_is_2():
-    from torch.optim.lr_scheduler import LRScheduler
-    SCHEDULER = LRScheduler
-else:
-    from torch.optim.lr_scheduler import _LRScheduler
-    SCHEDULER = _LRScheduler
+from nni.contrib.compression.utils.types import SCHEDULER
 
 #############  Create dataloaders, optimizer, training and evaluation function ############
 
@@ -83,7 +75,7 @@ def training(
     model: nn.Module,
     optimizer: torch.optim.Optimizer,
     criterion: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-    lr_scheduler: SCHEDULER = None, # type: ignore
+    lr_scheduler: SCHEDULER = None,
     max_steps: int = None, max_epochs: int = None,
     local_rank: int = -1,
     save_best_model: bool = False, save_path: str = None,

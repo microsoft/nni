@@ -14,15 +14,7 @@ from torchvision import datasets, transforms
 import nni
 from nni.contrib.compression.quantization import PtqQuantizer
 from nni.contrib.compression.utils import TorchEvaluator
-from nni.common.version import torch_version_is_2
-
-
-if torch_version_is_2():
-    from torch.optim.lr_scheduler import LRScheduler
-    SCHEDULER = LRScheduler
-else:
-    from torch.optim.lr_scheduler import _LRScheduler
-    SCHEDULER = _LRScheduler
+from nni.contrib.compression.utils.types import SCHEDULER
 
 
 torch.manual_seed(0)
@@ -71,7 +63,7 @@ def training_step(batch, model) -> Tensor:
 
 
 def training_model(model: torch.nn.Module, optimizer: Union[Optimizer, List[Optimizer]], \
-                   training_step: _TRAINING_STEP, scheduler: Union[None, SCHEDULER, List[SCHEDULER]] = None, # type: ignore
+                   training_step: _TRAINING_STEP, scheduler: Union[None, SCHEDULER, List[SCHEDULER]] = None,
                    max_steps: Union[int, None] = None, max_epochs: Union[int, None] = None):
     model.train()
     max_epochs = max_epochs if max_epochs else 10 if max_steps is None else 100

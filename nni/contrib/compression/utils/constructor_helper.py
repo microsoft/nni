@@ -11,15 +11,8 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 from nni.common.serializer import is_traceable
-from nni.common.version import torch_version_is_2
+from nni.contrib.compression.utils.types import SCHEDULER
 
-
-if torch_version_is_2():
-    from torch.optim.lr_scheduler import LRScheduler # type: ignore
-    SCHEDULER = LRScheduler
-else:
-    from torch.optim.lr_scheduler import _LRScheduler
-    SCHEDULER = _LRScheduler
 
 __all__ = ['OptimizerConstructHelper', 'LRSchedulerConstructHelper']
 
@@ -99,7 +92,7 @@ class OptimizerConstructHelper(ConstructHelper):
 
 
 class LRSchedulerConstructHelper(ConstructHelper):
-    def __init__(self, lr_scheduler_class: Type[SCHEDULER], *args, **kwargs): # type: ignore
+    def __init__(self, lr_scheduler_class: Type[SCHEDULER], *args, **kwargs):  # type: ignore
         args = list(args)
         if 'optimizer' in kwargs:
             kwargs['optimizer'] = None
@@ -107,7 +100,7 @@ class LRSchedulerConstructHelper(ConstructHelper):
             args[0] = None
         super().__init__(lr_scheduler_class, *args, **kwargs)
 
-    def call(self, optimizer: Optimizer) -> SCHEDULER: # type: ignore
+    def call(self, optimizer: Optimizer) -> SCHEDULER:  # type: ignore
         args = deepcopy(self.args)
         kwargs = deepcopy(self.kwargs)
 
@@ -119,10 +112,10 @@ class LRSchedulerConstructHelper(ConstructHelper):
         return self.callable_obj(*args, **kwargs)
 
     @staticmethod
-    def from_trace(lr_scheduler_trace: SCHEDULER): # type: ignore
+    def from_trace(lr_scheduler_trace: SCHEDULER):  # type: ignore
         assert is_traceable(lr_scheduler_trace), \
             'Please use nni.trace to wrap the lr scheduler class before initialize the scheduler.'
         assert isinstance(lr_scheduler_trace, SCHEDULER), \
             f'It is not an instance of torch.nn.lr_scheduler.{SCHEDULER}.'
-        return LRSchedulerConstructHelper(lr_scheduler_trace.trace_symbol, *lr_scheduler_trace.trace_args,  # type: ignore
-                                          **lr_scheduler_trace.trace_kwargs)  # type: ignore
+        return LRSchedulerConstructHelper(lr_scheduler_trace.trace_symbol, *lr_scheduler_trace.trace_args,   # type: ignore
+                                          **lr_scheduler_trace.trace_kwargs)   # type: ignore

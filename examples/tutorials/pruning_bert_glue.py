@@ -159,21 +159,13 @@ import torch.nn.functional as F
 from datasets import load_metric
 from transformers.modeling_outputs import SequenceClassifierOutput
 
-from nni.common.version import torch_version_is_2
-
-
-if torch_version_is_2():
-    from torch.optim.lr_scheduler import LRScheduler
-    SCHEDULER = LRScheduler
-else:
-    from torch.optim.lr_scheduler import _LRScheduler
-    SCHEDULER = _LRScheduler
+from nni.contrib.compression.utils.types import SCHEDULER
 
 
 def training(model: torch.nn.Module,
              optimizer: torch.optim.Optimizer,
              criterion: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-             lr_scheduler: SCHEDULER = None, # type: ignore
+             lr_scheduler: SCHEDULER = None,
              max_steps: int = None,
              max_epochs: int = None,
              train_dataloader: DataLoader = None,
@@ -409,7 +401,7 @@ module_list = []
 for i in range(0, layers_num):
     prefix = f'bert.encoder.layer.{i}.'
     value_mask: torch.Tensor = attention_masks[prefix + 'attention.self.value']['weight']
-    head_mask = (value_mask.reshape(heads_num, -1).sum(-1) == 0.)
+    head_mask = (value_mask.reshape(heads_num, -1).sum(-1) == 0.).to("cpu")
     head_idxs = torch.arange(len(head_mask))[head_mask].long().tolist()
     print(f'layer {i} prune {len(head_idxs)} head: {head_idxs}')
     if len(head_idxs) != heads_num:

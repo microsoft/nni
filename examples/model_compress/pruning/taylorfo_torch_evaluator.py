@@ -8,20 +8,12 @@ from torchvision import datasets, transforms
 
 import nni
 from nni.compression.pytorch import TorchEvaluator
-from nni.common.version import torch_version_is_2
+from nni.contrib.compression.utils.types import SCHEDULER
 
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from cifar10.vgg import VGG
-
-
-if torch_version_is_2():
-    from torch.optim.lr_scheduler import LRScheduler
-    SCHEDULER = LRScheduler
-else:
-    from torch.optim.lr_scheduler import _LRScheduler
-    SCHEDULER = _LRScheduler
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -30,7 +22,7 @@ model: torch.nn.Module = VGG().to(device)
 
 def training_func(model: torch.nn.Module, optimizers: torch.optim.Optimizer,
                   criterion: Callable[[Any, Any], torch.Tensor],
-                  lr_schedulers: SCHEDULER | None = None, max_steps: int | None = None, # type: ignore
+                  lr_schedulers: SCHEDULER | None = None, max_steps: int | None = None,
                   max_epochs: int | None = None, *args, **kwargs):
     model.train()
     # prepare data

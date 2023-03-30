@@ -31,16 +31,10 @@ else:
 
 import nni
 from nni.common import is_traceable
-from nni.common.version import torch_version_is_2
+from nni.contrib.compression.utils.types import SCHEDULER
 from .constructor_helper import OptimizerConstructHelper, LRSchedulerConstructHelper
 from .check_ddp import check_ddp_model, reset_ddp_model
 
-if torch_version_is_2():
-    from torch.optim.lr_scheduler import LRScheduler # type: ignore
-    SCHEDULER = LRScheduler
-else:
-    from torch.optim.lr_scheduler import _LRScheduler
-    SCHEDULER = _LRScheduler
 
 _logger = logging.getLogger(__name__)
 
@@ -225,7 +219,7 @@ class Evaluator:
                     raise TypeError("optimizer can only optimize Tensors, "
                                 "but one of the params is " + torch.typename(param))
                 if not optimizer.defaults.get('differentiable', None) \
-                    and not (param.is_leaf or param.retains_grad): # type: ignore
+                    and not (param.is_leaf or param.retains_grad):  # type: ignore
                     raise ValueError("can't optimize a non-leaf Tensor")
                 target_param_group['params'].append(param)
 
@@ -493,27 +487,27 @@ class LightningEvaluator(Evaluator):
 
         if self._opt_returned_dicts:
             def new_configure_optimizers(_):  # type: ignore
-                optimizers_lr_schedulers: Any = old_configure_optimizers() # type: ignore
+                optimizers_lr_schedulers: Any = old_configure_optimizers()  # type: ignore
                 optimizers = [opt_lrs_dict['optimizer'] for opt_lrs_dict in optimizers_lr_schedulers]
                 # add param group
-                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers) # type: ignore
+                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers)  # type: ignore
 
                 return optimizers_lr_schedulers
 
         elif self._lr_scheduler_helpers:
             def new_configure_optimizers(_):  # type: ignore
-                optimizers_lr_schedulers: Any = old_configure_optimizers() # type: ignore
+                optimizers_lr_schedulers: Any = old_configure_optimizers()  # type: ignore
                 optimizers, lr_schedulers = optimizers_lr_schedulers
                 # add param_group
-                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers) # type: ignore
+                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers)  # type: ignore
 
                 return optimizers, lr_schedulers
 
         else:
             def new_configure_optimizers(_):
-                optimizers_lr_schedulers: Any = old_configure_optimizers() # type: ignore
+                optimizers_lr_schedulers: Any = old_configure_optimizers()  # type: ignore
                 # add param_group
-                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers_lr_schedulers) # type: ignore
+                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers_lr_schedulers)  # type: ignore
 
                 return optimizers_lr_schedulers
 
@@ -663,7 +657,7 @@ class LightningEvaluator(Evaluator):
 
 _OPTIMIZERS = Union[Optimizer, List[Optimizer]]
 _TRAINING_STEP = Callable[..., Union[Tensor, Tuple[Tensor], Dict[str, Tensor]]]
-_SCHEDULERS = Union[None, SCHEDULER, List[SCHEDULER]] # type: ignore
+_SCHEDULERS = Union[None, SCHEDULER, List[SCHEDULER]]  # type: ignore
 _EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
 _TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, Optional[_SCHEDULERS], Optional[int], Optional[int]], None]
 
@@ -772,7 +766,7 @@ class TorchEvaluator(Evaluator):
     """
 
     def __init__(self, training_func: _TRAINING_FUNC, optimizers: Optimizer | List[Optimizer], training_step: _TRAINING_STEP,
-                 lr_schedulers: SCHEDULER | List[SCHEDULER] | None = None, dummy_input: Any | None = None, # type: ignore
+                 lr_schedulers: SCHEDULER | List[SCHEDULER] | None = None, dummy_input: Any | None = None,  # type: ignore
                  evaluating_func: _EVALUATING_FUNC | None = None):
         self.training_func = training_func
         self._ori_training_step = training_step
@@ -785,7 +779,7 @@ class TorchEvaluator(Evaluator):
 
         self.model: Module | None = None
         self._optimizers: List[Optimizer] | None = None
-        self._lr_schedulers: List[SCHEDULER] | None = None # type: ignore
+        self._lr_schedulers: List[SCHEDULER] | None = None  # type: ignore
         self._first_optimizer_step: Callable | None = None
         self._param_names_map: Dict[str, str] | None = None
 
@@ -836,7 +830,7 @@ class TorchEvaluator(Evaluator):
     def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
         assert isinstance(self.model, Module)
         assert module_name_param_dict is not None
-        self._optimizer_add_param_group(self.model, module_name_param_dict, self._optimizers) # type: ignore
+        self._optimizer_add_param_group(self.model, module_name_param_dict, self._optimizers)  # type: ignore
 
     def unbind_model(self):
         if self.model:

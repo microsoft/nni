@@ -30,16 +30,10 @@ else:
 
 import nni
 from nni.common import is_traceable
-from nni.common.version import torch_version_is_2
+from nni.contrib.compression.utils.types import SCHEDULER
 from .constructor_helper import OptimizerConstructHelper, LRSchedulerConstructHelper
 from .check_ddp import check_ddp_model, reset_ddp_model
 
-if torch_version_is_2():
-    from torch.optim.lr_scheduler import LRScheduler
-    SCHEDULER = LRScheduler
-else:
-    from torch.optim.lr_scheduler import _LRScheduler
-    SCHEDULER = _LRScheduler
 
 _logger = logging.getLogger(__name__)
 
@@ -663,7 +657,7 @@ class TorchEvaluator(Evaluator):
     """
 
     def __init__(self, training_func: _TRAINING_FUNC, optimizers: Optimizer | List[Optimizer], criterion: _CRITERION,
-                 lr_schedulers: SCHEDULER | List[SCHEDULER] | None = None, dummy_input: Any | None = None, # type: ignore
+                 lr_schedulers: SCHEDULER | List[SCHEDULER] | None = None, dummy_input: Any | None = None,
                  evaluating_func: _EVALUATING_FUNC | None = None):
         self.training_func = training_func
         self._ori_criterion = criterion
@@ -676,7 +670,7 @@ class TorchEvaluator(Evaluator):
 
         self.model: Module | None = None
         self._optimizers: List[Optimizer] | None = None
-        self._lr_schedulers: List[SCHEDULER] | None = None # type: ignore
+        self._lr_schedulers: List[SCHEDULER] | None = None
         self._first_optimizer_step: Callable | None = None
         self._param_names_map: Dict[str, str] | None = None
 

@@ -13,15 +13,7 @@ from torchvision import datasets, transforms
 import nni
 from nni.contrib.compression.quantization import BNNQuantizer
 from nni.contrib.compression.utils import TorchEvaluator
-from nni.common.version import torch_version_is_2
-
-
-if torch_version_is_2():
-    from torch.optim.lr_scheduler import LRScheduler
-    SCHEDULER = LRScheduler
-else:
-    from torch.optim.lr_scheduler import _LRScheduler
-    SCHEDULER = _LRScheduler
+from nni.contrib.compression.utils.types import SCHEDULER
 
 
 torch.manual_seed(0)
@@ -116,7 +108,7 @@ def test(model: nn.Module):
     return acc
 
 
-def train(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: Union[SCHEDULER, None] = None, # type: ignore
+def train(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: Union[SCHEDULER, None] = None,
           max_steps: Union[int, None] = None, max_epochs: Union[int, None] = 400):
     best_top1 = 0
     max_epochs = max_epochs or (40 if max_steps is None else 400)

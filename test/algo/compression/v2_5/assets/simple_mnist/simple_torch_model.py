@@ -15,15 +15,7 @@ from torchvision import transforms
 
 from ..device import device
 
-from nni.common.version import torch_version_is_2
-
-
-if torch_version_is_2():
-    from torch.optim.lr_scheduler import LRScheduler
-    SCHEDULER = LRScheduler
-else:
-    from torch.optim.lr_scheduler import _LRScheduler
-    SCHEDULER = _LRScheduler
+from nni.contrib.compression.utils.types import SCHEDULER
 
 
 class SimpleTorchModel(torch.nn.Module):
@@ -52,7 +44,7 @@ def training_step(batch: Tuple, model: Module, device: torch.device = device):
     return loss
 
 
-def training_model(model: Module, optimizer: Optimizer, training_step: Callable, scheduler: SCHEDULER = None, # type: ignore
+def training_model(model: Module, optimizer: Optimizer, training_step: Callable, scheduler: SCHEDULER = None,  # type: ignore
                    max_steps: int | None = None, max_epochs: int | None = None, device: torch.device = device):
     model.train()
 
