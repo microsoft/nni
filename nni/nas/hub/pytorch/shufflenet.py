@@ -1,13 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import cast
+from typing import Union, cast
 
 import torch
-import nni.nas.nn.pytorch as nn
-from nni.nas import model_wrapper
+import torch.nn as nn
+import nni
+from nni.mutable import MutableExpression
+from nni.nas.nn.pytorch import LayerChoice, ModelSpace, MutableConv2d, MutableBatchNorm2d
 
-from .utils.fixed import FixedFactory
 from .utils.pretrained import load_pretrained_weight
 
 
@@ -19,7 +20,7 @@ class ShuffleNetBlock(nn.Module):
     When stride = 1, the block expects an input with ``2 * input channels``. Otherwise input channels.
     """
 
-    def __init__(self, in_channels: int, out_channels: int, mid_channels: nn.MaybeChoice[int], *,
+    def __init__(self, in_channels: int, out_channels: int, mid_channels: Union[int, MutableExpression[int]], *,
                  kernel_size: int, stride: int, sequence: str = "pdp", affine: bool = True):
         super().__init__()
         assert stride in [1, 2]
@@ -40,12 +41,12 @@ class ShuffleNetBlock(nn.Module):
         if stride == 2:
             self.branch_proj = nn.Sequential(
                 # dw
-                nn.Conv2d(self.channels, self.channels, kernel_size, stride, self.pad,
-                          groups=self.channels, bias=False),
-                nn.BatchNorm2d(self.channels, affine=affine),
+                MutableConv2d(self.channels, self.channels, kernel_size, stride, self.pad,
+                              groups=self.channels, bias=False),
+                MutableBatchNorm2d(self.channels, affine=affine),
                 # pw-linear
-                nn.Conv2d(self.channels, self.channels, 1, 1, 0, bias=False),
-                nn.BatchNorm2d(self.channels, affine=affine),
+                MutableConv2d(self.channels, self.channels, 1, 1, 0, bias=False),
+                MutableBatchNorm2d(self.channels, affine=affine),
                 nn.ReLU(inplace=True)
             )
         else:
@@ -76,14 +77,14 @@ class ShuffleNetBlock(nn.Module):
                 if isinstance(pc, int) and isinstance(c, int):
                     # check can only be done for static channels
                     assert pc == c, "Depth-wise conv must not change channels."
-                result.append(nn.Conv2d(pc, c, self.kernel_size, self.stride if first_depth else 1, self.pad,
-                                        groups=c, bias=False))
-                result.append(nn.BatchNorm2d(c, affine=self.affine))
+                result.append(MutableConv2d(pc, c, self.kernel_size, self.stride if first_depth else 1, self.pad,
+                                            groups=c, bias=False))
+                result.append(MutableBatchNorm2d(c, affine=self.affine))
                 first_depth = False
             elif token == "p":
                 # point-wise conv
-                result.append(nn.Conv2d(pc, c, 1, 1, 0, bias=False))
-                result.append(nn.BatchNorm2d(c, affine=self.affine))
+                result.append(MutableConv2d(pc, c, 1, 1, 0, bias=False))
+                result.append(MutableBatchNorm2d(c, affine=self.affine))
                 result.append(nn.ReLU(inplace=True))
                 first_point = False
             else:
@@ -107,13 +108,13 @@ class ShuffleXceptionBlock(ShuffleNetBlock):
     `Single Path One-shot <https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123610528.pdf>`__.
     """
 
-    def __init__(self, in_channels: int, out_channels: int, mid_channels: nn.MaybeChoice[int], *, stride: int, affine: bool = True):
+    def __init__(self, in_channels: int, out_channels: int, mid_channels: Union[int, MutableExpression[int]],
+                 *, stride: int, affine: bool = True):
         super().__init__(in_channels, out_channels, mid_channels,
                          kernel_size=3, stride=stride, sequence="dpdpdp", affine=affine)
 
 
-@model_wrapper
-class ShuffleNetSpace(nn.Module):
+class ShuffleNetSpace(ModelSpace):
     """
     The search space proposed in `Single Path One-shot <https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123610528.pdf>`__.
 
@@ -177,13 +178,13 @@ class ShuffleNetSpace(nn.Module):
                 base_mid_channels = out_channels // 2
                 if self.channel_search:
                     k_choice_list = [int(base_mid_channels * (.2 * k)) for k in range(1, 9)]
-                    mid_channels = nn.ValueChoice(k_choice_list, label=f'channel_{global_block_idx}')
+                    mid_channels = nni.choice(f'channel_{global_block_idx}', k_choice_list)
                 else:
                     mid_channels = int(base_mid_channels)
 
-                mid_channels = cast(nn.MaybeChoice[int], mid_channels)
+                mid_channels = cast(Union[int, MutableExpression[int]], mid_channels)
 
-                choice_block = nn.LayerChoice(dict(
+                choice_block = LayerChoice(dict(
                     k3=ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=3, stride=stride, affine=affine),
                     k5=ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=5, stride=stride, affine=affine),
                     k7=ShuffleNetBlock(in_channels, out_channels, mid_channels=mid_channels, kernel_size=7, stride=stride, affine=affine),
@@ -249,10 +250,6 @@ class ShuffleNetSpace(nn.Module):
                     torch.nn.init.constant_(m.bias, 0)  # type: ignore
 
     @classmethod
-    def fixed_arch(cls, arch: dict) -> FixedFactory:
-        return FixedFactory(cls, arch)
-
-    @classmethod
     def load_searched_model(
         cls, name: str,
         pretrained: bool = False, download: bool = False, progress: bool = True
@@ -286,7 +283,7 @@ class ShuffleNetSpace(nn.Module):
         else:
             raise ValueError(f'Unsupported architecture with name: {name}')
 
-        model_factory = cls.fixed_arch(arch)
+        model_factory = cls.frozen_factory(arch)
         model = model_factory()
 
         if pretrained:

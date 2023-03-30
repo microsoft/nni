@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Optional, Union
 
 from nni.experiment.config.base import ConfigBase
+from nni.experiment.config.utils import diff
 
 # config classes
 
@@ -146,6 +147,13 @@ def test_bad():
         except Exception as e:
             exc = e
         assert exc is not None
+
+def test_diff():
+    config = TestConfig(**good)
+    assert diff(config, good_config) == ''
+    another = deepcopy(good)
+    another['msg'] = 'another'
+    assert 'another/b' in diff(config, TestConfig(**another))
 
 if __name__ == '__main__':
     test_good()

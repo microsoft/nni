@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from .base import BaseStrategy
+from .base import Strategy
 
 try:
     from nni.nas.oneshot.pytorch.strategy import (  # pylint: disable=unused-import
@@ -10,8 +10,8 @@ try:
 except ImportError as import_err:
     _import_err = import_err
 
-    class ImportFailedStrategy(BaseStrategy):
-        def run(self, base_model, applied_mutators):
+    class ImportFailedStrategy(Strategy):
+        def run(self, *args, **kwargs):
             raise _import_err
 
     # otherwise typing check will pointing to the wrong location

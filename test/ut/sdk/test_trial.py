@@ -2,17 +2,30 @@
 # Licensed under the MIT license.
 
 import nni
-import nni.runtime.platform.test as test_platform
 import nni.trial
+from nni.runtime.trial_command_channel import get_default_trial_command_channel, set_default_trial_command_channel
 
 import numpy as np
 from unittest import TestCase, main
 
+from .helper.trial_command_channel import TestHelperTrialCommandChannel
+
 
 class TrialTestCase(TestCase):
     def setUp(self):
+        self._default_channel = get_default_trial_command_channel()
+        self.channel = TestHelperTrialCommandChannel()
+        set_default_trial_command_channel(self.channel)
+        nni.trial.overwrite_intermediate_seq(0)
+
         self._trial_params = { 'msg': 'hi', 'x': 123, 'dict': { 'key': 'value', 'y': None } }
-        test_platform._params = { 'parameter_id': 'test_param', 'parameters': self._trial_params }
+        self.channel.init_params({
+            'parameter_id': 'test_param',
+            'parameters': self._trial_params
+        })
+
+    def tearDown(self):
+        set_default_trial_command_channel(self._default_channel)
 
     def test_get_next_parameter(self):
         self.assertEqual(nni.get_next_parameter(), self._trial_params)
@@ -22,17 +35,17 @@ class TrialTestCase(TestCase):
         self.assertEqual(nni.get_current_parameter('x'), 123)
 
     def test_get_experiment_id(self):
-        self.assertEqual(nni.get_experiment_id(), 'fakeidex')
+        self.assertEqual(nni.get_experiment_id(), 'test_experiment')
 
     def test_get_trial_id(self):
-        self.assertEqual(nni.get_trial_id(), 'fakeidtr')
+        self.assertEqual(nni.get_trial_id(), 'test_trial_job_id')
     
     def test_get_sequence_id(self):
         self.assertEqual(nni.get_sequence_id(), 0)
 
     def test_report_intermediate_result(self):
         nni.report_intermediate_result(123)
-        self.assertEqual(test_platform.get_last_metric(), {
+        self.assertEqual(self.channel.get_last_metric(), {
             'parameter_id': 'test_param',
             'trial_job_id': 'test_trial_job_id',
             'type': 'PERIODICAL',
@@ -53,7 +66,7 @@ class TrialTestCase(TestCase):
     def test_report_final_result_nparray(self):
         arr = np.array([[1, 2, 3], [4, 5, 6]])
         nni.report_final_result(arr)
-        out = test_platform.get_last_metric()
+        out = self.channel.get_last_metric()
         self.assertEqual(len(arr), 2)
         self.assertEqual(len(arr[0]), 3)
         self.assertEqual(len(arr[1]), 3)
@@ -66,7 +79,7 @@ class TrialTestCase(TestCase):
 
     def _test_report_final_result(self, in_, out):
         nni.report_final_result(in_)
-        self.assertEqual(test_platform.get_last_metric(), {
+        self.assertEqual(self.channel.get_last_metric(), {
             'parameter_id': 'test_param',
             'trial_job_id': 'test_trial_job_id',
             'type': 'FINAL',

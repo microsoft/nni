@@ -1,12 +1,12 @@
 $boxPadding: 24px;
 $boxBorderRadius: 5px;
-$boxGapPadding: 10px;
 
 .overviewWrapper {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     grid-auto-rows: 102px;
     margin-bottom: 24px;
+    max-height: 1158px;
 
     > div {
         background: #fff;
@@ -15,107 +15,68 @@ $boxGapPadding: 10px;
         box-sizing: border-box;
     }
 
+    .left {
+        margin-right: 18px;
+    }
+
     .duration,
     .trialCount {
-        grid-column: 1 / 5;
+        grid-column: 1 / 2;
         background: #fff;
-        padding: $boxPadding;
         border-radius: $boxBorderRadius;
         box-sizing: border-box;
-        margin-top: $boxGapPadding;
-
-        /* for alert message tooltip position */
-        position: relative;
     }
 
     .duration {
-        grid-row: 3 / 5;
-        height: 158px;
+        grid-row: 6 / 10;
+        position: relative;
+        top: -56px;
     }
 
     .trialCount {
-        grid-row: 5 / 8;
-        margin-top: -26px;
-        height: 273px;
-    }
-
-    .overviewCommand {
-        grid-column: 1 / 5;
-        grid-row-start: 8;
-        margin-top: -50px;
-        height: 152px;
-        margin-right: $boxGapPadding;
-        border-radius: $boxBorderRadius;
+        grid-row: 10 / 13;
+        max-height: 283px;
+        margin-top: -38px;
     }
 }
 
 .overviewBasicInfo {
-    grid-column: 1 / 5;
-    grid-row: 1 / 3;
+    grid-column: 1 / 2;
+    grid-row: 1 / 6;
     z-index: 2;
+    max-height: 436px;
 }
 
-.overviewBasicInfo,
-.duration,
-.trialCount {
-    margin-right: $boxGapPadding;
-}
-
-.basic {
-    line-height: 21px;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-
-    p {
-        font-size: 14px;
-        font-weight: normal;
-        color: #8f8f8f;
-
-        span {
-            color: #484848;
-        }
-    }
-
-    div {
-        font-size: 16px;
-        font-weight: 500;
-        color: #484848;
-    }
+.bestTable {
+    grid-column: 2 / 8;
+    grid-row: 7 / 13;
+    margin-top: 18px;
+    max-height: 532px;
 }
 
 .overviewBestMetric {
-    grid-column: 5 / 9;
-    grid-row: 1 / 9;
-    max-height: 822px;
+    grid-column: 2 / 8;
+    grid-row: 1 / 7;
     overflow: hidden;
 
-    .topTrialTitle {
-        width: 72%;
+    button {
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
     }
 
     .active {
-        background: #d2d0ce;
+        color: #fff;
+        background: #4076c4;
+        border: 1px solid #4076c4;
     }
 
     .max {
         margin-left: 7px;
     }
 
-    .mincenter {
-        margin: 0 13px 0 $boxGapPadding;
-    }
-
     .chooseEntry {
-        margin-right: $boxGapPadding;
         line-height: 30px;
     }
-}
-
-.overviewCommand1,
-.overviewCommand2 {
-    grid-row: 7 / 9;
-    height: 144px;
-    overflow: hidden;
-    margin-top: $boxGapPadding;
 }
 
 .overviewChart {

@@ -13,7 +13,6 @@ import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics } from '../common/manager';
 import { getExperimentsManager } from 'extensions/experiments_manager';
 import { TensorboardManager, TensorboardTaskInfo } from '../common/tensorboardManager';
-import { ValidationSchemas } from './restValidationSchemas';
 import { getVersion } from '../common/utils';
 import { MetricType } from '../common/datastore';
 import { ProfileUpdateType } from '../common/manager';
@@ -171,7 +170,7 @@ class NNIRestHandler {
             if (isNewExperiment()) {
                 this.nniManager.startExperiment(req.body).then((eid: string) => {
                     res.send({
-                        experiment_id: eid // eslint-disable-line @typescript-eslint/camelcase
+                        experiment_id: eid
                     });
                 }).catch((err: Error) => {
                     // Start experiment is a step of initialization, so any exception thrown is a fatal
@@ -211,7 +210,7 @@ class NNIRestHandler {
                     res.send();
                 } catch (err) {
                     // setClusterMetata is a step of initialization, so any exception thrown is a fatal
-                    this.handleError(NNIError.FromError(err), res, true);
+                    this.handleError(NNIError.FromError(err as any), res, true);
                 }
         });
     }
@@ -294,11 +293,7 @@ class NNIRestHandler {
 
     private getTrialFile(router: Router): void {
         router.get('/trial-file/:id/:filename', async(req: Request, res: Response) => {
-            let encoding: string | null = null;
             const filename = req.params['filename'];
-            if (!filename.includes('.') || filename.match(/.*\.(txt|log)/g)) {
-                encoding = 'utf8';
-            }
             this.nniManager.getTrialFile(req.params['id'], filename).then((content: Buffer | string) => {
                 const contentType = content instanceof Buffer ? 'application/octet-stream' : 'text/plain';
                 res.header('Content-Type', contentType);

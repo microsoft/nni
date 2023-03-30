@@ -15,5 +15,5 @@ fi
 echo "Generating database..."
 rm -f ${NASBENCHMARK_DIR}/nasbench101.db ${NASBENCHMARK_DIR}/nasbench101.db-journal
 mkdir -p ${NASBENCHMARK_DIR}
-python3 -m nni.nas.benchmarks.nasbench101.db_gen nasbench_full.tfrecord
+python3 -m nni.nas.benchmark.nasbench101.db_gen nasbench_full.tfrecord
 rm -f nasbench_full.tfrecord

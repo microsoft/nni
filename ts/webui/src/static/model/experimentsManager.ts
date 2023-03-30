@@ -36,7 +36,9 @@ class ExperimentsManager {
                 this.platform = Array.from(platforms);
             })
             .catch(error => {
-                this.errorMessage = error.message;
+                if (error.response) {
+                    this.errorMessage = error.response.data.error;
+                }
             });
     }
 }

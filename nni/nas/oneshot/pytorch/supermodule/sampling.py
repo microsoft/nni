@@ -1,22 +1,24 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# type: ignore
+
 from __future__ import annotations
 
 import copy
+import functools
 import random
 from typing import Any, List, Dict, Sequence, cast
 
 import torch
 import torch.nn as nn
 
-from nni.common.hpo_utils import ParameterSpec
-from nni.nas.nn.pytorch import LayerChoice, InputChoice, Repeat, ChoiceOf, Cell
-from nni.nas.nn.pytorch.choice import ValueChoiceX
+from nni.mutable import MutableExpression, label_scope, Mutable, Categorical, CategoricalMultiple
+from nni.nas.nn.pytorch import LayerChoice, InputChoice, Repeat, Cell
 from nni.nas.nn.pytorch.cell import CellOpFactory, create_cell_op_candidates, preprocess_cell_inputs
 
-from .base import BaseSuperNetModule, sub_state_dict
-from ._valuechoice_utils import evaluate_value_choice_with_dict, dedup_inner_choices, weighted_sum
+from .base import BaseSuperNetModule
+from ._expression_utils import weighted_sum
 from .operation import MixedOperationSamplingPolicy, MixedOperation
 
 __all__ = [
@@ -26,7 +28,7 @@ __all__ = [
 ]
 
 
-class PathSamplingLayer(BaseSuperNetModule):
+class PathSamplingLayer(LayerChoice, BaseSuperNetModule):
     """
     Mixed layer, in which fprop is decided by exactly one inner layer or sum of multiple (sampled) layers.
     If multiple modules are selected, the result will be summed and returned.
@@ -39,62 +41,43 @@ class PathSamplingLayer(BaseSuperNetModule):
         Name of the choice.
     """
 
-    def __init__(self, paths: list[tuple[str, nn.Module]], label: str):
-        super().__init__()
-        self.op_names = []
-        for name, module in paths:
-            self.add_module(name, module)
-            self.op_names.append(name)
-        assert self.op_names, 'There has to be at least one op to choose from.'
+    def __init__(self, paths: dict[str, nn.Module] | list[nn.Module], label: str):
+        super().__init__(paths, label=label)
         self._sampled: list[str] | str | None = None  # sampled can be either a list of indices or an index
-        self.label = label
 
     def resample(self, memo):
         """Random choose one path if label is not found in memo."""
         if self.label in memo:
             self._sampled = memo[self.label]
         else:
-            self._sampled = random.choice(self.op_names)
+            self._sampled = self.choice.random()
         return {self.label: self._sampled}
 
     def export(self, memo):
         """Random choose one name if label isn't found in memo."""
         if self.label in memo:
             return {}  # nothing new to export
-        return {self.label: random.choice(self.op_names)}
-
-    def search_space_spec(self):
-        return {self.label: ParameterSpec(self.label, 'choice', self.op_names, (self.label, ),
-                                          True, size=len(self.op_names))}
+        return {self.label: self.choice.random()}
 
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
-        if isinstance(module, LayerChoice):
-            return cls(list(module.named_children()), module.label)
+        if type(module) is LayerChoice:
+            return cls(module.candidates, module.label)
 
-    def reduction(self, items: list[Any], sampled: list[Any]):
+    def _reduction(self, items: list[Any], sampled: list[Any]):
         """Override this to implement customized reduction."""
         return weighted_sum(items)
-
-    def _save_module_to_state_dict(self, destination, prefix, keep_vars):
-        sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
-
-        for samp in sampled:
-            module = getattr(self, str(samp))
-            if module is not None:
-                sub_state_dict(module, destination=destination, prefix=prefix, keep_vars=keep_vars)
 
     def forward(self, *args, **kwargs):
         if self._sampled is None:
             raise RuntimeError('At least one path needs to be sampled before fprop.')
         sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
 
-        # str(samp) is needed here because samp can sometimes be integers, but attr are always str
-        res = [getattr(self, str(samp))(*args, **kwargs) for samp in sampled]
-        return self.reduction(res, sampled)
+        res = [self[samp](*args, **kwargs) for samp in sampled]
+        return self._reduction(res, sampled)
 
 
-class PathSamplingInput(BaseSuperNetModule):
+class PathSamplingInput(InputChoice, BaseSuperNetModule):
     """
     Mixed input. Take a list of tensor as input, select some of them and return the sum.
 
@@ -104,22 +87,9 @@ class PathSamplingInput(BaseSuperNetModule):
         Sampled input indices.
     """
 
-    def __init__(self, n_candidates: int, n_chosen: int, reduction_type: str, label: str):
-        super().__init__()
-        self.n_candidates = n_candidates
-        self.n_chosen = n_chosen
-        self.reduction_type = reduction_type
+    def __init__(self, n_candidates: int, n_chosen: int, reduction: str, label: str):
+        super().__init__(n_candidates, n_chosen=n_chosen, reduction=reduction, label=label)
         self._sampled: list[int] | int | None = None
-        self.label = label
-
-    def _random_choose_n(self):
-        sampling = list(range(self.n_candidates))
-        random.shuffle(sampling)
-        sampling = sorted(sampling[:self.n_chosen])
-        if len(sampling) == 1:
-            return sampling[0]
-        else:
-            return sampling
 
     def resample(self, memo):
         """Random choose one path / multiple paths if label is not found in memo.
@@ -129,42 +99,36 @@ class PathSamplingInput(BaseSuperNetModule):
         if self.label in memo:
             self._sampled = memo[self.label]
         else:
-            self._sampled = self._random_choose_n()
+            self._sampled = self.choice.random()
         return {self.label: self._sampled}
 
     def export(self, memo):
         """Random choose one name if label isn't found in memo."""
         if self.label in memo:
             return {}  # nothing new to export
-        return {self.label: self._random_choose_n()}
-
-    def search_space_spec(self):
-        return {
-            self.label: ParameterSpec(self.label, 'choice', list(range(self.n_candidates)),
-                                      (self.label, ), True, size=self.n_candidates, chosen_size=self.n_chosen)
-        }
+        return {self.label: self.choice.random()}
 
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
-        if isinstance(module, InputChoice):
+        if type(module) is InputChoice:
             if module.reduction not in ['sum', 'mean', 'concat']:
                 raise ValueError('Only input choice of sum/mean/concat reduction is supported.')
             if module.n_chosen is None:
                 raise ValueError('n_chosen is None is not supported yet.')
             return cls(module.n_candidates, module.n_chosen, module.reduction, module.label)
 
-    def reduction(self, items: list[Any], sampled: list[Any]) -> Any:
+    def _reduction(self, items: list[Any], sampled: list[Any]) -> Any:
         """Override this to implement customized reduction."""
         if len(items) == 1:
             return items[0]
         else:
-            if self.reduction_type == 'sum':
+            if self.reduction == 'sum':
                 return sum(items)
-            elif self.reduction_type == 'mean':
+            elif self.reduction == 'mean':
                 return sum(items) / len(items)
-            elif self.reduction_type == 'concat':
+            elif self.reduction == 'concat':
                 return torch.cat(items, 1)
-            raise ValueError(f'Unsupported reduction type: {self.reduction_type}')
+            raise ValueError(f'Unsupported reduction type: {self.reduction}')
 
     def forward(self, input_tensors):
         if self._sampled is None:
@@ -173,7 +137,7 @@ class PathSamplingInput(BaseSuperNetModule):
             raise ValueError(f'Expect {self.n_candidates} input tensors, found {len(input_tensors)}.')
         sampled = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
         res = [input_tensors[samp] for samp in sampled]
-        return self.reduction(res, sampled)
+        return self._reduction(res, sampled)
 
 
 class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):
@@ -191,28 +155,28 @@ class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):
     def resample(self, operation: MixedOperation, memo: dict[str, Any]) -> dict[str, Any]:
         """Random sample for each leaf value choice."""
         result = {}
-        space_spec = operation.search_space_spec()
-        for label in space_spec:
+        space_spec = operation.simplify()
+        for label, mutable in space_spec.items():
             if label in memo:
                 result[label] = memo[label]
             else:
-                result[label] = random.choice(space_spec[label].values)
+                result[label] = mutable.random()
 
-        # composits to kwargs
+        # composites to kwargs
         # example: result = {"exp_ratio": 3}, self._sampled = {"in_channels": 48, "out_channels": 96}
         self._sampled = {}
         for key, value in operation.mutable_arguments.items():
-            self._sampled[key] = evaluate_value_choice_with_dict(value, result)
+            self._sampled[key] = value.freeze(result)
 
         return result
 
     def export(self, operation: MixedOperation, memo: dict[str, Any]) -> dict[str, Any]:
         """Export is also random for each leaf value choice."""
         result = {}
-        space_spec = operation.search_space_spec()
-        for label in space_spec:
+        space_spec = operation.simplify()
+        for label, mutable in space_spec.items():
             if label not in memo:
-                result[label] = random.choice(space_spec[label].values)
+                result[label] = mutable.random()
         return result
 
     def forward_argument(self, operation: MixedOperation, name: str) -> Any:
@@ -224,9 +188,9 @@ class MixedOpPathSamplingPolicy(MixedOperationSamplingPolicy):
         return operation.init_arguments[name]
 
 
-class PathSamplingRepeat(BaseSuperNetModule):
+class PathSamplingRepeat(Repeat, BaseSuperNetModule):
     """
-    Implementaion of Repeat in a path-sampling supernet.
+    Implementation of Repeat in a path-sampling supernet.
     Samples one / some of the prefixes of the repeated blocks.
 
     Attributes
@@ -235,55 +199,42 @@ class PathSamplingRepeat(BaseSuperNetModule):
         Sampled depth.
     """
 
-    def __init__(self, blocks: list[nn.Module], depth: ChoiceOf[int]):
-        super().__init__()
-        self.blocks: Any = blocks
-        self.depth = depth
-        self._space_spec: dict[str, ParameterSpec] = dedup_inner_choices([depth])
+    def __init__(self, blocks: list[nn.Module], depth: MutableExpression[int]):
+        super().__init__(blocks, depth)
         self._sampled: list[int] | int | None = None
 
     def resample(self, memo):
         """Since depth is based on ValueChoice, we only need to randomly sample every leaf value choices."""
         result = {}
-        for label in self._space_spec:
+        assert isinstance(self.depth_choice, Mutable)
+        for label, mutable in self.depth_choice.simplify().items():
             if label in memo:
                 result[label] = memo[label]
             else:
-                result[label] = random.choice(self._space_spec[label].values)
+                result[label] = mutable.random()
 
-        self._sampled = evaluate_value_choice_with_dict(self.depth, result)
+        self._sampled = self.depth_choice.freeze(result)
 
         return result
 
     def export(self, memo):
         """Random choose one if every choice not in memo."""
         result = {}
-        for label in self._space_spec:
+        assert isinstance(self.depth_choice, Mutable)
+        for label, mutable in self.depth_choice.simplify().items():
             if label not in memo:
-                result[label] = random.choice(self._space_spec[label].values)
+                result[label] = mutable.random()
         return result
-
-    def search_space_spec(self):
-        return self._space_spec
 
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
-        if isinstance(module, Repeat) and isinstance(module.depth_choice, ValueChoiceX):
+        if type(module) == Repeat and isinstance(module.depth_choice, MutableExpression):
             # Only interesting when depth is mutable
-            return cls(cast(List[nn.Module], module.blocks), module.depth_choice)
+            return cls(list(module.blocks), module.depth_choice)
 
-    def reduction(self, items: list[Any], sampled: list[Any]):
+    def _reduction(self, items: list[Any], sampled: list[Any]):
         """Override this to implement customized reduction."""
         return weighted_sum(items)
-
-    def _save_module_to_state_dict(self, destination, prefix, keep_vars):
-        sampled: Any = [self._sampled] if not isinstance(self._sampled, list) else self._sampled
-
-        for cur_depth, (name, module) in enumerate(self.blocks.named_children(), start=1):
-            if module is not None:
-                sub_state_dict(module, destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
-            if not any(d > cur_depth for d in sampled):
-                break
 
     def forward(self, x):
         if self._sampled is None:
@@ -297,7 +248,7 @@ class PathSamplingRepeat(BaseSuperNetModule):
                 res.append(x)
             if not any(d > cur_depth for d in sampled):
                 break
-        return self.reduction(res, sampled)
+        return self._reduction(res, sampled)
 
 
 class PathSamplingCell(BaseSuperNetModule):
@@ -343,39 +294,46 @@ class PathSamplingCell(BaseSuperNetModule):
         # InputChoice is implicit in this graph.
         for i in self.output_node_indices:
             self.ops.append(nn.ModuleList())
-            for k in range(i + self.num_predecessors):
+            for k in range(i):
                 # Second argument in (i, **0**, k) is always 0.
                 # One-shot strategy can't handle the cases where op spec is dependent on `op_index`.
                 ops, _ = create_cell_op_candidates(op_factory, i, 0, k)
                 self.op_names = list(ops.keys())
                 cast(nn.ModuleList, self.ops[-1]).append(nn.ModuleDict(ops))
 
-        self.label = label
+        with label_scope(label) as self.label_scope:
+            for i in range(self.num_predecessors, self.num_nodes + self.num_predecessors):
+                for k in range(self.num_ops_per_node):
+                    op_label = f'op_{i}_{k}'
+                    input_label = f'input_{i}_{k}'
+                    self.add_mutable(Categorical(self.op_names, label=op_label))
+                    # Need multiple here to align with the original cell.
+                    self.add_mutable(CategoricalMultiple(range(i), n_chosen=1, label=input_label))
 
         self._sampled: dict[str, str | int] = {}
 
-    def search_space_spec(self) -> dict[str, ParameterSpec]:
-        # TODO: Recreating the space here.
-        # The spec should be moved to definition of Cell itself.
-        space_spec = {}
-        for i in range(self.num_predecessors, self.num_nodes + self.num_predecessors):
-            for k in range(self.num_ops_per_node):
-                op_label = f'{self.label}/op_{i}_{k}'
-                input_label = f'{self.label}/input_{i}_{k}'
-                space_spec[op_label] = ParameterSpec(op_label, 'choice', self.op_names, (op_label,), True, size=len(self.op_names))
-                space_spec[input_label] = ParameterSpec(input_label, 'choice', list(range(i)), (input_label, ), True, size=i)
-        return space_spec
+    @property
+    def label(self) -> str:
+        return self.label_scope.name
+
+    def freeze(self, sample):
+        raise NotImplementedError('PathSamplingCell does not support freeze.')
 
     def resample(self, memo):
         """Random choose one path if label is not found in memo."""
         self._sampled = {}
         new_sampled = {}
-        for label, param_spec in self.search_space_spec().items():
+        for label, param_spec in self.simplify().items():
             if label in memo:
-                assert not isinstance(memo[label], list), 'Multi-path sampling is currently unsupported on cell.'
+                if isinstance(memo[label], list) and len(memo[label]) > 1:
+                    raise ValueError(f'Multi-path sampling is currently unsupported on cell: {memo[label]}')
                 self._sampled[label] = memo[label]
             else:
-                self._sampled[label] = new_sampled[label] = random.choice(param_spec.values)
+                if isinstance(param_spec, Categorical):
+                    self._sampled[label] = new_sampled[label] = random.choice(param_spec.values)
+                elif isinstance(param_spec, CategoricalMultiple):
+                    assert param_spec.n_chosen == 1
+                    self._sampled[label] = new_sampled[label] = [random.choice(param_spec.values)]
         return new_sampled
 
     def export(self, memo):
@@ -390,7 +348,7 @@ class PathSamplingCell(BaseSuperNetModule):
 
             for k in range(self.num_ops_per_node):
                 # Select op list based on the input chosen
-                input_index = self._sampled[f'{self.label}/input_{i}_{k}']
+                input_index = self._sampled[f'{self.label}/input_{i}_{k}'][0]  # [0] because it's a list and n_chosen=1
                 op_candidates = ops[cast(int, input_index)]
                 # Select op from op list based on the op chosen
                 op_index = self._sampled[f'{self.label}/op_{i}_{k}']
@@ -409,7 +367,7 @@ class PathSamplingCell(BaseSuperNetModule):
         Mutate only handles cells of specific configurations (e.g., with loose end).
         Fallback to the default mutate if the cell is not handled here.
         """
-        if isinstance(module, Cell):
+        if type(module) is Cell:
             op_factory = None  # not all the cells need to be replaced
             if module.op_candidates_factory is not None:
                 op_factory = module.op_candidates_factory
@@ -418,10 +376,17 @@ class PathSamplingCell(BaseSuperNetModule):
             elif module.merge_op == 'loose_end':
                 op_candidates_lc = module.ops[-1][-1]  # type: ignore
                 assert isinstance(op_candidates_lc, LayerChoice)
-                op_factory = {  # create a factory
-                    name: lambda _, __, ___: copy.deepcopy(op_candidates_lc[name])
-                    for name in op_candidates_lc.names
-                }
+                candidates = op_candidates_lc.candidates
+
+                def _copy(_, __, ___, op):
+                    return copy.deepcopy(op)
+
+                if isinstance(candidates, list):
+                    op_factory = [functools.partial(_copy, op=op) for op in candidates]
+                elif isinstance(candidates, dict):
+                    op_factory = {name: functools.partial(_copy, op=op) for name, op in candidates.items()}
+                else:
+                    raise ValueError(f'Unsupported type of candidates: {type(candidates)}')
             if op_factory is not None:
                 return cls(
                     op_factory,

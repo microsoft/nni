@@ -43,7 +43,7 @@ Usage
 # But in fact ``ModelSpeedup`` is a relatively independent tool, so you can use it independently.
 
 import torch
-from scripts.compression_mnist_model import TorchModel, device
+from nni_assets.compression.mnist_model import TorchModel, device
 
 model = TorchModel().to(device)
 # masks = {layer_name: {'weight': weight_mask, 'bias': bias_mask}}
@@ -93,7 +93,6 @@ print('Speedup Model - Elapsed Time : ', time.time() - start)
 # Speedup Results of Examples
 # ---------------------------
 #
-# The code of these experiments can be found :githublink:`here <examples/model_compress/pruning/legacy/speedup/model_speedup.py>`.
 #
 # These result are tested on the `legacy pruning framework <https://nni.readthedocs.io/en/v2.6/Compression/pruning.html>`_, new results will coming soon.
 #

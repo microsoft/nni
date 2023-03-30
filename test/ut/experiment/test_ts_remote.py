@@ -70,7 +70,8 @@ minimal_canon = {
                 'maxTrialNumberPerGpu': 1,
             }
         ],
-        'reuseMode': True,
+        'reuseMode': False,
+        #'logCollection': 'on_error',
     }
 }
 
@@ -146,7 +147,8 @@ detailed_canon = {
                 'pythonPath': '~/path'
             }
         ],
-        'reuseMode': True,
+        'reuseMode': False,
+        #'logCollection': 'on_error',
     }
 }
 

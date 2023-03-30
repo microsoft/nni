@@ -6,13 +6,6 @@ schedules:
     include: [ master ]
   always: true
 
-resources:
-  repositories:
-    - repository: azpfilter
-      type: github
-      name: microsoft/azure-pipeline-filter
-      endpoint: github-filter-connection
-
 variables:
   filter.modified.globs: 'examples/tuners/**,nni/algorithms/hpo/**,pipelines/full-test-hpo.yml,'
   filter.prbody.heading: '#### Test Options'
@@ -50,9 +43,8 @@ stages:
     - script: |
         set -e
         (cd test && python -m pytest ut)
-        export PATH=$PATH:$PWD/toolchain/yarn/bin
         export CI=true
-        (cd ts/nni_manager && yarn test)
+        (cd ts/nni_manager && npm run test)
       displayName: SDK unit test
 
     # TODO: this should be replaced with a dedicated HPO algo test suite
