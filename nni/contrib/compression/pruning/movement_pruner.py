@@ -114,7 +114,7 @@ class MovementPruner(ScheduledPruner):
                         # TODO: here using a shrinked score to save memory, but need to test the speed.
                         score_val = torch.zeros_like(target_space.target)  # type: ignore
                         if target_space._scaler is not None:
-                            score_val = target_space._scaler.shrink(score_val)
+                            score_val = target_space._scaler.shrink(score_val, keepdim=True)
                         target_space._wrapper.register_parameter(MOVEMENT_SCORE_PNAME.format(target_name),
                                                                  torch.nn.Parameter(score_val))
                         score = target_space._get_wrapper_attr(MOVEMENT_SCORE_PNAME.format(target_name))
