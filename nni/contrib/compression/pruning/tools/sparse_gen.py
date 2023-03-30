@@ -141,6 +141,7 @@ def _generate_align_sparsity(masks: _MASKS, target_spaces: _PRUNING_TARGET_SPACE
             reduce_dims = [d for d in range(len(src_mask.shape)) if d not in align_dims and d - len(src_mask.shape) not in align_dims]
             align_mask = src_mask.sum(reduce_dims).bool().float()
             if target_space._scaler is not None:
+                assert target_space.shape is not None, f'The shape of {module_name}.{target_name} is not tracked'
                 align_mask = \
                     target_space._scaler.shrink(target_space._scaler.expand(align_mask, target_space.shape), keepdim=True).bool().float()
             align_masks[module_name][target_name] = align_mask
