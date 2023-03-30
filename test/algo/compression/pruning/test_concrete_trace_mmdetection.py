@@ -239,7 +239,7 @@ def test_mmdetection(config_file: str):
 
         traced_model = concrete_trace(model, {'img': img_tensor},
                                       use_operator_patch=False,
-                                      forwrad_function_name='forward_dummy',
+                                      forward_function_name='forward_dummy',
                                       autowrap_leaf_function = {
                                         **ConcreteTracer.default_autowrap_leaf_function,
                                         all:  ((), False, None),
