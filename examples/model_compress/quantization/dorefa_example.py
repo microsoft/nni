@@ -120,7 +120,7 @@ def main():
     model = model.to(device)
     configure_list = [{
     'op_names': ['conv1', 'conv2', 'fc1', 'fc2'],
-    'target_names': ['_input_', 'weight', '_output_'],
+    'target_names': ['_input_', 'weight'],
     'quant_dtype': 'int8',
     'quant_scheme': 'affine',
     'granularity': 'default',
