@@ -21,4 +21,4 @@ matplotlib
 git+https://github.com/microsoft/nn-Meter.git#egg=nn_meter
 sympy
 timm >= 0.5.4
-datasets == 2.10.1
+datasets
