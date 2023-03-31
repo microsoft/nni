@@ -8,13 +8,13 @@ from typing import Dict, List, overload
 import torch
 from torch import Tensor
 
-from ..base.compressor import Quantizer
+from ..base.compressor import Compressor, Quantizer
 from ..base.wrapper import ModuleWrapper
-from ..utils.evaluator import Evaluator
+from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 
 
 class QATQuantizer(Quantizer):
-    """
+    __doc__ = r"""
     Quantizer defined in:
     `Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
     <http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf>`__
@@ -44,7 +44,7 @@ class QATQuantizer(Quantizer):
         A list of dict, each dict configure which module need to be quantized, and how to quantize.
         Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
-        TODO: {evaluator_docstring}
+        {evaluator_docstring}
     quant_start_step
         The steps for warmup training before QAT begin.
 
@@ -58,7 +58,8 @@ class QATQuantizer(Quantizer):
         >>> evaluator = TorchEvaluator(train, optimizer, training_step)
         >>> quantizer = QATQuantizer(model, configure_list, evaluator)
         >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator,
                  quant_start_step: int = 0):
@@ -79,6 +80,11 @@ class QATQuantizer(Quantizer):
         self.current_step = 0
         self.register_qat_apply_method()
         self.register_track_func()
+
+    @classmethod
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict],
+                        quant_start_step: int = 0, evaluator: Evaluator | None = None):
+        return super().from_compressor(compressor, new_config_list, quant_start_step=quant_start_step, evaluator=evaluator)
 
     def register_qat_apply_method(self):
         if self.current_step < self.quant_start_step:
@@ -102,12 +108,13 @@ class QATQuantizer(Quantizer):
 
     def track_min_max_val(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
         # in a fused compression pipeline, the target name may be another compressor's target name
-        if not wrapper.training or target_name not in wrapper.quantization_target_spaces:
+        if not wrapper.training or not self.check_target(wrapper, target_name):
             return
         return track_min_max_val(wrapper, target_name, target)
 
     def update_scale_zp(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
-        if not wrapper.training or self.current_step < self.quant_start_step:
+        if not wrapper.training or self.current_step < self.quant_start_step \
+            or not self.check_target(wrapper, target_name):
             return
         if target_name in wrapper.quantization_target_spaces:
             target_space = wrapper.quantization_target_spaces[target_name]

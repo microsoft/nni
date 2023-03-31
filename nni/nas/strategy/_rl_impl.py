@@ -36,7 +36,7 @@ from __future__ import annotations
 __all__ = ['ObservationType', 'TuningEnvironment', 'TuningTrajectoryGenerator', 'PolicyFactory', 'default_policy_fn']
 
 from copy import deepcopy
-from typing import Tuple, Generator, Callable
+from typing import Tuple, Callable
 
 import gym
 import numpy as np
@@ -112,17 +112,17 @@ class TuningEnvironment(gym.Env[ObservationType, int]):
     def action_space(self):
         return spaces.Discrete(self.max_num_choices)
 
-    def reset(self) -> ObservationType:
+    def reset(self) -> tuple[ObservationType, dict]:
         self.action_history = np.zeros(self.num_steps, dtype=np.int32)
         self.cur_step = 0
         self.sample = {}
-        return {
-            'action_history': self.action_history,
-            'cur_step': self.cur_step,
-            'action_dim': self.num_choices[self.cur_step]
-        }, {}
+        return ObservationType(
+            action_history=self.action_history,
+            cur_step=self.cur_step,
+            action_dim=self.num_choices[self.cur_step]
+        ), {}
 
-    def step(self, action: int) -> EnvStepType | Generator[Sample, float, EnvStepType]:
+    def step(self, action: int) -> tuple[ObservationType, float, bool, bool, dict]:
         """Step the environment.
 
         Parameters
@@ -240,7 +240,6 @@ class TuningTrajectoryGenerator:
         It will either receive the reward via :meth:`send_reward` or be reset via another :meth:`next_sample`.
         """
         obs, info = self.env.reset()
-        done = False
         last_state = None  # hidden state
 
         self._trajectory = []
@@ -261,7 +260,7 @@ class TuningTrajectoryGenerator:
 
         step_count = 0
 
-        while not done:
+        while True:
             obs_batch = Batch([self._transition])    # the first dimension is batch-size
             policy_result = self.policy(obs_batch, last_state)
             # get bounded and remapped actions first (not saved into buffer)
@@ -331,6 +330,8 @@ class TuningTrajectoryGenerator:
             The reward for the sample just created.
             If None, the sample will be ignored.
         """
+
+        assert self._trajectory is not None and self._transition is not None and self._last_action is not None
 
         obs_next, _, terminated, truncated, info = self.env.step(self._last_action)
         assert terminated, 'The environment should be done.'
@@ -423,9 +424,8 @@ class Preprocessor(nn.Module):
         # end token is used to avoid out-of-range of v_s_. Will not actually affect BP.
         seq = self.embedding(seq.long())
 
-        step_onehot = F.one_hot(torch.arange(self.step_dim)).unsqueeze(0).repeat(batch_size, 1, 1)
+        step_onehot = F.one_hot(torch.arange(self.step_dim, device=seq.device)).unsqueeze(0).repeat(batch_size, 1, 1)
 
-        # feature = self.rnn(torch.cat((seq, step_onehot), -1))
         feature, _ = self.rnn(torch.cat((seq, step_onehot), -1))
         feature = feature[torch.arange(len(feature), device=feature.device), obs['cur_step'].long()]
         return self.fc(feature)
@@ -442,7 +442,7 @@ class Actor(nn.Module):
         obs = to_torch(obs, device=self.linear.weight.device)
         out = self.linear(self.preprocess(obs))
         # to take care of choices with different number of options
-        mask = torch.arange(self.action_dim).expand(len(out), self.action_dim) >= obs['action_dim'].unsqueeze(1)
+        mask = torch.arange(self.action_dim, device=out.device).expand(len(out), self.action_dim) >= obs['action_dim'].unsqueeze(1)
         # NOTE: this could potentially be used for prior knowledge
         out_bias = torch.zeros_like(out)
         out_bias.masked_fill_(mask, float('-inf'))

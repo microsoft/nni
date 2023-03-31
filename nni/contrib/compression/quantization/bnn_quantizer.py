@@ -9,16 +9,16 @@ from typing import List, Dict, overload
 import torch
 from torch import Tensor
 
-from ..base.compressor import Quantizer
+from ..base.compressor import Compressor, Quantizer
 from ..base.wrapper import ModuleWrapper
 from ..base.target_space import TargetType
-from ..utils.evaluator import Evaluator
+from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 
 _logger = logging.getLogger(__name__)
 
 
 class BNNQuantizer(Quantizer):
-    """
+    __doc__ = r"""
     BinaryNet Quantization, as defined in:
     `Binarized Neural Networks: Training Deep Neural Networks with Weights and
     Activations Constrained to +1 or -1 <https://arxiv.org/abs/1602.02830>`__,
@@ -38,7 +38,7 @@ class BNNQuantizer(Quantizer):
         A list of dict, each dict configure which module need to be quantized, and how to quantize.
         Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
-        TODO: {evaluator_docstring}
+        {evaluator_docstring}
 
     Examples
     --------
@@ -50,7 +50,8 @@ class BNNQuantizer(Quantizer):
         >>> evaluator = TorchEvaluator(train, optimizer, training_step)
         >>> quantizer = BNNQuantizer(model, configure_list, evaluator)
         >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
-    """
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator):
         ...
@@ -70,12 +71,18 @@ class BNNQuantizer(Quantizer):
         self.register_bnn_apply_method()
         self.register_track_func()
 
+    @classmethod
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], evaluator: Evaluator | None = None):
+        return super().from_compressor(compressor, new_config_list, evaluator=evaluator)
+
     def check_validation(self):
         for _, ts in self._target_spaces.items():
             for _, target_space in ts.items():
                 if target_space.quant_dtype is not None:
                     warn_msg = "BNNQuantizer will only quantize the value to 1 or -1; the quant_dtype value will not work"
                     _logger.warning(warn_msg)
+                if target_space._scaler is not None:
+                    raise ValueError("BNNQauntizer doesn't support for granularity, please set it to False")
 
     def register_track_func(self):
         for module_name, _ in self._target_spaces.items():
@@ -88,7 +95,7 @@ class BNNQuantizer(Quantizer):
                 target_space.apply_method = 'bnn_clamp_round'
 
     def init_scale_zp(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
-        if self.is_init or target_name not in wrapper.quantization_target_spaces:
+        if self.is_init or not self.check_target(wrapper, target_name):
             return
         target_space = wrapper.quantization_target_spaces[target_name]
         target_space.zero_point = torch.tensor(0.0).to(target.device)

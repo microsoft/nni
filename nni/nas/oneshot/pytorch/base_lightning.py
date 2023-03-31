@@ -4,21 +4,19 @@
 from __future__ import annotations
 
 import warnings
-from itertools import chain
-from typing import Callable, Any, Dict, Union, Tuple, Iterable, cast
+from typing import Any, Iterable, cast, TYPE_CHECKING
 
-import numpy as np
-import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
 from torch.optim import Optimizer
-from pytorch_lightning import loggers
 
 import nni.nas.nn.pytorch as nas_nn
 from nni.nas.evaluator.pytorch import LightningModule, Trainer
-from nni.common.serializer import is_traceable
-from nni.mutable import MutableExpression, frozen_context, Sample
+from nni.mutable import Sample
 from .supermodule.base import BaseSuperNetModule
+
+if TYPE_CHECKING:
+    from pytorch_lightning.core.optimizer import LightningOptimizer
 
 __all__ = [
     'BaseSuperNetModule',
@@ -288,13 +286,13 @@ class BaseOneShotLightningModule(LightningModule):
         # instead of trainer.optimizers (raw optimizers),
         # because otherwise optim_progress is incorrect.
         optimizers = self.optimizers()
-        if isinstance(optimizers, optim.Optimizer):
+        if not isinstance(optimizers, list):
             optimizers = [optimizers]
         # Filter out optimizers for architecture parameters.
         optimizers = [opt for opt in optimizers if not getattr(opt, 'is_arch_optimizer', False)]
 
         opt_idx = self._optimizer_progress % len(optimizers)
-        optimizer = optimizers[opt_idx]
+        optimizer = cast(Optimizer, optimizers[opt_idx])  # LightningOptimizer has the same interface as Optimizer.
 
         # There should be many before/after hooks called here, but they are omitted in this implementation.
         # 1. zero gradient
@@ -344,19 +342,21 @@ class BaseOneShotLightningModule(LightningModule):
                 if lr_scheduler['interval'] == interval and current_idx % lr_scheduler['frequency']:
                     lr_scheduler['scheduler'].step()
 
-    def architecture_optimizers(self) -> list[Optimizer] | Optimizer | None:
+    def architecture_optimizers(self) -> list[LightningOptimizer] | LightningOptimizer | None:
         """
         Get the optimizers configured in :meth:`configure_architecture_optimizers`.
+
+        Return type would be LightningOptimizer or list of LightningOptimizer.
         """
         optimizers = self.optimizers()
-        if isinstance(optimizers, optim.Optimizer):
+        if not isinstance(optimizers, list):
             optimizers = [optimizers]
         optimizers = [opt for opt in optimizers if getattr(opt, 'is_arch_optimizer', False)]
         if not optimizers:
             return None
         if len(optimizers) == 1:
             return optimizers[0]
-        return optimizers
+        return optimizers  # type: ignore
 
     # The following methods redirects the callbacks to inner module.
     # It's not the complete list though.

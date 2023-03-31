@@ -42,12 +42,17 @@ stages:
 
     - script: |
         cd test
-        # python -m pytest algo/nas
+        python algo/nas/benchmark/prepare.py
+      displayName: Prepare NAS benchmark
+
+    - script: |
+        cd test
+        python -m pytest algo/nas
       displayName: NAS test
 
   - job: windows
     pool: nni-it-1es-windows
-    timeoutInMinutes: 90
+    timeoutInMinutes: 120
 
     steps:
     - template: templates/check-gpu-status.yml
@@ -73,5 +78,5 @@ stages:
 
     - powershell: |
         cd test
-        # python -m pytest algo/nas
+        python -m pytest algo/nas
       displayName: NAS test

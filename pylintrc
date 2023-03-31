@@ -49,11 +49,4 @@ generated-members=numpy.*,torch.*,tensorflow.*,pycuda.*,tensorrt.*
 
 ignored-modules=tensorflow,_winapi,msvcrt,tensorrt,pycuda,nni_node
 
-ignore-paths=nni/retiarii,
-             nni/nas/space,
-             nni/nas/nn,
-             nni/nas/hub,
-             nni/nas/execution,
-             nni/nas/oneshot,
-             nni/nas/strategy,
-             nni/nas/experiment,
+ignore-paths=nni/retiarii

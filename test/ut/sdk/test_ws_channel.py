@@ -11,21 +11,21 @@ from subprocess import Popen, PIPE
 import sys
 import time
 
-from nni.runtime.tuner_command_channel.websocket import WebSocket
+from nni.runtime.command_channel.websocket import WsChannelClient
 
 # A helper server that connects its stdio to incoming WebSocket.
 _server = None
 _client = None
 
-_command1 = 'T_hello world'
-_command2 = 'T_你好'
+_command1 = {'type': 'ut_command', 'value': 123}
+_command2 = {'type': 'ut_command', 'value': '你好'}
 
 ## test cases ##
 
 def test_connect():
     global _client
     port = _init()
-    _client = WebSocket(f'ws://localhost:{port}')
+    _client = WsChannelClient(f'ws://localhost:{port}')
     _client.connect()
 
 def test_send():
@@ -34,16 +34,16 @@ def test_send():
     _client.send(_command2)
     time.sleep(0.01)
 
-    sent1 = _server.stdout.readline().strip()
+    sent1 = json.loads(_server.stdout.readline())
     assert sent1 == _command1, sent1
 
-    sent2 = _server.stdout.readline().strip()
+    sent2 = json.loads(_server.stdout.readline().strip())
     assert sent2 == _command2, sent2
 
 def test_receive():
     # Send commands to server via stdin, and get them back via channel.
-    _server.stdin.write(_command1 + '\n')
-    _server.stdin.write(_command2 + '\n')
+    _server.stdin.write(json.dumps(_command1) + '\n')
+    _server.stdin.write(json.dumps(_command2) + '\n')
     _server.stdin.flush()
 
     received1 = _client.receive()

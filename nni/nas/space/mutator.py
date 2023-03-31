@@ -194,7 +194,7 @@ class Mutator(LabeledMutable):
             # This will only affect the memo.
             # Parent random will take care of the freeze afterwards.
             return None
-    
+
 
 class StationaryMutator(Mutator):
     """A mutator that can be dry run.

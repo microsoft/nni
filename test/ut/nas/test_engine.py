@@ -1,3 +1,4 @@
+import time
 import pytest
 
 import nni
@@ -86,7 +87,9 @@ def test_engine(engine: ExecutionEngine):
     assert model.metrics.final == 10
     assert model.status == ModelStatus.Trained
 
-    assert engine.idle_worker_available()
+    if not engine.idle_worker_available():
+        time.sleep(10)  # The free event may be delayed for up to 5 seconds.
+        assert engine.idle_worker_available()
     assert engine.budget_available()
 
     engine.submit_models(exec_model_space.freeze({'a': 3}))

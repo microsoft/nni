@@ -16,3 +16,5 @@ from .fused_utils import (
     update_config,
     check_bias
 )
+
+from .docstring import _EVALUATOR_DOCSTRING

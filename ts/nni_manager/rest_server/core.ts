@@ -13,9 +13,6 @@ import assert from 'node:assert/strict';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
-import express from 'express';
-import expressWs from 'express-ws';
-
 import { Deferred } from 'common/deferred';
 import { globals } from 'common/globals';
 import { Logger, getLogger } from 'common/log';
@@ -40,9 +37,7 @@ export class RestServerCore {
     public start(): Promise<void> {
         logger.info(`Starting REST server at port ${this.port}, URL prefix: "/${this.urlPrefix}"`);
 
-        const app = express();
-        expressWs(app, undefined, { wsOptions: { maxPayload: 4 * 1024 * 1024 * 1024 }});
-
+        const app = globals.rest.getExpressApp();
         app.use('/' + this.urlPrefix, globals.rest.getExpressRouter());
         app.all('/' + this.urlPrefix, (_req, res) => { res.status(404).send('Not Found'); });
         app.all('*', (_req, res) => { res.status(404).send(`Outside prefix "/${this.urlPrefix}"`); });
@@ -61,7 +56,7 @@ export class RestServerCore {
         return deferred.promise;
     }
 
-    public shutdown(): Promise<void> {
+    public shutdown(timeoutMilliseconds?: number): Promise<void> {
         logger.info('Stopping REST server.');
         if (this.server === null) {
             logger.warning('REST server is not running.');
@@ -77,7 +72,7 @@ export class RestServerCore {
                 logger.debug('Killing connections');
                 this.server?.closeAllConnections();
             }
-        }, 5000);
+        }, timeoutMilliseconds ?? 5000);
         return deferred.promise;
     }
 }

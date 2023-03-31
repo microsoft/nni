@@ -21,7 +21,7 @@ def test_model_format_config():
 
 
 def test_experiment_config():
-    config = NasExperimentConfig('local', 'ts', 'simplified')
+    config = NasExperimentConfig('ts', 'simplified', 'local')
     config.trial_concurrency = 1
     config_json = config.json()
 

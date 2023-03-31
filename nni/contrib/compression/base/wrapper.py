@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 import logging
 import inspect
 from typing import Any, Callable, Dict, List, Tuple, Type, Union, Literal
@@ -53,7 +54,7 @@ class ModuleWrapper(torch.nn.Module):
         config
             The config is a dict which contains keys (not required): ``pruning``, ``quantization``, ``distillation``.
         fused_modules:
-            The List contains a series module names which need to fuse.
+            The List contains a series of modules which need to fuse.
         """
         super().__init__()
 
@@ -277,7 +278,7 @@ class ModuleWrapper(torch.nn.Module):
                 return pruning_apply_methods[target_space.apply_method](target, target_space)
             else:
                 raise TypeError(f'Only {list(pruning_apply_methods.keys())} are supported for mask `apply_method`.')
-        elif target_space.type is TargetType.PARAMETER:
+        elif target_space.type is TargetType.PARAMETER and target is not None:
             # Prevent registering buffer as a parameter
             return target * 1.
         else:
@@ -438,7 +439,7 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
                       ) -> Tuple[Dict[str, ModuleWrapper], Dict[str, Dict[str, TargetSpace]]]:
     assert mode in ['pruning', 'quantization', 'distillation']
 
-    configured_target_spaces = {}
+    configured_target_spaces = defaultdict(dict)
     existed_wrappers = existed_wrappers if existed_wrappers else {}
     module_wrappers = {k: v for k, v in existed_wrappers.items()}
     identity_module_set = set()
@@ -459,7 +460,7 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
             wrapper, target_spaces = create_module_wrapper(model, module, module_name, mode, public_config, \
                                                            old_wrapper, list(fused_modules_pair))
             module_wrappers[module_name] = wrapper
-            configured_target_spaces[module_name] = target_spaces
+            configured_target_spaces[module_name].update(target_spaces)
         if len(fuse_module_names) > 0:
             raise ValueError(f'{fuse_module_names} can\'t be fused with {modules.keys()}')
     if module_set.intersection(identity_module_set):

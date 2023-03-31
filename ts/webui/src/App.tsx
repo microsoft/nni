@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Stack } from '@fluentui/react';
+import { Stack, MessageBar, MessageBarType } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import NavCon from '@components/nav/Nav';
-import MessageInfo from '@components/common/MessageInfo';
 import { COLUMN } from '@static/const';
 import { isManagerExperimentPage } from '@static/function';
 import '@style/App.scss';
@@ -146,13 +145,17 @@ class App extends React.Component<{}, AppState> {
                                     (item, key) =>
                                         item.errorWhere && (
                                             <div key={key} className='warning'>
-                                                <MessageInfo info={item.errorMessage} typeInfo='error' />
+                                                <MessageBar messageBarType={MessageBarType.error}>
+                                                    {item.errorMessage}
+                                                </MessageBar>
                                             </div>
                                         )
                                 )}
                                 {isillegalFinal && (
                                     <div className='warning'>
-                                        <MessageInfo info={expWarningMessage} typeInfo='warning' />
+                                        <MessageBar messageBarType={MessageBarType.warning}>
+                                            {expWarningMessage}
+                                        </MessageBar>
                                     </div>
                                 )}
                                 {/* <AppContext.Provider */}

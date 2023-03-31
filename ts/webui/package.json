@@ -90,7 +90,8 @@
     "mock": "node scripts/server.js",
     "dev": "concurrently \"npm run mock\" \"npm run start\"",
     "tsc": "tsc",
-    "eslint": "eslint"
+    "eslint": "eslint ./ --ext .tsx,.ts",
+    "eslint-fix": "eslint ./ --ext .tsx,.ts --fix"
   },
   "eslintConfig": {
     "extends": "react-app"

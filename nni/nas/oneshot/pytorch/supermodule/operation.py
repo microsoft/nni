@@ -9,7 +9,6 @@ which is commonly known as super-kernel (as in channel search), or weight entang
 from __future__ import annotations
 
 import inspect
-import itertools
 import warnings
 from typing import Any, Type, TypeVar, cast, Union, Tuple, List
 
@@ -18,7 +17,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-from nni.common.serializer import is_traceable
 from nni.mutable import MutableExpression
 from nni.nas.nn.pytorch import (
     ParametrizedModule,
@@ -63,7 +61,6 @@ class MixedOperationSamplingPolicy:
         So similar to :meth:`BaseSuperNetModule.mutate`,
         memo should also be managed (read and written) by the policy itself.
         """
-        pass
 
     def resample(self, operation: 'MixedOperation', memo: dict[str, Any]) -> dict[str, Any]:
         """The handler of :meth:`MixedOperation.resample`."""
@@ -131,7 +128,6 @@ class MixedOperation(BaseSuperNetModule):
 
     def __post_init__(self) -> None:
         """Can be used to validate, or to do extra processing after calling ``__init__``."""
-        pass
 
     def forward_with_args(self, *args, **kwargs):
         """To control real fprop. The accepted arguments are ``argument_list``,
@@ -367,21 +363,21 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
             return max(traverse_all_options(mutable_expr))
 
     def freeze_weight(self,
-                    in_channels: int_or_int_dict,
-                    out_channels: int_or_int_dict,
-                    kernel_size: scalar_or_scalar_dict[_int_or_tuple],
-                    groups: int_or_int_dict,
-                    **kwargs) -> Any:
+                      in_channels: int_or_int_dict,
+                      out_channels: int_or_int_dict,
+                      kernel_size: scalar_or_scalar_dict[_int_or_tuple],
+                      groups: int_or_int_dict,
+                      **kwargs) -> Any:
         rv = self._freeze_weight_impl(in_channels, out_channels, kernel_size, groups)
         rv.pop('in_channels_per_group', None)
         return rv
 
     def _freeze_weight_impl(self,
-                          in_channels: int_or_int_dict,
-                          out_channels: int_or_int_dict,
-                          kernel_size: scalar_or_scalar_dict[_int_or_tuple],
-                          groups: int_or_int_dict,
-                          **kwargs) -> Any:
+                            in_channels: int_or_int_dict,
+                            out_channels: int_or_int_dict,
+                            kernel_size: scalar_or_scalar_dict[_int_or_tuple],
+                            groups: int_or_int_dict,
+                            **kwargs) -> Any:
         in_channels_ = _W(in_channels)
         out_channels_ = _W(out_channels)
 
@@ -769,12 +765,12 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
 
         params_mapping = self._freeze_weight_impl(embed_dim, kdim, vdim)
         in_proj_bias, in_proj_weight, bias_k, bias_v, \
-        out_proj_weight, out_proj_bias, q_proj, k_proj, v_proj, qkv_same_embed_dim = [
-            params_mapping.get(name)
-            for name in ['in_proj_bias', 'in_proj_weight', 'bias_k', 'bias_v',
-            'out_proj.weight', 'out_proj.bias', 'q_proj_weight', 'k_proj_weight',
-            'v_proj_weight', 'qkv_same_embed_dim']
-        ]
+            out_proj_weight, out_proj_bias, q_proj, k_proj, v_proj, qkv_same_embed_dim = [
+                params_mapping.get(name)
+                for name in ['in_proj_bias', 'in_proj_weight', 'bias_k', 'bias_v',
+                             'out_proj.weight', 'out_proj.bias', 'q_proj_weight', 'k_proj_weight',
+                             'v_proj_weight', 'qkv_same_embed_dim']
+            ]
 
         # The rest part is basically same as pytorch
         attn_output, attn_output_weights = F.multi_head_attention_forward(
@@ -787,12 +783,10 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             attn_mask=attn_mask, use_separate_proj_weight=not qkv_same_embed_dim,
             q_proj_weight=q_proj, k_proj_weight=k_proj, v_proj_weight=v_proj)
 
-
         if getattr(self, 'batch_first', False):  # backward compatibility
             return attn_output.transpose(1, 0), attn_output_weights
         else:
             return attn_output, attn_output_weights
-
 
 
 NATIVE_MIXED_OPERATIONS: list[Type[MixedOperation]] = [

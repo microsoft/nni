@@ -1,9 +1,18 @@
 import * as React from 'react';
-import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn, IStackTokens } from '@fluentui/react';
+import {
+    Stack,
+    DetailsList,
+    DefaultButton,
+    Icon,
+    SearchBox,
+    IColumn,
+    IStackTokens,
+    MessageBar,
+    MessageBarType
+} from '@fluentui/react';
 import { ExperimentsManager } from '@model/experimentsManager';
 import { expformatTimestamp, copyAndSort } from '@static/function';
 import { AllExperimentList, SortInfo } from '@static/interface';
-import MessageInfo from '@components/common/MessageInfo';
 import { compareDate, filterByStatusOrPlatform, getSortedSource } from './expFunction';
 import { MAXSCREENCOLUMNWIDHT, MINSCREENCOLUMNWIDHT } from './experimentConst';
 import { Hearder } from './Header';
@@ -85,7 +94,9 @@ class Experiment extends React.Component<{}, ExpListState> {
                 <Hearder />
                 {errorMessage !== '' ? (
                     <div className='warning'>
-                        <MessageInfo info={errorMessage} typeInfo='error' />
+                        <MessageBar messageBarType={MessageBarType.error} isMultiline={true} style={{ width: 400 }}>
+                            {errorMessage}
+                        </MessageBar>
                     </div>
                 ) : null}
                 <Stack className='contentBox expBackground'>
