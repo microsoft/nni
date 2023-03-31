@@ -8,7 +8,7 @@ from torchvision import datasets, transforms
 
 import nni
 from nni.compression.pytorch import TorchEvaluator
-from nni.contrib.compression.utils.types import SCHEDULER
+from nni.common.types import SCHEDULER
 
 import sys
 from pathlib import Path

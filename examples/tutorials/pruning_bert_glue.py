@@ -159,7 +159,7 @@ import torch.nn.functional as F
 from datasets import load_metric
 from transformers.modeling_outputs import SequenceClassifierOutput
 
-from nni.contrib.compression.utils.types import SCHEDULER
+from nni.common.types import SCHEDULER
 
 
 def training(model: torch.nn.Module,

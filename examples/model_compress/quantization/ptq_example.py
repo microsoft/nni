@@ -14,7 +14,7 @@ from torchvision import datasets, transforms
 import nni
 from nni.contrib.compression.quantization import PtqQuantizer
 from nni.contrib.compression.utils import TorchEvaluator
-from nni.contrib.compression.utils.types import SCHEDULER
+from nni.common.types import SCHEDULER
 
 
 torch.manual_seed(0)

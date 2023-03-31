@@ -11,7 +11,7 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 from nni.common.serializer import is_traceable
-from nni.contrib.compression.utils.types import SCHEDULER
+from nni.common.types import SCHEDULER
 
 
 __all__ = ['OptimizerConstructHelper', 'LRSchedulerConstructHelper']

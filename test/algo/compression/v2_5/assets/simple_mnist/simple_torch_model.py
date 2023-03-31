@@ -15,7 +15,7 @@ from torchvision import transforms
 
 from ..device import device
 
-from nni.contrib.compression.utils.types import SCHEDULER
+from nni.common.types import SCHEDULER
 
 
 class SimpleTorchModel(torch.nn.Module):
@@ -44,7 +44,7 @@ def training_step(batch: Tuple, model: Module, device: torch.device = device):
     return loss
 
 
-def training_model(model: Module, optimizer: Optimizer, training_step: Callable, scheduler: SCHEDULER = None,  # type: ignore
+def training_model(model: Module, optimizer: Optimizer, training_step: Callable, scheduler: SCHEDULER = None,
                    max_steps: int | None = None, max_epochs: int | None = None, device: torch.device = device):
     model.train()
 

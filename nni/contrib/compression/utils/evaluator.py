@@ -31,7 +31,7 @@ else:
 
 import nni
 from nni.common import is_traceable
-from nni.contrib.compression.utils.types import SCHEDULER
+from nni.common.types import SCHEDULER
 from .constructor_helper import OptimizerConstructHelper, LRSchedulerConstructHelper
 from .check_ddp import check_ddp_model, reset_ddp_model
 

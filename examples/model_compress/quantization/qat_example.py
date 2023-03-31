@@ -16,7 +16,7 @@ from torchvision.datasets import MNIST
 import nni
 from nni.contrib.compression.quantization import QATQuantizer
 from nni.contrib.compression.utils import TorchEvaluator
-from nni.contrib.compression.utils.types import SCHEDULER
+from nni.common.types import SCHEDULER
 
 
 torch.manual_seed(1024)

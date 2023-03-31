@@ -25,7 +25,7 @@ from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils import count_flops_params
 from nni.compression.pytorch.pruning import TaylorFOWeightPruner
 from nni.compression.pytorch.utils import TorchEvaluator
-from nni.contrib.compression.utils.types import SCHEDULER
+from nni.common.types import SCHEDULER
 
 #############  Create dataloaders, optimizer, training and evaluation function ############
 

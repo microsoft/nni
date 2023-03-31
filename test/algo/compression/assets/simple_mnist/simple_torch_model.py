@@ -16,7 +16,7 @@ from torchvision import transforms
 
 from ..device import device
 
-from nni.contrib.compression.utils.types import SCHEDULER
+from nni.common.types import SCHEDULER
 
 
 class SimpleTorchModel(torch.nn.Module):
