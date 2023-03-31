@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { Stack, StackItem, CommandBarButton, IContextualMenuProps, IStackTokens } from '@fluentui/react';
+import { Stack, StackItem, CommandBarButton, DefaultButton, IContextualMenuProps, IStackTokens } from '@fluentui/react';
 import WebRouters from './WebsiteRouter';
 import TooltipHostForIcon from './TooltipHostForIcon';
 import LinksIcon from '@components/nav/LinksIcon';
@@ -10,9 +10,10 @@ import { EXPERIMENT } from '@static/datamodel';
 import { getPrefix } from '@static/function';
 import { SlideNavBtns } from './slideNav/SlideNavBtns';
 import { timeIcon, disableUpdates, requency, closeTimer } from '@components/fluent/Icon';
+import { ErrorMessage } from '@components/nav/ErrorMessage';
+import { NavContext } from '@/App';
 import '@style/nav/nav.scss';
 import '@style/icon.scss';
-import { ErrorMessage } from '@components/nav/ErrorMessage';
 
 const pageURLtoken: IStackTokens = {
     padding: '20px 10px',
@@ -23,13 +24,9 @@ const navMaintoken: IStackTokens = {
     childrenGap: 16
 };
 
-interface NavProps {
-    changeInterval: (value: number) => void;
-}
-
-const NavCon = (props: NavProps): any => {
-    const { changeInterval } = props;
+const NavCon = (): any => {
     const [version, setVersion] = useState('999' as string);
+    const { changeInterval, refreshPage } = useContext(NavContext);
     const [currentPage, setcurrentPage] = useState(
         window.location.pathname === '/oview' || window.location.pathname === '/'
             ? 'Overview'
@@ -156,6 +153,22 @@ const NavCon = (props: NavProps): any => {
                         />
                         <div className='bar'>|</div>
                         <SlideNavBtns />
+                        <div className='bar'>|</div>
+                        {/* click to refresh page  */}
+                        {/* <LinksIcon
+                            tooltip='Refresh'
+                            iconName='summary'
+                            directional='bottom'
+                            iconClickEvent={(): void => refreshPage()}
+                        /> */}
+                        <DefaultButton
+                            text="Standard"
+                            onClick={(): void => { 
+                                refreshPage();
+                            }}
+                            allowDisabledFocus
+                            // disabled={disabled}
+                        />
                         <div className='bar'>|</div>
                         <div className='nav-refresh'>
                             <CommandBarButton
