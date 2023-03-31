@@ -15,4 +15,3 @@ def test_nni_trace_mmcv(mod_fn):
 
     mod = mod_fn()
     trace_pipeline(mod)
- 
