@@ -54,7 +54,7 @@ class ModuleWrapper(torch.nn.Module):
         config
             The config is a dict which contains keys (not required): ``pruning``, ``quantization``, ``distillation``.
         fused_modules:
-            The List contains a series module names which need to fuse.
+            The List contains a series of modules which need to fuse.
         """
         super().__init__()
 
