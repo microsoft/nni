@@ -340,6 +340,31 @@ class Quantizer(Compressor):
 
         return calibration_config
 
+    def update_calibration_config(self, calibration_config: Dict[str, Dict[str, Dict[str, torch.Tensor | Any]]]):
+        for module_name, target_configs in calibration_config.items():
+            for target_name, config in target_configs.items():
+                assert module_name in self._module_wrappers and target_name in self._module_wrappers[module_name].quantization_target_spaces
+                wrapper = self._module_wrappers[module_name]
+                target_space = wrapper.quantization_target_spaces[target_name]
+                # NOTE: try to auto get the device of the current module
+                try:
+                    device = next(wrapper.parameters()).device
+                except StopIteration:
+                    try:
+                        device = next(wrapper.buffers()).device
+                    except StopIteration:
+                        if target_space.scale is not None:
+                            device = target_space.scale.device
+                        else:
+                            # NOTE: this will have risk in model parallel
+                            device = next(self.bound_model.parameters()).device
+                config = tree_map(lambda t: t.to(device) if isinstance(t, torch.Tensor) else t, config)
+                target_space.scale = config['scale']
+                target_space.zero_point = config['zero_point']
+                assert target_space.quant_bits == config['quant_bits']
+                assert target_space.quant_dtype == config['quant_dtype']
+                assert target_space.quant_scheme == config['quant_scheme']
+
     def patch_optimizer_param_group(self):
         module_name_param_dict = {}
         for module_name, _ in self._target_spaces.items():
