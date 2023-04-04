@@ -657,7 +657,7 @@ class LightningEvaluator(Evaluator):
 
 _OPTIMIZERS = Union[Optimizer, List[Optimizer]]
 _TRAINING_STEP = Callable[..., Union[Tensor, Tuple[Tensor], Dict[str, Tensor]]]
-_SCHEDULERS = Union[None, SCHEDULER, List[SCHEDULER]]  # type: ignore
+_SCHEDULERS = Union[None, SCHEDULER, List[SCHEDULER]]
 _EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
 _TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, Optional[_SCHEDULERS], Optional[int], Optional[int]], None]
 
