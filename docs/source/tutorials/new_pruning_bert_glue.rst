@@ -805,7 +805,7 @@ Evaluate the pruned model size and accuracy.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 571-608
+.. GENERATED FROM PYTHON SOURCE LINES 571-618
 
 Results
 -------
@@ -834,6 +834,16 @@ Results
       - 73.57% (22.48M)
       - 50.00% (0.30M)
       - 83.33%
+    * - 70.95% (31.81M)
+      - 33.33% (15.89M)
+      - 81.75% (15.52M)
+      - 33.33% (0.39M)
+      - 83.79%
+    * - 78.20% (23.86M)
+      - 50.00% (11.92M)
+      - 86.31% (11.65M)
+      - 50.00% (0.30M)
+      - 82.53%
     * - 81.65% (20.12M)
       - 50.00% (11.92M)
       - 90.71% (7.90M)
@@ -848,7 +858,7 @@ Results
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.667 seconds)
+   **Total running time of the script:** ( 0 minutes  1.990 seconds)
 
 
 .. _sphx_glr_download_tutorials_new_pruning_bert_glue.py:
