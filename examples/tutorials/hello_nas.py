@@ -283,17 +283,17 @@ exp = NasExperiment(model_space, evaluator, search_strategy)
 # local training service with concurrency 1 will be used by default.
 # Users can customize the config. For example,
 
-exp.config.max_trial_number = 4   # spawn 4 trials at most
-exp.config.trial_concurrency = 2  # will run two trials concurrently
+exp.config.max_trial_number = 3   # spawn 3 trials at most
+exp.config.trial_concurrency = 1  # will run 1 trial concurrently
+exp.config.trial_gpu_number = 0   # will not use GPU
 
 # %%
 # Remember to set the following config if you want to GPU.
-# ``use_active_gpu`` should be set true if you wish to use an occupied GPU (possibly running a GUI).
-
-exp.config.trial_gpu_number = 1
-exp.config.training_service.use_active_gpu = True
-
-# %%
+# ``use_active_gpu`` should be set true if you wish to use an occupied GPU (possibly running a GUI)::
+#
+#    exp.config.trial_gpu_number = 1
+#    exp.config.training_service.use_active_gpu = True
+#
 # Launch the experiment. The experiment should take several minutes to finish on a workstation with 2 GPUs.
 
 exp.run(port=8081)
