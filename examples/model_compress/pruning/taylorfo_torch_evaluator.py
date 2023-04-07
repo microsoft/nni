@@ -2,12 +2,13 @@ from __future__ import annotations
 from typing import Callable, Any
 
 import torch
-from torch.optim.lr_scheduler import StepLR, _LRScheduler
+from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
 import nni
 from nni.compression.pytorch import TorchEvaluator
+from nni.common.types import SCHEDULER
 
 import sys
 from pathlib import Path
@@ -21,7 +22,7 @@ model: torch.nn.Module = VGG().to(device)
 
 def training_func(model: torch.nn.Module, optimizers: torch.optim.Optimizer,
                   criterion: Callable[[Any, Any], torch.Tensor],
-                  lr_schedulers: _LRScheduler | None = None, max_steps: int | None = None,
+                  lr_schedulers: SCHEDULER | None = None, max_steps: int | None = None,
                   max_epochs: int | None = None, *args, **kwargs):
     model.train()
     # prepare data
