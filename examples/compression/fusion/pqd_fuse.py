@@ -23,7 +23,7 @@ from nni.contrib.compression import TorchEvaluator
 from nni.contrib.compression.base.compressor import Quantizer
 from nni.contrib.compression.distillation import DynamicLayerwiseDistiller
 from nni.contrib.compression.pruning import TaylorPruner, AGPPruner
-from nni.contrib.compression.quantization import LsqQuantizer
+from nni.contrib.compression.quantization import QATQuantizer
 from nni.contrib.compression.utils import auto_set_denpendency_group_ids
 from nni.compression.pytorch.speedup.v2 import ModelSpeedup
 
@@ -72,14 +72,21 @@ if __name__ == '__main__':
     q_config_list = [{
         'op_types': ['Conv2d'],
         'quant_dtype': 'int8',
-        'target_names': ['weight', '_input_']
+        'target_names': ['_input_'],
+        'granularity': 'per_channel'
+    }, {
+        'op_types': ['Conv2d'],
+        'quant_dtype': 'int8',
+        'target_names': ['weight'],
+        'granularity': 'out_channel'
     }, {
         'op_types': ['BatchNorm2d'],
         'quant_dtype': 'int8',
-        'target_names': ['_output_']
+        'target_names': ['_output_'],
+        'granularity': 'per_channel'
     }]
 
-    quantizer = LsqQuantizer.from_compressor(scheduled_pruner, q_config_list)
+    quantizer = QATQuantizer.from_compressor(scheduled_pruner, q_config_list, quant_start_step=100)
 
     # create distiller
     def teacher_predict(batch, teacher_model):
@@ -100,12 +107,51 @@ if __name__ == '__main__':
 
     # speed up model
     masks = scheduled_pruner.get_masks()
-    model = ModelSpeedup(model, dummy_input, masks).speedup_model()
+    speedup = ModelSpeedup(model, dummy_input, masks)
+    model = speedup.speedup_model()
+
+    print('Compressed model paramater number: ', sum([param.numel() for param in model.parameters()]))
+    print('Compressed model without finetuning & qsim acc: ', evaluate(model, test_loader), '%')
 
     # simulate quantization
     calibration_config = quantizer.get_calibration_config()
+
+    def trans(calibration_config, speedup: ModelSpeedup):
+        for node, node_info in speedup.node_infos.items():
+            if node.op == 'call_module' and node.target in calibration_config:
+                # assume the module only has one input and one output
+                input_mask = speedup.node_infos[node.args[0]].output_masks
+                param_mask = node_info.param_masks
+                output_mask = node_info.output_masks
+
+                module_cali_config = calibration_config[node.target]
+                if '_input_0' in module_cali_config:
+                    reduce_dims = list(range(len(input_mask.shape)))
+                    reduce_dims.remove(1)
+                    idxs = torch.nonzero(input_mask.sum(reduce_dims), as_tuple=True)[0].cpu()
+                    module_cali_config['_input_0']['scale'] = module_cali_config['_input_0']['scale'].index_select(1, idxs)
+                    module_cali_config['_input_0']['zero_point'] = module_cali_config['_input_0']['zero_point'].index_select(1, idxs)
+                if '_output_0' in module_cali_config:
+                    reduce_dims = list(range(len(output_mask.shape)))
+                    reduce_dims.remove(1)
+                    idxs = torch.nonzero(output_mask.sum(reduce_dims), as_tuple=True)[0].cpu()
+                    module_cali_config['_output_0']['scale'] = module_cali_config['_output_0']['scale'].index_select(1, idxs)
+                    module_cali_config['_output_0']['zero_point'] = module_cali_config['_output_0']['zero_point'].index_select(1, idxs)
+                if 'weight' in module_cali_config:
+                    reduce_dims = list(range(len(param_mask['weight'].shape)))
+                    reduce_dims.remove(0)
+                    idxs = torch.nonzero(param_mask['weight'].sum(reduce_dims), as_tuple=True)[0].cpu()
+                    module_cali_config['weight']['scale'] = module_cali_config['weight']['scale'].index_select(0, idxs)
+                    module_cali_config['weight']['zero_point'] = module_cali_config['weight']['zero_point'].index_select(0, idxs)
+                if 'bias' in module_cali_config:
+                    idxs = torch.nonzero(param_mask['bias'], as_tuple=True)[0].cpu()
+                    module_cali_config['bias']['scale'] = module_cali_config['bias']['scale'].index_select(0, idxs)
+                    module_cali_config['bias']['zero_point'] = module_cali_config['bias']['zero_point'].index_select(0, idxs)
+        return calibration_config
+
+    calibration_config = trans(calibration_config, speedup)
+
     sim_quantizer = Quantizer(model, q_config_list)
     sim_quantizer.update_calibration_config(calibration_config)
 
-    print('Compressed model paramater number: ', sum([param.numel() for param in model.parameters()]))
     print('Compressed model without finetuning acc: ', evaluate(model, test_loader), '%')
