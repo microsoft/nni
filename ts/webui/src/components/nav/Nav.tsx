@@ -33,6 +33,7 @@ const NavCon = (): any => {
             : ('Trials detail' as 'Overview' | 'Trials detail')
     );
     const [visibleExperimentPanel, setVisibleExperimentPanel] = useState(false);
+    const [refreshBtnDisabled, setRefreshBtnDisabled] = useState(false);
     const [refreshText, setRefreshText] = useState('Auto refresh' as string);
     const [refreshFrequency, setRefreshFrequency] = useState(10 as number | string);
 
@@ -155,19 +156,17 @@ const NavCon = (): any => {
                         <SlideNavBtns />
                         <div className='bar'>|</div>
                         {/* click to refresh page  */}
-                        {/* <LinksIcon
-                            tooltip='Refresh'
-                            iconName='summary'
-                            directional='bottom'
-                            iconClickEvent={(): void => refreshPage()}
-                        /> */}
                         <DefaultButton
-                            text="Standard"
-                            onClick={(): void => { 
+                            text='Refresh'
+                            onClick={(): void => {
+                                setRefreshBtnDisabled(true);
                                 refreshPage();
+                                setTimeout(() => {
+                                    setRefreshBtnDisabled(false);
+                                }, 2000);
                             }}
                             allowDisabledFocus
-                            // disabled={disabled}
+                            disabled={refreshBtnDisabled}
                         />
                         <div className='bar'>|</div>
                         <div className='nav-refresh'>
