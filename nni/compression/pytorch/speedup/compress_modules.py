@@ -602,7 +602,7 @@ def replace_conv1d(conv, masks):
     assert isinstance(conv, torch.nn.Conv1d)
     if len(in_masks) != 1:
         raise InputsNumberError()
- 
+
     in_mask = in_masks[0]
     weight_mask = weight_masks['weight']
     pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
