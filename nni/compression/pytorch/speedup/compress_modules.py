@@ -58,7 +58,7 @@ replace_module = {
 def convert_to_coarse_mask(t_mask, dim):
     """
     Convert the mask tensor to the coarse-grained mask tensor.
-    
+
     Parameters
     ---------
     t_mask: torch.Tensor
