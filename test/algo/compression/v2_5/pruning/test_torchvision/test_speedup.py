@@ -17,26 +17,30 @@ def test_l1_pruning_tv_models(mod_fn):
     if mod_fn.skip_reason:
         pytest.skip(mod_fn.skip_reason)
 
-    speedup_pipeline(mod_fn)
+    mod = mod_fn()
+    speedup_pipeline(mod)
 
 @pytest.mark.parametrize('mod_fn', tv_detection_models)
 def test_l1_pruning_tv_detection_models(mod_fn):
     if mod_fn.skip_reason:
         pytest.skip(mod_fn.skip_reason)
 
-    speedup_pipeline(mod_fn)
+    mod = mod_fn()
+    speedup_pipeline(mod)
 
 @pytest.mark.parametrize('mod_fn', tv_segmentation_models)
 def test_l1_pruning_tv_segmentation_models(mod_fn):
     if mod_fn.skip_reason:
         pytest.skip(mod_fn.skip_reason)
 
-    speedup_pipeline(mod_fn)
+    mod = mod_fn()
+    speedup_pipeline(mod)
 
 @pytest.mark.parametrize('mod_fn', tv_video_models)
 def test_l1_pruning_tv_video_models(mod_fn):
     if mod_fn.skip_reason:
         pytest.skip(mod_fn.skip_reason)
 
+    mod = mod_fn()
     speedup_pipeline(mod_fn)
     
