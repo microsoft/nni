@@ -4,6 +4,7 @@ resources:
     type: github
     endpoint: mmdetection
     name: open-mmlab/mmdetection
+    refs: 2.x
 
 trigger: none
 
