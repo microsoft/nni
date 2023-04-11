@@ -266,9 +266,9 @@ if __name__ == "__main__":
 # %%
 # Result
 # ------
-# We experimented with PTQ, LSQ, and QAT algorithms on the MNLI, QNLI, QQP, and RTE datasets respectively on an A100, and the experimental results are as follows
+# We experimented with PTQ, LSQ, and QAT algorithms on the MNLI, QNLI, QQP and  MRPC datasets respectively on an A100, and the experimental results are as follows
 #
-# ..list-table:: Quantize Bert-base-uncased on MNLI, QNLI, MRPC, QQP and RTE datasets.
+# ..list-table:: Quantize Bert-base-uncased on MNLI, QNLI, MRPC and QQP datasets.
 #     :header-rows: 1
 #     :widths: auto
 #
@@ -277,28 +277,28 @@ if __name__ == "__main__":
 #       - QNLI
 #       - MRPC
 #       - QQP
-#       - RTE
+#     * - Metrics
+#       - ACC
+#       - ACC
+#       - F1
+#       - F1
 #     * - Baseline
-#       - 84.53
-#       - 91.71
-#       - 83.09
-#       - 91.2
-#       - 72.56
+#       - 85.04
+#       - 91.67
+#       - 87.69
+#       - 88.42
 #     * - LSQ
-#       - 84.13
-#       - 91.58
-#       - 83.58
-#       - 91.08
-#       - 70.76
+#       - 84.34
+#       - 91.69
+#       - 89.9
+#       - 88.16
 #     * - QAT
-#       - 83.18
+#       - 83.68
 #       - 90.52
-#       - 84.07
-#       - 90.82
-#       - 74.01
+#       - 89.16
+#       - 87.62
 #     * - PTQ
-#       - 81.4
-#       - 89.37
-#       - 79.17
-#       - 90.74
-#       - 67.87
+#       - 76.37
+#       - 67.67
+#       - 74.79
+#       - 84.82
