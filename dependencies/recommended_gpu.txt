@@ -9,7 +9,7 @@ pytorch-lightning >= 1.6.1, < 2.0
 # for full-test-compression 
 -f https://download.openmmlab.com/mmcv/dist/cu117/torch1.13/index.html
 mmcv-full == 1.7.1
-mmdet
+mmdet >= 3.0
 
 git+https://github.com/microsoft/nn-Meter.git#egg=nn_meter
 lightgbm
