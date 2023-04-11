@@ -6,32 +6,32 @@ Quantizer
 QAT Quantizer
 ^^^^^^^^^^^^^
 
-..  autoclass:: nni.contrib.compression.quantizaiton.QATQuantizer
+..  autoclass:: nni.contrib.compression.quantization.QATQuantizer
 
 .. _DorefaQuantizer:
 
 DoReFa Quantizer
 ^^^^^^^^^^^^^^^^
 
-..  autoclass:: nni.contrib.compression.quantizaiton.DoReFaQuantizer
+..  autoclass:: nni.contrib.compression.quantization.DoReFaQuantizer
 
 .. _BNNQuantizer:
 
 BNN Quantizer
 ^^^^^^^^^^^^^
 
-..  autoclass:: nni.contrib.compression.quantizaiton.BNNQuantizer
+..  autoclass:: nni.contrib.compression.quantization.BNNQuantizer
 
 .. _LsqQuantizer:
 
 LSQ Quantizer
 ^^^^^^^^^^^^^
 
-..  autoclass:: nni.contrib.compression.quantizaiton.LsqQuantizer
+..  autoclass:: nni.contrib.compression.quantization.LsqQuantizer
 
 .. _PtqQuantizer:
 
 PTQ Quantizer
 ^^^^^^^^^^^^^^^^^^
 
-..  autoclass:: nni.contrib.compression.quantizaiton.PtqQuantizer
+..  autoclass:: nni.contrib.compression.quantization.PtqQuantizer
