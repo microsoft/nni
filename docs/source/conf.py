@@ -210,8 +210,8 @@ gettext_documents = [
     r'^index$',
     r'^quickstart$',
     r'^installation$',
-    r'^(nas|hpo|compression)/overview$',
-    r'^tutorials/(hello_nas|pruning_quick_start_mnist|hpo_quickstart_pytorch/main)$',
+    r'^(hpo|compression)/overview$',
+    r'^tutorials/(pruning_quick_start_mnist|hpo_quickstart_pytorch/main)$',
 ]
 
 # List of patterns, relative to source directory, that match files and
