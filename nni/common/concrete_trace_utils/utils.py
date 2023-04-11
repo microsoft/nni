@@ -18,6 +18,7 @@ _orig_torch_assert: Callable = torch._assert
 
 _orig_type: Callable = builtins.type
 _orig_isinstance: Callable = builtins.isinstance
+_orig_issubclass: Callable = builtins.issubclass
 _orig_getattr: Callable = builtins.getattr
 
 _orig_range: Type[Any] = builtins.range
@@ -32,6 +33,8 @@ _orig_map: Type[Any] = builtins.map
 _orig_zip: Type[Any] = builtins.zip
 _orig_enumerate: Type[Any] = builtins.enumerate
 _orig_slice: Type[Any] = builtins.slice
+_orig_reversed: Type[Any] = builtins.reversed
+_orig_torch_size: Type[Any] = torch.Size
 
 _orig_len: Callable = builtins.len
 _orig_not: Callable = operator.not_
@@ -39,6 +42,11 @@ _orig_is: Callable = operator.is_
 _orig_is_not: Callable = operator.is_not
 _orig_contains: Callable = operator.contains
 _orig_index: Callable = operator.index
+
+_orig_all: Callable = builtins.all
+_orig_min: Callable = builtins.min
+_orig_max: Callable = builtins.max
+
 
 def run_onlyif_instance(cond_type: Type[Any], return_orig: bool = True, return_const: Any = None):
     def helper(fn):

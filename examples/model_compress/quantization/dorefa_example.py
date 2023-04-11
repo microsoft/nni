@@ -7,7 +7,6 @@ from typing import Callable, Union, List, Dict, Tuple
 import torch
 import torch.nn.functional as F
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from torch import Tensor
 
@@ -16,6 +15,8 @@ from torchvision import datasets, transforms
 import nni
 from nni.contrib.compression.quantization import DoReFaQuantizer
 from nni.contrib.compression.utils import TorchEvaluator
+from nni.common.types import SCHEDULER
+
 
 torch.manual_seed(0)
 device = 'cuda'
@@ -61,7 +62,7 @@ def training_step(batch, model) -> Tensor:
 
 
 def training_model(model: torch.nn.Module, optimizer: Union[Optimizer, List[Optimizer]], \
-                   training_step: _TRAINING_STEP, scheduler: Union[None, _LRScheduler, List[_LRScheduler]] = None,
+                   training_step: _TRAINING_STEP, scheduler: Union[None, SCHEDULER, List[SCHEDULER]] = None,
                    max_steps: Union[int, None] = None, max_epochs: Union[int, None] = None):
     model.train()
     max_epochs = max_epochs or (10 if max_steps is None else 100)
@@ -85,9 +86,9 @@ def training_model(model: torch.nn.Module, optimizer: Union[Optimizer, List[Opti
             elif isinstance(optimizer, List) and all(isinstance(_, Optimizer) for _ in optimizer):
                 for opt in optimizer:
                     opt.step()
-            if isinstance(scheduler, _LRScheduler):
+            if isinstance(scheduler, SCHEDULER):
                 scheduler.step()
-            if isinstance(scheduler, List) and all(isinstance(_, _LRScheduler) for _ in scheduler):
+            if isinstance(scheduler, List) and all(isinstance(_, SCHEDULER) for _ in scheduler):
                 for sch in scheduler:
                     sch.step()
             current_steps += 1
@@ -120,7 +121,7 @@ def main():
     model = model.to(device)
     configure_list = [{
     'op_names': ['conv1', 'conv2', 'fc1', 'fc2'],
-    'target_names': ['_input_', 'weight', '_output_'],
+    'target_names': ['_input_', 'weight'],
     'quant_dtype': 'int8',
     'quant_scheme': 'affine',
     'granularity': 'default',
