@@ -11,7 +11,7 @@ We list the model formats currently supported.
 
 NNI supports two execution engines, along with one execution engine middleware:
 
-* **Training service execution engine** is the default engine for multi-trial strategy. It will spawn the trials concurrently and the trials will run by :doc:`NNI training service <experiment/training_service/overview>`.
+* **Training service execution engine** is the default engine for multi-trial strategy. It will spawn the trials concurrently and the trials will run by :doc:`NNI training service </experiment/training_service/overview>`.
 * **Sequential execution engine** is the default engine for one-shot strategy. It will run the trials in the current process. The trials will run sequentially without parallelism. It's also good for debugging multi-trial strategies.
 * **Cross-graph optimization middleware** experimentally supports cross-model optimizations, which makes model space exploration faster. It is only compatible with graph format above.
 
