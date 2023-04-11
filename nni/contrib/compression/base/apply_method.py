@@ -45,11 +45,7 @@ class DoferaGradClampRound(torch.autograd.Function):
         target = target / (2 * target.abs().max()) + 0.5
         dequantized_target = ClampRound.apply(target, target_space)
 
-<<<<<<< HEAD
         return 2 * dequantized_target - 1  # type: ignore
-=======
-        return 2 * dequantized_target - 1 # type: ignore
->>>>>>> remote_master/master
 
     @staticmethod
     def dorefa_clamp_round_output(target: torch.Tensor, target_space: QuantizationTargetSpace) -> Any:
