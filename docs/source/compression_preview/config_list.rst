@@ -219,6 +219,13 @@ quant_scheme
 ``affine`` or ``symmetric``. If this key is not set, the quantization scheme will be choosen by quantizer,
 most quantizer will apply ``symmetric`` quantization.
 
+fuse_names
+^^^^^^^^^^
+
+``List[(str,)]``. Optional parameter, each tuple defines the module and modules that need to be fused in the first module. 
+Each element in the tuple is the module name in the model. 
+Note that the first module name in each tuple should be in the ``op_name`` or ``op_name_re``.
+
 granularity
 ^^^^^^^^^^^
 
