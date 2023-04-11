@@ -9,11 +9,12 @@ import logging
 from typing import Any, Dict, List, Literal, Callable
 
 import torch
+from torch.utils._pytree import tree_map
 
 from .config import trans_legacy_config_list, default_config_schema
 from .target_space import TargetSpace, TargetType, DistillationTargetSpace, PruningTargetSpace, QuantizationTargetSpace
 from .wrapper import ModuleWrapper, register_wrappers
-from ..utils import Evaluator, Scaling
+from ..utils import Evaluator, Scaling, _EVALUATOR_DOCSTRING
 
 _logger = logging.getLogger(__name__)
 
@@ -24,24 +25,24 @@ _DISTILLATION_TARGET_SPACES = Dict[str, Dict[str, DistillationTargetSpace]]
 
 
 class Compressor:
+    __doc__ = r"""Compressor base class.
+
+    Parameters
+    ----------
+    model
+        Model to be compressed.
+    config_list
+        Config list. Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
+    evaluator
+        {evaluator_docstring}
+    existed_wrappers
+        Use by class method ``from_compressor`` to inherit another compressor's wrapper.
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     mode: Literal['pruning', 'quantization', 'distillation']
 
     def __init__(self, model: torch.nn.Module, config_list: List[Dict],
                  evaluator: Evaluator | None = None, existed_wrappers: Dict[str, ModuleWrapper] | None = None):
-        """
-        Compressor base class.
-
-        Parameters
-        ----------
-        model
-            Model to be compressed.
-        config_list
-            Config list. Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
-        evaluator
-            TODO: please refer.
-        existed_wrappers
-            Use by class method ``from_compressor`` to inherit another compressor's wrapper.
-        """
         assert self.mode in ['pruning', 'quantization', 'distillation']
         self.bound_model = model
         self.config_list = trans_legacy_config_list(deepcopy(config_list))
@@ -132,6 +133,9 @@ class Compressor:
         """
         assert self._is_wrapped, 'The bound model is not wrapped, can not track information with an unwrapped model.'
         with torch.no_grad():
+            model_device = next(iter(self.bound_model.parameters())).device
+            args = tree_map(lambda x: x.to(model_device) if isinstance(x, torch.Tensor) else x, args)
+            kwargs = tree_map(lambda x: x.to(model_device) if isinstance(x, torch.Tensor) else x, kwargs)
             self.bound_model(*args, **kwargs)
 
     def _get_param_names_map(self) -> Dict[str, str]:
@@ -293,6 +297,16 @@ class Quantizer(Compressor):
     def _register_scalers(self):
         # scalers are used to support different sparse/quant granularity
         register_scalers(self._target_spaces, self._set_default_sparse_granularity)  # type: ignore
+
+    def check_target(self, wrapper: ModuleWrapper, target_name: str) -> bool:
+        module_name = wrapper.name
+        if module_name not in self._target_spaces:
+            return False
+        ts = self._target_spaces[module_name]
+        if target_name not in ts:
+            return False
+
+        return True
 
     def _set_default_sparse_granularity(self, target_space: PruningTargetSpace) -> List[int] | str | None:
         return None

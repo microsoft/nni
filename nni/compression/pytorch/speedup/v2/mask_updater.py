@@ -243,7 +243,7 @@ class NoMaskUpdater(DefaultMaskUpdater):
                 return True
         elif node.op == 'call_method':
             if isinstance(node.args[0], Node) and isinstance(model_speedup.node_infos[node.args[0]].output_origin, torch.Tensor):
-                if node.target in ('dim', 'size', 'clone', 'detach'):
+                if node.target in ('dim', 'size'):
                     return True
         return False
 
@@ -434,6 +434,10 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
             module: torch.nn.Module = model_speedup.fetch_attr(node.target)
             if isinstance(module, self.no_change_act_module):
                 return self.direct_activation, self.indirect_activation
+        elif node.op == 'call_method':
+            if isinstance(node.args[0], Node) and isinstance(model_speedup.node_infos[node.args[0]].output_origin, torch.Tensor):
+                if node.target in ('clone', 'detach'):
+                    return self.direct_activation, self.indirect_activation
         return None
 
     def direct_update_process(self, model_speedup: 'ModelSpeedup', node: Node):

@@ -13,12 +13,10 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.hooks import RemovableHandle
 
 try:
     import pytorch_lightning as pl
-    from pytorch_lightning.callbacks import Callback
 except ImportError:
     LIGHTNING_INSTALLED = False
 else:
@@ -33,8 +31,10 @@ else:
 
 import nni
 from nni.common import is_traceable
+from nni.common.types import SCHEDULER
 from .constructor_helper import OptimizerConstructHelper, LRSchedulerConstructHelper
 from .check_ddp import check_ddp_model, reset_ddp_model
+
 
 _logger = logging.getLogger(__name__)
 
@@ -199,13 +199,13 @@ class Evaluator:
                                     'the ordering of tensors in sets will change between runs. Please use a list instead.')
                 else:
                     params = list(params)
-                name_lis = [param2name_dict[id(p)] for p in params]
-                target_prefix_name = ".".join(module_name.strip().split(".")[:-1])
+                name_lis = [param2name_dict[id(p)] for p in params if id(p) in param2name_dict]
 
                 for name in name_lis:
                     # match module_name
-                    prefix_name = ".".join(name.strip().split(".")[:-1])
-                    if target_prefix_name == prefix_name:
+                    prefix_name = name.strip().split(".")[:-1]
+                    prefix_name = ".".join(prefix_name[:-1]) if prefix_name[-1] == '_nni_wrapper' else ".".join(prefix_name)
+                    if module_name == prefix_name:
                         return i
 
             return -1
@@ -219,7 +219,7 @@ class Evaluator:
                     raise TypeError("optimizer can only optimize Tensors, "
                                 "but one of the params is " + torch.typename(param))
                 if not optimizer.defaults.get('differentiable', None) \
-                    and not (param.is_leaf or param.retains_grad): # type: ignore
+                    and not (param.is_leaf or param.retains_grad):  # type: ignore
                     raise ValueError("can't optimize a non-leaf Tensor")
                 target_param_group['params'].append(param)
 
@@ -487,27 +487,27 @@ class LightningEvaluator(Evaluator):
 
         if self._opt_returned_dicts:
             def new_configure_optimizers(_):  # type: ignore
-                optimizers_lr_schedulers: Any = old_configure_optimizers() # type: ignore
+                optimizers_lr_schedulers: Any = old_configure_optimizers()  # type: ignore
                 optimizers = [opt_lrs_dict['optimizer'] for opt_lrs_dict in optimizers_lr_schedulers]
                 # add param group
-                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers) # type: ignore
+                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers)  # type: ignore
 
                 return optimizers_lr_schedulers
 
         elif self._lr_scheduler_helpers:
             def new_configure_optimizers(_):  # type: ignore
-                optimizers_lr_schedulers: Any = old_configure_optimizers() # type: ignore
+                optimizers_lr_schedulers: Any = old_configure_optimizers()  # type: ignore
                 optimizers, lr_schedulers = optimizers_lr_schedulers
                 # add param_group
-                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers) # type: ignore
+                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers)  # type: ignore
 
                 return optimizers, lr_schedulers
 
         else:
             def new_configure_optimizers(_):
-                optimizers_lr_schedulers: Any = old_configure_optimizers() # type: ignore
+                optimizers_lr_schedulers: Any = old_configure_optimizers()  # type: ignore
                 # add param_group
-                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers_lr_schedulers) # type: ignore
+                self._optimizer_add_param_group(self.model, module_name_param_dict, optimizers_lr_schedulers)  # type: ignore
 
                 return optimizers_lr_schedulers
 
@@ -564,26 +564,39 @@ class LightningEvaluator(Evaluator):
 
     def patch_optimizer_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
         assert isinstance(self.model, pl.LightningModule)
+        old_configure_optimizers = self.model.configure_optimizers
 
-        class OptimizerCallback(Callback):
-            def on_before_optimizer_step(self, trainer: pl.Trainer, pl_module: pl.LightningModule,
-                                         optimizer: Optimizer, opt_idx: int) -> None:
+        def patched_step_factory(old_step):
+            def patched_step(_, *args, **kwargs):
                 for task in before_step_tasks:
                     task()
-
-            def on_before_zero_grad(self, trainer: pl.Trainer, pl_module: pl.LightningModule, optimizer: Optimizer) -> None:
+                # call origin optimizer step method
+                output = old_step(*args, **kwargs)
                 for task in after_step_tasks:
                     task()
+                return output
+            return patched_step
 
-        old_configure_callbacks = self.model.configure_callbacks
+        if self._opt_returned_dicts:
+            def new_configure_optimizers(_):  # type: ignore
+                opt_lrs_dicts = old_configure_optimizers()
+                optimizer = [opt_lrs_dict['optimizer'] for opt_lrs_dict in opt_lrs_dicts][0]
+                optimizer.step = types.MethodType(patched_step_factory(optimizer.step), optimizer)
+                return opt_lrs_dicts
+        elif self._lr_scheduler_helpers:
+            def new_configure_optimizers(_):  # type: ignore
+                optimizers, lr_schedulers = old_configure_optimizers()
+                optimizer = optimizers[0]
+                optimizer.step = types.MethodType(patched_step_factory(optimizer.step), optimizer)
+                return optimizers, lr_schedulers
+        else:
+            def new_configure_optimizers(_):
+                optimizers = old_configure_optimizers()
+                optimizer = optimizers[0]
+                optimizer.step = types.MethodType(patched_step_factory(optimizer.step), optimizer)
+                return optimizers
 
-        def patched_configure_callbacks(_):
-            callbacks = old_configure_callbacks()
-            callbacks = list(callbacks) if isinstance(callbacks, Sequence) else [callbacks]
-            callbacks.append(OptimizerCallback())
-            return callbacks
-
-        self.model.configure_callbacks = types.MethodType(patched_configure_callbacks, self.model)
+        self.model.configure_optimizers = types.MethodType(new_configure_optimizers, self.model)
 
     def revert_optimizer_step(self):
         assert isinstance(self.model, pl.LightningModule)
@@ -644,7 +657,7 @@ class LightningEvaluator(Evaluator):
 
 _OPTIMIZERS = Union[Optimizer, List[Optimizer]]
 _TRAINING_STEP = Callable[..., Union[Tensor, Tuple[Tensor], Dict[str, Tensor]]]
-_SCHEDULERS = Union[None, _LRScheduler, List[_LRScheduler]]
+_SCHEDULERS = Union[None, SCHEDULER, List[SCHEDULER]]
 _EVALUATING_FUNC = Callable[[Module], Union[float, Dict]]
 _TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, Optional[_SCHEDULERS], Optional[int], Optional[int]], None]
 
@@ -753,7 +766,7 @@ class TorchEvaluator(Evaluator):
     """
 
     def __init__(self, training_func: _TRAINING_FUNC, optimizers: Optimizer | List[Optimizer], training_step: _TRAINING_STEP,
-                 lr_schedulers: _LRScheduler | List[_LRScheduler] | None = None, dummy_input: Any | None = None,
+                 lr_schedulers: SCHEDULER | List[SCHEDULER] | None = None, dummy_input: Any | None = None,  # type: ignore
                  evaluating_func: _EVALUATING_FUNC | None = None):
         self.training_func = training_func
         self._ori_training_step = training_step
@@ -762,11 +775,11 @@ class TorchEvaluator(Evaluator):
         self.evaluating_func = evaluating_func
 
         self._train_with_single_optimizer = isinstance(optimizers, Optimizer)
-        self._train_with_single_scheduler = isinstance(lr_schedulers, _LRScheduler)
+        self._train_with_single_scheduler = isinstance(lr_schedulers, SCHEDULER)
 
         self.model: Module | None = None
         self._optimizers: List[Optimizer] | None = None
-        self._lr_schedulers: List[_LRScheduler] | None = None
+        self._lr_schedulers: List[SCHEDULER] | None = None  # type: ignore
         self._first_optimizer_step: Callable | None = None
         self._param_names_map: Dict[str, str] | None = None
 
@@ -774,7 +787,7 @@ class TorchEvaluator(Evaluator):
         self._tmp_optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
         assert all(isinstance(optimizer, Optimizer) and is_traceable(optimizer) for optimizer in self._tmp_optimizers)
         self._tmp_lr_schedulers = lr_schedulers if isinstance(lr_schedulers, (list, tuple)) else [lr_schedulers] if lr_schedulers else []
-        assert all(isinstance(lr_scheduler, _LRScheduler) and is_traceable(lr_scheduler) for lr_scheduler in self._tmp_lr_schedulers)
+        assert all(isinstance(lr_scheduler, SCHEDULER) and is_traceable(lr_scheduler) for lr_scheduler in self._tmp_lr_schedulers)
         self._initialization_complete = False
 
     def _init_optimizer_helpers(self, pure_model: Module):
@@ -817,7 +830,7 @@ class TorchEvaluator(Evaluator):
     def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
         assert isinstance(self.model, Module)
         assert module_name_param_dict is not None
-        self._optimizer_add_param_group(self.model, module_name_param_dict, self._optimizers) # type: ignore
+        self._optimizer_add_param_group(self.model, module_name_param_dict, self._optimizers)  # type: ignore
 
     def unbind_model(self):
         if self.model:

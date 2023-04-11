@@ -7,7 +7,7 @@ torch == 1.13.1+cpu ; sys_platform != "darwin"
 torch == 1.13.1 ; sys_platform == "darwin"
 torchvision == 0.14.1+cpu ; sys_platform != "darwin"
 torchvision == 0.14.1 ; sys_platform == "darwin"
-pytorch-lightning >= 1.6.1 
+pytorch-lightning >= 1.6.1, < 2.0
 torchmetrics
 lightgbm
 onnx

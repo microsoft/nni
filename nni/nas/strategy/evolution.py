@@ -235,6 +235,7 @@ class RegularizedEvolution(Strategy):
         if event.model in self._running_models:
             self._running_models.remove(event.model)
             if event.model.metric is not None:
+                _logger.info('[Metric] %f Sample: %s', event.model.metric, event.model.sample)
                 # Even if it fails, as long as it has a metric, we add it to the population.
                 assert event.model.sample is not None
                 self._population.append(Individual(event.model.sample, event.model.metric))

@@ -7,13 +7,13 @@ from typing import List, Dict, Union, overload
 import torch
 from torch import Tensor
 
-from ..base.compressor import Quantizer
+from ..base.compressor import Compressor, Quantizer
 from ..base.wrapper import ModuleWrapper
-from ..utils.evaluator import Evaluator
+from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 
 
 class PtqQuantizer(Quantizer):
-    '''
+    __doc__ = r'''
     Post Training Quantization
 
     Parameters
@@ -24,7 +24,7 @@ class PtqQuantizer(Quantizer):
         A list of dict, each dict configure which module need to be quantized, and how to quantize.
         Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
     evaluator
-        TODO: {evaluator_docstring}
+        {evaluator_docstring}
 
     Examples
     --------
@@ -36,7 +36,8 @@ class PtqQuantizer(Quantizer):
         >>> evaluator = TorchEvaluator(train, optimizer, training_step)
         >>> quantizer = PtqQuantizer(model, configure_list, evaluator)
         >>> _, calibration_config = quantizer.compress(max_steps, max_epochs)
-    '''
+    '''.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
+
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator):
         ...
@@ -53,6 +54,10 @@ class PtqQuantizer(Quantizer):
         self.is_compressed = False
         self.register_ptq_apply_method()
         self.register_track_func()
+
+    @classmethod
+    def from_compressor(cls, compressor: Compressor, new_config_list: List[Dict], evaluator: Evaluator | None = None):
+        return super().from_compressor(compressor, new_config_list, evaluator=evaluator)
 
     def register_ptq_apply_method(self):
         for _, ts in self._target_spaces.items():
