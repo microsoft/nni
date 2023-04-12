@@ -9,7 +9,6 @@ from typing import Any, Callable, Dict, List, overload
 
 import torch
 import torch.nn.functional as F
-from torch.optim import Adam
 from torch.utils._pytree import tree_map
 
 from ..base.compressor import Compressor, Distiller, _DISTILLATION_TARGET_SPACES
