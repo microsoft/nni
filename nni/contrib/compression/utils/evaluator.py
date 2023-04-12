@@ -30,12 +30,21 @@ except ImportError:
 else:
     TRANSFORMERS_INSTALLED = True
 
+from transformers.trainer_callback import TrainerCallback, TrainerControl, TrainerState
+from transformers.training_args import TrainingArguments
+
 import nni
 from nni.common import is_traceable
 from .constructor_helper import OptimizerConstructHelper, LRSchedulerConstructHelper
 from .check_ddp import check_ddp_model, reset_ddp_model
 
+
 _logger = logging.getLogger(__name__)
+
+
+class PatchCallback(TrainerCallback):
+    def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        pass
 
 
 class Hook:
@@ -829,7 +838,7 @@ class TorchEvaluator(Evaluator):
     def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
         assert isinstance(self.model, Module)
         assert module_name_param_dict is not None
-        self._optimizer_add_param_group(self.model, module_name_param_dict, self._optimizers) # type: ignore
+        self._optimizer_add_param_group(self.model, module_name_param_dict, self._optimizers)  # type: ignore
 
     def unbind_model(self):
         if self.model:
@@ -1021,6 +1030,8 @@ class TransformersEvaluator(Evaluator):
         self._ori_trainer_attr['optimizer.step'] = self.trainer.optimizer.step
 
     def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
+        if self.trainer.args.deepspeed:
+            return
         assert isinstance(self.model, Module)
         assert module_name_param_dict is not None
 
@@ -1035,6 +1046,7 @@ class TransformersEvaluator(Evaluator):
             self.trainer.optimizer = None
             self._param_names_map = None
             self._ori_trainer_attr.pop('compute_loss', None)
+            self.trainer.remove_callback(PatchCallback)
             self.trainer = None  # type: ignore
             self.model = None
         else:
@@ -1056,19 +1068,27 @@ class TransformersEvaluator(Evaluator):
         self.trainer.compute_loss = self._ori_trainer_attr['compute_loss']
 
     def patch_optimizer_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
-        assert self.trainer.optimizer is not None
-        old_step = self.trainer.optimizer.step
+        def custom_on_train_begin(_, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+            optimizer = self.trainer.deepspeed if self.trainer.deepspeed else self.trainer.callback_handler.optimizer
 
-        def patched_step(_, *args, **kwargs):
-            for task in before_step_tasks:
-                task()
-            # call origin optimizer step method
-            output = old_step(*args, **kwargs)
-            for task in after_step_tasks:
-                task()
-            return output
+            assert optimizer is not None
+            old_step = optimizer.step
 
-        self.trainer.optimizer.step = types.MethodType(patched_step, self.trainer.optimizer)
+            def patched_step(_, *args, **kwargs):
+                for task in before_step_tasks:
+                    task()
+                # call origin optimizer step method
+                output = old_step(*args, **kwargs)
+                for task in after_step_tasks:
+                    task()
+                return output
+
+            optimizer.step = types.MethodType(patched_step, optimizer)
+
+        PatchCallback.on_train_begin = types.MethodType(custom_on_train_begin, PatchCallback)
+
+        # Add Callback into the callback_handler
+        self.trainer.add_callback(PatchCallback)
 
     def revert_optimizer_step(self):
         assert self.trainer.optimizer is not None
