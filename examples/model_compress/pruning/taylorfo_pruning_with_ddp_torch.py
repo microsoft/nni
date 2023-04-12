@@ -25,9 +25,10 @@ from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils import count_flops_params
 from nni.compression.pytorch.pruning import TaylorFOWeightPruner
 from nni.compression.pytorch.utils import TorchEvaluator
-
+from nni.common.types import SCHEDULER
 
 #############  Create dataloaders, optimizer, training and evaluation function ############
+
 
 class Mnist(torch.nn.Module):
     def __init__(self):
@@ -74,7 +75,7 @@ def training(
     model: nn.Module,
     optimizer: torch.optim.Optimizer,
     criterion: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-    lr_scheduler: torch.optim.lr_scheduler._LRScheduler = None,
+    lr_scheduler: SCHEDULER = None,
     max_steps: int = None, max_epochs: int = None,
     local_rank: int = -1,
     save_best_model: bool = False, save_path: str = None,

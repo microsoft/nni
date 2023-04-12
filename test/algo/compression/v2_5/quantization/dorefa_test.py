@@ -11,7 +11,6 @@ from typing import Callable, Union, List, Dict, Tuple
 import torch
 import torch.nn.functional as F
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from torch import Tensor
 
