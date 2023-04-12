@@ -509,14 +509,15 @@ def parse_aten_schema_version_1_8_x(schema: str):
     def parse_number():
         if next_if('+') or next_if('-'):
             value = next_pass() + next_expect_pass_value('numdigits')
-        elif (get := next_if_pass_value('numdigits')) is not None:
-            value = get
         else:
-            return None
+            value = next_if_pass_value('numdigits')
+            if value is None:
+                return None
         if next_if_pass_value('.') is not None:
             value += '.'
-            if (get := next_if_pass_value('numdigits')):
-                value += get
+            res = next_if_pass_value('numdigits')
+            if res:
+                value += res
         if value[-1] == 'e' and next_if_pass_value('-') is not None:
             # only occur in versions < 1.9.0
             # 1e-10
@@ -537,9 +538,11 @@ def parse_aten_schema_version_1_8_x(schema: str):
         ret = []
         if end is None or not next_if(end):
             ret.append(callback())
-            while (get := next_if_pass_value(sep)) is not None:
-                ret.append(get)
+            res = next_if_pass_value(sep)
+            while res is not None:
+                ret.append(res)
                 ret.append(callback())
+                res = next_if_pass_value(sep)
         if end is not None:
             ret.append(next_expect_pass_value(end))
         return ret
@@ -569,8 +572,10 @@ def parse_aten_schema_version_1_8_x(schema: str):
             value = next_expect_pass_value('string')
             if value == '__torch__':
                 # only occur in versions < 1.9.0
-                while (get := next_if_pass_value('.')) is not None:
-                    value += get + next_expect_pass_value('string')
+                res = next_if_pass_value('.')
+                while res is not None:
+                    value += res + next_expect_pass_value('string')
+                    res = next_if_pass_value('.')
             if next_if_pass_value('('):
                 the_types = ''.join(parse_list(',', ')', parse_type))
                 value += '(%s)' % the_types
@@ -594,12 +599,13 @@ def parse_aten_schema_version_1_8_x(schema: str):
     def parse_default_value():
         if next_if_pass_value('[') is not None:
             return parse_list(',', ']', parse_default_value)
-        elif (get := parse_number()) is not None:
-            return get
-        elif (get := next_if_pass_value('quoted')) is not None:
-            return get
-        else:
-            return next_expect_pass_value('string')
+        res = parse_number()
+        if res is not None:
+            return res
+        res = next_if_pass_value('quoted')
+        if res is not None:
+            return res
+        return next_expect_pass_value('string')
 
     def parse_argument():
         the_type = parse_type()

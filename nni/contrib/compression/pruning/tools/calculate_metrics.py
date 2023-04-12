@@ -38,7 +38,7 @@ def norm_metrics(p: str | int, data: _DATA, target_spaces: _PRUNING_TARGET_SPACE
             if target_space._scaler is None:
                 metrics[module_name][target_name] = target_data.abs()
             else:
-                metrics[module_name][target_name] = target_space._scaler.shrink(target_data, reduce_func)
+                metrics[module_name][target_name] = target_space._scaler.shrink(target_data, reduce_func, keepdim=True)
     return metrics
 
 
@@ -55,5 +55,5 @@ def fpgm_metrics(p: str | int, data: _DATA, target_spaces: _PRUNING_TARGET_SPACE
         for target_name, target_data in module_data.items():
             target_space = target_spaces[module_name][target_name]
             assert target_space._scaler is not None, 'FPGM metric do not support finegrained sparse pattern.'
-            metrics[module_name][target_name] = target_space._scaler.shrink(target_data, reduce_func)
+            metrics[module_name][target_name] = target_space._scaler.shrink(target_data, reduce_func, keepdim=True)
     return metrics

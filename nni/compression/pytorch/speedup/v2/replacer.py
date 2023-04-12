@@ -11,7 +11,7 @@ from nni.compression.pytorch.utils import get_nested_attr, set_nested_attr
 if TYPE_CHECKING:
     from .model_speedup import ModelSpeedup
 
-_logger = logging.getLogger()
+_logger = logging.getLogger(__name__)
 
 
 class Replacer:
