@@ -17,7 +17,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_pruning_speedup_thumb.png
-    :alt:
+    :alt: Speedup Model with Mask
 
   :ref:`sphx_glr_tutorials_pruning_speedup.py`
 
@@ -34,7 +34,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_quantization_quick_start_mnist_thumb.png
-    :alt:
+    :alt: Quantization Quickstart
 
   :ref:`sphx_glr_tutorials_quantization_quick_start_mnist.py`
 
@@ -51,7 +51,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_pruning_quick_start_mnist_thumb.png
-    :alt:
+    :alt: Pruning Quickstart
 
   :ref:`sphx_glr_tutorials_pruning_quick_start_mnist.py`
 
@@ -68,7 +68,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_quantization_customize_thumb.png
-    :alt:
+    :alt: Customize a new quantization algorithm
 
   :ref:`sphx_glr_tutorials_quantization_customize.py`
 
@@ -85,7 +85,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_nasbench_as_dataset_thumb.png
-    :alt:
+    :alt: Use NAS Benchmarks as Datasets
 
   :ref:`sphx_glr_tutorials_nasbench_as_dataset.py`
 
@@ -102,7 +102,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_quantization_speedup_thumb.png
-    :alt:
+    :alt: Speed Up Quantized Model with TensorRT
 
   :ref:`sphx_glr_tutorials_quantization_speedup.py`
 
@@ -119,7 +119,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_hello_nas_thumb.png
-    :alt:
+    :alt: Hello, NAS!
 
   :ref:`sphx_glr_tutorials_hello_nas.py`
 
@@ -136,7 +136,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_darts_thumb.png
-    :alt:
+    :alt: Searching in DARTS search space
 
   :ref:`sphx_glr_tutorials_darts.py`
 
@@ -170,7 +170,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_pruning_bert_glue_thumb.png
-    :alt:
+    :alt: Pruning Bert on Task MNLI
 
   :ref:`sphx_glr_tutorials_pruning_bert_glue.py`
 
@@ -214,7 +214,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/hpo_quickstart_pytorch/images/thumb/sphx_glr_main_thumb.png
-    :alt:
+    :alt: HPO Quickstart with PyTorch
 
   :ref:`sphx_glr_tutorials_hpo_quickstart_pytorch_main.py`
 
@@ -231,7 +231,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/hpo_quickstart_pytorch/images/thumb/sphx_glr_model_thumb.png
-    :alt:
+    :alt: Port PyTorch Quickstart to NNI
 
   :ref:`sphx_glr_tutorials_hpo_quickstart_pytorch_model.py`
 
@@ -260,7 +260,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/hpo_quickstart_tensorflow/images/thumb/sphx_glr_main_thumb.png
-    :alt:
+    :alt: HPO Quickstart with TensorFlow
 
   :ref:`sphx_glr_tutorials_hpo_quickstart_tensorflow_main.py`
 
@@ -277,7 +277,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/hpo_quickstart_tensorflow/images/thumb/sphx_glr_model_thumb.png
-    :alt:
+    :alt: Port TensorFlow Quickstart to NNI
 
   :ref:`sphx_glr_tutorials_hpo_quickstart_tensorflow_model.py`
 
@@ -295,7 +295,6 @@ Tutorials
 .. toctree::
    :hidden:
    :includehidden:
-
 
    /tutorials/hpo_quickstart_pytorch/index.rst
    /tutorials/hpo_quickstart_tensorflow/index.rst
