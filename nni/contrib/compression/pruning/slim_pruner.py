@@ -97,7 +97,7 @@ class SlimPruner(Pruner):
                         # TODO: here using a shrinked score to save memory, but need to test the speed.
                         scaling_factor = torch.ones_like(target_space.target)  # type: ignore
                         if target_space._scaler is not None:
-                            scaling_factor = target_space._scaler.shrink(scaling_factor)
+                            scaling_factor = target_space._scaler.shrink(scaling_factor, keepdim=True)
                         target_space._wrapper.register_parameter(SLIM_SCALING_FACTOR_PNAME.format(target_name),
                                                                  torch.nn.Parameter(scaling_factor))
                         scaling_factor = target_space._get_wrapper_attr(SLIM_SCALING_FACTOR_PNAME.format(target_name))

@@ -34,7 +34,9 @@ _orig_zip: Type[Any] = builtins.zip
 _orig_enumerate: Type[Any] = builtins.enumerate
 _orig_slice: Type[Any] = builtins.slice
 _orig_reversed: Type[Any] = builtins.reversed
+
 _orig_torch_size: Type[Any] = torch.Size
+_orig_torch_finfo: Type[Any] = torch.finfo
 
 _orig_len: Callable = builtins.len
 _orig_not: Callable = operator.not_
