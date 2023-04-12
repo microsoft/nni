@@ -69,7 +69,9 @@ from .utils import (
     _orig_enumerate,
     _orig_slice,
     _orig_reversed,
+
     _orig_torch_size,
+    _orig_torch_finfo,
 
     _orig_len,
     _orig_not,
@@ -204,6 +206,7 @@ class ConcreteTracer(TracerBase):
         _orig_reversed:             ((), False),
 
         _orig_torch_size:           ((), False),
+        _orig_torch_finfo:          ((), False),
     }
 
     # add these to record module path information during tracing
