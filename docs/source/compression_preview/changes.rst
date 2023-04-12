@@ -1,5 +1,5 @@
-Main Changes of Compression API
-===============================
+Main Changes of Compression API in NNI 3.0
+==========================================
 
 To bolster additional compression scenarios and more particular compression configurations,
 we have revised the compression application programming interface (API) in NNI 3.0.
@@ -30,6 +30,13 @@ since 0 as input is also meaningful for ``softmax``.
 In NNI 3.0, this can be avoided by setting the input and output masks and ``apply_method``
 to ensure that ``softmax`` obtains the correct simulated pruning result.
 
+Please consult the sections on :ref:`target_names` and :ref:`target_settings` for further details.
+
+
+Compression Apply Method
+------------------------
+
+
 
 Compression Mode
 ----------------
@@ -50,3 +57,18 @@ Nevertheless, we believe that more flexible combinations should be allowed.
 For example, in a compression process, certain modules of similar levels could apply the overall sparse ratio,
 while other modules with operational dependencies could generate similar masks at the same time.
 
+Right now in NNI 3.0, users can directly set :ref:`global_group_id` and :ref:`dependency_group_id` to implement ``global`` and ``dependency-aware`` modes.
+Additionally, :ref:`align` is supported to generate a mask from another module mask, such as generating a batch normalization mask from a convolution mask.
+You can achieve improved performance and exploration by combining these modes by setting the appropriate keys in the configuration list.
+
+
+Distillation
+------------
+
+
+Pruning Speedup
+---------------
+
+
+Fusion Compressoin
+------------------
