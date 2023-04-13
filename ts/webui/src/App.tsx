@@ -13,7 +13,12 @@ const echarts = require('echarts/lib/echarts');
 echarts.registerTheme('nni_theme', {
     color: '#3c8dbc'
 });
-
+export const NavContext = React.createContext({
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeInterval: (_val: number) => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    refreshPage: (): void => {}
+});
 export const AppContext = React.createContext({
     interval: 10, // sendons
     columnList: COLUMN,
@@ -135,7 +140,14 @@ class App extends React.Component<{}, AppState> {
                     <Stack className='nni' style={{ minHeight: window.innerHeight }}>
                         <div className='header'>
                             <div className='headerCon'>
-                                <NavCon changeInterval={this.changeInterval} />
+                                <NavContext.Provider
+                                    value={{
+                                        changeInterval: this.changeInterval,
+                                        refreshPage: this.lastRefresh
+                                    }}
+                                >
+                                    <NavCon />
+                                </NavContext.Provider>
                             </div>
                         </div>
                         <Stack className='contentBox'>
