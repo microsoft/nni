@@ -12,13 +12,13 @@ _init_logger()
 from .common.framework import *
 from .common.serializer import trace, dump, load
 from .experiment import Experiment
+from .mutable.shortcut import *
 from .runtime.env_vars import dispatcher_env_vars
 from .runtime.log import enable_global_logging, silence_stdout
 from .utils import ClassArgsValidator
 
 if dispatcher_env_vars.SDK_PROCESS != 'dispatcher':
     from .trial import *
-    from .smartparam import *
     from .common.nas_utils import training_update
 
 class NoMoreTrialError(Exception):

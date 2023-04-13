@@ -6,7 +6,6 @@
 /test/model_path/
 /test/temp.json
 /test/ut/sdk/*.pth
-/test/ut/tools/annotation/_generated/
 /ts/nni_manager/exp_profile.json
 /ts/nni_manager/metrics.json
 /ts/nni_manager/trial_jobs.json
@@ -62,7 +61,6 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
-**/package-lock.json
 
 # TypeScript v1 declaration files
 typings/

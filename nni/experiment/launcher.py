@@ -18,7 +18,6 @@ from typing import Any, TYPE_CHECKING, cast
 from typing_extensions import Literal
 
 from .config import ExperimentConfig
-from .config.utils import load_experiment_config
 from . import rest
 from ..tools.nnictl.config_utils import Experiments, Config
 from ..tools.nnictl.nnictl_utils import update_experiment
@@ -141,11 +140,17 @@ def start_experiment(
         rest.post(port, '/experiment', config.json(), url_prefix)
 
     except Exception as e:
-        _logger.error('Create experiment failed')
+        _logger.error('Create experiment failed: %s', e)
         if proc is not None:
             with contextlib.suppress(Exception):
                 proc.kill()
-        raise e
+
+        log = Path(nni_manager_args.experiments_directory, nni_manager_args.experiment_id, 'log', 'nnictl_stderr.log')
+        if log.exists():
+            _logger.warning('NNI manager stderr:')
+            _logger.warning(log.read_text())
+
+        raise
 
     return proc
 
@@ -202,16 +207,56 @@ def _save_experiment_information(experiment_id: str, port: int, start_time: int,
     experiments_config.add_experiment(experiment_id, port, start_time, platform, name, pid=pid, logDir=logDir, tag=tag)
 
 
-def get_stopped_experiment_config(exp_id, exp_dir=None):
+def get_stopped_experiment_config(exp_id: str, exp_dir: str | Path | None = None) -> ExperimentConfig:
+    """Get the experiment config of a stopped experiment.
+
+    Parameters
+    ----------
+    exp_id
+        The experiment ID.
+    exp_dir
+        The experiment working directory which is expected to contain a folder named ``exp_id``.
+
+    Returns
+    -------
+    The config.
+    It's the config returned by :func:`get_stopped_experiment_config_json`,
+    loaded by :class:`ExperimentConfig`.
+    """
+    if isinstance(exp_dir, Path):
+        exp_dir = str(exp_dir)
     config_json = get_stopped_experiment_config_json(exp_id, exp_dir)  # type: ignore
-    config = load_experiment_config(config_json)  # type: ignore
+    if config_json is None:
+        raise ValueError(f'Config of {exp_id} (under {exp_dir}) failed to be loaded.')
+    config = ExperimentConfig(**config_json)  # type: ignore
     if exp_dir and not os.path.samefile(exp_dir, config.experiment_working_directory):
         msg = 'Experiment working directory provided in command line (%s) is different from experiment config (%s)'
         _logger.warning(msg, exp_dir, config.experiment_working_directory)
         config.experiment_working_directory = exp_dir
     return config
 
-def get_stopped_experiment_config_json(exp_id, exp_dir=None):
+
+def get_stopped_experiment_config_json(exp_id: str, exp_dir: str | None = None) -> dict | None:
+    """Get the experiment config, in JSON format, of a stopped experiment.
+
+    Different from :func:`get_stopped_experiment_config`,
+    this function does not load the config into an :class:`ExperimentConfig` object.
+    It doesn't check the experiment directory contained inside the config JSON either.
+
+    NOTE: The config is retrieved from SQL database, and should be written by NNI manager in current implementation.
+
+    Parameters
+    ----------
+    exp_id
+        The experiment ID.
+    exp_dir
+        The experiment working directory which is expected to contain a folder named ``exp_id``.
+        If ``exp_dir`` is not provided, the directory will be retrieved from the manifest of all experiments.
+
+    Returns
+    -------
+    The config JSON.
+    """
     if exp_dir:
         return Config(exp_id, exp_dir).get_config()
     else:

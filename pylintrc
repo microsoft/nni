@@ -48,3 +48,5 @@ ignore-patterns=test*
 generated-members=numpy.*,torch.*,tensorflow.*,pycuda.*,tensorrt.*
 
 ignored-modules=tensorflow,_winapi,msvcrt,tensorrt,pycuda,nni_node
+
+ignore-paths=nni/retiarii

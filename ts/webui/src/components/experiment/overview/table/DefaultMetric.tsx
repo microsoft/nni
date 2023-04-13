@@ -7,15 +7,9 @@ interface DefaultMetricProps {
     trialId: string;
 }
 
-class DefaultMetric extends React.Component<DefaultMetricProps, {}> {
-    constructor(props: DefaultMetricProps) {
-        super(props);
-    }
-
-    render(): React.ReactNode {
-        const accuracy = TRIALS.getTrial(this.props.trialId).accuracy;
-        return <div className='succeed-padding'>{accuracy !== undefined ? formatAccuracy(accuracy) : '--'}</div>;
-    }
-}
+const DefaultMetric = (props: DefaultMetricProps): any => {
+    const accuracy = TRIALS.getTrial(props.trialId).accuracy;
+    return <div className='succeed-padding metric'>{accuracy !== undefined ? formatAccuracy(accuracy) : '--'}</div>;
+};
 
 export default DefaultMetric;
