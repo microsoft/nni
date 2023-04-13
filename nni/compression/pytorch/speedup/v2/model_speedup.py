@@ -370,7 +370,7 @@ class ModelSpeedup(torch.fx.Interpreter):
                         assert isinstance(self.node_infos[node_kw[key]].output_masks, torch.Tensor)
                         self.node_infos[node_kw[key]].output_masks *= mask.detach().clone()
 
-    def speedup_model(self) -> GraphModule:
+    def speedup_model(self) -> torch.nn.Module:
         try:
             ori_state_dict_file = tempfile.NamedTemporaryFile(delete=False)
             torch.save(self.graph_module.state_dict(), ori_state_dict_file)
