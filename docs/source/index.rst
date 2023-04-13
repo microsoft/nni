@@ -16,7 +16,8 @@ NNI Documentation
 
    hpo/toctree
    nas/toctree
-   Model Compression <compression/toctree>
+   compression/toctree
+   compression_preview/toctree
    feature_engineering/toctree
    experiment/toctree
 
