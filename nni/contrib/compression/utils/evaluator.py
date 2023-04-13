@@ -24,10 +24,20 @@ else:
 
 try:
     from transformers.trainer import Trainer as HFTrainer
+    from transformers import TrainerCallback, TrainerControl, TrainerState
+    from transformers import TrainingArguments
 except ImportError:
     TRANSFORMERS_INSTALLED = False
+
+    class PatchCallback:
+        def on_train_begin(self, *args, **kwargs):
+            raise RuntimeError("Don't use the fake PatchCallback, please install transformers or check it's version")
 else:
     TRANSFORMERS_INSTALLED = True
+
+    class PatchCallback(TrainerCallback):  # type: ignore
+        def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+            pass
 
 import nni
 from nni.common import is_traceable
@@ -37,18 +47,6 @@ from .check_ddp import check_ddp_model, reset_ddp_model
 
 
 _logger = logging.getLogger(__name__)
-
-try:
-    from transformers import TrainerCallback, TrainerControl, TrainerState
-    from transformers import TrainingArguments
-
-    class PatchCallback(TrainerCallback):
-        def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-            pass
-
-    TrainerCallback_INSTALLED = True
-except:
-    TrainerCallback_INSTALLED = False
 
 
 class Hook:
@@ -965,7 +963,6 @@ class TransformersEvaluator(Evaluator):
 
     def __init__(self, trainer: HFTrainer, dummy_input: Any | None = None) -> None:
         assert TRANSFORMERS_INSTALLED, 'transformers is not installed.'
-        assert TrainerCallback_INSTALLED, "trainer_callback should be in the transformers, please check the version of transformers"
         assert is_traceable(trainer), f'Only support traced Trainer, please use nni.trace(Trainer) to initialize the trainer.'
         self.traced_trainer = trainer
         self.dummy_input = dummy_input
