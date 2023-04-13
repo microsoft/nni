@@ -6,10 +6,10 @@
 
 Computation times
 =================
-**00:29.846** total execution time for **tutorials** files:
+**00:01.990** total execution time for **tutorials** files:
 
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_pruning_bert_glue.py` (``pruning_bert_glue.py``)                           | 00:29.846 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_new_pruning_bert_glue.py` (``new_pruning_bert_glue.py``)                   | 00:01.990 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_tutorials_darts.py` (``darts.py``)                                                   | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+

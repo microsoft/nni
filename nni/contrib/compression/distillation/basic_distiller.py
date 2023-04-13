@@ -9,7 +9,6 @@ from typing import Any, Callable, Dict, List, overload
 
 import torch
 import torch.nn.functional as F
-from torch.optim import Adam
 from torch.utils._pytree import tree_map
 
 from ..base.compressor import Compressor, Distiller, _DISTILLATION_TARGET_SPACES
@@ -214,7 +213,7 @@ class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
                             loss_list.append(target_space.lambda_ * \
                                 F.kl_div((stu_hs / 2).log_softmax(dim=-1), (tea_hs / 2).softmax(dim=-1), reduction='batchmean') * (2 ** 2))
                 if loss_list:
-                    distill_loss += min(loss_list)
+                    distill_loss = distill_loss + min(loss_list)
         for _, ts in self._target_spaces.items():
             for _, target_space in ts.items():
                 target_space.clean()
@@ -296,23 +295,16 @@ class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
                     self.trans_linears[module_name][target_name] = torch.nn.Linear(stu_hs.shape[-1], tea_hs.shape[-1]).to(stu_hs.device)
 
     def _register_linears_optimization(self, evaluator: Evaluator):
-        linear_params = []
-        for _, linears in self.trans_linears.items():
+        linear_params = {}
+        for module_name, linears in self.trans_linears.items():
             for _, linear in linears.items():
                 if linear is not None:
-                    linear_params.extend(linear.parameters())
+                    linear_params[module_name] = list(linear.parameters())
 
         if not linear_params:
             return
 
-        params = [{"params": linear_params}]
-        optimizer = Adam(params, 1e-2)
-
-        def optimizer_task():
-            optimizer.step()
-            optimizer.zero_grad()
-
-        evaluator.patch_optimizer_step(before_step_tasks=[optimizer_task], after_step_tasks=[])
+        evaluator.patch_optim_param_group(linear_params)
 
     def compute_distill_loss(self):
         distill_loss = 0
