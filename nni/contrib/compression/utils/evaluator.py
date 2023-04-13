@@ -39,8 +39,8 @@ from .check_ddp import check_ddp_model, reset_ddp_model
 _logger = logging.getLogger(__name__)
 
 try:
-    from transformers.trainer_callback import TrainerCallback, TrainerControl, TrainerState
-    from transformers.training_args import TrainingArguments
+    from transformers import TrainerCallback, TrainerControl, TrainerState
+    from transformers import TrainingArguments
 
     class PatchCallback(TrainerCallback):
         def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
