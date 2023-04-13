@@ -151,8 +151,8 @@ def movement_mul_mask(target: torch.Tensor, target_space: PruningTargetSpace):
     else:
         assert target_space.mask is not None and target_space.shape is not None
         if target_space._scaler is not None:
-            score = target_space._scaler.expand(score, target_space.shape)
-        return torch.mul(target, _StraightThrough.apply(score, target_space.mask))  # type: ignore
+            score = target_space._scaler.expand(score, target_space.shape, keepdim=True, full_expand=False)
+        return torch.mul(target, _StraightThrough.apply(score, target_space.mask))
 
 
 def movement_add_mask(target: torch.Tensor, target_space: PruningTargetSpace):
@@ -163,8 +163,8 @@ def movement_add_mask(target: torch.Tensor, target_space: PruningTargetSpace):
         assert target_space.mask is not None and target_space.shape is not None
         trans_mask = torch.where(target_space.mask == 1, torch.zeros_like(target_space.mask), SMALL_MASK_VALUE)
         if target_space._scaler is not None:
-            score = target_space._scaler.expand(score, target_space.shape)
-        return torch.add(target, _StraightThrough.apply(score, trans_mask))  # type: ignore
+            score = target_space._scaler.expand(score, target_space.shape, keepdim=True, full_expand=False)
+        return torch.add(target, _StraightThrough.apply(score, trans_mask))
 
 
 def slim_mul_mask(target: torch.Tensor, target_space: PruningTargetSpace):
@@ -174,7 +174,7 @@ def slim_mul_mask(target: torch.Tensor, target_space: PruningTargetSpace):
     else:
         assert target_space.shape is not None
         if target_space._scaler is not None:
-            scaling_factor = target_space._scaler.expand(scaling_factor, target_space.shape)
+            scaling_factor = target_space._scaler.expand(scaling_factor, target_space.shape, keepdim=True, full_expand=False)
         return mul_mask(torch.mul(target, scaling_factor), target_space)
 
 
