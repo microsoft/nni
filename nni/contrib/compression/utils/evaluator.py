@@ -29,9 +29,6 @@ except ImportError:
 else:
     TRANSFORMERS_INSTALLED = True
 
-from transformers.trainer_callback import TrainerCallback, TrainerControl, TrainerState
-from transformers.training_args import TrainingArguments
-
 import nni
 from nni.common import is_traceable
 from nni.common.types import SCHEDULER
@@ -41,10 +38,17 @@ from .check_ddp import check_ddp_model, reset_ddp_model
 
 _logger = logging.getLogger(__name__)
 
+try:
+    from transformers.trainer_callback import TrainerCallback, TrainerControl, TrainerState
+    from transformers.training_args import TrainingArguments
 
-class PatchCallback(TrainerCallback):
-    def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-        pass
+    class PatchCallback(TrainerCallback):
+        def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+            pass
+
+    TrainerCallback_INSTALLED = True
+except:
+    TrainerCallback_INSTALLED = False
 
 
 class Hook:
@@ -961,6 +965,7 @@ class TransformersEvaluator(Evaluator):
 
     def __init__(self, trainer: HFTrainer, dummy_input: Any | None = None) -> None:
         assert TRANSFORMERS_INSTALLED, 'transformers is not installed.'
+        assert TrainerCallback_INSTALLED, "trainer_callback should be in the transformers, please check the version of transformers"
         assert is_traceable(trainer), f'Only support traced Trainer, please use nni.trace(Trainer) to initialize the trainer.'
         self.traced_trainer = trainer
         self.dummy_input = dummy_input
