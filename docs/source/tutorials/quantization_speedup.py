@@ -33,11 +33,11 @@ As TensorRT has supported post-training quantization, directly leveraging this f
 import torch
 import torchvision
 import torchvision.transforms as transforms
-def prepare_data_loaders(data_path, batch_size, datatype='train'):
+def prepare_data_loaders(data_path, batch_size):
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     dataset = torchvision.datasets.ImageNet(
-        data_path, split=datatype,
+        data_path, split="train",
         transform=transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
@@ -90,20 +90,26 @@ def test_accelerated_model(engine, data_loader, neval_batches):
     cnt = 0
     total_time = 0
     for image, target in data_loader:
+        start_time = time.time()
         output, time_span = engine.inference(image)
-        print('time: ', time_span)
+        infer_time = time.time() - start_time
+        print('time: ', time_span, infer_time)
         total_time += time_span
+
+        start_time = time.time()
         output = output.view(-1, 1000)
         cnt += 1
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
         top1.update(acc1[0], image.size(0))
         top5.update(acc5[0], image.size(0))
+        rest_time = time.time() - start_time
+        print('rest time: ', rest_time)
         if cnt >= neval_batches:
             break
     print('inference time: ', total_time / neval_batches)
     return top1, top5
 
-data_loader = prepare_data_loaders(data_path, batch_size=64, datatype='test')
+data_loader = prepare_data_loaders(data_path, batch_size=64)
 top1, top5 = test_accelerated_model(engine, data_loader, neval_batches=32)
 print('Accuracy of mode #1: ', top1, top5)
 
@@ -167,6 +173,6 @@ model.eval()
 
 engine = ModelSpeedupTensorRT(model, input_shape=(64, 3, 224, 224), config=calibration_config)
 engine.compress()
-data_loader = prepare_data_loaders(data_path, batch_size=64, datatype='test')
+data_loader = prepare_data_loaders(data_path, batch_size=64)
 top1, top5 = test_accelerated_model(engine, data_loader, neval_batches=32)
 print('Accuracy of mode #2: ', top1, top5)
