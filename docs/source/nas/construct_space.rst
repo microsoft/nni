@@ -16,15 +16,18 @@ The following table summarizes all the APIs we have provided for constructing se
    * - Name
      - Category
      - Brief Description
+   * - :class:`~nni.nas.nn.pytorch.ModelSpace`
+     - :ref:`Mutation Primitives <mutation-primitives>`
+     - All model spaces should inherit this class
+   * - :class:`~nni.nas.nn.pytorch.ParametrizedModule`
+     - :ref:`Mutation Primitives <mutation-primitives>`
+     - Modules with mutable parameters should inherit this class
    * - :class:`LayerChoice <nni.nas.nn.pytorch.LayerChoice>`
      - :ref:`Mutation Primitives <mutation-primitives>`
      - Select from some PyTorch modules
    * - :class:`InputChoice <nni.nas.nn.pytorch.InputChoice>`
      - :ref:`Mutation Primitives <mutation-primitives>`
      - Select from some inputs (tensors)
-   * - :class:`ValueChoice <nni.nas.nn.pytorch.ValueChoice>`
-     - :ref:`Mutation Primitives <mutation-primitives>`
-     - Select from some candidate values
    * - :class:`Repeat <nni.nas.nn.pytorch.Repeat>`
      - :ref:`Mutation Primitives <mutation-primitives>`
      - Repeat a block by a variable number of times
