@@ -94,7 +94,7 @@ Evaluators with PyTorch-Lightning
 Use Built-in Evaluators
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-NNI provides some commonly used model evaluators for users' convenience. These evaluators are built upon the awesome library PyTorch-Lightning. Read the :doc:`reference </reference/nas/evaluator>` for their detailed usages.
+NNI provides some commonly used model evaluators for users' convenience. These evaluators are built upon the awesome library PyTorch-Lightning. Read the :doc:`reference </reference/nas>` for their detailed usages.
 
 * :class:`nni.nas.evaluator.pytorch.Classification`: for classification tasks.
 * :class:`nni.nas.evaluator.pytorch.Regression`: for regression tasks.

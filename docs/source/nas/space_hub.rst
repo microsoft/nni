@@ -39,7 +39,7 @@ The model spaces provided so far are all built for image classification tasks, t
      - The largest space in `TuNAS <https://arxiv.org/abs/2008.06120>`__.
    * - :class:`~nni.nas.hub.pytorch.ShuffleNetSpace`
      - Based on ShuffleNetV2, proposed by `Single Path One-shot <https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123610528.pdf>`__
-   * - :class:`~nni.nas.hub.pytorch.AutoformerSpace`
+   * - :class:`~nni.nas.hub.pytorch.AutoFormer`
      - Based on ViT, proposed by `Autoformer <https://arxiv.org/abs/2107.00651>`__
 
 .. note::

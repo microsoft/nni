@@ -17,32 +17,32 @@ The following table summarizes all the APIs we have provided for constructing se
      - Category
      - Brief Description
    * - :class:`~nni.nas.nn.pytorch.ModelSpace`
-     - :ref:`Mutation Primitives <mutation-primitives>`
+     - Mutation Primitives
      - All model spaces should inherit this class
    * - :class:`~nni.nas.nn.pytorch.ParametrizedModule`
-     - :ref:`Mutation Primitives <mutation-primitives>`
+     - Mutation Primitives
      - Modules with mutable parameters should inherit this class
    * - :class:`LayerChoice <nni.nas.nn.pytorch.LayerChoice>`
-     - :ref:`Mutation Primitives <mutation-primitives>`
+     - Mutation Primitives
      - Select from some PyTorch modules
    * - :class:`InputChoice <nni.nas.nn.pytorch.InputChoice>`
-     - :ref:`Mutation Primitives <mutation-primitives>`
+     - Mutation Primitives
      - Select from some inputs (tensors)
    * - :class:`Repeat <nni.nas.nn.pytorch.Repeat>`
-     - :ref:`Mutation Primitives <mutation-primitives>`
+     - Mutation Primitives
      - Repeat a block by a variable number of times
    * - :class:`Cell <nni.nas.nn.pytorch.Cell>`
-     - :ref:`Mutation Primitives <mutation-primitives>`
+     - Mutation Primitives
      - Cell structure popularly used in literature
-   * - :class:`NasBench101Cell <nni.nas.hub.pytorch.NasBench101Cell>`
-     - :ref:`Mutation Primitives <mutation-primitives>`
+   * - :class:`NasBench101Cell <nni.nas.hub.pytorch.modules.NasBench101Cell>`
+     - Mutation Primitives
      - Cell structure (variant) proposed by NAS-Bench-101
-   * - :class:`NasBench201Cell <nni.nas.hub.pytorch.NasBench201Cell>`
-     - :ref:`Mutation Primitives <mutation-primitives>`
+   * - :class:`NasBench201Cell <nni.nas.hub.pytorch.modules.NasBench201Cell>`
+     - Mutation Primitives
      - Cell structure (variant) proposed by NAS-Bench-201
-   * - :class:`AutoActivation <nni.nas.nn.pytorch.AutoActivation>`
-     - :ref:`Hyper-modules Library <hyper-modules>`
+   * - :class:`AutoActivation <nni.nas.hub.pytorch.modules.AutoActivation>`
+     - Hyper-modules library
      - Searching for activation functions
-   * - :class:`Mutator <nni.nas.Mutator>`
+   * - :class:`Mutator <nni.nas.space.Mutator>`
      - :doc:`Mutator <mutator>`
      - Flexible mutations on graphs. :doc:`See tutorial here <mutator>`

@@ -76,19 +76,8 @@ To enable CGO execution engine, you need to follow these steps:
     config.training_service.machine_list = [rm_conf]
     exp.run(config, 8099)
 
-CGO middleware only supports pytorch-lightning trainer that inherits :class:`~nni.nas.execution.cgo.evaluator.MultiModelSupervisedLearningModule`.
-For a trial running multiple models, the trainers inheriting :class:`~nni.nas.execution.cgo.evaluator.MultiModelSupervisedLearningModule` can handle the multiple outputs from the merged model for training, test and validation.
-We have already implemented two trainers: :class:`~nni.nas.execution.cgo.evaluator.Classification` and :class:`~nni.nas.execution.cgo.evaluator.Regression`.
-
-.. code-block:: python
-
-  from nni.nas.execution.cgo.evaluator import Classification
-
-  trainer = Classification(train_dataloaders=pl.DataLoader(train_dataset, batch_size=100),
-                           val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
-                           max_epochs=1, limit_train_batches=0.2)
-
-Advanced users can also implement their own trainers by inheriting :class:`~nni.nas.execution.cgo.evaluator.MultiModelSupervisedLearningModule`.
+CGO middleware only supports pytorch-lightning trainer that inherits :class:`~nni.nas.execution.cgo.MultiModelLightningModule`.
+For a trial running multiple models, the trainers inheriting :class:`~nni.nas.execution.cgo.MultiModelTrainer` can handle the multiple outputs from the merged model for training, test and validation.
 
 Sometimes, a mutated model cannot be executed (e.g., due to shape mismatch). When a trial running multiple models contains 
 a bad model, CGO will re-run each model independently in separate trials without cross-model optimizations.

@@ -43,8 +43,6 @@ NAS-Bench-201
 
 NAS-Bench-201 is a cell-wise search space that views nodes as tensors and edges as operators. The search space contains all possible densely-connected DAGs with 4 nodes, resulting in 15,625 candidates in total. Each operator (i.e., edge) is selected from a pre-defined operator set (\ ``NONE``, ``SKIP_CONNECT``, ``CONV_1X1``, ``CONV_3X3`` and ``AVG_POOL_3X3``\ ). Training appraoches vary in the dataset used (CIFAR-10, CIFAR-100, ImageNet) and number of epochs scheduled (12 and 200). Each combination of architecture and training approach is repeated 1 - 3 times with different random seeds.
 
-See :doc:`example usages </tutorials/nasbench_as_dataset>` and :ref:`API references <nas-bench-201-reference>`.
-
 NDS
 ^^^
 
