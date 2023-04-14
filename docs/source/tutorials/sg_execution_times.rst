@@ -6,17 +6,18 @@
 
 Computation times
 =================
+**02:31.916** total execution time for **tutorials** files:
 
-**13:08.330** total execution time for **tutorials** files:
-
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_hello_nas.py` (``hello_nas.py``)                                           | 13:08.330 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_nasbench_as_dataset.py` (``nasbench_as_dataset.py``)                       | 01:51.444 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_new_pruning_bert_glue.py` (``new_pruning_bert_glue.py``)                   | 00:01.990 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_darts.py` (``darts.py``)                                                   | 00:40.472 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_darts.py` (``darts.py``)                                                   | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_hello_nas.py` (``hello_nas.py``)                                           | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_nasbench_as_dataset.py` (``nasbench_as_dataset.py``)                       | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_new_pruning_bert_glue.py` (``new_pruning_bert_glue.py``)                   | 00:00.000 | 0.0 MB |
++-----------------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_tutorials_pruning_bert_glue.py` (``pruning_bert_glue.py``)                           | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_tutorials_pruning_quick_start_mnist.py` (``pruning_quick_start_mnist.py``)           | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
