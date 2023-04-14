@@ -1,7 +1,6 @@
 /* all trial status font-color in the table */
 .RUNNING,
-.USER_CANCELED,
-.ADD_RESUMED {
+.USER_CANCELED {
     color: #0071bc;
 }
 
