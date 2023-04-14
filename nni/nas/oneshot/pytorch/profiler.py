@@ -12,6 +12,11 @@ It might be moved to a more general place in the future.
 
 from __future__ import annotations
 
+__all__ = [
+    'ProfilerFilter', 'RangeProfilerFilter', 'ProfilerPenalty',
+    'ExpectationProfilerPenalty', 'SampleProfilerPenalty'
+]
+
 import logging
 from typing import cast
 from typing_extensions import Literal
@@ -179,6 +184,9 @@ class ProfilerPenalty(nn.Module):
 
 
 class ExpectationProfilerPenalty(ProfilerPenalty):
+    """:class:`ProfilerPenalty` for a sample with distributions.
+    Value for each label is a a mapping from chosen value to probablity.
+    """
 
     def profile(self, sample: Sample) -> float:
         """Profile based on a distribution of samples.
@@ -195,6 +203,9 @@ class ExpectationProfilerPenalty(ProfilerPenalty):
 
 
 class SampleProfilerPenalty(ProfilerPenalty):
+    """:class:`ProfilerPenalty` for a single sample.
+    Value for each label is a specifically chosen value.
+    """
 
     def profile(self, sample: Sample) -> float:
         """Profile based on a single sample."""
