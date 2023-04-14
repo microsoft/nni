@@ -7,4 +7,4 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../'))
 
 import nni
-import nni.retiarii.nn.pytorch
+import nni.nas.nn.pytorch

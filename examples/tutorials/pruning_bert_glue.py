@@ -159,11 +159,13 @@ import torch.nn.functional as F
 from datasets import load_metric
 from transformers.modeling_outputs import SequenceClassifierOutput
 
+from nni.common.types import SCHEDULER
+
 
 def training(model: torch.nn.Module,
              optimizer: torch.optim.Optimizer,
              criterion: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-             lr_scheduler: torch.optim.lr_scheduler._LRScheduler = None,
+             lr_scheduler: SCHEDULER = None,
              max_steps: int = None,
              max_epochs: int = None,
              train_dataloader: DataLoader = None,
@@ -291,12 +293,11 @@ def create_pretrained_model():
 
 
 def create_finetuned_model():
-    finetuned_model = create_pretrained_model()
+    finetuned_model = create_pretrained_model().to(device)
     finetuned_model_state_path = Path(model_dir) / 'finetuned_model_state.pth'
 
     if finetuned_model_state_path.exists():
-        finetuned_model.load_state_dict(torch.load(finetuned_model_state_path, map_location='cpu'))
-        finetuned_model.to(device)
+        finetuned_model.load_state_dict(torch.load(finetuned_model_state_path, map_location=device))
     elif dev_mode:
         pass
     else:
@@ -344,7 +345,7 @@ else:
 # Initialize evaluator used by MovementPruner.
 
 import nni
-from nni.algorithms.compression.v2.pytorch import TorchEvaluator
+from nni.compression.pytorch import TorchEvaluator
 
 movement_training = functools.partial(training, train_dataloader=train_dataloader,
                                       log_path=log_dir / 'movement_pruning.log',
@@ -400,7 +401,7 @@ module_list = []
 for i in range(0, layers_num):
     prefix = f'bert.encoder.layer.{i}.'
     value_mask: torch.Tensor = attention_masks[prefix + 'attention.self.value']['weight']
-    head_mask = (value_mask.reshape(heads_num, -1).sum(-1) == 0.)
+    head_mask = (value_mask.reshape(heads_num, -1).sum(-1) == 0.).to("cpu")
     head_idxs = torch.arange(len(head_mask))[head_mask].long().tolist()
     print(f'layer {i} prune {len(head_idxs)} head: {head_idxs}')
     if len(head_idxs) != heads_num:

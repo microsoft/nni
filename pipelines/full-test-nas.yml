@@ -6,13 +6,6 @@ schedules:
     include: [ master ]
   always: true
 
-resources:
-  repositories:
-    - repository: azpfilter
-      type: github
-      name: microsoft/azure-pipeline-filter
-      endpoint: github-filter-connection
-
 variables:
   filter.modified.globs: 'examples/nas/**,nni/algorithms/nas/**,nni/nas/**,nni/retiarii/**,pipelines/full-test-nas.yml,test/ut/nas/**,test/algo/nas/**'
   filter.prbody.heading: '#### Test Options'
@@ -49,12 +42,17 @@ stages:
 
     - script: |
         cd test
+        python algo/nas/benchmark/prepare.py
+      displayName: Prepare NAS benchmark
+
+    - script: |
+        cd test
         python -m pytest algo/nas
       displayName: NAS test
 
   - job: windows
     pool: nni-it-1es-windows
-    timeoutInMinutes: 90
+    timeoutInMinutes: 120
 
     steps:
     - template: templates/check-gpu-status.yml

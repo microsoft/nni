@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.algorithms.compression.pytorch.quantization import DoReFaQuantizer
+from nni.compression.pytorch.quantization import DoReFaQuantizer
 
 import sys
 sys.path.append('../models')

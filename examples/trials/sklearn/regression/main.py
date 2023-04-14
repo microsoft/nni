@@ -16,7 +16,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import nni
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
 from sklearn import linear_model
 import logging
@@ -32,9 +32,9 @@ LOG = logging.getLogger('sklearn_regression')
 
 def load_data():
     '''Load dataset, use boston dataset'''
-    boston = load_boston()
+    diabetes = load_diabetes()
     X_train, X_test, y_train, y_test = train_test_split(
-        boston.data, boston.target, random_state=99, test_size=0.25)
+        diabetes.data, diabetes.target, random_state=99, test_size=0.25)
     #normalize data
     ss_X = StandardScaler()
     ss_y = StandardScaler()
