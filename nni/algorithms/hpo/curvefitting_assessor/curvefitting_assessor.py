@@ -40,7 +40,7 @@ class CurvefittingAssessor(Assessor):
     .. code-block::
 
         config.assessor.name = 'Curvefitting'
-        config.tuner.class_args = {
+        config.assessor.class_args = {
             'epoch_num': 20,
             'start_step': 6,
             'threshold': 9,
