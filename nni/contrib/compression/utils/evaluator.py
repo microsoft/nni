@@ -31,13 +31,29 @@ except ImportError:
 
     class PatchCallback:
         def on_train_begin(self, *args, **kwargs):
-            raise RuntimeError("Don't use the fake PatchCallback, please install transformers or check it's version")
+            raise RuntimeError("Don't use the fake PatchCallback, please install transformers")
 else:
     TRANSFORMERS_INSTALLED = True
 
     class PatchCallback(TrainerCallback):  # type: ignore
         def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
             pass
+
+try:
+    from accelerate.utils.deepspeed import HfDeepSpeedConfig as DeepSpeedConfig  # type: ignore
+except ImportError:
+    ACCELERATE_INSTALLED = False
+    class DeepSpeedConfig:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("Don't use the fake DeepSpeedConfig, please install accelerate")
+        def get_value(self, key: str):
+            raise RuntimeError("Don't use the fake DeepSpeedConfig, please install accelerate")
+        def del_config_sub_tree(self, key: str):
+            raise RuntimeError("Don't use the fake DeepSpeedConfig, please install accelerate")
+        def is_zero3(self):
+            raise RuntimeError("Don't use the fake DeepSpeedConfig, please install accelerate")
+else:
+    ACCELERATE_INSTALLED = True
 
 import nni
 from nni.common import is_traceable
@@ -1125,3 +1141,363 @@ class TransformersEvaluator(Evaluator):
 
     def get_dummy_input(self) -> Any:
         return self.dummy_input
+
+
+class DeepspeedTorchEvaluator(Evaluator):
+    def __init__(self, training_func: _TRAINING_FUNC, optimizer: Optimizer | Callable[[List[Tensor]], Optimizer] | None,
+                 training_step: _TRAINING_STEP, lr_scheduler: SCHEDULER | Callable[[Optimizer], SCHEDULER] | None,
+                 deepspeed: str | Dict, resume_from_checkpoint_args: Dict | None = None, dummy_input: Any | None = None,
+                 evaluating_func: _EVALUATING_FUNC | None = None):
+        assert ACCELERATE_INSTALLED, "accelerate is not installed"
+        self.training_func = training_func
+        self._ori_training_step = training_step
+        self._training_step = self._ori_training_step
+        self.dummy_input = dummy_input
+        self.evaluating_func = evaluating_func
+        self.resume_from_checkpoint_args = resume_from_checkpoint_args
+        self._ori_optimizer_step = None
+
+        self.model: Module | None = None
+        self.optimizer: Optimizer | Callable[[List[Tensor]], Optimizer] | None = None
+        self.lr_scheduler: SCHEDULER | Callable[[Optimizer], SCHEDULER] | None = None
+        self._ori_optimizer_step: Callable | None = None
+        self._param_names_map: Dict[str, str] | None = None
+        self.deepspeed_engine = None
+
+        # will del self._tmp_optimizer and self._tmp_lr_scheduler in `_init_optimizer_helpers`
+        self._tmp_optimizer: Optimizer | Callable[[List[Tensor]], Optimizer] | None = optimizer
+        self._tmp_lr_scheduler: SCHEDULER | Callable[[Optimizer], SCHEDULER] | None = lr_scheduler
+        self._initialization_complete = False
+
+        self.deepspeed_config: DeepSpeedConfig | None = self.process_deepspeed(deepspeed)
+
+    def process_deepspeed(self, config_file_or_dict: str | Dict) -> DeepSpeedConfig:
+        print(f"deepspeed_file: ={config_file_or_dict}")
+        if config_file_or_dict is None:
+            raise ValueError('deepspeed_config should not be None')
+        assert isinstance(config_file_or_dict, (Dict, str)), \
+            f"Only two types: Dict and str are supported for config_file_or_dict, but got {type(config_file_or_dict)}"
+        return DeepSpeedConfig(config_file_or_dict)
+
+    def check_optim_sched(self) -> None:
+        assert self._tmp_optimizer is None or isinstance(self._tmp_optimizer, Optimizer) or callable(self._tmp_optimizer)
+        assert self._tmp_lr_scheduler is None or isinstance(self._tmp_lr_scheduler, SCHEDULER) or callable(self._tmp_lr_scheduler)
+        # check the validation of optimizer
+        if isinstance(self._tmp_optimizer, Optimizer):
+            assert is_traceable(self._tmp_optimizer)
+        # check the validation of scheduler
+        if isinstance(self._tmp_lr_scheduler, SCHEDULER):
+            assert is_traceable(self._tmp_lr_scheduler)
+
+        # there are 9 cases:
+        # case 1: opt = None, sche = None, depends on the optimizer configuration in deepspeed_config
+        # case 2: opt = Callback, sche = None, ok
+        # case 3: opt = Optim, sche = None, ok
+        # case 4: opt = None, sche = Callback, depends on the optimizer configuration in deepspeed_config
+        # case 5: opt = Callback, sche = Callback, ok
+        # case 6: opt = Optim, sche = Callback, ok
+        # case 7: opt = None, sche = Scheduler, X
+        # case 8: opt = Callback, sche = Scheduler, X
+        # case 9: opt = Optim, sche = Scheduler, ok
+        assert hasattr(self, "deepspeed_config") and self.deepspeed_config is not None
+        # case 1: optimizer is None and config is None
+        if self._tmp_optimizer is None and self.deepspeed_config.get_value('optimizer') is None:
+            raise ValueError("Optimizer and optimizer configuration in deepspeed config" +
+                             "can\'t be None at the same time, please provide one")
+        # case 2: optimizer is Callable or None, but scheduler is _SCHEUDLER
+        if not isinstance(self._tmp_optimizer, Optimizer) and isinstance(self._tmp_lr_scheduler, SCHEDULER):
+            raise ValueError("Don't support for non-instance optimizer and instance scheduler pair")
+
+    def _init_optimizer_helpers(self, pure_model: Module):
+        assert self._initialization_complete is False, 'Evaluator initialization is already complete.'
+        # check the validation of optimizer and scheduler
+        self.check_optim_sched()
+        if isinstance(self._tmp_optimizer, Optimizer):
+            self._optimizer_helper = OptimizerConstructHelper.from_trace(pure_model, self._tmp_optimizer)
+        else:
+            self.optimizer = self._tmp_optimizer
+        if isinstance(self._tmp_lr_scheduler, SCHEDULER):
+            self._lr_scheduler_helper = LRSchedulerConstructHelper.from_trace(self._tmp_lr_scheduler)
+        else:
+            self.lr_scheduler = self._tmp_lr_scheduler
+
+        delattr(self, '_tmp_optimizer')
+        delattr(self, '_tmp_lr_scheduler')
+        self._initialization_complete = True
+
+    def _rewrap_if_ddp_model(self, model):
+        errmsg = "model is None, no need to rewrap model to DistributedDatapallel model"
+        assert model is not None, errmsg
+        is_ddp_model, _ = check_ddp_model(model)
+
+        if is_ddp_model:
+            raise RuntimeError("DeepSpeed will provide DDP logic so that your model should not be wrapped with DistributedParallel")
+
+        return model
+
+    def bind_model(self, model: Module, param_names_map: Dict[str, str] | None = None):
+        err_msg = 'Evaluator initialization is not complete, please call `_init_optimizer_helpers` before bind model.'
+        assert self._initialization_complete is True, err_msg
+        assert isinstance(model, Module)
+        if self.model is not None:
+            _logger.warning('Already bound a model, will unbind it before bind a new model.')
+            self.unbind_model()
+
+        self.model = self._rewrap_if_ddp_model(model)
+        self._param_names_map = param_names_map
+        # initialize optimizers & lr_schedulers for the bound model here
+        if hasattr(self, '_optimizer_helper'):
+            self.optimizer = self._optimizer_helper.call(model, param_names_map)
+        if hasattr(self, '_lr_scheduler_helper'):
+            self.lr_scheduler = self._lr_scheduler_helper.call(self.optimizer)  # type: ignore
+
+    def deepspeed_init(self, inference=False):
+        import deepspeed
+        assert self.model is not None
+        assert self.deepspeed_config is not None
+        # whether to check the validation of params
+        deepspeed_config: DeepSpeedConfig = deepcopy(self.deepspeed_config)
+        config: Dict = deepspeed_config.config  # type: ignore
+        if inference:
+            # only Z3 makes sense for the inference
+            if not deepspeed_config.is_zero3():
+                raise ValueError("ZeRO inference only makes sense with ZeRO Stage 3 - please adjust your config")
+
+            # in case the training config is re-used for inference
+            deepspeed_config.del_config_sub_tree("optimizer")
+            deepspeed_config.del_config_sub_tree("lr_scheduler")
+            optimizer, lr_scheduler = None, None
+            model_parameters = None
+        else:
+            model_parameters = list(filter(lambda p: p.requires_grad, self.model.parameters()))
+            optimizer, lr_scheduler = self.optimizer, self.lr_scheduler
+
+        # deepspeed init
+        kwargs = {
+            "model": self.model,
+            "model_parameters": model_parameters,
+            "config_params": config,
+            "optimizer": optimizer,
+            "lr_scheduler": lr_scheduler,
+        }
+        deepspeed_engine, optimizer, _, lr_scheduler = deepspeed.initialize(**kwargs)
+        # load deepspeed checkpoint
+        if self.resume_from_checkpoint_args is not None:
+            # it's possible that the user is trying to resume from model_path, which doesn't necessarily
+            # contain a deepspeed checkpoint. e.g. examples just check if the dir exists and assume it's
+            # a resume from a checkpoint and not just a local pretrained weight. So we check here if the
+            # path contains what looks like a deepspeed checkpoint
+            resume_from_checkpoint = self.resume_from_checkpoint_args.get("load_dir", None)
+            assert resume_from_checkpoint is not None
+            tag = self.resume_from_checkpoint_args.get('tag', "global_step")
+            load_module_strict = self.resume_from_checkpoint_args.get('load_module_strict', True)
+            load_optimizer_states = self.resume_from_checkpoint_args.get('load_optimizer_states', True)
+            load_lr_scheduler_states = self.resume_from_checkpoint_args.get('load_lr_scheduler_states', True)
+            load_module_only = self.resume_from_checkpoint_args.get('load_module_only', False)
+            custom_load_fn = self.resume_from_checkpoint_args.get("custom_load_fn", None)
+            # copyed from transformers
+            import glob
+            # TODO to add load model from tag
+            deepspeed_checkpoint_dirs = sorted(glob.glob(f"{resume_from_checkpoint}/{tag}*"))
+
+            if len(deepspeed_checkpoint_dirs) > 0:
+                # logger.info(f"Attempting to resume from {self.resume_from_checkpoint}")
+                # this magically updates self.optimizer and self.lr_scheduler
+                # load_path, _ = deepspeed_engine.load_checkpoint(
+                #     self.resume_from_checkpoint, load_optimizer_states=True, load_lr_scheduler_states=True
+                # )
+                load_path, _ = self.load_checkpoint(resume_from_checkpoint,
+                                                    tag,
+                                                    load_module_strict=load_module_strict,
+                                                    load_optimizer_states=load_optimizer_states,
+                                                    load_lr_scheduler_states=load_lr_scheduler_states,
+                                                    load_module_only=load_module_only,
+                                                    custom_load_fn=custom_load_fn)
+                if load_path is None:
+                    raise ValueError(f"[deepspeed] failed to resume from checkpoint {resume_from_checkpoint}")
+            else:
+                raise ValueError(f"Can't find a valid checkpoint at {resume_from_checkpoint}")
+        # record the original deepspeed step function
+        self._ori_optimizer_step = deepspeed_engine.step
+
+        return deepspeed_engine, optimizer, lr_scheduler
+
+    def patch_optim_param_group(self, module_name_param_dict: Dict[str, List[Tensor]]):
+        if not isinstance(self.optimizer, Optimizer):
+            return
+        # used for adding param_group without deepspeed config
+        assert isinstance(self.model, Module)
+        assert module_name_param_dict is not None
+        self._optimizer_add_param_group(self.model, module_name_param_dict, [self.optimizer])  # type: ignore
+
+    def unbind_model(self):
+        if self.model:
+            self.revert_loss()
+            self.revert_optimizer_step()
+            self.remove_all_hooks()
+            self.lr_scheduler = None
+            self.optimizer = None
+            self._param_names_map = None
+            self.model = None
+            # TODO to check if unibind deepspeed params is needed
+            self.deepspeed_engine = None
+            self.deepspeed_config = None
+        else:
+            _logger.warning('Did not bind any model, no need to unbind model.')
+
+    def patch_loss(self, patch: Callable[[Tensor, Any], Tensor]):
+        old_training_step = self._training_step
+
+        def patched_training_step(*args, **kwargs):
+            out = old_training_step(*args, **kwargs)
+            # we assume in training_step, ``batch`` is the first argument
+            batch = args[0] if len(args) > 0 else kwargs['batch']
+            if isinstance(out, Tensor):
+                out = patch(out, batch)
+            elif isinstance(out, Sequence) and not isinstance(out, str):
+                assert isinstance(out[0], Tensor)
+                new_loss = patch(out[0], batch)
+                out = (new_loss,) + tuple(out[1:])
+            elif isinstance(out, MutableMapping):
+                assert 'loss' in out and isinstance(out['loss'], Tensor)
+                out['loss'] = patch(out['loss'], batch)
+            return out
+
+        self._training_step: _TRAINING_STEP = patched_training_step
+
+    def revert_loss(self):
+        self._training_step = self._ori_training_step
+
+    def patch_optimizer_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
+        self.is_patch_optim_for_ds = True
+        self.before_step_tasks = before_step_tasks
+        self.after_step_tasks = after_step_tasks
+
+    def revert_optimizer_step(self):
+        assert self.deepspeed_engine is not None
+        if self._ori_optimizer_step is not None:
+            self.deepspeed_engine.step = self._ori_optimizer_step
+
+    def patch_engine_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
+        assert self.deepspeed_engine is not None
+        old_step = self.deepspeed_engine.step
+
+        def patched_step(_, *args, **kwargs):
+            for task in before_step_tasks:
+                task()
+            # call origin optimizer step method
+            output = old_step(*args, **kwargs)
+            for task in after_step_tasks:
+                task()
+            return output
+
+        self.deepspeed_engine.step = types.MethodType(patched_step, self.deepspeed_engine)
+
+    def train(self, max_steps: int | None = None, max_epochs: int | None = None):
+        # deepspeed init
+        deepspeed_engine, optimizer, lr_scheduler = self.deepspeed_init(inference=False)
+        self.deepspeed_engine = deepspeed_engine
+        self.optimizer = optimizer
+        self.lr_scheduler = lr_scheduler
+        self.model = deepspeed_engine.module
+
+        assert self.deepspeed_engine is not None
+        assert self.optimizer is not None
+        assert self._training_step is not None
+
+        if hasattr(self, 'is_patch_optim_for_ds') and self.is_patch_optim_for_ds:
+            self.patch_engine_step(self.before_step_tasks, self.after_step_tasks)
+
+        self.training_func(self.deepspeed_engine, self.optimizer, self._training_step, self.lr_scheduler, max_steps, max_epochs)
+
+    def finetune(self):
+        self.train()
+
+    def evaluate(self) -> float | None | Tuple[float, Dict[str, Any]] | Tuple[None, Dict[str, Any]]:
+        # assert self.model is not None
+        if self.evaluating_func is None:
+            warn_msg = f'Did not pass evaluation_func to {self.__class__.__name__}, will return None for calling evaluate()'
+            _logger.warning(warn_msg)
+            return None
+
+        if self.deepspeed_engine is None:
+            deepspeed_engine, _, _ = self.deepspeed_init(inference=True)
+            self.deepspeed_engine = deepspeed_engine
+            self.model = self.deepspeed_engine.module
+
+        assert self.deepspeed_engine is not None
+
+        metric = self.evaluating_func(self.deepspeed_engine)
+        if isinstance(metric, dict):
+            nni_used_metric = metric.get('default', None)
+            if nni_used_metric is None:
+                warn_msg = f'Evaluation function returns a dict metric without key `default`,' + \
+                           'will return None as the model evaluation metric value.'
+                _logger.warning(warn_msg)
+            return nni_used_metric, metric
+        else:
+            return metric
+
+    def get_dummy_input(self) -> Any:
+        return self.dummy_input
+
+    def save_checkpoint(self, save_dir, tag=None, client_state={}, save_latest=True):
+        """Save training checkpoint
+
+        Arguments:
+            save_dir: Required. Directory for saving the checkpoint
+            tag: Optional. Checkpoint tag used as a unique identifier for the checkpoint, global step is
+                used if not provided. Tag name must be the same across all ranks.
+            client_state: Optional. State dictionary used for saving required training states in the client code.
+            save_latest: Optional. Save a file 'latest' pointing to the latest saved checkpoint.
+        Important: all processes must call this method and not just the process with rank 0. It is
+        because each process needs to save its master weights and scheduler+optimizer states. This
+        method will hang waiting to synchronize with other processes if it's called just for the
+        process with rank 0.
+
+        """
+        # copyed from deepspeed
+        assert self.deepspeed_engine is not None
+        return self.deepspeed_engine.save_checkpoint(save_dir, tag, client_state=client_state,
+                                                     save_latest=save_latest)
+
+    def load_checkpoint(self,
+                        load_dir,
+                        tag=None,
+                        load_module_strict=True,
+                        load_optimizer_states=True,
+                        load_lr_scheduler_states=True,
+                        load_module_only=False,
+                        custom_load_fn=None):
+        """
+        Load training checkpoint
+
+        Arguments:
+            load_dir: Required. Directory to load the checkpoint from
+            tag: Checkpoint tag used as a unique identifier for checkpoint, if not provided will attempt to load tag in 'latest' file
+            load_module_strict: Optional. Boolean to strictly enforce that the keys in state_dict of module and checkpoint match.
+            load_optimizer_states: Optional. Boolean to load the training optimizer states from Checkpoint. Ex. ADAM's momentum and variance
+            load_lr_scheduler_states: Optional. Boolean to add the learning rate scheduler states from Checkpoint.
+            load_module_only: Optional. Boolean to load only the model weights from the checkpoint. Ex. warmstarting.
+            custom_load_fn: Optional. Custom model load function.
+
+        Returns:
+            A tuple of ``load_path`` and ``client_state``.
+            *``load_path``: Path of the loaded checkpoint. ``None`` if loading the checkpoint failed.
+            *``client_state``: State dictionary used for loading required training states in the client code.
+
+        Important: under ZeRO3, one cannot load checkpoint with ``engine.load_checkpoint()`` right
+        after ``engine.save_checkpoint()``. It is because ``engine.module`` is partitioned, and
+        ``load_checkpoint()`` wants a pristine model. If insisting to do so, please reinitialize engine
+        before ``load_checkpoint()``.
+
+        """
+        # copyed from deepspeed
+        assert self.deepspeed_engine is not None
+        return self.deepspeed_engine.load_checkpoint(load_dir,
+                                                     tag=tag,
+                                                     load_module_strict=load_module_strict,
+                                                     load_optimizer_states=load_optimizer_states,
+                                                     load_lr_scheduler_states=load_lr_scheduler_states,
+                                                     load_module_only=load_module_only,
+                                                     custom_load_fn=custom_load_fn)
