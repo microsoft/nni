@@ -1,5 +1,5 @@
-Main Changes of Compression API in NNI 3.0
-==========================================
+Major Enhancement of Compression in NNI 3.0
+===========================================
 
 To bolster additional compression scenarios and more particular compression configurations,
 we have revised the compression application programming interface (API) in NNI 3.0.
