@@ -8,6 +8,23 @@ Nonetheless, if you have employed NNI Compression before and want to try the lat
 this document will help you in comprehending the noteworthy alterations in the interface in 3.0.
 
 
+New compression version import path:
+
+.. code-block:: python
+
+    # most new compression related, include pruners, quantizers, distillers, except new pruning speedup
+    from nni.contrib.compression.xxx import xxx
+    # new pruning speedup
+    from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+
+
+Old compression version import path:
+
+.. code-block:: python
+
+    from nni.compression.pytorch.xxx import xxx
+
+
 Compression Target
 ------------------
 
@@ -36,6 +53,8 @@ Please consult the sections on :ref:`target_names` and :ref:`target_settings` fo
 Compression Apply Method
 ------------------------
 
+
+Apply method is how to apply compression effect on the model.
 
 
 Compression Mode
