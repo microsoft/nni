@@ -43,7 +43,8 @@ class TaylorPruner(Pruner):
 
     Examples
     --------
-        TODO
+        Please refer to
+        :githublink:`examples/compression/pruning/taylor_pruning.py <examples/compression/pruning/taylor_pruning.py>`.
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload

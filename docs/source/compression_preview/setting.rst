@@ -96,7 +96,7 @@ We can create a setting for ``CustomizedModule`` by following the above default 
                 'module_name': None,
                 'target_name': 'p1',
                 'dims': [0],
-            }
+            },
             'apply_method': 'mul',
             'granularity': [-1, 1]
         }
@@ -192,7 +192,7 @@ Then we could temporarily make batchnorm masks align with convolution layer weig
                     'module_name': 'conv1',
                     'target_name': 'weight',
                     'dims': [0],
-                }
+                },
                 'granularity': 'out_channel',
             }
         }

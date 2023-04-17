@@ -147,7 +147,7 @@ The only need is using ``nni.trace`` to wrap the Trainer class.
 
     import nni
     from transformers.trainer import Trainer
-    trainer = nni.trace(Trainer)(model=model, args=training_args, ...)
+    trainer = nni.trace(Trainer)(model, training_args, ...)
 
     from nni.contrib.compression.utils import TransformersEvaluator
     evaluator = TransformersEvaluator(trainer)
