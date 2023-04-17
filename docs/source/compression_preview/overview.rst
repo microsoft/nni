@@ -1,5 +1,5 @@
-Overview of NNI Model Compression (preview version)
-===================================================
+Overview of NNI Model Compression (Preview)
+===========================================
 
 The NNI model compression has undergone a completely new framework design in version 3.0,
 seamlessly integrating pruning, quantization, and distillation methods.
