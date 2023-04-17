@@ -95,7 +95,7 @@ const TableList = (props: TableListProps): any => {
     };
 
     const _renderOperationColumn = (record: any): React.ReactNode => {
-        const runningTrial: boolean = ['RUNNING', 'UNKNOWN', 'ADD_RESUMED'].includes(record.status) ? false : true;
+        const runningTrial: boolean = ['RUNNING', 'UNKNOWN'].includes(record.status) ? false : true;
         const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED', 'VIEWED'].includes(EXPERIMENT.status);
         return (
             <Stack className='detail-button' horizontal>
