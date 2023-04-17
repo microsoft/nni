@@ -6,4 +6,6 @@ Compression API Reference (Preview)
 
     Pruner <pruner>
     Pruning Speedup <pruning_speedup>
+    Distiller <distiller>
+    Evaluator <evaluator>
     Compression Utilities <utils>

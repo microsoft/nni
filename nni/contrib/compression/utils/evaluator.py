@@ -701,19 +701,13 @@ class TorchEvaluator(Evaluator):
                               training_step: Callable[[Any, Any], torch.Tensor],
                               lr_schedulers: _LRScheduler | None = None, max_steps: int | None = None,
                               max_epochs: int | None = None, *args, **kwargs):
-
                 ...
-
                 total_epochs = max_epochs if max_epochs else 20
                 total_steps = max_steps if max_steps else 1000000
                 current_steps = 0
-
                 ...
-
                 for epoch in range(total_epochs):
-
                     ...
-
                     if current_steps >= total_steps:
                         return
 
@@ -732,13 +726,16 @@ class TorchEvaluator(Evaluator):
     training_step
         A callable function, the first argument of inputs should be ``batch``, and the outputs should contain loss.
         Three kinds of outputs are supported: single loss, tuple with the first element is loss, a dict contains a key ``loss``.
+
         .. code-block:: python
+
             def training_step(batch, model, ...):
                 inputs, labels = batch
                 output = model(inputs)
                 ...
                 loss = loss_func(output, labels)
                 return loss
+
     lr_schedulers
         Optional. A single traced lr_scheduler instance or a list of traced lr_schedulers by ``nni.trace``.
         For the same reason with ``optimizers``, NNI needs the traced lr_scheduler to re-initialize it.

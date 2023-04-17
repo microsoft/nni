@@ -11,6 +11,3 @@ Compression API Reference
     Evaluator <evaluator>
     Compression Utilities <utils>
     Framework Related <framework>
-    Pruner (Preview) <_pruner>
-    Pruning Speedup (Preview) <_pruning_speedup>
-    Compression Utilities (Preview) <_utils>
