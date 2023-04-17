@@ -36,7 +36,7 @@ class MedianstopAssessor(Assessor):
     .. code-block::
 
         config.assessor.name = 'Medianstop'
-        config.tuner.class_args = {
+        config.assessor.class_args = {
             'optimize_mode': 'maximize',
             'start_step': 5
         }
