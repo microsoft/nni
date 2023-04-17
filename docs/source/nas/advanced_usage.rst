@@ -7,6 +7,5 @@ Advanced Usage
     execution_engine
     hardware_aware_nas
     mutator
-    customize_strategy
     serialization
     benchmarks_toctree

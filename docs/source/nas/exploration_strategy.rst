@@ -88,8 +88,8 @@ Starting from v2.8, the usage of one-shot strategies are much alike to multi-tri
 
    exp_config.execution_engine = 'oneshot'
 
-One-shot strategies only support a limited set of :ref:`mutation-primitives`, and does not support :doc:`customizing mutators <mutator>` at all. See the :ref:`reference <one-shot-strategy-reference>` for the detailed support list of each algorithm.
+One-shot strategies only support a limited set of mutation primitives, and does not support :doc:`customizing mutators <mutator>` at all. See the :doc:`reference </reference/nas>` for the detailed support list of each algorithm.
 
 .. versionadded:: 2.8
 
-   One-shot strategy is now compatible with `Lightning accelerators <https://pytorch-lightning.readthedocs.io/en/stable/accelerators/gpu.html>`__. It means that, you can accelerate one-shot strategies on hardwares like multiple GPUs. To enable this feature, you only need to pass the keyword arguments which used to be set in ``pytorch_lightning.Trainer``, to your evaluator. See :doc:`this reference </reference/nas/evaluator>` for more details.
+   One-shot strategy is now compatible with `Lightning accelerators <https://pytorch-lightning.readthedocs.io/en/stable/accelerators/gpu.html>`__. It means that, you can accelerate one-shot strategies on hardwares like multiple GPUs. To enable this feature, you only need to pass the keyword arguments which used to be set in ``pytorch_lightning.Trainer``, to your evaluator. See :doc:`this reference </reference/nas>` for more details.

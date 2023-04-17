@@ -1,83 +1,88 @@
 Hardware-aware NAS
 ==================
 
-.. This file should be rewritten as a tutorial
+Hardware-aware NAS is a technique to search for architectures under the constraints of a given hardware platform. Deploying a neural network on a specific hardware is challenging because different hardwares have different preferences for operations, combinations of operations. Different use scenarios might also pose different levels of requirements. Some strict scenarios might require the networks to be smaller and faster. Our hardware-aware NAS supports searching for architectures under the constraints of latency, model size or FLOPs. This document demonstrates how to use multi-trial strategy or one-shot strategy combining those constraints.
 
-End-to-end Multi-trial SPOS Demo
+Profiler
+--------
+
+:class:`~nni.nas.profiler.Profiler` is designed to efficiently compute metrics like latency for models within the same model space. Specifically, it is first initialized with a model space, in which it precomputes some data, and for any sample in the model space, it can quickly give out a metric::
+
+    class MyModelSpace(ModelSpace):
+        ...
+      
+    from nni.nas.profiler.pytorch.flops import FlopsProfiler
+    # initialization
+    profiler = FlopsProfiler(net, torch.randn(3))  # randn(3) is a dummy input. It could be a tensor or a tuple of tensors.
+    # compute flops for a sample
+    flops = profiler.profile({'layer1': 'conv'})
+
+NNI currently supports the following types of profilers:
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Name
+     - Brief Description
+   * - :class:`~nni.nas.profiler.pytorch.flops.FlopsProfiler`
+     - Profile the FLOPs of a model
+   * - :class:`~nni.nas.profiler.pytorch.flops.NumParamsProfiler`
+     - Profile the number of parameters of a model
+   * - :class:`~nni.nas.profiler.pytorch.nn_meter.NnMeterProfiler`
+     - Profile the estimated latency of a model with nn-meter
+
+Hardware-aware multi-trial search
+---------------------------------
+
+When using multi-trial strategies, the most intuitive approach to combine a hardware-aware constraint is to filter out those outside the constraints. This can be done via strategy middleware :class:`~nni.nas.strategy.middleware.Filter`. An example is as follows::
+
+    from nni.nas.strategy import Random
+    from nni.nas.strategy.middleware import Filter, Chain
+    from nni.nas.profiler.pytorch.flops import FlopsProfiler
+
+    profiler = FlopsProfiler(model_space, dummy_input)
+
+    strategy = Chain(
+        Random(),
+        Filter(lambda sample: profiler.profile(sample) < 300e6)
+    )
+
+The example here uses a random strategy to randomly generate models, but the FLOPs is restricted to less than 300M. Models over the limitation will be directly discarded without training. :class:`~nni.nas.strategy.middleware.Filter` can be also set to a mode to return a bad metric for models out of constraint, so that the strategy can learn to avoid sampling such models. The profiler can also be replaced with any profiler listed above or customized.
+
+Hardware-aware one-shot strategy
 --------------------------------
 
-To empower affordable DNN on the edge and mobile devices, hardware-aware NAS searches both high accuracy and low latency models. In particular, the search algorithm only considers the models within the target latency constraints during the search process.
+One-shot strategy can be also combined with metrics on hardware. There are usually two approaches.
 
-To run this demo, first install nn-Meter by running:
+The first approach is to add a special regularization term to the loss within one-shot strategy, penalizing the sampling of models that does not fit the constraints. To do this, a penalty term (either :class:`~nni.nas.oneshot.pytorch.profiler.ExpectationProfilerPenalty` for differentiable algorithms, or :class:`~nni.nas.oneshot.pytorch.profiler.SampleProfilerPenalty` for sampling-based algorithms). Example below::
 
-.. code-block:: bash
+    from nni.nas.strategy import ProxylessNAS
+    from nni.nas.oneshot.pytorch.profiler import ExpectationProfilerPenalty
+    # For sampling-based algorithms like ENAS, use `SampleProfilerPenalty` here.
+    # Please see the document for each algorithm for the type of penalties they have supported.
 
-  pip install nn-meter
+    profiler = FlopsProfiler(model_space, dummy_input)
+    penalty = ExpectationProfilerPenalty(profiler, 300e6)  # 300M is the expected profiler here. Exceeding it will be penalized.
+    strategy = ProxylessNAS(penalty=penalty)
 
-Then run multi-trail SPOS demo:
+Another approach is similar to what we've done for multi-trial strategies: to directly prevent models out of constraints from being sampled. To do this, use :class:`~nni.nas.oneshot.pytorch.profiler.RangeProfilerFilter`. Example::
 
-.. code-block:: bash
+    from nni.nas.strategy import ENAS
+    from nni.nas.oneshot.pytorch.profiler import RangeProfilerFilter
 
-  cd ${NNI_ROOT}/examples/nas/oneshot/spos/
-  python search.py --latency-filter cortexA76cpu_tflite21
+    profiler = FlopsProfiler(model_space, dummy_input)
+    penalty = RangeProfilerFilter(profiler, 200e6, 300e6)  # Only flops between 200M and 300M are considered legal.
+    strategy = ENAS(filter=filter)
 
+.. tip:: The penalty and filter here are specialized for one-shot strategies, please do not use them in multi-trial strategies.
 
-How the demo works
-^^^^^^^^^^^^^^^^^^
+Best practices of hardware-aware NAS
+------------------------------------
 
-To support hardware-aware NAS, you first need a ``Strategy`` that supports filtering the models by latency. We provide such a filter named ``LatencyFilter`` in NNI and initialize a ``RegularizedEvolution`` strategy with the filter:
+The hardware-aware part in NAS is probably the most complex component within the whole NNI NAS framework. It's expected that users might encounter technical issues when using hardware-aware NAS. A full troubleshooting guide is still under preparation. For now, we recommend the following practices, briefly.
 
-.. code-block:: python
-
-  evolution_strategy = strategy.RegularizedEvolution(
-        model_filter=latency_filter,
-        sample_size=args.evolution_sample_size, population_size=args.evolution_population_size, cycles=args.evolution_cycles
-        )
-
-``LatencyFilter`` will predict the models\' latency by using nn-Meter and filter out the models whose latency are larger than the threshold (i.e., ``100`` in this example).
-You can also build your own strategies and filters to support more flexible NAS such as sorting the models according to latency.
-
-Then, pass this strategy to ``RetiariiExperiment``:
-
-.. code-block:: python
-
-  exp = RetiariiExperiment(base_model, evaluator, strategy=evolution_strategy)
-
-  exp_config = RetiariiExeConfig('local')
-  ...
-  exp_config.dummy_input = [1, 3, 224, 224]
-
-  exp.run(exp_config, args.port)
-
-In ``exp_config``, ``dummy_input`` is required for tracing shape info in latency predictor.
-
-
-End-to-end ProxylessNAS with Latency Constraints
-------------------------------------------------
-
-`ProxylessNAS <https://arxiv.org/abs/1812.00332>`__ is a hardware-aware one-shot NAS algorithm. ProxylessNAS applies the expected latency of the model to build a differentiable metric and design efficient neural network architectures for hardware. The latency loss is added as a regularization term for architecture parameter optimization. In this example, nn-Meter provides a latency estimator to predict expected latency for the mixed operation on other types of mobile and edge hardware. 
-
-To run the one-shot ProxylessNAS demo, first install nn-Meter by running:
-
-.. code-block:: bash
-
-  pip install nn-meter
-
-Then run one-shot ProxylessNAS demo:
-
-.. code-block:: bash
-
-   python ${NNI_ROOT}/examples/nas/oneshot/proxylessnas/main.py --applied_hardware HARDWARE --reference_latency REFERENCE_LATENCY_MS
-
-How the demo works
-^^^^^^^^^^^^^^^^^^
-
-In the implementation of ProxylessNAS ``trainer``, we provide a ``HardwareLatencyEstimator`` which currently builds a lookup table, that stores the measured latency of each candidate building block in the search space. The latency sum of all building blocks in a candidate model will be treated as the model inference latency. The latency prediction is obtained by ``nn-Meter``. ``HardwareLatencyEstimator`` predicts expected latency for the mixed operation based on the path weight of ``ProxylessLayerChoice``. With leveraging ``nn-Meter`` in NNI, users can apply ProxylessNAS to search efficient DNN models on more types of edge devices. 
-
-Despite of ``applied_hardware`` and ``reference_latency``, There are some other parameters related to hardware-aware ProxylessNAS training in this :githublink:`example <examples/nas/oneshot/proxylessnas/main.py>`:
-
-* ``grad_reg_loss_type``: Regularization type to add hardware related loss. Allowed types include ``"mul#log"`` and ``"add#linear"``. Type of ``mul#log`` is calculate by ``(torch.log(expected_latency) / math.log(reference_latency)) ** beta``. Type of ``"add#linear"`` is calculate by ``reg_lambda * (expected_latency - reference_latency) / reference_latency``. 
-* ``grad_reg_loss_lambda``: Regularization params, is set to ``0.1`` by default.
-* ``grad_reg_loss_alpha``: Regularization params, is set to ``0.2`` by default.
-* ``grad_reg_loss_beta``: Regularization params, is set to ``0.3`` by default.
-* ``dummy_input``: The dummy input shape when applied to the target hardware. This parameter is set as (1, 3, 224, 224) by default.
+1. Make sure shape inference succeeds. In order to make profiler to work, we will dry run the model space and infer a symbolic shape for inputs and outputs of every submodule. Built-in implementations only support a limited set of operations when inferencing shapes. If errors like ``no shape formula``, please register the shape formula following the prompt, or decorate the whole module as a leaf module that doesn't need to be opened. Note that if the shape inference doesn't open a module, its FLOPs and latency might also need to compute as a whole. You might also need to write FLOPs / latency formula for the module.
+2. Try with FLOPs first. In our experience, complex profilers like nn-Meter might make it harder to debug when something goes wrong. Remember to examine whether the FLOPs profiler returns a reasonable result. This can be done by manually invoking ``profiler.profile(sample)``.
+3. :class:`~nni.nas.profiler.pytorch.nn_meter.NnMeterProfiler` will expand all the possible modules when it considers a module space as a leaf module (note that nn-meter has its own leaf module settings and do not follow what has been set for shape inference). If the submodule contains too many combinations. The profiler might hang when preprocessing. Try using ``logging.getLogger('nni').setLevel(logging.DEBUG)`` to print debug logs, so as to identify the cause of the issue.
+4. For a specific model space and a specific hardware, you can also build your own profiler with :class:`~nni.nas.profiler.Profiler`. As long as they follow the interface of :class:`~nni.nas.profiler.Profiler`, the inner implementation doesn't matter. Users can use lookup tables, build predictors, or even connecting to the real device for profiling. If the interface is compatible, it's possible to use it combining our built-in strategies. It's usually the recommended method when your model space is too complex for the general shape inference to work, or you are targetting at the specialized hardware we do not yet support.
