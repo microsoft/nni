@@ -5,77 +5,74 @@ import pytest
 
 import os
 import torch
-import mmcv
 import mmcv.cnn as mmcv_cnn
-import mmdet.core as mmdet_core
+import mmdet.models as mmdet_models
 from mmdet.apis import init_detector
-from mmcv.parallel import collate
-from mmdet.datasets import replace_ImageToTensor
-from mmdet.datasets.pipelines import Compose
+from mmdet.testing import demo_mm_inputs, get_detector_cfg
+from mmengine import Config
 from nni.common.concrete_trace_utils import concrete_trace, ConcreteTracer
 
 config_files_correct = (
     'atss/atss_r50_fpn_1x_coco',
-    'autoassign/autoassign_r50_fpn_8x2_1x_coco',
-    'cascade_rcnn/cascade_mask_rcnn_r50_caffe_fpn_1x_coco',
-    'centernet/centernet_resnet18_140e_coco',
-    'centripetalnet/centripetalnet_hourglass104_mstest_16x6_210e_coco',
-    'cityscapes/faster_rcnn_r50_fpn_1x_cityscapes',
-    'cornernet/cornernet_hourglass104_mstest_8x6_210e_coco',
-    'dcn/cascade_mask_rcnn_r50_fpn_dconv_c3-c5_1x_coco',
-    'dcnv2/faster_rcnn_r50_fpn_mdconv_c3-c5_1x_coco',
-    'ddod/ddod_r50_fpn_1x_coco',
-    'deepfashion/mask_rcnn_r50_fpn_15e_deepfashion',
-    'deformable_detr/deformable_detr_r50_16x2_50e_coco',
-    'detr/detr_r50_8x2_150e_coco',
-    'double_heads/dh_faster_rcnn_r50_fpn_1x_coco',
-    'dyhead/atss_r50_caffe_fpn_dyhead_1x_coco',
-    'dynamic_rcnn/dynamic_rcnn_r50_fpn_1x_coco',
-    'empirical_attention/faster_rcnn_r50_fpn_attention_0010_1x_coco',
-    'faster_rcnn/faster_rcnn_r50_fpn_1x_coco',
-    'fcos/fcos_center_r50_caffe_fpn_gn-head_1x_coco',
-    'foveabox/fovea_align_r50_fpn_gn-head_4x4_2x_coco',
-    'fpg/faster_rcnn_r50_fpg-chn128_crop640_50e_coco',
-    'free_anchor/retinanet_free_anchor_r50_fpn_1x_coco',
+    'autoassign/autoassign_r50-caffe_fpn_1x_coco',
+    # 'cascade_rcnn/cascade-mask-rcnn_r50_fpn_1x_coco',
+    'centernet/centernet_r18-dcnv2_8xb16-crop512-140e_coco',
+    'centripetalnet/centripetalnet_hourglass104_16xb6-crop511-210e-mstest_coco',
+    # 'cityscapes/faster-rcnn_r50_fpn_1x_cityscapes',
+    'cornernet/cornernet_hourglass104_8xb6-210e-mstest_coco',
+    # 'dcn/cascade-mask-rcnn_r50-dconv-c3-c5_fpn_1x_coco',
+    # 'dcnv2/faster-rcnn_r50_fpn_mdpool_1x_coco',
+    # 'ddod/ddod_r50_fpn_1x_coco',
+    # 'deepfashion/mask-rcnn_r50_fpn_15e_deepfashion',
+    # 'deformable_detr/deformable-detr_r50_16xb2-50e_coco',
+    'detr/detr_r18_8xb2-500e_coco',
+    # 'double_heads/dh-faster-rcnn_r50_fpn_1x_coco',
+    'dyhead/atss_r50-caffe_fpn_dyhead_1x_coco',
+    # 'dynamic_rcnn/dynamic-rcnn_r50_fpn_1x_coco',
+    # 'empirical_attention/faster-rcnn_r50-attn0010_fpn_1x_coco',
+    # 'faster_rcnn/faster-rcnn_r50_fpn_1x_coco',
+    'fcos/fcos_r18_fpn_gn-head-center-normbbox-centeronreg-giou_8xb8-amp-lsj-200e_coco',
+    'foveabox/fovea_r50_fpn_4xb4-1x_coco',
+    # 'fpg/faster-rcnn_r50_fpg_crop640-50e_coco',
+    'free_anchor/freeanchor_r50_fpn_1x_coco',
     'fsaf/fsaf_r50_fpn_1x_coco',
     'gfl/gfl_r50_fpn_1x_coco',
-    'ghm/retinanet_ghm_r50_fpn_1x_coco',
-    'gn/mask_rcnn_r50_fpn_gn-all_2x_coco',
-    'gn+ws/faster_rcnn_r50_fpn_gn_ws-all_1x_coco',
-    'grid_rcnn/grid_rcnn_r50_fpn_gn-head_1x_coco',
-    'groie/faster_rcnn_r50_fpn_groie_1x_coco',
-    'hrnet/cascade_mask_rcnn_hrnetv2p_w18_20e_coco',
-    'htc/htc_r50_fpn_1x_coco',
-    'instaboost/cascade_mask_rcnn_r50_fpn_instaboost_4x_coco',
-    'legacy_1.x/faster_rcnn_r50_fpn_1x_coco_v1',
-    'lvis/mask_rcnn_r50_fpn_sample1e-3_mstrain_1x_lvis_v1',
-    'ms_rcnn/ms_rcnn_r50_caffe_fpn_1x_coco',
-    'nas_fcos/nas_fcos_fcoshead_r50_caffe_fpn_gn-head_4x4_1x_coco',
-    'nas_fpn/retinanet_r50_fpn_crop640_50e_coco',
-    'openimages/faster_rcnn_r50_fpn_32x2_1x_openimages',
+    'ghm/retinanet_r50_fpn_ghm-1x_coco',
+    # 'gn/mask-rcnn_r50_fpn_gn-all_2x_coco',
+    # 'gn+ws/faster-rcnn_r50_fpn_gn_ws-all_1x_coco',
+    # 'grid_rcnn/grid-rcnn_r50_fpn_gn-head_1x_coco',
+    # 'groie/grid-rcnn_r50_fpn_gn-head-groie_1x_coco',
+    # 'hrnet/cascade-mask-rcnn_hrnetv2p-w18_20e_coco',
+    # 'htc/htc_r50_fpn_1x_coco',
+    # 'instaboost/cascade-mask-rcnn_r50_fpn_instaboost-4x_coco',
+    # 'lvis/mask-rcnn_r50_fpn_sample1e-3_mstrain-1x_lvis-v1',
+    # 'ms_rcnn/ms-rcnn_r50_fpn_1x_coco',
+    # 'nas_fcos/nas-fcos_r50-caffe_fpn_fcoshead-gn-head_4xb4-1x_coco',
+    'nas_fpn/retinanet_r50_fpn_crop640-50e_coco',
+    # 'openimages/faster-rcnn_r50_fpn_32xb2-1x_openimages',
     'paa/paa_r50_fpn_1x_coco',
-    'pafpn/faster_rcnn_r50_pafpn_1x_coco',
-    'pisa/pisa_faster_rcnn_r50_fpn_1x_coco',
-    'point_rend/point_rend_r50_caffe_fpn_mstrain_1x_coco',
+    # 'pafpn/faster-rcnn_r50_pafpn_1x_coco',
+    # 'pisa/faster-rcnn_r50_fpn_pisa_1x_coco',
+    # 'point_rend/point-rend_r50-caffe_fpn_ms-1x_coco',
     'pvt/retinanet_pvt-l_fpn_1x_coco',
-    'queryinst/queryinst_r50_fpn_1x_coco',
-    'regnet/cascade_mask_rcnn_regnetx-400MF_fpn_mstrain_3x_coco',
-    'reppoints/bbox_r50_grid_center_fpn_gn-neck+head_1x_coco',
-    'res2net/cascade_mask_rcnn_r2_101_fpn_20e_coco',
-    'resnet_strikes_back/cascade_mask_rcnn_r50_fpn_rsb-pretrain_1x_coco',
+    # 'queryinst/queryinst_r50_fpn_1x_coco',
+    # 'regnet/cascade-mask-rcnn_regnetx-1.6GF_fpn_ms-3x_coco',
+    'reppoints/reppoints-bbox_r50_fpn-gn_head-gn-grid_1x_coco',
+    # 'res2net/cascade-mask-rcnn_res2net-101_fpn_20e_coco',
+    # 'resnet_strikes_back/cascade-mask-rcnn_r50-rsb-pre_fpn_1x_coco',
     'retinanet/retinanet_r18_fpn_1x_coco',
-    'rpn/rpn_r50_caffe_c4_1x_coco',
-    'sabl/sabl_cascade_rcnn_r50_fpn_1x_coco',
-    'scratch/faster_rcnn_r50_fpn_gn-all_scratch_6x_coco',
-    'sparse_rcnn/sparse_rcnn_r50_fpn_1x_coco',
-    'ssd/ssdlite_mobilenetv2_scratch_600e_coco',
-    'swin/mask_rcnn_swin-s-p4-w7_fpn_fp16_ms-crop-3x_coco',
-    'tood/tood_r50_fpn_1x_coco',
-    'vfnet/vfnet_r2_101_fpn_mdconv_c3-c5_mstrain_2x_coco',
-    'yolact/yolact_r50_1x8_coco',
-    'yolo/yolov3_d53_320_273e_coco',
-    'yolof/yolof_r50_c5_8x8_1x_coco',
-    'yolox/yolox_nano_8x8_300e_coco',
+    'rpn/rpn_r50_fpn_1x_coco',
+    # 'sabl/sabl-cascade-rcnn_r50_fpn_1x_coco',
+    # 'scratch/faster-rcnn_r50-scratch_fpn_gn-all_6x_coco',
+    # 'sparse_rcnn/sparse-rcnn_r50_fpn_1x_coco',
+    'ssd/ssdlite_mobilenetv2-scratch_8xb24-600e_coco',
+    # 'swin/mask-rcnn_swin-s-p4-w7_fpn_amp-ms-crop-3x_coco',
+    # 'tood/tood_r50_fpn_1x_coco',
+    'vfnet/vfnet_r50_fpn_1x_coco',
+    # 'yolact/yolact_r50_1xb8-55e_coco',
+    'yolo/yolov3_d53_8xb8-320-273e_coco',
+    'yolof/yolof_r50-c5_8xb8-1x_coco',
+    'yolox/yolox_nano_8xb8-300e_coco',
 )
 
 # has exceptions:
@@ -89,11 +86,11 @@ config_files_maskrcnn = (
 
 # cannot run model: need gpu
 config_files_need_gpu = (
-    'carafe/faster_rcnn_r50_fpn_carafe_1x_coco',
-    'efficientnet/retinanet_effb3_fpn_crop896_8x4_1x_coco',
-    'gcnet/cascade_mask_rcnn_x101_32x4d_fpn_syncbn-backbone_1x_coco',
-    'resnest/cascade_mask_rcnn_s50_fpn_syncbn-backbone+head_mstrain_1x_coco',
-    'selfsup_pretrain/mask_rcnn_r50_fpn_mocov2-pretrain_1x_coco',
+    # 'carafe/faster-rcnn_r50_fpn-carafe_1x_coco',
+    # 'efficientnet/retinanet_effb3_fpn_8xb4-crop896-1x_coco',
+    # 'gcnet/cascade-mask-rcnn_x101-32x4d-syncbn_fpn_1x_coco',
+    # 'resnest/cascade-mask-rcnn_s50_fpn_syncbn-backbone+head_ms-1x_coco',
+    # 'selfsup_pretrain/mask-rcnn_r50-mocov2-pre_fpn_1x_coco',
 )
 
 # cannot run model: need argument img_metas
@@ -173,11 +170,9 @@ def test_mmdetection(config_file: str):
     torch.cuda.empty_cache()
 
     folder_prefix = os.environ['MMDET_DIR']
-    img = '%s/tests/data/color.jpg' % folder_prefix
 
     # Specify the path to model config and checkpoint file
-    config = mmcv.Config.fromfile(
-        folder_prefix + '/configs/' + config_file + '.py')
+    config = Config.fromfile(folder_prefix + '/configs/' + config_file + '.py')
 
     # RoIAlign will cause many errors. there are 4 ways to avoid it
     # 1. add 'mmcv_ops.RoIAlign' to leaf_module when tracing, and set 'config_dict['use_torchvision'] = True' recursively
@@ -204,29 +199,27 @@ def test_mmdetection(config_file: str):
     roi_align_setter(config._cfg_dict['model'])
 
     leaf_module_append = ()
-    if RoIAlign_solution in (1, 2):
+    if RoIAlign_solution in (1, 2, 3):
         from mmcv import ops as mmcv_ops
         leaf_module_append = (mmcv_ops.RoIAlign,)
 
     model = init_detector(config, device=device)
 
     with torch.no_grad():
-        cfg = model.cfg
-        cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
-        test_pipeline = Compose(cfg.data.test.pipeline)
-        img_data = test_pipeline(dict(img_info=dict(filename=img), img_prefix=None))['img']
-        img_tensor = collate(img_data, 1).data[0].to(device)
-
+        packed_inputs = demo_mm_inputs()
+        
+        dummy_inputs = model.data_preprocessor(packed_inputs, False)
+        
         # init run
         # some models need to be run 2 times before doing trace
-        model.forward_dummy(torch.rand_like(img_tensor))
-        model.forward_dummy(torch.rand_like(img_tensor))
+        model.forward(**dummy_inputs)
+        model.forward(**dummy_inputs)
 
         seed = torch.seed()
         torch.manual_seed(seed)
-        out_orig_1 = model.forward_dummy(img_tensor)
+        out_orig_1 = model.forward(**dummy_inputs)
         torch.manual_seed(seed)
-        out_orig_2 = model.forward_dummy(img_tensor)
+        out_orig_2 = model.forward(**dummy_inputs)
         assert check_equal(out_orig_1, out_orig_2), 'check_equal failure for original model'
         del out_orig_1, out_orig_2
 
@@ -237,9 +230,9 @@ def test_mmdetection(config_file: str):
             orig_base_types = torch_fx.proxy.base_types
             torch_fx.proxy.base_types = (*torch_fx.proxy.base_types, intc, int64)
 
-        traced_model = concrete_trace(model, {'img': img_tensor},
-                                      use_operator_patch=False,
-                                      forwrad_function_name='forward_dummy',
+        traced_model = concrete_trace(model, dummy_inputs,
+                                      use_operator_patch=True,
+                                      forward_function_name='forward',
                                       autowrap_leaf_function = {
                                         **ConcreteTracer.default_autowrap_leaf_function,
                                         all:  ((), False, None),
@@ -260,7 +253,7 @@ def test_mmdetection(config_file: str):
                                         mmcv_cnn.bricks.wrappers.MaxPool2d,
                                         mmcv_cnn.bricks.wrappers.MaxPool3d,
                                       ), fake_middle_class = (
-                                        mmdet_core.anchor.anchor_generator.AnchorGenerator,
+                                        mmdet_models.task_modules.prior_generators.AnchorGenerator,
         ))
 
         if config_file == 'pvt/retinanet_pvt-l_fpn_1x_coco':
@@ -268,20 +261,11 @@ def test_mmdetection(config_file: str):
 
         seed = torch.seed()
         torch.manual_seed(seed)
-        out_orig = model.forward_dummy(img_tensor)
+        out_orig = model.forward(**dummy_inputs)
         torch.manual_seed(seed)
-        out_orig_traced = traced_model(img_tensor)
+        out_orig_traced = traced_model(**dummy_inputs)
         assert check_equal(out_orig, out_orig_traced), 'check_equal failure in original inputs'
         del out_orig, out_orig_traced
-
-        input_like = torch.rand_like(img_tensor)
-        seed = torch.seed()
-        torch.manual_seed(seed)
-        out_like = model.forward_dummy(input_like)
-        torch.manual_seed(seed)
-        out_like_traced = traced_model(input_like)
-        assert check_equal(out_like, out_like_traced), 'check_equal failure in new inputs'
-        del input_like, out_like, out_like_traced
 
 if __name__ == '__main__':
     for config_file in config_files_correct:

@@ -54,7 +54,7 @@ class ModuleWrapper(torch.nn.Module):
         config
             The config is a dict which contains keys (not required): ``pruning``, ``quantization``, ``distillation``.
         fused_modules:
-            The List contains a series module names which need to fuse.
+            The List contains a series of modules which need to fuse.
         """
         super().__init__()
 
@@ -478,8 +478,8 @@ def register_wrappers(model: torch.nn.Module, config_list: List[Dict[str, Any]],
     return module_wrappers, configured_target_spaces
 
 
-def create_module_wrapper(model:nn.Module, module: nn.Module, module_name: str, mode: Literal['pruning', 'quantization', 'distillation'], \
-        config: Dict[str, Any], wrapper: ModuleWrapper | None = None, fused_modules_pair: List[str] | None = None):
+def create_module_wrapper(model: nn.Module, module: nn.Module, module_name: str, mode: Literal['pruning', 'quantization', 'distillation'],
+                          config: Dict[str, Any], wrapper: ModuleWrapper | None = None, fused_modules_pair: List[str] | None = None):
     fused_modules_pair = fused_modules_pair if fused_modules_pair is not None else []
     if mode != 'quantization' and len(fused_modules_pair) > 0:
         raise ValueError(f"Only quantization supports model fusion, but got {mode} and {fused_modules_pair}")

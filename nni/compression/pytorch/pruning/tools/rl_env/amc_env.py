@@ -1,5 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
+#
+# This file contains code adapted from AMC (https://github.com/mit-han-lab/amc)
+# Copyright (c) 2018 MIT_Han_Lab
+# Licensed under the MIT License
+# https://github.com/mit-han-lab/amc/blob/master/LICENSE
 
 from collections import OrderedDict
 from copy import Error

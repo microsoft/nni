@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 import inspect
 import logging
 from pathlib import Path
@@ -226,7 +225,7 @@ class ModelSpeedup(torch.fx.Interpreter):
 
             self.node_infos[node].output_origin = output
             self.node_infos[node].output_inplace = \
-                tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else deepcopy(t), output)
+                tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else t, output)
             self.node_infos[node].output_masks = \
                 tree_map_zip(lambda t: torch.ones_like(t).clone().detach() if isinstance(t, torch.Tensor) else None, output)
 
@@ -404,4 +403,4 @@ class ModelSpeedup(torch.fx.Interpreter):
         return self.bound_model
 
     def run(self):
-        self.speedup_model()
+        return self.speedup_model()
