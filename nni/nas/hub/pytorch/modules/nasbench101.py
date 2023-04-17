@@ -295,7 +295,7 @@ class NasBench101Cell(MutableModule):
 
     Warnings
     --------
-    :class:`NasBench101Cell` is not supported in :ref:`graph-based execution engine <graph-based-execution-engine>`.
+    :class:`NasBench101Cell` is not supported for graph-based model format.
     It's also not supported by most one-shot algorithms currently.
     """
 
