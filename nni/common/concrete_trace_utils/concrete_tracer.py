@@ -1457,7 +1457,17 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         fx.GraphModule: a Module created from the recorded operations from ``root``.
     """
     tracer = ConcreteTracer()
-    
+
+    tracer.trace(root,
+        autowrap_leaf_function = autowrap_leaf_function,
+        autowrap_leaf_class = autowrap_leaf_class,
+        leaf_module = leaf_module,
+        fake_middle_class = fake_middle_class,
+        concrete_args=concrete_args,
+        use_operator_patch=use_operator_patch,
+        operator_patch_backlist=operator_patch_backlist,
+        forwrad_function_name=forwrad_function_name,
+    )
     graph = tracer.trace(root,
         autowrap_leaf_function = autowrap_leaf_function,
         autowrap_leaf_class = autowrap_leaf_class,
@@ -1536,8 +1546,8 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         # check forward results equal before dce and after dce
         assert check_correctness(orig_forward_func, gm_check, concrete_args), 'correctness check(before dce) failed'
         assert check_correctness(orig_forward_func, traced, concrete_args), 'correctness check(after dce) failed'
-    # else:
-        # assert check_correctness(orig_forward_func, traced, concrete_args), 'correctness check failed'
+    else:
+        assert check_correctness(orig_forward_func, traced, concrete_args), 'correctness check failed'
 
     if check_args is not None:
         assert root(**check_args) == traced(**check_args), 'check_args check equal failed'
@@ -1545,5 +1555,4 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
     # before returning the traced GraphModule, store module path info
     setattr(traced, 'module_path', tracer.node_to_originating_module.copy())
 
-    # return traced, tracer
     return traced
