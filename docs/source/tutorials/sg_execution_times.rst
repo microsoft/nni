@@ -6,10 +6,10 @@
 
 Computation times
 =================
-**09:39.389** total execution time for **tutorials** files:
+**09:40.647** total execution time for **tutorials** files:
 
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_tutorials_quantization_bert_glue.py` (``quantization_bert_glue.py``)                 | 09:39.389 | 0.0 MB |
+| :ref:`sphx_glr_tutorials_quantization_bert_glue.py` (``quantization_bert_glue.py``)                 | 09:40.647 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_tutorials_darts.py` (``darts.py``)                                                   | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------+-----------+--------+

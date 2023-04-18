@@ -258,11 +258,7 @@ evaluate()
 # Result
 # ------
 # We experimented with PTQ, LSQ, and QAT algorithms on the MNLI, QNLI, QQP and  MRPC datasets respectively on an A100, and the experimental results are as follows.
-# 
-# Setting 1: pytorch 1.12.1
 #
-# Setting 2: pytorch 1.10.0
-# 
 # .. list-table:: Quantize Bert-base-uncased on MNLI, QNLI, MRPC and QQP
 #     :header-rows: 1
 #     :widths: auto

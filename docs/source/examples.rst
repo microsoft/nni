@@ -85,7 +85,7 @@ More examples can be found in our :githublink:`GitHub repository <examples>`.
 
 .. cardlinkitem::
    :header: Quantize Bert on Task MNLI
-   :description: An end to end example for how to using NNI to quantize transformer and show the real speedup number
+   :description: An end to end example for how to using NNI to simulate the process of quantize transformer
    :link: tutorials/quantization_bert_glue
    :image: ../img/thumbnails/quantization-tutorial.svg
    :background: indigo
