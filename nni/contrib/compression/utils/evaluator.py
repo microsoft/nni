@@ -23,6 +23,13 @@ else:
     LIGHTNING_INSTALLED = True
 
 try:
+    import deepspeed
+except ImportError:
+    DEEPSPEED_INSTALLED = False
+else:
+    DEEPSPEED_INSTALLED = True
+
+try:
     from transformers.trainer import Trainer as HFTrainer
     from transformers import TrainerCallback, TrainerControl, TrainerState
     from transformers import TrainingArguments
@@ -1149,6 +1156,7 @@ class DeepspeedTorchEvaluator(Evaluator):
                  deepspeed: str | Dict, resume_from_checkpoint_args: Dict | None = None, dummy_input: Any | None = None,
                  evaluating_func: _EVALUATING_FUNC | None = None):
         assert ACCELERATE_INSTALLED, "accelerate is not installed"
+        assert DEEPSPEED_INSTALLED, "deepspeed is not installed"
         self.training_func = training_func
         self._ori_training_step = training_step
         self._training_step = self._ori_training_step
@@ -1252,7 +1260,6 @@ class DeepspeedTorchEvaluator(Evaluator):
             self.lr_scheduler = self._lr_scheduler_helper.call(self.optimizer)  # type: ignore
 
     def deepspeed_init(self, inference=False):
-        import deepspeed
         assert self.model is not None
         assert self.deepspeed_config is not None
         # whether to check the validation of params
