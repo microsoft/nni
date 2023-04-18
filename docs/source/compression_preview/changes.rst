@@ -1,11 +1,28 @@
-Main Changes of Compression API in NNI 3.0
-==========================================
+Major Enhancement of Compression in NNI 3.0
+===========================================
 
 To bolster additional compression scenarios and more particular compression configurations,
 we have revised the compression application programming interface (API) in NNI 3.0.
 If you are a beginner to NNI Compression, you could bypass this document.
 Nonetheless, if you have employed NNI Compression before and want to try the latest Compression version,
 this document will help you in comprehending the noteworthy alterations in the interface in 3.0.
+
+
+New compression version import path:
+
+.. code-block:: python
+
+    # most new compression related, include pruners, quantizers, distillers, except new pruning speedup
+    from nni.contrib.compression.xxx import xxx
+    # new pruning speedup
+    from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+
+
+Old compression version import path:
+
+.. code-block:: python
+
+    from nni.compression.pytorch.xxx import xxx
 
 
 Compression Target
@@ -33,11 +50,6 @@ to ensure that ``softmax`` obtains the correct simulated pruning result.
 Please consult the sections on :ref:`target_names` and :ref:`target_settings` for further details.
 
 
-Compression Apply Method
-------------------------
-
-
-
 Compression Mode
 ----------------
 
@@ -62,13 +74,48 @@ Additionally, :ref:`align` is supported to generate a mask from another module m
 You can achieve improved performance and exploration by combining these modes by setting the appropriate keys in the configuration list.
 
 
+Pruning Speedup
+---------------
+
+The previous pruning speedup is based on ``torch.jit.trace`` to trace the model graph,
+it has a lot limiatations and need additional support for performing the operations.
+Excessive maintenance costs make it difficult for us to continue development.
+
+So in NNI 3.0, we refactor the pruning speedup based on ``concrete_trace``, it is a useful util to trace a model graph.
+``concrete_trace`` based on ``torch.fx``, and different with ``torch.fx.symbolic_trace``, it actually executes the entire model,
+so it can get a more complete graph.
+Most operations that cannot be traced in previous pruning speedup can now be traced.
+
+In addition to ``concrete_trace``, if users already have a good ``torch.fx.GraphModule`` for their model traced,
+users can also use the ``torch.fx.GraphModule`` directly.
+
+Moreover, customized masks propagation logic and module replacement method are supported in new pruning speedup.
+
+The previous method of pruning speedup relied on ``torch.jit.trace`` to trace the model graph.
+However, this method had several limitations and required additional support to perform certain operations.
+These limitations resulted in excessive maintenance costs, making it difficult to continue development. 
+
+To address these issues, in NNI 3.0, we refactored the pruning speedup based on ``concrete_trace``.
+This is a useful utility for tracing a model graph, based on ``torch.fx``.
+Unlike ``torch.fx.symbolic_trace``, ``concrete_trace`` executes the entire model, resulting in a more complete graph.
+As a result, most operations that couldn't be traced in the previous pruning speedup can now be traced. 
+
+In addition to ``concrete_trace``, users who have a good ``torch.fx.GraphModule`` for their traced model can also use the ``torch.fx.GraphModule`` directly.
+Furthermore, the new pruning speedup supports customized masks propagation logic and module replacement methods to cope with the speedup of various customized modules.
+
+
 Distillation
 ------------
 
+Two distillers is supported in NNI 3.0. By pruning or quantization fused distillation, it can get better compression results and higher precision.
 
-Pruning Speedup
----------------
+Please refer :doc:`Distiller <../reference/compression_preview/distiller>` for more details.
 
 
 Fusion Compressoin
 ------------------
+
+Thanks to the new unified compression framework, it is now possible to perform pruning, quantization, and distillation simultaneously,
+without having to apply them one by one.
+
+Please refer :doc:`fusion compression <./fusion_compress>` for more details.

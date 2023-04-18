@@ -149,7 +149,8 @@ class LinearPruner(_ComboPruner):
 
     Examples
     --------
-        TODO
+        Please refer to
+        :githublink:`examples/compression/pruning/scheduled_pruning.py <examples/compression/pruning/scheduled_pruning.py>`.
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     def update_sparse_goals(self, current_times: int):
@@ -180,7 +181,8 @@ class AGPPruner(_ComboPruner):
 
     Examples
     --------
-        TODO
+        Please refer to
+        :githublink:`examples/compression/pruning/scheduled_pruning.py <examples/compression/pruning/scheduled_pruning.py>`.
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     def update_sparse_goals(self, current_times: int):

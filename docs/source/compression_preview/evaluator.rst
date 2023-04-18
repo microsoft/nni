@@ -58,7 +58,35 @@ Here is an example of how to initialize a :class:`TorchEvaluator <nni.contrib.co
 
 .. code-block:: python
 
-    pass
+    def training_step(batch, model, *args, **kwargs):
+        output = model(batch[0])
+        loss = F.cross_entropy(output, batch[1])
+        return loss
+
+    def training_func(model, optimizer, training_step, lr_scheduler, max_steps, max_epochs):
+        assert max_steps is not None or max_epochs is not None
+        total_steps = max_steps if max_steps else max_epochs * len(train_dataloader)
+        total_epochs = total_steps // len(train_dataloader) + (0 if total_steps % len(train_dataloader) == 0 else 1)
+
+        current_step = 0
+        for _ in range(total_epochs):
+            for batch in train_dataloader:
+                loss = training_step(batch, model)
+                loss.backward()
+                optimizer.step()
+
+                # if reach the total steps, exit from the training loop
+                current_step = current_step + 1
+                if current_step >= total_steps:
+                    return
+
+            # if you are using a epoch-wise scheduler, call it here
+            lr_scheduler.step()
+
+    optimizer = nni.trace(torch.optim.Adam)(model.parameters(), lr=0.001)
+    lr_scheduler = nni.trace(torch.optim.lr_scheduler.LambdaLR)(optimizer, lr_lambda=lambda epoch: 1 / epoch)
+
+    evaluator = TorchEvaluator(training_func, optimizer, training_step, lr_scheduler)
 
 .. note::
     It is also worth to note that not all the arguments of :class:`TorchEvaluator <nni.contrib.compression.TorchEvaluator>` must be provided.
@@ -67,7 +95,7 @@ Here is an example of how to initialize a :class:`TorchEvaluator <nni.contrib.co
     But, it is fine to provide more arguments than the compressor's need.
 
 
-A complete example of pruner using :class:`TorchEvaluator <nni.contrib.compression.TorchEvaluator>` to compress model can be found :githublink:`here <examples/model_compress/pruning/taylorfo_torch_evaluator.py>`.
+A complete example can be found :githublink:`here <examples/compression/evaluator/torch_evaluator.py>`.
 
 
 LightningEvaluator
@@ -76,7 +104,7 @@ LightningEvaluator
 
 Only three parts users need to modify compared with the original pytorch-lightning code:
 
-1. Wrap the ``Optimizer`` and ``_LRScheduler`` class with ``nni.trace``.
+1. Wrap the ``Optimizer`` and ``LRScheduler`` class with ``nni.trace``.
 2. Wrap the ``LightningModule`` class with ``nni.trace``.
 3. Wrap the ``LightningDataModule`` class with ``nni.trace``.
 
@@ -85,7 +113,10 @@ Here is an example of how to initialize a :class:`LightningEvaluator <nni.contri
 
 .. code-block:: python
 
-    pass
+    pl_trainer = nni.trace(pl.Trainer)(...)
+    pl_data = nni.trace(MyDataModule)(...)
+
+    evaluator = LightningEvaluator(pl_trainer, pl_data)
 
 .. note::
     In ``LightningModule.configure_optimizers``, user should use traced ``torch.optim.Optimizer`` and traced ``torch.optim._LRScheduler``.
@@ -102,10 +133,28 @@ Here is an example of how to initialize a :class:`LightningEvaluator <nni.contri
                 return optimizers, lr_schedulers
 
 
-A complete example of pruner using :class:`LightningEvaluator <nni.contrib.compression.LightningEvaluator>` to compress model can be found :githublink:`here <examples/model_compress/pruning/taylorfo_lightning_evaluator.py>`.
+A complete example can be found :githublink:`here <examples/compression/evaluator/lightning_evaluator.py>`.
 
 
 TransformersEvaluator
 ---------------------
 
-TBD
+:class:`TransformersEvaluator <nni.contrib.compression.TransformersEvaluator>` is for the users who work with Huggingface Transformers Trainer.
+
+The only need is using ``nni.trace`` to wrap the Trainer class.
+
+.. code-block:: python
+
+    import nni
+    from transformers.trainer import Trainer
+    trainer = nni.trace(Trainer)(model, training_args, ...)
+
+    from nni.contrib.compression.utils import TransformersEvaluator
+    evaluator = TransformersEvaluator(trainer)
+
+Moreover, if you are utilizing a personalized optimizer or learning rate scheduler, kindly use ``nni.trace`` to wrap their class as well.
+
+.. code-block:: python
+
+    optimizer = nni.trace(torch.optim.Adam)(model.parameters(), lr=0.001)
+    lr_scheduler = nni.trace(torch.optim.lr_scheduler.LambdaLR)(optimizer, lr_lambda=lambda epoch: 1 / epoch)

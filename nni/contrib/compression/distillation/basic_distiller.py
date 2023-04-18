@@ -166,20 +166,23 @@ class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
     config_list
         Config list to configure how to distill.
         Common keys please refer :doc:`Compression Config Specification </compression/compression_config_list>`.
+
         Specific keys:
-            - 'lambda': By default, 1.
-              This is a scaling factor to control the loss scale, the final loss used during training is
-              ``(origin_loss_lambda * origin_loss + sum(lambda_i * distill_loss_i))``.
-              Here ``i`` represents the ``i-th`` distillation target.
-              The higher the value of lambda, the greater the contribution of the corresponding distillation target to the loss.
-            - 'link': By default, 'auto'.
-              'auto' or a teacher module name or a list of teacher module names,
-              the module name(s) of teacher module(s) will align with student module(s) configured in this config.
-              If 'auto' is set, will use student module name as the link,
-              usually requires the teacher model and the student model to be isomorphic.
-            - 'apply_method': By default, 'mse'.
-              'mse' and 'kl' are supported right now. 'mse' means the MSE loss, usually used to distill hidden states.
-              'kl' means the KL loss, usually used to distill logits.
+
+        * 'lambda': By default, 1.
+          This is a scaling factor to control the loss scale, the final loss used during training is
+          ``(origin_loss_lambda * origin_loss + sum(lambda_i * distill_loss_i))``.
+          Here ``i`` represents the ``i-th`` distillation target.
+          The higher the value of lambda, the greater the contribution of the corresponding distillation target to the loss.
+        * 'link': By default, 'auto'.
+          'auto' or a teacher module name or a list of teacher module names,
+          the module name(s) of teacher module(s) will align with student module(s) configured in this config.
+          If 'auto' is set, will use student module name as the link,
+          usually requires the teacher model and the student model to be isomorphic.
+        * 'apply_method': By default, 'mse'.
+          'mse' and 'kl' are supported right now. 'mse' means the MSE loss, usually used to distill hidden states.
+          'kl' means the KL loss, usually used to distill logits.
+
     evaluator
         {evaluator_docstring}
     teacher_model
@@ -239,20 +242,23 @@ class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
     config_list
         Config list to configure how to distill.
         Common keys please refer :doc:`Compression Config Specification </compression/compression_config_list>`.
+
         Specific keys:
-            - 'lambda': By default, 1.
-              This is a scaling factor to control the loss scale, the final loss used during training is
-              ``(origin_loss_lambda * origin_loss + sum(lambda_i * distill_loss_i))``.
-              Here ``i`` represents the ``i-th`` distillation target.
-              The higher the value of lambda, the greater the contribution of the corresponding distillation target to the loss.
-            - 'link': By default, 'auto'.
-              'auto' or a teacher module name or a list of teacher module names,
-              the module name(s) of teacher module(s) will align with student module(s) configured in this config.
-              If 'auto' is set, will use student module name as the link,
-              usually requires the teacher model and the student model to be isomorphic.
-            - 'apply_method': By default, 'mse'.
-              'mse' and 'kl' are supported right now. 'mse' means the MSE loss, usually used to distill hidden states.
-              'kl' means the KL loss, usually used to distill logits.
+
+        * 'lambda': By default, 1.
+          This is a scaling factor to control the loss scale, the final loss used during training is
+          ``(origin_loss_lambda * origin_loss + sum(lambda_i * distill_loss_i))``.
+          Here ``i`` represents the ``i-th`` distillation target.
+          The higher the value of lambda, the greater the contribution of the corresponding distillation target to the loss.
+        * 'link': By default, 'auto'.
+          'auto' or a teacher module name or a list of teacher module names,
+          the module name(s) of teacher module(s) will align with student module(s) configured in this config.
+          If 'auto' is set, will use student module name as the link,
+          usually requires the teacher model and the student model to be isomorphic.
+        * 'apply_method': By default, 'mse'.
+          'mse' and 'kl' are supported right now. 'mse' means the MSE loss, usually used to distill hidden states.
+          'kl' means the KL loss, usually used to distill logits.
+
     evaluator
         {evaluator_docstring}
     teacher_model
