@@ -204,7 +204,7 @@ Then we could temporarily make batchnorm masks align with convolution layer weig
                     'module_name': 'conv2',
                     'target_name': 'weight',
                     'dims': [0],
-                }
+                },
                 'granularity': 'out_channel',
             }
         }
