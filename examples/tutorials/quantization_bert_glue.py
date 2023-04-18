@@ -2,9 +2,9 @@
 Quantize BERT on Task GLUE
 ==========================
 
-Here we show an effective transformer simulated quantization process that NNI team has tried, and users can use NNI to discover better process
+Here we show an effective transformer simulated quantization process that NNI team has tried, and users can use NNI to discover better process.
 
-we use the BERT model and the trainer pipeline in the Transformers to do some experiments.
+We use the BERT model and the trainer pipeline in the Transformers to do some experiments.
 The entire quantization process can be divided into the following steps:
 
 1. Use the BERT-base-uncased model and the trainer pipeline in the transformers to fine-tune the model on the downstream task GLUE.
@@ -54,7 +54,7 @@ from transformers.trainer import Trainer
 from transformers.training_args import TrainingArguments
 
 
-task_name = 'rte'
+task_name = 'qnli'
 finetune_lr = 4e-5
 quant_lr = 1e-5
 quant_method = 'lsq'
@@ -130,13 +130,13 @@ def prepare_datasets(task_name: str, tokenizer: BertTokenizerFast, cache_dir: st
 
 # %%
 # Create a trainer instance
-
+#
 # .. note::
+#
+#     Please set ``is_quant`` to ``False`` to fine-tune the BERT model and set ``is_quant`` to ``True``
+#     , when you need to create a traced trainer and use ``quant_lr`` for model quantization.
 
-#     Please set ``is_trace`` to ``False`` to fine-tune the BERT model and set ``is_trace`` to ``True``
-#     When you need to create a traced trainer for model quantization.
-
-def prepare_traced_trainer(model, load_best_model_at_end=False, is_trace=False):
+def prepare_traced_trainer(model, load_best_model_at_end=False, is_quant=False):
     is_regression = task_name == 'stsb'
     metric = load_metric('glue', task_name)
 
@@ -165,38 +165,30 @@ def prepare_traced_trainer(model, load_best_model_at_end=False, is_trace=False):
                                       greater_is_better=True,
                                       seed=1024,
                                       load_best_model_at_end=load_best_model_at_end,)
-    if is_trace:
+    if is_quant:
         training_args.learning_rate = quant_lr
-        trainer = nni.trace(Trainer)(model=model,
-                                    args=training_args,
-                                    data_collator=data_collator,
-                                    train_dataset=train_dataset,
-                                    eval_dataset=merged_validation_dataset,
-                                    tokenizer=tokenizer,
-                                    compute_metrics=compute_metrics,
-                                    )
     else:
         training_args.learning_rate = finetune_lr
-        trainer = Trainer(model=model,
-                         args=training_args,
-                         data_collator=data_collator,
-                         train_dataset=train_dataset,
-                         eval_dataset=merged_validation_dataset,
-                         tokenizer=tokenizer,
-                         compute_metrics=compute_metrics,
-                         )
+    trainer = nni.trace(Trainer)(model=model,
+                        args=training_args,
+                        data_collator=data_collator,
+                        train_dataset=train_dataset,
+                        eval_dataset=merged_validation_dataset,
+                        tokenizer=tokenizer,
+                        compute_metrics=compute_metrics,
+                        )
 
     return trainer
 
 # %%
 # Create the finetuned model
 
-def build_finetuning_model(state_dict_path: str, is_trace=False):
+def build_finetuning_model(state_dict_path: str, is_quant=False):
     model = build_model('bert-base-uncased', task_name)
     if Path(state_dict_path).exists():
         model.load_state_dict(torch.load(state_dict_path))
     else:
-        trainer = prepare_traced_trainer(model, True, is_trace)
+        trainer = prepare_traced_trainer(model, True, is_quant)
         trainer.train()
         torch.save(model.state_dict(), state_dict_path)
     return model
@@ -210,7 +202,7 @@ def build_finetuning_model(state_dict_path: str, is_trace=False):
 # The entire quantization process can be devided into the following steps:
 #
 # 1. Call ``build_finetuning_model`` to load or fine-tune the BERT model on a specific task GLUE
-# 2. Call ``prepare_traced_trainer`` and set ``is_trace`` to ``True`` to create a traced trainer instance for model quantization
+# 2. Call ``prepare_traced_trainer`` and set ``is_quant`` to ``True`` to create a traced trainer instance for model quantization
 # 3. Call the TransformersEvaluator to create an evaluator instance
 # 4. Use the defined config_list and evaluator to create a quantizer instance
 # 5. Define ``max_steps`` or ``max_epochs``. Note that ``max_steps`` and ``max_epochs`` cannot be None at the same time.
@@ -232,8 +224,8 @@ def fake_quantize():
 
     # create a finetune model
     Path('./output/bert_finetuned/').mkdir(parents=True, exist_ok=True)
-    model: torch.nn.Module = build_finetuning_model(f'./output/bert_finetuned/{task_name}.bin', is_trace=False) # type: ignore
-    traced_trainer = prepare_traced_trainer(model, is_trace=True)
+    model: torch.nn.Module = build_finetuning_model(f'./output/bert_finetuned/{task_name}.bin', is_quant=False)  # type: ignore
+    traced_trainer = prepare_traced_trainer(model, is_quant=False)
     evaluator = TransformersEvaluator(traced_trainer)
     if quant_method == 'lsq':
         quantizer = LsqQuantizer(model, config_list, evaluator)
@@ -252,23 +244,26 @@ def fake_quantize():
     print(quantizer.evaluator.evaluate())
 
 def evaluate():
-    model = build_finetuning_model(f'./output/bert_finetuned/{task_name}.bin', is_trace=False)
-    trainer = prepare_traced_trainer(model, is_trace=False)
+    model = build_finetuning_model(f'./output/bert_finetuned/{task_name}.bin', is_quant=False)
+    trainer = prepare_traced_trainer(model, is_quant=False)
     metrics = trainer.evaluate()
     print(f"Evaluate metrics={metrics}")
 
 
-if __name__ == "__main__":
-    fake_quantize()
-    evaluate()
+fake_quantize()
+evaluate()
 
 
 # %%
 # Result
 # ------
-# We experimented with PTQ, LSQ, and QAT algorithms on the MNLI, QNLI, QQP and  MRPC datasets respectively on an A100, and the experimental results are as follows
+# We experimented with PTQ, LSQ, and QAT algorithms on the MNLI, QNLI, QQP and  MRPC datasets respectively on an A100, and the experimental results are as follows.
+# 
+# Setting 1: pytorch 1.12.1
 #
-# ..list-table:: Quantize Bert-base-uncased on MNLI, QNLI, MRPC and QQP datasets.
+# Setting 2: pytorch 1.10.0
+# 
+# .. list-table:: Quantize Bert-base-uncased on MNLI, QNLI, MRPC and QQP
 #     :header-rows: 1
 #     :widths: auto
 #
@@ -283,22 +278,22 @@ if __name__ == "__main__":
 #       - F1
 #       - F1
 #     * - Baseline
-#       - 85.04
-#       - 91.67
-#       - 87.69
-#       - 88.42
+#       - 85.04%
+#       - 91.67%
+#       - 87.69%
+#       - 88.42%
 #     * - LSQ
-#       - 84.34
-#       - 91.69
-#       - 89.9
-#       - 88.16
+#       - 84.34%
+#       - 91.69%
+#       - 89.9%
+#       - 88.16%
 #     * - QAT
-#       - 83.68
-#       - 90.52
-#       - 89.16
-#       - 87.62
+#       - 83.68%
+#       - 90.52%
+#       - 89.16%
+#       - 87.62%
 #     * - PTQ
-#       - 76.37
-#       - 67.67
-#       - 74.79
-#       - 84.82
+#       - 76.37%
+#       - 67.67%
+#       - 74.79%
+#       - 84.42%
