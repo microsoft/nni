@@ -7,5 +7,5 @@ Quantization
 
     Overview <quantization>
     Quickstart <quantization_quick_start>
-    Quantizer <quantizer_v_2_5>
+    Quantizer <quantizer>
     SpeedUp </tutorials/quantization_speedup>

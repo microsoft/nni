@@ -39,23 +39,39 @@ Preparation
 In this tutorial, we use a simple model and pre-train on MNIST dataset.
 If you are familiar with defining a model and training in pytorch, you can skip directly to `Quantizing Model`_.
 
-.. GENERATED FROM PYTHON SOURCE LINES 22-150
+.. GENERATED FROM PYTHON SOURCE LINES 22-36
 
 .. code-block:: default
 
 
     import functools
     import time
-    from typing import Callable, Union, List, Dict, Tuple
+    from typing import Callable, Union, List, Dict, Tuple, Union
 
     import torch
     import torch.nn.functional as F
     from torch.optim import Optimizer, SGD
-    from torch.optim.lr_scheduler import _LRScheduler
     from torch.utils.data import DataLoader
     from torch import Tensor
 
-    # define the model
+    from nni.common.types import SCHEDULER
+
+
+
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 37-38
+
+Define the model
+
+.. GENERATED FROM PYTHON SOURCE LINES 38-63
+
+.. code-block:: default
+
     class Mnist(torch.nn.Module):
         def __init__(self):
             super().__init__()
@@ -81,7 +97,21 @@ If you are familiar with defining a model and training in pytorch, you can skip 
             return F.log_softmax(x, dim=1)
 
 
-    # Create training and evaluation dataloader
+
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 64-65
+
+Create training and evaluation dataloader
+
+.. GENERATED FROM PYTHON SOURCE LINES 65-78
+
+.. code-block:: default
+
     from torch.utils.data import DataLoader
     from torchvision import transforms
     from torchvision.datasets import MNIST
@@ -95,7 +125,21 @@ If you are familiar with defining a model and training in pytorch, you can skip 
     test_dataloader = DataLoader(mnist_test, batch_size=1000)
 
 
-    # define training and evaluation functions
+
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 79-80
+
+Define training and evaluation functions
+
+.. GENERATED FROM PYTHON SOURCE LINES 80-124
+
+.. code-block:: default
+
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 
@@ -106,42 +150,25 @@ If you are familiar with defining a model and training in pytorch, you can skip 
         return loss
 
 
-    def training_model(model: torch.nn.Module, optimizer: Union[Optimizer, List[Optimizer]], \
-                       training_step, scheduler, max_steps: Union[int, None] = None, max_epochs: Union[int, None] = None):
+    def training_model(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: Union[SCHEDULER, None] = None,
+                       max_steps: Union[int, None] = None, max_epochs: Union[int, None] = None):
         model.train()
-        max_epochs = max_epochs or (40 if max_steps is None else 100)
+        max_epochs = max_epochs if max_epochs else 1 if max_steps is None else 100
         current_steps = 0
-        best_acc = 0.0
 
         # training
         for epoch in range(max_epochs):
             print(f'Epoch {epoch} start!')
             for batch in train_dataloader:
-                if isinstance(optimizer, Optimizer):
-                    optimizer.zero_grad()
-                elif isinstance(optimizer, List) and all(isinstance(_, Optimizer) for _ in optimizer):
-                    for opt in optimizer:
-                        opt.zero_grad()
+                optimizer.zero_grad()
                 loss = training_step(batch, model)
-                assert isinstance(loss, torch.Tensor)
                 loss.backward()
-                if isinstance(optimizer, Optimizer):
-                    optimizer.step()
-                elif isinstance(optimizer, List) and all(isinstance(_, Optimizer) for _ in optimizer):
-                    for opt in optimizer:
-                        opt.step()
-                if isinstance(scheduler, _LRScheduler):
-                    scheduler.step()
-                if isinstance(scheduler, List) and all(isinstance(_, _LRScheduler) for _ in scheduler):
-                    for sch in scheduler:
-                        sch.step()
+                optimizer.step()
                 current_steps += 1
                 if max_steps and current_steps == max_steps:
                     return
-
-            acc = evaluating_model(model)
-            best_acc = max(acc, best_acc)
-            print(f"epoch={epoch}\tacc={acc}\tbest_acc={best_acc}")
+            if scheduler is not None:
+                scheduler.step()
 
 
     def evaluating_model(model: torch.nn.Module):
@@ -154,12 +181,24 @@ If you are familiar with defining a model and training in pytorch, you can skip 
                 logits = model(x)
                 preds = torch.argmax(logits, dim=1)
                 correct += preds.eq(y.view_as(preds)).sum().item()
-        print(f'Accuracy: {100 * correct / len(mnist_test)}%)\n')
-
         return correct / len(mnist_test)
 
 
-    # pre-train and evaluate the model on MNIST dataset
+
+
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 125-126
+
+Pre-train and evaluate the model on MNIST dataset
+
+.. GENERATED FROM PYTHON SOURCE LINES 126-137
+
+.. code-block:: default
+
     model = Mnist().to(device)
     optimizer = SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
 
@@ -179,66 +218,87 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Downloading http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
-    Downloading http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz to data/mnist/MNIST/raw/train-images-idx3-ubyte.gz
-      0%|          | 0/9912422 [00:00<?, ?it/s]    100%|##########| 9912422/9912422 [00:00<00:00, 276853949.10it/s]
-    Extracting data/mnist/MNIST/raw/train-images-idx3-ubyte.gz to data/mnist/MNIST/raw
-
-    Downloading http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
-    Downloading http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz to data/mnist/MNIST/raw/train-labels-idx1-ubyte.gz
-      0%|          | 0/28881 [00:00<?, ?it/s]    100%|##########| 28881/28881 [00:00<00:00, 239872661.04it/s]
-    Extracting data/mnist/MNIST/raw/train-labels-idx1-ubyte.gz to data/mnist/MNIST/raw
-
-    Downloading http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
-    Downloading http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz to data/mnist/MNIST/raw/t10k-images-idx3-ubyte.gz
-      0%|          | 0/1648877 [00:00<?, ?it/s]    100%|##########| 1648877/1648877 [00:00<00:00, 104567591.95it/s]
-    Extracting data/mnist/MNIST/raw/t10k-images-idx3-ubyte.gz to data/mnist/MNIST/raw
-
-    Downloading http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
-    Downloading http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz to data/mnist/MNIST/raw/t10k-labels-idx1-ubyte.gz
-      0%|          | 0/4542 [00:00<?, ?it/s]    100%|##########| 4542/4542 [00:00<00:00, 61453318.61it/s]
-    Extracting data/mnist/MNIST/raw/t10k-labels-idx1-ubyte.gz to data/mnist/MNIST/raw
-
     Epoch 0 start!
-    Accuracy: 96.95%)
-
-    epoch=0 acc=0.9695      best_acc=0.9695
     Epoch 1 start!
-    Accuracy: 98.76%)
-
-    epoch=1 acc=0.9876      best_acc=0.9876
     Epoch 2 start!
-    Accuracy: 98.88%)
-
-    epoch=2 acc=0.9888      best_acc=0.9888
     Epoch 3 start!
-    Accuracy: 99.12%)
-
-    epoch=3 acc=0.9912      best_acc=0.9912
     Epoch 4 start!
-    Accuracy: 99.17%)
-
-    epoch=4 acc=0.9917      best_acc=0.9917
-    pure training 5 epochs: 74.82779717445374s
-    Accuracy: 99.17%)
-
-    pure evaluating: 1.4569122791290283s    Acc.: 0.9917
+    pure training 5 epochs: 47.914021015167236s
+    pure evaluating: 1.2639274597167969s    Acc.: 0.9897
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 151-155
+.. GENERATED FROM PYTHON SOURCE LINES 138-143
 
 Quantizing Model
 ----------------
 
 Initialize a `config_list`.
-Detailed about how to write ``config_list`` please refer :doc:`compression config specification <../compression/compression_config_list>`.
+Detailed about how to write ``config_list`` please refer :doc:`Config Specification <../compression_preview/config_list>`.
+
+.. GENERATED FROM PYTHON SOURCE LINES 143-177
+
+.. code-block:: default
+
+
+    import nni
+    from nni.contrib.compression.quantization import QATQuantizer
+    from nni.contrib.compression.utils import TorchEvaluator
+
+
+    optimizer = nni.trace(SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+    evaluator = TorchEvaluator(training_model, optimizer, training_step)  # type: ignore
+
+    config_list = [{
+        'op_names': ['conv1', 'conv2', 'fc1', 'fc2'],
+        'target_names': ['_input_', 'weight', '_output_'],
+        'quant_dtype': 'int8',
+        'quant_scheme': 'affine',
+        'granularity': 'default',
+    },{
+        'op_names': ['relu1', 'relu2', 'relu3'],
+        'target_names': ['_output_'],
+        'quant_dtype': 'int8',
+        'quant_scheme': 'affine',
+        'granularity': 'default',
+    }]
+
+    quantizer = QATQuantizer(model, config_list, evaluator, len(train_dataloader))
+    real_input = next(iter(train_dataloader))[0].to(device)
+    quantizer.track_forward(real_input)
+
+    start = time.time()
+    _, calibration_config = quantizer.compress(None, max_epochs=5)
+    print(f'pure training 5 epochs: {time.time() - start}s')
+
+    print(calibration_config)
+    start = time.time()
+    acc = evaluating_model(model)
+    print(f'quantization evaluating: {time.time() - start}s    Acc.: {acc}')
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ .. code-block:: none
+
+    Epoch 0 start!
+    Epoch 1 start!
+    Epoch 2 start!
+    Epoch 3 start!
+    Epoch 4 start!
+    pure training 5 epochs: 78.95339393615723s
+    defaultdict(<class 'dict'>, {'fc2': {'weight': {'scale': tensor(0.0017), 'zero_point': tensor(-5.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(0.2286), 'tracked_min': tensor(-0.2105)}, '_input_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(6.), 'tracked_min': tensor(0.)}, '_output_0': {'scale': tensor(0.1543), 'zero_point': tensor(-35.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(25.0385), 'tracked_min': tensor(-14.1545)}}, 'conv2': {'weight': {'scale': tensor(0.0011), 'zero_point': tensor(-19.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(0.1659), 'tracked_min': tensor(-0.1226)}, '_input_0': {'scale': tensor(0.0230), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(5.8373), 'tracked_min': tensor(0.)}, '_output_0': {'scale': tensor(0.0971), 'zero_point': tensor(-6.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(12.9122), 'tracked_min': tensor(-11.7522)}}, 'fc1': {'weight': {'scale': tensor(0.0007), 'zero_point': tensor(-3.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(0.0885), 'tracked_min': tensor(-0.0844)}, '_input_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(6.), 'tracked_min': tensor(0.)}, '_output_0': {'scale': tensor(0.0611), 'zero_point': tensor(-7.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(8.2104), 'tracked_min': tensor(-7.3205)}}, 'conv1': {'weight': {'scale': tensor(0.0021), 'zero_point': tensor(-19.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(0.3130), 'tracked_min': tensor(-0.2318)}, '_input_0': {'scale': tensor(0.0128), 'zero_point': tensor(-94.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(2.8215), 'tracked_min': tensor(-0.4242)}, '_output_0': {'scale': tensor(0.0311), 'zero_point': tensor(13.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(3.5516), 'tracked_min': tensor(-4.3537)}}, 'relu3': {'_output_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(6.), 'tracked_min': tensor(0.)}}, 'relu1': {'_output_0': {'scale': tensor(0.0232), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(5.8952), 'tracked_min': tensor(0.)}}, 'relu2': {'_output_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(6.), 'tracked_min': tensor(0.)}}})
+    quantization evaluating: 1.2496261596679688s    Acc.: 0.9902
+
+
+
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  17.495 seconds)
+   **Total running time of the script:** ( 2 minutes  14.073 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_quick_start.py:

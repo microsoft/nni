@@ -9,3 +9,5 @@ Compression API Reference (Preview)
     Distiller <distiller>
     Evaluator <evaluator>
     Compression Utilities <utils>
+    Module Fusion <module_fusion>
+    Quantizer <quantizer>

@@ -103,6 +103,11 @@ As a result, most operations that couldn't be traced in the previous pruning spe
 In addition to ``concrete_trace``, users who have a good ``torch.fx.GraphModule`` for their traced model can also use the ``torch.fx.GraphModule`` directly.
 Furthermore, the new pruning speedup supports customized masks propagation logic and module replacement methods to cope with the speedup of various customized modules.
 
+Model Fusion
+------------
+
+Model fusion is supported in NNI 3.0. You can use it easily by setting ``fuse_names`` in each configure in the config_list.
+Please refer :doc:`Module Fusion <../reference/compression_preview/module_fusion>` for more details.
 
 Distillation
 ------------

@@ -22,16 +22,19 @@ Here we use `QATQuantizer` as an example to show the usage of quantization in NN
 
 import functools
 import time
-from typing import Callable, Union, List, Dict, Tuple
+from typing import Callable, Union, List, Dict, Tuple, Union
 
 import torch
 import torch.nn.functional as F
 from torch.optim import Optimizer, SGD
-from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from torch import Tensor
 
-# define the model
+from nni.common.types import SCHEDULER
+
+
+# %%
+# Define the model
 class Mnist(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -57,6 +60,7 @@ class Mnist(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 
+# %%
 # Create training and evaluation dataloader
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -71,7 +75,8 @@ mnist_test = MNIST(root='data/mnist', train=False, transform=transform)
 test_dataloader = DataLoader(mnist_test, batch_size=1000)
 
 
-# define training and evaluation functions
+# %%
+# Define training and evaluation functions
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 
@@ -82,42 +87,25 @@ def training_step(batch, model) -> Tensor:
     return loss
 
 
-def training_model(model: torch.nn.Module, optimizer: Union[Optimizer, List[Optimizer]], \
-                   training_step, scheduler, max_steps: Union[int, None] = None, max_epochs: Union[int, None] = None):
+def training_model(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: Union[SCHEDULER, None] = None,
+                   max_steps: Union[int, None] = None, max_epochs: Union[int, None] = None):
     model.train()
-    max_epochs = max_epochs or (40 if max_steps is None else 100)
+    max_epochs = max_epochs if max_epochs else 1 if max_steps is None else 100
     current_steps = 0
-    best_acc = 0.0
 
     # training
     for epoch in range(max_epochs):
         print(f'Epoch {epoch} start!')
         for batch in train_dataloader:
-            if isinstance(optimizer, Optimizer):
-                optimizer.zero_grad()
-            elif isinstance(optimizer, List) and all(isinstance(_, Optimizer) for _ in optimizer):
-                for opt in optimizer:
-                    opt.zero_grad()
+            optimizer.zero_grad()
             loss = training_step(batch, model)
-            assert isinstance(loss, torch.Tensor)
             loss.backward()
-            if isinstance(optimizer, Optimizer):
-                optimizer.step()
-            elif isinstance(optimizer, List) and all(isinstance(_, Optimizer) for _ in optimizer):
-                for opt in optimizer:
-                    opt.step()
-            if isinstance(scheduler, _LRScheduler):
-                scheduler.step()
-            if isinstance(scheduler, List) and all(isinstance(_, _LRScheduler) for _ in scheduler):
-                for sch in scheduler:
-                    sch.step()
+            optimizer.step()
             current_steps += 1
             if max_steps and current_steps == max_steps:
                 return
-
-        acc = evaluating_model(model)
-        best_acc = max(acc, best_acc)
-        print(f"epoch={epoch}\tacc={acc}\tbest_acc={best_acc}")
+        if scheduler is not None:
+            scheduler.step()
 
 
 def evaluating_model(model: torch.nn.Module):
@@ -130,12 +118,11 @@ def evaluating_model(model: torch.nn.Module):
             logits = model(x)
             preds = torch.argmax(logits, dim=1)
             correct += preds.eq(y.view_as(preds)).sum().item()
-    print(f'Accuracy: {100 * correct / len(mnist_test)}%)\n')
-
     return correct / len(mnist_test)
 
 
-# pre-train and evaluate the model on MNIST dataset
+# %%
+# Pre-train and evaluate the model on MNIST dataset
 model = Mnist().to(device)
 optimizer = SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
 
@@ -152,4 +139,39 @@ print(f'pure evaluating: {time.time() - start}s    Acc.: {acc}')
 # ----------------
 #
 # Initialize a `config_list`.
-# Detailed about how to write ``config_list`` please refer :doc:`compression config specification <../compression/compression_config_list>`.
+# Detailed about how to write ``config_list`` please refer :doc:`Config Specification <../compression_preview/config_list>`.
+
+import nni
+from nni.contrib.compression.quantization import QATQuantizer
+from nni.contrib.compression.utils import TorchEvaluator
+
+
+optimizer = nni.trace(SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+evaluator = TorchEvaluator(training_model, optimizer, training_step)  # type: ignore
+
+config_list = [{
+    'op_names': ['conv1', 'conv2', 'fc1', 'fc2'],
+    'target_names': ['_input_', 'weight', '_output_'],
+    'quant_dtype': 'int8',
+    'quant_scheme': 'affine',
+    'granularity': 'default',
+},{
+    'op_names': ['relu1', 'relu2', 'relu3'],
+    'target_names': ['_output_'],
+    'quant_dtype': 'int8',
+    'quant_scheme': 'affine',
+    'granularity': 'default',
+}]
+
+quantizer = QATQuantizer(model, config_list, evaluator, len(train_dataloader))
+real_input = next(iter(train_dataloader))[0].to(device)
+quantizer.track_forward(real_input)
+
+start = time.time()
+_, calibration_config = quantizer.compress(None, max_epochs=5)
+print(f'pure training 5 epochs: {time.time() - start}s')
+
+print(calibration_config)
+start = time.time()
+acc = evaluating_model(model)
+print(f'quantization evaluating: {time.time() - start}s    Acc.: {acc}')

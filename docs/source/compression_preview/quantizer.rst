@@ -10,13 +10,13 @@ The following table provides a brief introduction to the quantizers implemented 
 
    * - Name
      - Brief Introduction of Algorithm
-   * - :ref:`QATQuantizer`
+   * - :ref:`NewQATQuantizer`
      - Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. `Reference Paper <http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf>`__
-   * - :ref:`DorefaQuantizer`
+   * - :ref:`NewDorefaQuantizer`
      - DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. `Reference Paper <https://arxiv.org/abs/1606.06160>`__
-   * - :ref:`BNNQuantizer`
+   * - :ref:`NewBNNQuantizer`
      - Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1. `Reference Paper <https://arxiv.org/abs/1602.02830>`__
-   * - :ref:`LsqQuantizer`
+   * - :ref:`NewLsqQuantizer`
      - Learned step size quantization. `Reference Paper <https://arxiv.org/pdf/1902.08153.pdf>`__
-   * - :ref:`PtqQuantizer`
+   * - :ref:`NewPtqQuantizer`
      - Post training quantizaiton. Collect quantization information during calibration with observers.

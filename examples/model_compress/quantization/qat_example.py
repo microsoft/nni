@@ -20,7 +20,7 @@ from nni.common.types import SCHEDULER
 
 
 torch.manual_seed(1024)
-device = 'cuda'
+device = 'cuda:0'
 
 
 MNIST(root='data/mnist', train=True, download=True)
