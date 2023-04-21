@@ -82,10 +82,6 @@ const OpenRow = (props: OpenRowProps): any => {
                     <PivotItem headerText='Parameters' key='1' itemIcon='TestParameter'>
                         {trial.info.hyperParameters !== undefined ? (
                             <Stack tokens={expandTrialGap}>
-                                <Stack horizontal className='logpath' tokens={expandTrialGap}>
-                                    <span className='logName'>Error: </span>
-                                    <span className='error'>{`This trial's parameters are not available.`}</span>
-                                </Stack>
                                 <div className='bgHyper'>
                                     <JSONTree
                                         hideRoot={true}
@@ -95,11 +91,7 @@ const OpenRow = (props: OpenRowProps): any => {
                                     />
                                 </div>
                                 <Stack horizontal className='copy' tokens={buttonsGap}>
-                                    <DefaultButton
-                                        onClick={copyParams.bind(this, trial)}
-                                        text='Copy as json'
-                                        styles={{ root: { width: 128 } }}
-                                    />
+                                    <DefaultButton onClick={copyParams.bind(this, trial)} text='Copy as json' />
                                     {hasVisualHyperParams && (
                                         <DefaultButton onClick={isshowRetiaParamPanel} text='Original parameters' />
                                     )}
