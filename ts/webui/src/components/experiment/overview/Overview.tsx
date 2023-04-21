@@ -107,7 +107,7 @@ const Overview = (): any => {
                                 iconProps={{ iconName: 'MarketDown' }}
                                 onClick={clickMinTop}
                             />
-                            <div className='chooseEntry'>Display top</div>
+                            <div className='chooseEntry'>Display top--</div>
                             <div>
                                 <Dropdown
                                     selectedKey={bestTrialEntries}
