@@ -167,7 +167,7 @@ const NavCon = (): any => {
                             }}
                             allowDisabledFocus
                             disabled={refreshBtnDisabled}
-                            style={{marginTop: 5}}
+                            style={{ marginTop: 5 }}
                         />
                         <div className='bar'>|</div>
                         <div className='nav-refresh'>
