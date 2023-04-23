@@ -118,7 +118,7 @@ linkcheck_ignore = [
     r'https://www\.docker\.com/',
 
     # remove after #5491 merged
-    r' https://github.com/microsoft/nni/tree/master/examples/compression/pqd_fuse.py',
+    r' https://github\.com/microsoft/nni/tree/master/examples/compression/pqd_fuse\.py',
 ]
 
 # Ignore all links located in release.rst
