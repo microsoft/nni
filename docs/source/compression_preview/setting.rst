@@ -175,7 +175,7 @@ Temporarily Setting Update
 Sometimes we just want to temporarily modify the setting template and don't want to make a global change.
 Then we could directly write full setting in ``config_list`` to achieve this.
 
-For example, if the compressed model has conv-bn-relu pattern, and for a better pruning simulation and performence,
+For example, if the compressed model has conv-bn-relu pattern, and for a better pruning simulation and performance,
 we want to mask the batchnorm on the channels convolution masked.
 Then we could temporarily make batchnorm masks align with convolution layer weight masks.
 

@@ -309,3 +309,10 @@ apply_method
 ^^^^^^^^^^^^
 
 ``mse`` or ``kl``.
+
+``mse`` means the MSE loss, usually used to distill hidden states.
+Please reference `mse_loss <https://pytorch.org/docs/stable/generated/torch.nn.functional.mse_loss.html>`__.
+
+``kl`` means the KL loss, usually used to distill logits.
+The implementation is ``kl_div((stu_hs / 2).log_softmax(dim=-1), (tea_hs / 2).softmax(dim=-1), reduction='batchmean') * (2 ** 2)``,
+please reference `kl_div <https://pytorch.org/docs/stable/generated/torch.nn.functional.kl_div.html>`__.
