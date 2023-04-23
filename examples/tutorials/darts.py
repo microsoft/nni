@@ -15,7 +15,7 @@ In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves
 .. attention::
 
    Running this tutorial requires a GPU.
-   If you don't have one, you can set ``gpus`` in :class:`~nni.retiarii.evaluator.pytorch.Classification` to be 0,
+   If you don't have one, you can set ``gpus`` in :class:`~nni.nas.evaluator.pytorch.Classification` to be 0,
    but do note that it will be much slower.
 
 .. _DARTS: https://arxiv.org/abs/1806.09055
@@ -34,7 +34,7 @@ import nni
 import torch
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
-from nni.retiarii.evaluator.pytorch import DataLoader
+from nni.nas.evaluator.pytorch import DataLoader
 
 CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
 CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
@@ -51,7 +51,7 @@ valid_loader = DataLoader(valid_data, batch_size=256, num_workers=6)
 # .. note::
 #
 #    If you are to use multi-trial strategies, wrapping CIFAR10 with :func:`nni.trace` and
-#    use DataLoader from ``nni.retiarii.evaluator.pytorch`` (instead of ``torch.utils.data``) are mandatory.
+#    use DataLoader from ``nni.nas.evaluator.pytorch`` (instead of ``torch.utils.data``) are mandatory.
 #    Otherwise, it's optional.
 #
 # NNI presents many built-in model spaces, along with many *pre-searched models* in :doc:`model space hub </nas/space_hub>`,
@@ -69,7 +69,7 @@ valid_loader = DataLoader(valid_data, batch_size=256, num_workers=6)
 #    `this tutorial of object detection finetuning <https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html>`__
 #    if you want to know how finetuning is generally done in PyTorch.
 
-from nni.retiarii.hub.pytorch import DARTS as DartsSpace
+from nni.nas.hub.pytorch import DARTS as DartsSpace
 
 darts_v2_model = DartsSpace.load_searched_model('darts-v2', pretrained=True, download=True)
 
@@ -93,7 +93,7 @@ evaluate_model(darts_v2_model, cuda=True)  # Set this to false if there's no GPU
 # %%
 #
 # The journey of using a pre-searched model could end here. Or you are interested,
-# we can go a step further to search a model within :class:`~nni.retiarii.hub.pytorch.DARTS` space on our own.
+# we can go a step further to search a model within :class:`~nni.nas.hub.pytorch.DARTS` space on our own.
 #
 # Use the DARTS model space
 # -------------------------
@@ -141,15 +141,15 @@ evaluate_model(darts_v2_model, cuda=True)  # Set this to false if there's no GPU
 #    `DARTS`_ is one of those papers that innovate both in search space and search strategy.
 #    In this tutorial, we will search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
 #    We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
-#    We did NOT imply that the :class:`~nni.retiarii.hub.pytorch.DARTS` space and
-#    :class:`~nni.retiarii.strategy.DARTS` strategy has to used together.
+#    We did NOT imply that the :class:`~nni.nas.hub.pytorch.DARTS` space and
+#    :class:`~nni.nas.strategy.DARTS` strategy has to used together.
 #    You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
 #
-# In the following example, we initialize a :class:`~nni.retiarii.hub.pytorch.DARTS`
+# In the following example, we initialize a :class:`~nni.nas.hub.pytorch.DARTS`
 # model space, with 16 initial filters and 8 stacked cells.
 # The network is specialized for CIFAR-10 dataset with 32x32 input resolution.
 #
-# The :class:`~nni.retiarii.hub.pytorch.DARTS` model space here is provided by :doc:`model space hub </nas/space_hub>`,
+# The :class:`~nni.nas.hub.pytorch.DARTS` model space here is provided by :doc:`model space hub </nas/space_hub>`,
 # where we have supported multiple popular model spaces for plug-and-play.
 #
 # .. tip::
@@ -181,7 +181,7 @@ fast_dev_run = True
 # ^^^^^^^^^
 #
 # To begin exploring the model space, one firstly need to have an evaluator to provide the criterion of a "good model".
-# As we are searching on CIFAR-10 dataset, one can easily use the :class:`~nni.retiarii.evaluator.pytorch.Classification`
+# As we are searching on CIFAR-10 dataset, one can easily use the :class:`~nni.nas.evaluator.pytorch.Classification`
 # as a starting point.
 #
 # Note that for a typical setup of NAS, the model search should be on validation set, and the evaluation of the final searched model
@@ -190,7 +190,7 @@ fast_dev_run = True
 # The recommended train/val split by `DARTS`_ strategy is 1:1.
 
 import numpy as np
-from nni.retiarii.evaluator.pytorch import Classification
+from nni.nas.evaluator.pytorch import Classification
 from torch.utils.data import SubsetRandomSampler
 
 transform = transforms.Compose([
@@ -232,7 +232,7 @@ evaluator = Classification(
 # ^^^^^^^^
 #
 # We will use `DARTS`_ (Differentiable ARchiTecture Search) as the search strategy to explore the model space.
-# :class:`~nni.retiarii.strategy.DARTS` strategy belongs to the category of :ref:`one-shot strategy <one-shot-nas>`.
+# :class:`~nni.nas.strategy.DARTS` strategy belongs to the category of :ref:`one-shot strategy <one-shot-nas>`.
 # The fundamental differences between One-shot strategies and :ref:`multi-trial strategies <multi-trial-nas>` is that,
 # one-shot strategy combines search with model training into a single run.
 # Compared to multi-trial strategies, one-shot NAS doesn't need to iteratively spawn new trials (i.e., models),
@@ -246,10 +246,10 @@ evaluator = Classification(
 #    and
 #    `How Does Supernet Help in Neural Architecture Search? <https://arxiv.org/abs/2010.08219>`__ for interested readers.
 #
-# :class:`~nni.retiarii.strategy.DARTS` strategy is provided as one of NNI's :doc:`built-in search strategies </nas/exploration_strategy>`.
+# :class:`~nni.nas.strategy.DARTS` strategy is provided as one of NNI's :doc:`built-in search strategies </nas/exploration_strategy>`.
 # Using it can be as simple as one line of code.
 
-from nni.retiarii.strategy import DARTS as DartsStrategy
+from nni.nas.strategy import DARTS as DartsStrategy
 
 strategy = DartsStrategy()
 
@@ -272,14 +272,12 @@ strategy = DartsStrategy()
 # ^^^^^^^^^^^^^^^^^
 #
 # We then come to the step of launching the experiment.
-# This step is similar to what we have done in the :doc:`beginner tutorial <hello_nas>`,
-# except that the ``execution_engine`` argument should be set to ``oneshot``.
+# This step is similar to what we have done in the :doc:`beginner tutorial <hello_nas>`.
 
-from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
+from nni.nas.experiment import NasExperiment
 
-config = RetiariiExeConfig(execution_engine='oneshot')
-experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy)
-experiment.run(config)
+experiment = NasExperiment(model_space, evaluator, strategy)
+experiment.run()
 
 # %%
 #
@@ -296,7 +294,7 @@ experiment.run(config)
 # We can then retrieve the best model found by the strategy with ``export_top_models``.
 # Here, the retrieved model is a dict (called *architecture dict*) describing the selected normal cell and reduction cell.
 
-exported_arch = experiment.export_top_models()[0]
+exported_arch = experiment.export_top_models(formatter='dict')[0]
 
 exported_arch
 
@@ -411,12 +409,12 @@ plot_double_cells({
 # and then fully train it.
 #
 # To construct a fixed model based on the architecture dict exported from the experiment,
-# we can use :func:`nni.retiarii.fixed_arch`. Under the with-context, we will creating a fixed model based on ``exported_arch``,
+# we can use :func:`nni.nas.space.model_context`. Under the with-context, we will creating a fixed model based on ``exported_arch``,
 # instead of creating a space.
 
-from nni.retiarii import fixed_arch
+from nni.nas.space import model_context
 
-with fixed_arch(exported_arch):
+with model_context(exported_arch):
     final_model = DartsSpace(width=16, num_cells=8, dataset='cifar')
 
 # %%
@@ -434,7 +432,7 @@ valid_loader
 # %%
 #
 # We must create a new evaluator here because a different data split is used.
-# Also, we should avoid the underlying pytorch-lightning implementation of :class:`~nni.retiarii.evaluator.pytorch.Classification`
+# Also, we should avoid the underlying pytorch-lightning implementation of :class:`~nni.nas.evaluator.pytorch.Classification`
 # evaluator from loading the wrong checkpoint.
 
 max_epochs = 100
@@ -478,13 +476,13 @@ evaluator.fit(final_model)
 # `LightingModule <https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html>`__ is a concept in
 # PyTorch-Lightning, which organizes the model training process into a list of functions, such as,
 # ``training_step``, ``validation_step``, ``configure_optimizers``, etc.
-# Since we are merely adding a few ingredients to :class:`~nni.retiarii.evaluator.pytorch.Classification`,
-# we can simply inherit :class:`~nni.retiarii.evaluator.pytorch.ClassificationModule`, which is the underlying LightningModule
-# behind :class:`~nni.retiarii.evaluator.pytorch.Classification`.
+# Since we are merely adding a few ingredients to :class:`~nni.nas.evaluator.pytorch.Classification`,
+# we can simply inherit :class:`~nni.nas.evaluator.pytorch.ClassificationModule`, which is the underlying LightningModule
+# behind :class:`~nni.nas.evaluator.pytorch.Classification`.
 # This could look intimidating at first, but most of them are just plug-and-play tricks which you don't need to know details about.
 
 import torch
-from nni.retiarii.evaluator.pytorch import ClassificationModule
+from nni.nas.evaluator.pytorch import ClassificationModule
 
 class DartsClassificationModule(ClassificationModule):
     def __init__(
@@ -541,10 +539,10 @@ class DartsClassificationModule(ClassificationModule):
 #
 # The full evaluator is written as follows,
 # which simply wraps everything (except model space and search strategy of course), in a single object.
-# :class:`~nni.retiarii.evaluator.pytorch.Lightning` here is a special type of evaluator.
+# :class:`~nni.nas.evaluator.pytorch.Lightning` here is a special type of evaluator.
 # Don't forget to use the train/val data split specialized for search (1:1) here.
 
-from nni.retiarii.evaluator.pytorch import Lightning, Trainer
+from nni.nas.evaluator.pytorch import Lightning, Trainer
 
 max_epochs = 50
 
@@ -564,10 +562,10 @@ evaluator = Lightning(
 # Strategy
 # ^^^^^^^^
 #
-# :class:`~nni.retiarii.strategy.DARTS` strategy is created with gradient clip turned on.
+# :class:`~nni.nas.strategy.DARTS` strategy is created with gradient clip turned on.
 # If you are familiar with PyTorch-Lightning, you might aware that gradient clipping can be enabled in Lightning trainer.
 # However, enabling gradient clip in the trainer above won't work, because the underlying
-# implementation of :class:`~nni.retiarii.strategy.DARTS` strategy is based on
+# implementation of :class:`~nni.nas.strategy.DARTS` strategy is based on
 # `manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`__.
 
 strategy = DartsStrategy(gradient_clip_val=5.)
@@ -586,11 +584,10 @@ strategy = DartsStrategy(gradient_clip_val=5.)
 
 model_space = DartsSpace(width=16, num_cells=8, dataset='cifar')
 
-config = RetiariiExeConfig(execution_engine='oneshot')
-experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy)
-experiment.run(config)
+experiment = NasExperiment(model_space, evaluator, strategy)
+experiment.run()
 
-exported_arch = experiment.export_top_models()[0]
+exported_arch = experiment.export_top_models(formatter='dict')[0]
 
 exported_arch
 
@@ -684,7 +681,7 @@ train_loader_cutout = DataLoader(train_data_cutout, batch_size=96)
 # Following the same procedure as paper, we also increase the number of filters to 36, and number of cells to 20,
 # so as to reasonably increase the model size and boost the performance.
 
-with fixed_arch(exported_arch):
+with model_context(exported_arch):
     final_model = DartsSpace(width=36, num_cells=20, dataset='cifar', auxiliary_loss=True, drop_path_prob=0.2)
 
 # %%

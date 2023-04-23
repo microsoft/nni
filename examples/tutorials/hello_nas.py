@@ -12,7 +12,7 @@ There are mainly three crucial components for a neural architecture search task,
 * A proper strategy as the method to explore this model space.
 * A model evaluator that reports the performance of every model in the space.
 
-Currently, PyTorch is the only supported framework by Retiarii, and we have only tested **PyTorch 1.7 to 1.10**.
+Currently, PyTorch is the only supported framework by Retiarii, and we have only tested **PyTorch 1.9 to 1.13**.
 This tutorial assumes PyTorch context but it should also apply to other frameworks, which is in our future plan.
 
 Define your Model Space
@@ -28,19 +28,17 @@ In this framework, a model space is defined with two parts: a base model and pos
 # ^^^^^^^^^^^^^^^^^
 #
 # Defining a base model is almost the same as defining a PyTorch (or TensorFlow) model.
-# Usually, you only need to replace the code ``import torch.nn as nn`` with
-# ``import nni.retiarii.nn.pytorch as nn`` to use our wrapped PyTorch modules.
 #
 # Below is a very simple example of defining a base model.
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
-import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import model_wrapper
+import nni
+from nni.nas.nn.pytorch import LayerChoice, ModelSpace, MutableDropout, MutableLinear
 
 
-@model_wrapper      # this decorator should be put on the out most
-class Net(nn.Module):
+class Net(ModelSpace):  # should inherit ModelSpace rather than nn.Module
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, 1)
@@ -59,12 +57,9 @@ class Net(nn.Module):
         return output
 
 # %%
-# .. tip:: Always keep in mind that you should use ``import nni.retiarii.nn.pytorch as nn`` and :meth:`nni.retiarii.model_wrapper`.
-#          Many mistakes are a result of forgetting one of those.
-#          Also, please use ``torch.nn`` for submodules of ``nn.init``, e.g., ``torch.nn.init`` instead of ``nn.init``.
 #
-# Define Model Mutations
-# ^^^^^^^^^^^^^^^^^^^^^^
+# Define Model Variations
+# ^^^^^^^^^^^^^^^^^^^^^^^
 #
 # A base model is only one concrete model not a model space. We provide :doc:`API and Primitives </nas/construct_space>`
 # for users to express how the base model can be mutated. That is, to build a model space which includes many models.
@@ -73,24 +68,23 @@ class Net(nn.Module):
 #
 # .. code-block:: diff
 #
-#   @model_wrapper
-#   class Net(nn.Module):
+#   class Net(ModelSpace):
 #     def __init__(self):
 #       super().__init__()
 #       self.conv1 = nn.Conv2d(1, 32, 3, 1)
 #   -   self.conv2 = nn.Conv2d(32, 64, 3, 1)
-#   +   self.conv2 = nn.LayerChoice([
+#   +   self.conv2 = LayerChoice([
 #   +       nn.Conv2d(32, 64, 3, 1),
 #   +       DepthwiseSeparableConv(32, 64)
-#   +   ])
+#   +   ], label='conv2)
 #   -   self.dropout1 = nn.Dropout(0.25)
-#   +   self.dropout1 = nn.Dropout(nn.ValueChoice([0.25, 0.5, 0.75]))
+#   +   self.dropout1 = MutableDropout(nni.choice('dropout', [0.25, 0.5, 0.75]))
 #       self.dropout2 = nn.Dropout(0.5)
 #   -   self.fc1 = nn.Linear(9216, 128)
 #   -   self.fc2 = nn.Linear(128, 10)
-#   +   feature = nn.ValueChoice([64, 128, 256])
-#   +   self.fc1 = nn.Linear(9216, feature)
-#   +   self.fc2 = nn.Linear(feature, 10)
+#   +   feature = nni.choice('feature', [64, 128, 256])
+#   +   self.fc1 = MutableLinear(9216, feature)
+#   +   self.fc2 = MutableLinear(feature, 10)
 #
 #     def forward(self, x):
 #       x = F.relu(self.conv1(x))
@@ -113,24 +107,22 @@ class DepthwiseSeparableConv(nn.Module):
         return self.pointwise(self.depthwise(x))
 
 
-@model_wrapper
-class ModelSpace(nn.Module):
+class MyModelSpace(ModelSpace):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, 1)
         # LayerChoice is used to select a layer between Conv2d and DwConv.
-        self.conv2 = nn.LayerChoice([
+        self.conv2 = LayerChoice([
             nn.Conv2d(32, 64, 3, 1),
             DepthwiseSeparableConv(32, 64)
-        ])
-        # ValueChoice is used to select a dropout rate.
-        # ValueChoice can be used as parameter of modules wrapped in `nni.retiarii.nn.pytorch`
-        # or customized modules wrapped with `@basic_unit`.
-        self.dropout1 = nn.Dropout(nn.ValueChoice([0.25, 0.5, 0.75]))  # choose dropout rate from 0.25, 0.5 and 0.75
+        ], label='conv2')
+        # nni.choice is used to select a dropout rate.
+        # The result can be used as parameters of `MutableXXX`.
+        self.dropout1 = MutableDropout(nni.choice('dropout', [0.25, 0.5, 0.75]))  # choose dropout rate from 0.25, 0.5 and 0.75
         self.dropout2 = nn.Dropout(0.5)
-        feature = nn.ValueChoice([64, 128, 256])
-        self.fc1 = nn.Linear(9216, feature)
-        self.fc2 = nn.Linear(feature, 10)
+        feature = nni.choice('feature', [64, 128, 256])
+        self.fc1 = MutableLinear(9216, feature)
+        self.fc2 = MutableLinear(feature, 10)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
@@ -141,18 +133,17 @@ class ModelSpace(nn.Module):
         return output
 
 
-model_space = ModelSpace()
+model_space = MyModelSpace()
 model_space
 
 # %%
 # This example uses two mutation APIs,
-# :class:`nn.LayerChoice <nni.retiarii.nn.pytorch.LayerChoice>` and
-# :class:`nn.InputChoice <nni.retiarii.nn.pytorch.ValueChoice>`.
-# :class:`nn.LayerChoice <nni.retiarii.nn.pytorch.LayerChoice>`
+# :class:`nn.LayerChoice <nni.nas.nn.pytorch.LayerChoice>` and
+# :func:`nni.choice`.
+# :class:`nn.LayerChoice <nni.nas.nn.pytorch.LayerChoice>`
 # takes a list of candidate modules (two in this example), one will be chosen for each sampled model.
 # It can be used like normal PyTorch module.
-# :class:`nn.InputChoice <nni.retiarii.nn.pytorch.ValueChoice>` takes a list of candidate values,
-# one will be chosen to take effect for each sampled model.
+# :func:`nni.choice` is used as parameter of `MutableDropout`, which then takes the result as dropout rate.
 #
 # More detailed API description and usage can be found :doc:`here </nas/construct_space>`.
 #
@@ -176,12 +167,12 @@ model_space
 # Pick an exploration strategy
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-# Retiarii supports many :doc:`exploration strategies </nas/exploration_strategy>`.
+# NNI NAS supports many :doc:`exploration strategies </nas/exploration_strategy>`.
 #
 # Simply choosing (i.e., instantiate) an exploration strategy as below.
 
-import nni.retiarii.strategy as strategy
-search_strategy = strategy.Random(dedup=True)  # dedup=False if deduplication is not wanted
+import nni.nas.strategy as strategy
+search_strategy = strategy.Random()  # dedup=False if deduplication is not wanted
 
 # %%
 # Pick or customize a model evaluator
@@ -191,8 +182,8 @@ search_strategy = strategy.Random(dedup=True)  # dedup=False if deduplication is
 # and validating each generated model to obtain the model's performance.
 # The performance is sent to the exploration strategy for the strategy to generate better models.
 #
-# Retiarii has provided :doc:`built-in model evaluators </nas/evaluator>`, but to start with,
-# it is recommended to use :class:`FunctionalEvaluator <nni.retiarii.evaluator.FunctionalEvaluator>`,
+# NNI NAS has provided :doc:`built-in model evaluators </nas/evaluator>`, but to start with,
+# it is recommended to use :class:`FunctionalEvaluator <nni.nas.evaluator.FunctionalEvaluator>`,
 # that is, to wrap your own training and evaluation code with one single function.
 # This function should receive one single model class and uses :func:`nni.report_final_result` to report the final score of this model.
 #
@@ -241,10 +232,8 @@ def test_epoch(model, device, test_loader):
     return accuracy
 
 
-def evaluate_model(model_cls):
-    # "model_cls" is a class, need to instantiate
-    model = model_cls()
-
+def evaluate_model(model):
+    # By v3.0, the model will be instantiated by default.
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     model.to(device)
 
@@ -268,7 +257,7 @@ def evaluate_model(model_cls):
 # %%
 # Create the evaluator
 
-from nni.retiarii.evaluator import FunctionalEvaluator
+from nni.nas.evaluator import FunctionalEvaluator
 evaluator = FunctionalEvaluator(evaluate_model)
 
 # %%
@@ -276,40 +265,41 @@ evaluator = FunctionalEvaluator(evaluate_model)
 # The ``train_epoch`` and ``test_epoch`` here can be any customized function,
 # where users can write their own training recipe.
 #
-# It is recommended that the ``evaluate_model`` here accepts no additional arguments other than ``model_cls``.
+# It is recommended that the ``evaluate_model`` here accepts no additional arguments other than ``model``.
 # However, in the :doc:`advanced tutorial </nas/evaluator>`, we will show how to use additional arguments in case you actually need those.
-# In future, we will support mutation on the arguments of evaluators, which is commonly called "Hyper-parmeter tuning".
+# In future, we will support mutation on the arguments of evaluators, which is commonly called "Hyper-parameter tuning".
 #
 # Launch an Experiment
 # --------------------
 #
 # After all the above are prepared, it is time to start an experiment to do the model search. An example is shown below.
 
-from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
-exp = RetiariiExperiment(model_space, evaluator, [], search_strategy)
-exp_config = RetiariiExeConfig('local')
-exp_config.experiment_name = 'mnist_search'
+from nni.nas.experiment import NasExperiment
+exp = NasExperiment(model_space, evaluator, search_strategy)
 
 # %%
-# The following configurations are useful to control how many trials to run at most / at the same time.
+# Different from HPO experiment, NAS experiment will generate an experiment config automatically.
+# It should work for most cases. For example, when using multi-trial strategies,
+# local training service with concurrency 1 will be used by default.
+# Users can customize the config. For example,
 
-exp_config.max_trial_number = 4   # spawn 4 trials at most
-exp_config.trial_concurrency = 2  # will run two trials concurrently
+exp.config.max_trial_number = 3   # spawn 3 trials at most
+exp.config.trial_concurrency = 1  # will run 1 trial concurrently
+exp.config.trial_gpu_number = 0   # will not use GPU
 
 # %%
 # Remember to set the following config if you want to GPU.
-# ``use_active_gpu`` should be set true if you wish to use an occupied GPU (possibly running a GUI).
-
-exp_config.trial_gpu_number = 1
-exp_config.training_service.use_active_gpu = True
-
-# %%
+# ``use_active_gpu`` should be set true if you wish to use an occupied GPU (possibly running a GUI)::
+#
+#    exp.config.trial_gpu_number = 1
+#    exp.config.training_service.use_active_gpu = True
+#
 # Launch the experiment. The experiment should take several minutes to finish on a workstation with 2 GPUs.
 
-exp.run(exp_config, 8081)
+exp.run(port=8081)
 
 # %%
-# Users can also run Retiarii Experiment with :doc:`different training services </experiment/training_service/overview>`
+# Users can also run NAS Experiment with :doc:`different training services </experiment/training_service/overview>`
 # besides ``local`` training service.
 #
 # Visualize the Experiment
@@ -332,14 +322,13 @@ import os
 from pathlib import Path
 
 
-def evaluate_model_with_visualization(model_cls):
-    model = model_cls()
+def evaluate_model_with_visualization(model):
     # dump the model into an onnx
     if 'NNI_OUTPUT_DIR' in os.environ:
         dummy_input = torch.zeros(1, 3, 32, 32)
         torch.onnx.export(model, (dummy_input, ),
                           Path(os.environ['NNI_OUTPUT_DIR']) / 'model.onnx')
-    evaluate_model(model_cls)
+    evaluate_model(model)
 
 # %%
 # Relaunch the experiment, and a button is shown on Web portal.
@@ -353,12 +342,3 @@ def evaluate_model_with_visualization(model_cls):
 
 for model_dict in exp.export_top_models(formatter='dict'):
     print(model_dict)
-
-# %%
-# The output is ``json`` object which records the mutation actions of the top model.
-# If users want to output source code of the top model,
-# they can use :ref:`graph-based execution engine <graph-based-execution-engine>` for the experiment,
-# by simply adding the following two lines.
-
-exp_config.execution_engine = 'base'
-export_formatter = 'code'

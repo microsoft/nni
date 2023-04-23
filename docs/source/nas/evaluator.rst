@@ -8,15 +8,14 @@ A model evaluator is for training and validating each generated model. They are 
 Customize Evaluator with Any Function
 -------------------------------------
 
-The simplest way to customize a new evaluator is with :class:`~nni.retiarii.evaluator.FunctionalEvaluator`, which is very easy when training code is already available. Users only need to write a fit function that wraps everything, which usually includes training, validating and testing of a single model. This function takes one positional arguments (``model_cls``) and possible keyword arguments. The keyword arguments (other than ``model_cls``) are fed to :class:`~nni.retiarii.evaluator.FunctionalEvaluator` as its initialization parameters (note that they will be :doc:`serialized <./serialization>`). In this way, users get everything under their control, but expose less information to the framework and as a result, further optimizations like :ref:`CGO <cgo-execution-engine>` might be not feasible. An example is as belows:
+The simplest way to customize a new evaluator is with :class:`~nni.nas.evaluator.FunctionalEvaluator`, which is very easy when training code is already available. Users only need to write a fit function that wraps everything, which usually includes training, validating and testing of a single model. This function takes one positional arguments (``model``) and possible keyword arguments. The keyword arguments (other than ``model``) are fed to :class:`~nni.nas.evaluator.FunctionalEvaluator` as its initialization parameters (note that they will be :doc:`serialized <./serialization>`). In this way, users get everything under their control, but expose less information to the framework and as a result, further optimizations like :ref:`CGO <cgo-execution-engine>` might be not feasible. An example is as belows:
 
 .. code-block:: python
 
-    from nni.retiarii.evaluator import FunctionalEvaluator
-    from nni.retiarii.experiment.pytorch import RetiariiExperiment
+    from nni.nas.evaluator import FunctionalEvaluator
+    from nni.nas.experiment import NasExperiment
 
-    def fit(model_cls, dataloader):
-        model = model_cls()
+    def fit(model, dataloader):
         train(model, dataloader)
         acc = test(model, dataloader)
         nni.report_final_result(acc)
@@ -24,7 +23,11 @@ The simplest way to customize a new evaluator is with :class:`~nni.retiarii.eval
     # The dataloader will be serialized, thus ``nni.trace`` is needed here.
     # See serialization tutorial for more details.
     evaluator = FunctionalEvaluator(fit, dataloader=nni.trace(DataLoader)(foo, bar))
-    experiment = RetiariiExperiment(base_model, evaluator, mutators, strategy)
+    experiment = NasExperiment(base_model, lightning, strategy)
+
+.. note::
+
+   Different from the legacy Retiarii FunctionEvaluator, the new FunctionalEvaluator now accepts model instance as the first argument, rather than ``model_cls``. This makes it more intuitive and easier to use.
 
 .. tip::
 
@@ -32,8 +35,7 @@ The simplest way to customize a new evaluator is with :class:`~nni.retiarii.eval
 
     .. code-block:: python
 
-        def fit(model_cls):
-            model = model_cls()
+        def fit(model):
             onnx_path = Path(os.environ.get('NNI_OUTPUT_DIR', '.')) / 'model.onnx'
             onnx_path.parent.mkdir(exist_ok=True)
             dummy_input = torch.randn(10, 3, 224, 224)
@@ -54,28 +56,35 @@ The usage is shown below:
 
 .. code-block:: python
 
-   # Class definition of single model, for example, ResNet.
-   class SingleModel(nn.Module):
-       def __init__():  # Can't have init parameters here.
-           ...
+   # Class definition of a model space, for example, ResNet.
+   class MyModelSpace(ModelSpace):
+        ...
 
-   # Use a callable returning a model
-   evaluator.evaluate(SingleModel)
-   # Or initialize the model beforehand
-   evaluator.evaluate(SingleModel())
+   # Mock a model instance
+   from nni.nas.space import RawFormatModelSpace
+   model_container = RawFormatModelSpace.from_model(MyModelSpace())
 
-The underlying implementation of :meth:`~nni.retiarii.Evaluator.evaluate` depends on concrete evaluator that you used.
-For example, if :class:`~nni.retiarii.evaluator.FunctionalEvaluator` is used, it will run your customized fit function.
-If lightning evaluators like :class:`nni.retiarii.evaluator.pytorch.Classification` are used, it will invoke the ``trainer.fit()`` of Lightning.
+   # Randomly sample a model
+   model = model_container.random()
 
-To evaluate an architecture that is exported from experiment (i.e., from :meth:`~nni.retiarii.experiment.pytorch.RetiariiExperiment.export_top_models`), use :func:`nni.retiarii.fixed_arch` to instantiate the exported model::
+   # Mock a runtime so that `nni.get_next_parameter` and `nni.report_xxx_result` will work.
+   with evaluator.mock_runtime(model):
+       evaluator.evaluate(model.executable_model())
 
-    with fixed_arch(exported_model):
-        model = ModelSpace()
+The underlying implementation of :meth:`~nni.nas.Evaluator.evaluate` depends on concrete evaluator that you used.
+For example, if :class:`~nni.nas.evaluator.FunctionalEvaluator` is used, it will run your customized fit function.
+If lightning evaluators like :class:`nni.nas.evaluator.pytorch.Classification` are used, it will invoke the ``trainer.fit()`` of Lightning.
+
+To evaluate an architecture that is exported from experiment (i.e., from :meth:`~nni.nas.experiment.NasExperiment.export_top_models`), use :func:`nni.nas.space.model_context` to instantiate the exported model::
+
+    with model_context(exported_model_dict):
+        model = MyModelSpace()
     # Then use evaluator.evaluate
     evaluator.evaluate(model)
 
-.. tip:: There is a way to port the trained checkpoint of super-net produced by one-shot strategies, to the concrete chosen architecture, thanks to :func:`nni.retiarii.utils.original_state_dict_hooks`. This is helpful in implementing recent multi-stage NAS algorithms like `SPOS <https://arxiv.org/abs/1904.00420>`__.
+Another way of doing this is probably using ``freeze`` API. It will also preserve the weights at best effort if the model space has been mutated by one-shot strategies::
+
+    MyModelSpace().freeze(exported_model_dict)
 
 .. _lightning-evaluator:
 
@@ -85,21 +94,21 @@ Evaluators with PyTorch-Lightning
 Use Built-in Evaluators
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-NNI provides some commonly used model evaluators for users' convenience. These evaluators are built upon the awesome library PyTorch-Lightning. Read the :doc:`reference </reference/nas/evaluator>` for their detailed usages.
+NNI provides some commonly used model evaluators for users' convenience. These evaluators are built upon the awesome library PyTorch-Lightning. Read the :doc:`reference </reference/nas>` for their detailed usages.
 
-* :class:`nni.retiarii.evaluator.pytorch.Classification`: for classification tasks.
-* :class:`nni.retiarii.evaluator.pytorch.Regression`: for regression tasks.
+* :class:`nni.nas.evaluator.pytorch.Classification`: for classification tasks.
+* :class:`nni.nas.evaluator.pytorch.Regression`: for regression tasks.
 
 We recommend to read the :doc:`serialization tutorial <serialization>` before using these evaluators. A few notes to summarize the tutorial:
 
-1. :class:`nni.retiarii.evaluator.pytorch.DataLoader` should be used in place of ``torch.utils.data.DataLoader``.
+1. :class:`nni.nas.evaluator.pytorch.DataLoader` should be used in place of ``torch.utils.data.DataLoader``.
 2. The datasets used in data-loader should be decorated with :meth:`nni.trace` recursively.
 
 For example,
 
 .. code-block:: python
 
-  import nni.retiarii.evaluator.pytorch.lightning as pl
+  import nni.nas.evaluator.pytorch.lightning as pl
   from torchvision import transforms
 
   transform = nni.trace(transforms.Compose, [nni.trace(transforms.ToTensor()), nni.trace(transforms.Normalize, (0.1307,), (0.3081,))])
@@ -116,13 +125,13 @@ Customize Evaluator with PyTorch-Lightning
 
 Another approach is to write training code in PyTorch-Lightning style, that is, to write a LightningModule that defines all elements needed for training (e.g., loss function, optimizer) and to define a trainer that takes (optional) dataloaders to execute the training. Before that, please read the `document of PyTorch-lightning <https://pytorch-lightning.readthedocs.io/>`__ to learn the basic concepts and components provided by PyTorch-lightning.
 
-In practice, writing a new training module in Retiarii should inherit :class:`nni.retiarii.evaluator.pytorch.LightningModule`, which has a ``set_model`` that will be called after ``__init__`` to save the candidate model (generated by strategy) as ``self.model``. The rest of the process (like ``training_step``) should be the same as writing any other lightning module. Evaluators should also communicate with strategies via two API calls (:meth:`nni.report_intermediate_result` for periodical metrics and :meth:`nni.report_final_result` for final metrics), added in ``on_validation_epoch_end`` and ``teardown`` respectively. 
+In practice, writing a new training module in nas should inherit :class:`nni.nas.evaluator.pytorch.LightningModule`, which has a ``set_model`` that will be called after ``__init__`` to save the candidate model (generated by strategy) as ``self.model``. The rest of the process (like ``training_step``) should be the same as writing any other lightning module. Evaluators should also communicate with strategies via two API calls (:meth:`nni.report_intermediate_result` for periodical metrics and :meth:`nni.report_final_result` for final metrics), added in ``on_validation_epoch_end`` and ``teardown`` respectively. 
 
 An example is as follows:
 
 .. code-block:: python
 
-    from nni.retiarii.evaluator.pytorch.lightning import LightningModule  # please import this one
+    from nni.nas.evaluator.pytorch.lightning import LightningModule  # please import this one
 
     @nni.trace
     class AutoEncoder(LightningModule):
@@ -173,15 +182,15 @@ An example is as follows:
 
    If you are trying to use your customized evaluator with one-shot strategy, bear in mind that your defined methods will be reassembled into another LightningModule, which might result in extra constraints when writing the LightningModule. For example, your validation step could appear else where (e.g., in ``training_step``). This prohibits you from returning arbitrary object in ``validation_step``.
 
-Then, users need to wrap everything (including LightningModule, trainer and dataloaders) into a :class:`nni.retiarii.evaluator.pytorch.Lightning` object, and pass this object into a Retiarii experiment.
+Then, users need to wrap everything (including LightningModule, trainer and dataloaders) into a :class:`nni.nas.evaluator.pytorch.Lightning` object, and pass this object into a nas experiment.
 
 .. code-block:: python
 
-    import nni.retiarii.evaluator.pytorch.lightning as pl
-    from nni.retiarii.experiment.pytorch import RetiariiExperiment
+    import nni.nas.evaluator.pytorch.lightning as pl
+    from nni.nas.experiment import NasExperiment
 
     lightning = pl.Lightning(AutoEncoder(),
                              pl.Trainer(max_epochs=10),
                              train_dataloaders=pl.DataLoader(train_dataset, batch_size=100),
                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
-    experiment = RetiariiExperiment(base_model, lightning, mutators, strategy)
+    experiment = NasExperiment(base_model, lightning, strategy)

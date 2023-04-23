@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_tutorials_darts.py>`
+        :ref:`Go to the end <sphx_glr_download_tutorials_darts.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -34,7 +34,7 @@ In the end, we get a strong-performing model on CIFAR-10 dataset, which achieves
 .. attention::
 
    Running this tutorial requires a GPU.
-   If you don't have one, you can set ``gpus`` in :class:`~nni.retiarii.evaluator.pytorch.Classification` to be 0,
+   If you don't have one, you can set ``gpus`` in :class:`~nni.nas.evaluator.pytorch.Classification` to be 0,
    but do note that it will be much slower.
 
 .. _DARTS: https://arxiv.org/abs/1806.09055
@@ -57,7 +57,7 @@ We first load the CIFAR-10 dataset with torchvision.
     import torch
     from torchvision import transforms
     from torchvision.datasets import CIFAR10
-    from nni.retiarii.evaluator.pytorch import DataLoader
+    from nni.nas.evaluator.pytorch import DataLoader
 
     CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
     CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
@@ -87,7 +87,7 @@ We first load the CIFAR-10 dataset with torchvision.
 .. note::
 
    If you are to use multi-trial strategies, wrapping CIFAR10 with :func:`nni.trace` and
-   use DataLoader from ``nni.retiarii.evaluator.pytorch`` (instead of ``torch.utils.data``) are mandatory.
+   use DataLoader from ``nni.nas.evaluator.pytorch`` (instead of ``torch.utils.data``) are mandatory.
    Otherwise, it's optional.
 
 NNI presents many built-in model spaces, along with many *pre-searched models* in :doc:`model space hub </nas/space_hub>`,
@@ -110,7 +110,7 @@ so as to save the tedious steps of finetuning.
 .. code-block:: default
 
 
-    from nni.retiarii.hub.pytorch import DARTS as DartsSpace
+    from nni.nas.hub.pytorch import DARTS as DartsSpace
 
     darts_v2_model = DartsSpace.load_searched_model('darts-v2', pretrained=True, download=True)
 
@@ -139,6 +139,43 @@ so as to save the tedious steps of finetuning.
 
  .. code-block:: none
 
+
+    /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/ray/autoscaler/_private/cli_logger.py:57: FutureWarning: Not all Ray CLI dependencies were found. In Ray 1.4+, the Ray CLI, autoscaler, and dashboard will only be usable via `pip install 'ray[default]'`. Please update your install command.
+      warnings.warn(
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a default in torch.ops.aten because <built-in method relu of PyCapsule object at 0x7fa2d74d25a0> has no attribute default. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a default in torch.ops.aten because <built-in method gelu of PyCapsule object at 0x7fa2d74d25d0> has no attribute default. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a default in torch.ops.aten because <built-in method hardswish of PyCapsule object at 0x7fa2d74d2720> has no attribute default. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a default in torch.ops.aten because <built-in method hardsigmoid of PyCapsule object at 0x7fa2d74d2870> has no attribute default. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a default in torch.ops.aten because <built-in method relu_ of PyCapsule object at 0x7fa2d74d2960> has no attribute default. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a default in torch.ops.aten because <built-in method hardswish_ of PyCapsule object at 0x7fa2d74d2900> has no attribute default. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a default in torch.ops.aten because <built-in method hardsigmoid_ of PyCapsule object at 0x7fa2d74d2930> has no attribute default. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a default in torch.ops.aten because <built-in method hardtanh_ of PyCapsule object at 0x7fa2d74d28d0> has no attribute default. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a default in torch.ops.aten because <built-in method permute of PyCapsule object at 0x7fa2d74d28a0> has no attribute default. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a int in torch.ops.aten because <built-in method select of PyCapsule object at 0x7fa2d74d2990> has no attribute int. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a default in torch.ops.aten because <built-in method cat of PyCapsule object at 0x7fa2d74d26f0> has no attribute default. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a dim in torch.ops.aten because <built-in method mean of PyCapsule object at 0x7fa2d74d29f0> has no attribute dim. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a default in torch.ops.aten because <built-in method _log_softmax of PyCapsule object at 0x7fa2d74d2a20> has no attribute default. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:112: UserWarning: Fail to register shape inference formula for aten operator _reshape_alias because: No such operator aten::_reshape_alias
+      warnings.warn(f'Fail to register shape inference formula for aten operator {name} because: {e}')
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a Tensor in torch.ops.aten because <built-in method add of PyCapsule object at 0x7fa2d74d2ab0> has no attribute Tensor. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a Tensor in torch.ops.aten because <built-in method mul of PyCapsule object at 0x7fa2d74d2a80> has no attribute Tensor. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
+    /home/yugzhan/nni/nni/nas/profiler/pytorch/utils/shape_formula.py:107: UserWarning: Cannot find a Tensor in torch.ops.aten because <built-in method slice of PyCapsule object at 0x7fa2d74d2a50> has no attribute Tensor. Skip registering the shape inference formula.
+      warnings.warn(f'Cannot find a {name} in torch.ops.aten because {object} has no attribute {name}. '
     Accuracy: 0.9737
 
     0.9737
@@ -148,7 +185,7 @@ so as to save the tedious steps of finetuning.
 .. GENERATED FROM PYTHON SOURCE LINES 94-158
 
 The journey of using a pre-searched model could end here. Or you are interested,
-we can go a step further to search a model within :class:`~nni.retiarii.hub.pytorch.DARTS` space on our own.
+we can go a step further to search a model within :class:`~nni.nas.hub.pytorch.DARTS` space on our own.
 
 Use the DARTS model space
 -------------------------
@@ -196,15 +233,15 @@ during the search phase, and increase them back when training the final searched
    `DARTS`_ is one of those papers that innovate both in search space and search strategy.
    In this tutorial, we will search on **model space** provided by DARTS with **search strategy** proposed by DARTS.
    We refer to them as *DARTS model space* (``DartsSpace``) and *DARTS strategy* (``DartsStrategy``), respectively.
-   We did NOT imply that the :class:`~nni.retiarii.hub.pytorch.DARTS` space and
-   :class:`~nni.retiarii.strategy.DARTS` strategy has to used together.
+   We did NOT imply that the :class:`~nni.nas.hub.pytorch.DARTS` space and
+   :class:`~nni.nas.strategy.DARTS` strategy has to used together.
    You can always explore the DARTS space with another search strategy, or use your own strategy to search a different model space.
 
-In the following example, we initialize a :class:`~nni.retiarii.hub.pytorch.DARTS`
+In the following example, we initialize a :class:`~nni.nas.hub.pytorch.DARTS`
 model space, with 16 initial filters and 8 stacked cells.
 The network is specialized for CIFAR-10 dataset with 32x32 input resolution.
 
-The :class:`~nni.retiarii.hub.pytorch.DARTS` model space here is provided by :doc:`model space hub </nas/space_hub>`,
+The :class:`~nni.nas.hub.pytorch.DARTS` model space here is provided by :doc:`model space hub </nas/space_hub>`,
 where we have supported multiple popular model spaces for plug-and-play.
 
 .. tip::
@@ -260,7 +297,7 @@ Evaluator
 ^^^^^^^^^
 
 To begin exploring the model space, one firstly need to have an evaluator to provide the criterion of a "good model".
-As we are searching on CIFAR-10 dataset, one can easily use the :class:`~nni.retiarii.evaluator.pytorch.Classification`
+As we are searching on CIFAR-10 dataset, one can easily use the :class:`~nni.nas.evaluator.pytorch.Classification`
 as a starting point.
 
 Note that for a typical setup of NAS, the model search should be on validation set, and the evaluation of the final searched model
@@ -274,7 +311,7 @@ The recommended train/val split by `DARTS`_ strategy is 1:1.
 
 
     import numpy as np
-    from nni.retiarii.evaluator.pytorch import Classification
+    from nni.nas.evaluator.pytorch import Classification
     from torch.utils.data import SubsetRandomSampler
 
     transform = transforms.Compose([
@@ -319,13 +356,8 @@ The recommended train/val split by `DARTS`_ strategy is 1:1.
  .. code-block:: none
 
     Files already downloaded and verified
-    /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:447: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
+    /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:446: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
       rank_zero_deprecation(
-    GPU available: True (cuda), used: True
-    TPU available: False, using: 0 TPU cores
-    IPU available: False, using: 0 IPUs
-    HPU available: False, using: 0 HPUs
-    Running in `fast_dev_run` mode: will run the requested loop using 1 batch(es). Logging and checkpointing is suppressed.
 
 
 
@@ -336,7 +368,7 @@ Strategy
 ^^^^^^^^
 
 We will use `DARTS`_ (Differentiable ARchiTecture Search) as the search strategy to explore the model space.
-:class:`~nni.retiarii.strategy.DARTS` strategy belongs to the category of :ref:`one-shot strategy <one-shot-nas>`.
+:class:`~nni.nas.strategy.DARTS` strategy belongs to the category of :ref:`one-shot strategy <one-shot-nas>`.
 The fundamental differences between One-shot strategies and :ref:`multi-trial strategies <multi-trial-nas>` is that,
 one-shot strategy combines search with model training into a single run.
 Compared to multi-trial strategies, one-shot NAS doesn't need to iteratively spawn new trials (i.e., models),
@@ -350,7 +382,7 @@ and thus saves the excessive cost of model training.
    and
    `How Does Supernet Help in Neural Architecture Search? <https://arxiv.org/abs/2010.08219>`__ for interested readers.
 
-:class:`~nni.retiarii.strategy.DARTS` strategy is provided as one of NNI's :doc:`built-in search strategies </nas/exploration_strategy>`.
+:class:`~nni.nas.strategy.DARTS` strategy is provided as one of NNI's :doc:`built-in search strategies </nas/exploration_strategy>`.
 Using it can be as simple as one line of code.
 
 .. GENERATED FROM PYTHON SOURCE LINES 251-256
@@ -358,7 +390,7 @@ Using it can be as simple as one line of code.
 .. code-block:: default
 
 
-    from nni.retiarii.strategy import DARTS as DartsStrategy
+    from nni.nas.strategy import DARTS as DartsStrategy
 
     strategy = DartsStrategy()
 
@@ -369,7 +401,7 @@ Using it can be as simple as one line of code.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 257-276
+.. GENERATED FROM PYTHON SOURCE LINES 257-275
 
 .. tip:: The ``DartsStrategy`` here can be replaced by any search strategies, even multi-trial strategies.
 
@@ -388,19 +420,17 @@ Launch experiment
 ^^^^^^^^^^^^^^^^^
 
 We then come to the step of launching the experiment.
-This step is similar to what we have done in the :doc:`beginner tutorial <hello_nas>`,
-except that the ``execution_engine`` argument should be set to ``oneshot``.
+This step is similar to what we have done in the :doc:`beginner tutorial <hello_nas>`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 277-284
+.. GENERATED FROM PYTHON SOURCE LINES 276-282
 
 .. code-block:: default
 
 
-    from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
+    from nni.nas.experiment import NasExperiment
 
-    config = RetiariiExeConfig(execution_engine='oneshot')
-    experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy)
-    experiment.run(config)
+    experiment = NasExperiment(model_space, evaluator, strategy)
+    experiment.run()
 
 
 
@@ -410,25 +440,16 @@ except that the ``execution_engine`` argument should be set to ``oneshot``.
 
  .. code-block:: none
 
-    LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [3]
-
-      | Name  | Type                 | Params
-    -----------------------------------------------
-    0 | model | ClassificationModule | 3.0 M 
-    -----------------------------------------------
-    3.0 M     Trainable params
-    0         Non-trainable params
-    3.0 M     Total params
-    12.164    Total estimated model params size (MB)
-    /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1892: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
+    `training_service` will be ignored for sequential execution engine.
+    /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1555: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.75s/it]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.75s/it, v_num=, train_loss=2.310, train_acc=0.0781]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.76s/it, v_num=, train_loss=2.310, train_acc=0.0781]`Trainer.fit` stopped: `max_epochs=1` reached.
-    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.77s/it, v_num=, train_loss=2.310, train_acc=0.0781]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.29s/it]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.30s/it, v_num=, train_loss=2.380, train_acc=0.156]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.30s/it, v_num=, train_loss=2.380, train_acc=0.156]    Epoch 0: 100%|##########| 1/1 [00:03<00:00,  3.31s/it, v_num=, train_loss=2.380, train_acc=0.156]
+
+    True
 
 
 
-
-.. GENERATED FROM PYTHON SOURCE LINES 285-297
+.. GENERATED FROM PYTHON SOURCE LINES 283-295
 
 .. tip::
 
@@ -443,12 +464,12 @@ except that the ``execution_engine`` argument should be set to ``oneshot``.
 We can then retrieve the best model found by the strategy with ``export_top_models``.
 Here, the retrieved model is a dict (called *architecture dict*) describing the selected normal cell and reduction cell.
 
-.. GENERATED FROM PYTHON SOURCE LINES 298-303
+.. GENERATED FROM PYTHON SOURCE LINES 296-301
 
 .. code-block:: default
 
 
-    exported_arch = experiment.export_top_models()[0]
+    exported_arch = experiment.export_top_models(formatter='dict')[0]
 
     exported_arch
 
@@ -461,16 +482,16 @@ Here, the retrieved model is a dict (called *architecture dict*) describing the 
  .. code-block:: none
 
 
-    {'normal/op_2_0': 'sep_conv_5x5', 'normal/input_2_0': 1, 'normal/op_2_1': 'max_pool_3x3', 'normal/input_2_1': 0, 'normal/op_3_0': 'dil_conv_5x5', 'normal/input_3_0': 0, 'normal/op_3_1': 'sep_conv_3x3', 'normal/input_3_1': 2, 'normal/op_4_0': 'dil_conv_5x5', 'normal/input_4_0': 3, 'normal/op_4_1': 'sep_conv_3x3', 'normal/input_4_1': 1, 'normal/op_5_0': 'sep_conv_5x5', 'normal/input_5_0': 1, 'normal/op_5_1': 'dil_conv_5x5', 'normal/input_5_1': 3, 'reduce/op_2_0': 'dil_conv_5x5', 'reduce/input_2_0': 0, 'reduce/op_2_1': 'sep_conv_5x5', 'reduce/input_2_1': 1, 'reduce/op_3_0': 'sep_conv_5x5', 'reduce/input_3_0': 1, 'reduce/op_3_1': 'max_pool_3x3', 'reduce/input_3_1': 2, 'reduce/op_4_0': 'avg_pool_3x3', 'reduce/input_4_0': 1, 'reduce/op_4_1': 'dil_conv_5x5', 'reduce/input_4_1': 3, 'reduce/op_5_0': 'sep_conv_3x3', 'reduce/input_5_0': 1, 'reduce/op_5_1': 'sep_conv_5x5', 'reduce/input_5_1': 3}
+    {'normal/op_2_0': 'sep_conv_3x3', 'normal/input_2_0': [0], 'normal/op_2_1': 'dil_conv_5x5', 'normal/input_2_1': [1], 'normal/op_3_0': 'sep_conv_3x3', 'normal/input_3_0': [2], 'normal/op_3_1': 'sep_conv_5x5', 'normal/input_3_1': [1], 'normal/op_4_0': 'skip_connect', 'normal/input_4_0': [1], 'normal/op_4_1': 'sep_conv_3x3', 'normal/input_4_1': [2], 'normal/op_5_0': 'sep_conv_3x3', 'normal/input_5_0': [0], 'normal/op_5_1': 'sep_conv_3x3', 'normal/input_5_1': [3], 'reduce/op_2_0': 'dil_conv_3x3', 'reduce/input_2_0': [0], 'reduce/op_2_1': 'sep_conv_3x3', 'reduce/input_2_1': [1], 'reduce/op_3_0': 'sep_conv_5x5', 'reduce/input_3_0': [2], 'reduce/op_3_1': 'sep_conv_5x5', 'reduce/input_3_1': [1], 'reduce/op_4_0': 'dil_conv_5x5', 'reduce/input_4_0': [2], 'reduce/op_4_1': 'avg_pool_3x3', 'reduce/input_4_1': [1], 'reduce/op_5_0': 'sep_conv_5x5', 'reduce/input_5_0': [3], 'reduce/op_5_1': 'dil_conv_5x5', 'reduce/input_5_1': [4]}
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 304-306
+.. GENERATED FROM PYTHON SOURCE LINES 302-304
 
 The cell can be visualized with the following code snippet
 (copied and modified from `DARTS visualization <https://github.com/quark0/darts/blob/master/cnn/visualize.py>`__).
 
-.. GENERATED FROM PYTHON SOURCE LINES 307-362
+.. GENERATED FROM PYTHON SOURCE LINES 305-360
 
 .. code-block:: default
 
@@ -541,14 +562,14 @@ The cell can be visualized with the following code snippet
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 363-367
+.. GENERATED FROM PYTHON SOURCE LINES 361-365
 
 .. warning:: The cell above is obtained via ``fast_dev_run`` (i.e., running only 1 mini-batch).
 
 When ``fast_dev_run`` is turned off, we get a model with the following architecture,
 where you might notice an interesting fact that around half the operations have selected ``sep_conv_3x3``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 368-404
+.. GENERATED FROM PYTHON SOURCE LINES 366-402
 
 .. code-block:: default
 
@@ -600,7 +621,7 @@ where you might notice an interesting fact that around half the operations have 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 405-415
+.. GENERATED FROM PYTHON SOURCE LINES 403-413
 
 Retrain the searched model
 --------------------------
@@ -610,17 +631,17 @@ To get a final usable model with trained weights, we need to construct a real mo
 and then fully train it.
 
 To construct a fixed model based on the architecture dict exported from the experiment,
-we can use :func:`nni.retiarii.fixed_arch`. Under the with-context, we will creating a fixed model based on ``exported_arch``,
+we can use :func:`nni.nas.space.model_context`. Under the with-context, we will creating a fixed model based on ``exported_arch``,
 instead of creating a space.
 
-.. GENERATED FROM PYTHON SOURCE LINES 416-422
+.. GENERATED FROM PYTHON SOURCE LINES 414-420
 
 .. code-block:: default
 
 
-    from nni.retiarii import fixed_arch
+    from nni.nas.space import model_context
 
-    with fixed_arch(exported_arch):
+    with model_context(exported_arch):
         final_model = DartsSpace(width=16, num_cells=8, dataset='cifar')
 
 
@@ -630,11 +651,11 @@ instead of creating a space.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 423-424
+.. GENERATED FROM PYTHON SOURCE LINES 421-422
 
 We then train the model on full CIFAR-10 training dataset, and evaluate it on the original CIFAR-10 validation dataset.
 
-.. GENERATED FROM PYTHON SOURCE LINES 425-428
+.. GENERATED FROM PYTHON SOURCE LINES 423-426
 
 .. code-block:: default
 
@@ -648,11 +669,11 @@ We then train the model on full CIFAR-10 training dataset, and evaluate it on th
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 429-430
+.. GENERATED FROM PYTHON SOURCE LINES 427-428
 
 The validation data loader can be reused.
 
-.. GENERATED FROM PYTHON SOURCE LINES 431-434
+.. GENERATED FROM PYTHON SOURCE LINES 429-432
 
 .. code-block:: default
 
@@ -668,17 +689,17 @@ The validation data loader can be reused.
  .. code-block:: none
 
 
-    <torch.utils.data.dataloader.DataLoader object at 0x7f5e187c0430>
+    <torch.utils.data.dataloader.DataLoader object at 0x7fa2eb2f21c0>
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 435-438
+.. GENERATED FROM PYTHON SOURCE LINES 433-436
 
 We must create a new evaluator here because a different data split is used.
-Also, we should avoid the underlying pytorch-lightning implementation of :class:`~nni.retiarii.evaluator.pytorch.Classification`
+Also, we should avoid the underlying pytorch-lightning implementation of :class:`~nni.nas.evaluator.pytorch.Classification`
 evaluator from loading the wrong checkpoint.
 
-.. GENERATED FROM PYTHON SOURCE LINES 439-455
+.. GENERATED FROM PYTHON SOURCE LINES 437-453
 
 .. code-block:: default
 
@@ -706,39 +727,21 @@ evaluator from loading the wrong checkpoint.
 
  .. code-block:: none
 
-    /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:447: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
+    /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:446: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
       rank_zero_deprecation(
-    GPU available: True (cuda), used: True
-    TPU available: False, using: 0 TPU cores
-    IPU available: False, using: 0 IPUs
-    HPU available: False, using: 0 HPUs
-    Running in `fast_dev_run` mode: will run the requested loop using 1 batch(es). Logging and checkpointing is suppressed.
-    LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [3]
-
-      | Name      | Type             | Params
-    -----------------------------------------------
-    0 | criterion | CrossEntropyLoss | 0     
-    1 | metrics   | ModuleDict       | 0     
-    2 | model     | DARTS            | 345 K 
-    -----------------------------------------------
-    345 K     Trainable params
-    0         Non-trainable params
-    345 K     Total params
-    1.381     Total estimated model params size (MB)
-    /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1892: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
+    /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1555: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.02it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.02it/s, loss=2.46, v_num=, train_loss=2.460, train_acc=0.0729]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.77it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.77it/s, loss=2.33, v_num=, train_loss=2.330, train_acc=0.104]
     Validation: 0it [00:00, ?it/s]
     Validation:   0%|          | 0/1 [00:00<?, ?it/s]
     Validation DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]
-    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00, 11.12it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.15it/s, loss=2.46, v_num=, train_loss=2.460, train_acc=0.0729]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.15it/s, loss=2.46, v_num=, train_loss=2.460, train_acc=0.0729, val_loss=2.300, val_acc=0.117]
-                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.15it/s, loss=2.46, v_num=, train_loss=2.460, train_acc=0.0729, val_loss=2.300, val_acc=0.117]`Trainer.fit` stopped: `max_steps=1` reached.
-    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.15it/s, loss=2.46, v_num=, train_loss=2.460, train_acc=0.0729, val_loss=2.300, val_acc=0.117]
+    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00, 13.64it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.93it/s, loss=2.33, v_num=, train_loss=2.330, train_acc=0.104]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.93it/s, loss=2.33, v_num=, train_loss=2.330, train_acc=0.104, val_loss=2.300, val_acc=0.0898]
+                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.92it/s, loss=2.33, v_num=, train_loss=2.330, train_acc=0.104, val_loss=2.300, val_acc=0.0898]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.92it/s, loss=2.33, v_num=, train_loss=2.330, train_acc=0.104, val_loss=2.300, val_acc=0.0898]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 456-484
+.. GENERATED FROM PYTHON SOURCE LINES 454-482
 
 .. note:: When ``fast_dev_run`` is turned off, we achieve a validation accuracy of 89.69% after training for 100 epochs.
 
@@ -764,18 +767,18 @@ Putting it briefly, the core part of writing a new evaluator is to write a new L
 `LightingModule <https://pytorch-lightning.readthedocs.io/en/stable/common/lightning_module.html>`__ is a concept in
 PyTorch-Lightning, which organizes the model training process into a list of functions, such as,
 ``training_step``, ``validation_step``, ``configure_optimizers``, etc.
-Since we are merely adding a few ingredients to :class:`~nni.retiarii.evaluator.pytorch.Classification`,
-we can simply inherit :class:`~nni.retiarii.evaluator.pytorch.ClassificationModule`, which is the underlying LightningModule
-behind :class:`~nni.retiarii.evaluator.pytorch.Classification`.
+Since we are merely adding a few ingredients to :class:`~nni.nas.evaluator.pytorch.Classification`,
+we can simply inherit :class:`~nni.nas.evaluator.pytorch.ClassificationModule`, which is the underlying LightningModule
+behind :class:`~nni.nas.evaluator.pytorch.Classification`.
 This could look intimidating at first, but most of them are just plug-and-play tricks which you don't need to know details about.
 
-.. GENERATED FROM PYTHON SOURCE LINES 485-540
+.. GENERATED FROM PYTHON SOURCE LINES 483-538
 
 .. code-block:: default
 
 
     import torch
-    from nni.retiarii.evaluator.pytorch import ClassificationModule
+    from nni.nas.evaluator.pytorch import ClassificationModule
 
     class DartsClassificationModule(ClassificationModule):
         def __init__(
@@ -835,19 +838,19 @@ This could look intimidating at first, but most of them are just plug-and-play t
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 541-545
+.. GENERATED FROM PYTHON SOURCE LINES 539-543
 
 The full evaluator is written as follows,
 which simply wraps everything (except model space and search strategy of course), in a single object.
-:class:`~nni.retiarii.evaluator.pytorch.Lightning` here is a special type of evaluator.
+:class:`~nni.nas.evaluator.pytorch.Lightning` here is a special type of evaluator.
 Don't forget to use the train/val data split specialized for search (1:1) here.
 
-.. GENERATED FROM PYTHON SOURCE LINES 546-562
+.. GENERATED FROM PYTHON SOURCE LINES 544-560
 
 .. code-block:: default
 
 
-    from nni.retiarii.evaluator.pytorch import Lightning, Trainer
+    from nni.nas.evaluator.pytorch import Lightning, Trainer
 
     max_epochs = 50
 
@@ -870,29 +873,24 @@ Don't forget to use the train/val data split specialized for search (1:1) here.
 
  .. code-block:: none
 
-    /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:447: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
+    /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:446: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
       rank_zero_deprecation(
-    GPU available: True (cuda), used: True
-    TPU available: False, using: 0 TPU cores
-    IPU available: False, using: 0 IPUs
-    HPU available: False, using: 0 HPUs
-    Running in `fast_dev_run` mode: will run the requested loop using 1 batch(es). Logging and checkpointing is suppressed.
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 563-571
+.. GENERATED FROM PYTHON SOURCE LINES 561-569
 
 Strategy
 ^^^^^^^^
 
-:class:`~nni.retiarii.strategy.DARTS` strategy is created with gradient clip turned on.
+:class:`~nni.nas.strategy.DARTS` strategy is created with gradient clip turned on.
 If you are familiar with PyTorch-Lightning, you might aware that gradient clipping can be enabled in Lightning trainer.
 However, enabling gradient clip in the trainer above won't work, because the underlying
-implementation of :class:`~nni.retiarii.strategy.DARTS` strategy is based on
+implementation of :class:`~nni.nas.strategy.DARTS` strategy is based on
 `manual optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`__.
 
-.. GENERATED FROM PYTHON SOURCE LINES 572-575
+.. GENERATED FROM PYTHON SOURCE LINES 570-573
 
 .. code-block:: default
 
@@ -906,7 +904,7 @@ implementation of :class:`~nni.retiarii.strategy.DARTS` strategy is based on
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 576-585
+.. GENERATED FROM PYTHON SOURCE LINES 574-583
 
 Launch experiment
 ^^^^^^^^^^^^^^^^^
@@ -918,18 +916,17 @@ Then we use the newly created evaluator and strategy to launch the experiment ag
    ``model_space`` has to be re-instantiated because a known limitation,
    i.e., one model space instance can't be reused across multiple experiments.
 
-.. GENERATED FROM PYTHON SOURCE LINES 586-597
+.. GENERATED FROM PYTHON SOURCE LINES 584-594
 
 .. code-block:: default
 
 
     model_space = DartsSpace(width=16, num_cells=8, dataset='cifar')
 
-    config = RetiariiExeConfig(execution_engine='oneshot')
-    experiment = RetiariiExperiment(model_space, evaluator=evaluator, strategy=strategy)
-    experiment.run(config)
+    experiment = NasExperiment(model_space, evaluator, strategy)
+    experiment.run()
 
-    exported_arch = experiment.export_top_models()[0]
+    exported_arch = experiment.export_top_models(formatter='dict')[0]
 
     exported_arch
 
@@ -941,30 +938,19 @@ Then we use the newly created evaluator and strategy to launch the experiment ag
 
  .. code-block:: none
 
-    LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [3]
-
-      | Name  | Type                      | Params
-    ----------------------------------------------------
-    0 | model | DartsClassificationModule | 3.0 M 
-    ----------------------------------------------------
-    3.0 M     Trainable params
-    0         Non-trainable params
-    3.0 M     Total params
-    12.164    Total estimated model params size (MB)
-    /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1892: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
+    /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1555: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [01:04<00:00, 64.95s/it]    Epoch 0: 100%|##########| 1/1 [01:04<00:00, 64.95s/it, v_num=, train_loss=2.450, train_acc=0.0625]    Epoch 0: 100%|##########| 1/1 [01:04<00:00, 64.96s/it, v_num=, train_loss=2.450, train_acc=0.0625]`Trainer.fit` stopped: `max_epochs=1` reached.
-    Epoch 0: 100%|##########| 1/1 [01:04<00:00, 64.97s/it, v_num=, train_loss=2.450, train_acc=0.0625]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/1 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/1 [00:00<?, ?it/s]     Epoch 0: 100%|##########| 1/1 [00:02<00:00,  2.84s/it]    Epoch 0: 100%|##########| 1/1 [00:02<00:00,  2.84s/it, v_num=, train_loss=2.410, train_acc=0.0781]    Epoch 0: 100%|##########| 1/1 [00:02<00:00,  2.85s/it, v_num=, train_loss=2.410, train_acc=0.0781]    Epoch 0: 100%|##########| 1/1 [00:02<00:00,  2.86s/it, v_num=, train_loss=2.410, train_acc=0.0781]
 
-    {'normal/op_2_0': 'avg_pool_3x3', 'normal/input_2_0': 0, 'normal/op_2_1': 'avg_pool_3x3', 'normal/input_2_1': 1, 'normal/op_3_0': 'sep_conv_5x5', 'normal/input_3_0': 2, 'normal/op_3_1': 'avg_pool_3x3', 'normal/input_3_1': 0, 'normal/op_4_0': 'dil_conv_3x3', 'normal/input_4_0': 2, 'normal/op_4_1': 'sep_conv_3x3', 'normal/input_4_1': 0, 'normal/op_5_0': 'avg_pool_3x3', 'normal/input_5_0': 2, 'normal/op_5_1': 'dil_conv_5x5', 'normal/input_5_1': 4, 'reduce/op_2_0': 'sep_conv_3x3', 'reduce/input_2_0': 1, 'reduce/op_2_1': 'sep_conv_5x5', 'reduce/input_2_1': 0, 'reduce/op_3_0': 'avg_pool_3x3', 'reduce/input_3_0': 2, 'reduce/op_3_1': 'sep_conv_3x3', 'reduce/input_3_1': 0, 'reduce/op_4_0': 'max_pool_3x3', 'reduce/input_4_0': 1, 'reduce/op_4_1': 'dil_conv_5x5', 'reduce/input_4_1': 2, 'reduce/op_5_0': 'dil_conv_3x3', 'reduce/input_5_0': 3, 'reduce/op_5_1': 'max_pool_3x3', 'reduce/input_5_1': 4}
-
+    {'normal/op_2_0': 'dil_conv_5x5', 'normal/input_2_0': [0], 'normal/op_2_1': 'dil_conv_5x5', 'normal/input_2_1': [1], 'normal/op_3_0': 'sep_conv_3x3', 'normal/input_3_0': [0], 'normal/op_3_1': 'sep_conv_5x5', 'normal/input_3_1': [2], 'normal/op_4_0': 'avg_pool_3x3', 'normal/input_4_0': [3], 'normal/op_4_1': 'dil_conv_3x3', 'normal/input_4_1': [2], 'normal/op_5_0': 'avg_pool_3x3', 'normal/input_5_0': [0], 'normal/op_5_1': 'sep_conv_5x5', 'normal/input_5_1': [2], 'reduce/op_2_0': 'dil_conv_3x3', 'reduce/input_2_0': [1], 'reduce/op_2_1': 'dil_conv_5x5', 'reduce/input_2_1': [0], 'reduce/op_3_0': 'skip_connect', 'reduce/input_3_0': [0], 'reduce/op_3_1': 'avg_pool_3x3', 'reduce/input_3_1': [1], 'reduce/op_4_0': 'max_pool_3x3', 'reduce/input_4_0': [2], 'reduce/op_4_1': 'max_pool_3x3', 'reduce/input_4_1': [3], 'reduce/op_5_0': 'dil_conv_3x3', 'reduce/input_5_0': [4], 'reduce/op_5_1': 'dil_conv_5x5', 'reduce/input_5_1': [3]}
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 598-599
+
+.. GENERATED FROM PYTHON SOURCE LINES 595-596
 
 We get the following architecture when ``fast_dev_run`` is set to False. It takes around 8 hours on a P100 GPU.
 
-.. GENERATED FROM PYTHON SOURCE LINES 600-636
+.. GENERATED FROM PYTHON SOURCE LINES 597-633
 
 .. code-block:: default
 
@@ -1016,7 +1002,7 @@ We get the following architecture when ``fast_dev_run`` is set to False. It take
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 637-644
+.. GENERATED FROM PYTHON SOURCE LINES 634-641
 
 Retrain
 ^^^^^^^
@@ -1026,7 +1012,7 @@ we extend the original dataloader to introduce another trick called `Cutout <htt
 Cutout is a data augmentation technique that randomly masks out rectangular regions in images.
 In CIFAR-10, the typical masked size is 16x16 (the image sizes are 32x32 in the dataset).
 
-.. GENERATED FROM PYTHON SOURCE LINES 645-671
+.. GENERATED FROM PYTHON SOURCE LINES 642-668
 
 .. code-block:: default
 
@@ -1063,12 +1049,12 @@ In CIFAR-10, the typical masked size is 16x16 (the image sizes are 32x32 in the 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 672-674
+.. GENERATED FROM PYTHON SOURCE LINES 669-671
 
 The train dataloader needs to be reinstantiated with the new transform.
 The validation dataloader is not affected, and thus can be reused.
 
-.. GENERATED FROM PYTHON SOURCE LINES 675-679
+.. GENERATED FROM PYTHON SOURCE LINES 672-676
 
 .. code-block:: default
 
@@ -1089,7 +1075,7 @@ The validation dataloader is not affected, and thus can be reused.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 680-685
+.. GENERATED FROM PYTHON SOURCE LINES 677-682
 
 We then create the final model based on the new exported architecture.
 This time, auxiliary loss and drop path probability is enabled.
@@ -1097,12 +1083,12 @@ This time, auxiliary loss and drop path probability is enabled.
 Following the same procedure as paper, we also increase the number of filters to 36, and number of cells to 20,
 so as to reasonably increase the model size and boost the performance.
 
-.. GENERATED FROM PYTHON SOURCE LINES 686-690
+.. GENERATED FROM PYTHON SOURCE LINES 683-687
 
 .. code-block:: default
 
 
-    with fixed_arch(exported_arch):
+    with model_context(exported_arch):
         final_model = DartsSpace(width=36, num_cells=20, dataset='cifar', auxiliary_loss=True, drop_path_prob=0.2)
 
 
@@ -1112,11 +1098,11 @@ so as to reasonably increase the model size and boost the performance.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 691-692
+.. GENERATED FROM PYTHON SOURCE LINES 688-689
 
 We create a new evaluator for the retraining process, where the gradient clipping is put into the keyword arguments of trainer.
 
-.. GENERATED FROM PYTHON SOURCE LINES 693-710
+.. GENERATED FROM PYTHON SOURCE LINES 690-707
 
 .. code-block:: default
 
@@ -1145,43 +1131,23 @@ We create a new evaluator for the retraining process, where the gradient clippin
 
  .. code-block:: none
 
-    /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:447: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
+    /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py:446: LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7 and will be removed in v2.0. Please use `Trainer(accelerator='gpu', devices=1)` instead.
       rank_zero_deprecation(
-    GPU available: True (cuda), used: True
-    TPU available: False, using: 0 TPU cores
-    IPU available: False, using: 0 IPUs
-    HPU available: False, using: 0 HPUs
-    Running in `fast_dev_run` mode: will run the requested loop using 1 batch(es). Logging and checkpointing is suppressed.
-    LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [3]
-
-      | Name      | Type             | Params
-    -----------------------------------------------
-    0 | criterion | CrossEntropyLoss | 0     
-    1 | metrics   | ModuleDict       | 0     
-    2 | model     | DARTS            | 3.2 M 
-    -----------------------------------------------
-    3.2 M     Trainable params
-    0         Non-trainable params
-    3.2 M     Total params
-    12.942    Total estimated model params size (MB)
-    /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:225: PossibleUserWarning: The dataloader, train_dataloader, does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` (try 56 which is the number of cpus on this machine) in the `DataLoader` init to improve performance.
+    /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:224: PossibleUserWarning: The dataloader, train_dataloader, does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` (try 16 which is the number of cpus on this machine) in the `DataLoader` init to improve performance.
       rank_zero_warn(
-    /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1892: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
+    /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/pytorch_lightning/trainer/trainer.py:1555: PossibleUserWarning: The number of training batches (1) is smaller than the logging interval Trainer(log_every_n_steps=50). Set a lower value for log_every_n_steps if you want to see logs for the training epoch.
       rank_zero_warn(
-    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s] /data/data0/jiahang/miniconda3/lib/python3.8/site-packages/torchvision/transforms/functional_pil.py:41: DeprecationWarning: FLIP_LEFT_RIGHT is deprecated and will be removed in Pillow 10 (2023-07-01). Use Transpose.FLIP_LEFT_RIGHT instead.
-      return img.transpose(Image.FLIP_LEFT_RIGHT)
-    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.33it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.33it/s, loss=3.47, v_num=, train_loss=3.470, train_acc=0.0625]
+    Training: 0it [00:00, ?it/s]    Training:   0%|          | 0/2 [00:00<?, ?it/s]    Epoch 0:   0%|          | 0/2 [00:00<?, ?it/s]     Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.77it/s]    Epoch 0:  50%|#####     | 1/2 [00:00<00:00,  1.77it/s, loss=3.36, v_num=, train_loss=3.360, train_acc=0.0729]
     Validation: 0it [00:00, ?it/s]
     Validation:   0%|          | 0/1 [00:00<?, ?it/s]
     Validation DataLoader 0:   0%|          | 0/1 [00:00<?, ?it/s]
-    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00,  3.13it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.20it/s, loss=3.47, v_num=, train_loss=3.470, train_acc=0.0625]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.20it/s, loss=3.47, v_num=, train_loss=3.470, train_acc=0.0625, val_loss=2.300, val_acc=0.0938]
-                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.19it/s, loss=3.47, v_num=, train_loss=3.470, train_acc=0.0625, val_loss=2.300, val_acc=0.0938]`Trainer.fit` stopped: `max_steps=1` reached.
-    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.19it/s, loss=3.47, v_num=, train_loss=3.470, train_acc=0.0625, val_loss=2.300, val_acc=0.0938]
+    Validation DataLoader 0: 100%|##########| 1/1 [00:00<00:00,  1.55it/s]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.26it/s, loss=3.36, v_num=, train_loss=3.360, train_acc=0.0729]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.26it/s, loss=3.36, v_num=, train_loss=3.360, train_acc=0.0729, val_loss=2.300, val_acc=0.0938]
+                                                                              Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.25it/s, loss=3.36, v_num=, train_loss=3.360, train_acc=0.0729, val_loss=2.300, val_acc=0.0938]    Epoch 0: 100%|##########| 2/2 [00:01<00:00,  1.25it/s, loss=3.36, v_num=, train_loss=3.360, train_acc=0.0729, val_loss=2.300, val_acc=0.0938]
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 711-725
+.. GENERATED FROM PYTHON SOURCE LINES 708-722
 
 When ``fast_dev_run`` is turned off, after retraining, the architecture yields a top-1 accuracy of 97.12%.
 If we take the best snapshot throughout the retrain process,
@@ -1201,7 +1167,7 @@ The implementation of second order DARTS is in our future plan, and we also welc
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  53.716 seconds)
+   **Total running time of the script:** ( 0 minutes  40.472 seconds)
 
 
 .. _sphx_glr_download_tutorials_darts.py:
@@ -1209,6 +1175,8 @@ The implementation of second order DARTS is in our future plan, and we also welc
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python
