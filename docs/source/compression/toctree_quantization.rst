@@ -9,3 +9,4 @@ Quantization
     Quickstart </tutorials/quantization_quick_start_mnist>
     Quantizer <quantizer>
     SpeedUp </tutorials/quantization_speedup>
+    Quantization Tutorials <quantization_tutorials>
