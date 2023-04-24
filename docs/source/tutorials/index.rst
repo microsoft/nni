@@ -148,6 +148,23 @@ Tutorials
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Here we show an effective transformer simulated quantization process that NNI team has tried, a...">
+
+.. only:: html
+
+  .. image:: /tutorials/images/thumb/sphx_glr_quantization_bert_glue_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_tutorials_quantization_bert_glue.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Quantize BERT on Task GLUE</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="In this tutorial, we demonstrate how to search in the famous model space proposed in `DARTS`_.">
 
 .. only:: html
@@ -213,6 +230,7 @@ Tutorials
    /tutorials/quantization_quick_start
    /tutorials/quantization_speedup
    /tutorials/hello_nas
+   /tutorials/quantization_bert_glue
    /tutorials/darts
    /tutorials/new_pruning_bert_glue
    /tutorials/pruning_bert_glue
