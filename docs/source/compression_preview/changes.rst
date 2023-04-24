@@ -93,7 +93,7 @@ Model Fusion
 ------------
 
 Model fusion is supported in NNI 3.0. You can use it easily by setting ``fuse_names`` in each configure in the config_list.
-Please refer :doc:`Module Fusion <../reference/compression_preview/module_fusion>` for more details.
+Please refer :doc:`Module Fusion <./module_fusion>` for more details.
 
 Distillation
 ------------

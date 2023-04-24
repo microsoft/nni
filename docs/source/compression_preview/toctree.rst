@@ -13,4 +13,5 @@ Compression (Preview)
     Evaluator <evaluator>
     Customize Setting <setting>
     Fusion Compression <fusion_compress>
+    Module Fusion <module_fusion>
 

@@ -7,7 +7,7 @@ reducing the error between the simulated quantization and inference stages.
 
 Users can use this feature by directly defining ``fuse_names`` in each configure of config_list.
 ``fuse_names`` is an optional parameter of type ``List[(str,)]``. Each tuple specifies the name of the module 
-to be fused in the current configure in the model. Meanwhile, Each tuple 2 or 3 elements, and the first module 
+to be fused in the current configure in the model. Meanwhile, each tuple has 2 or 3 elements, and the first module 
 in each tuple is the fused module, which contains all the operations of all the modules in the tuple. 
 The rest of the modules will be replaced by ``Identity`` during the quantization process. Here is an example:
 
