@@ -103,16 +103,20 @@ export class RemoteTrainingServiceV3 implements TrainingServiceV3 {
         }
     }
 
-    public async createTrial(envId: string, trialCommand: string, directoryName: string, sequenceId?: number):
-            Promise<string | null> {
-
+    public async createTrial(
+        envId: string,
+        trialCommand: string,
+        directoryName: string,
+        sequenceId: number,
+        trialId?: string
+    ): Promise<string | null> {
         const worker = this.workersByEnv.get(envId);
         if (!worker) {
             this.log.warning('Cannot create trial. Bad environment ID:', envId);
             return null;
         }
 
-        const trialId = uuid();
+        trialId = trialId ?? uuid();
 
         let gpuNumber = this.config.trialGpuNumber;
         if (gpuNumber) {

@@ -151,6 +151,7 @@ class NNIManager implements Manager {
                     value: JSON.stringify(packedParameter),
                     index: 0
                 },
+                envId: job.envId,
             };
 
             this.waitingTrials.push(form);

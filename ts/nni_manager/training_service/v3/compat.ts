@@ -16,6 +16,8 @@ import {
 import type { EnvironmentInfo, Parameter, TrainingServiceV3 } from 'common/training_service_v3';
 import { trainingServiceFactoryV3 } from './factory';
 
+const logger = getLogger('TrainingServiceCompat');
+
 type MutableTrialJobDetail = {
     -readonly [Property in keyof TrialJobDetail]: TrialJobDetail[Property];
 };
@@ -44,6 +46,7 @@ export class V3asV1 implements TrainingService {
 
     private trialJobs: Record<string, MutableTrialJobDetail> = {};
     private parameters: Parameter[] = [];
+    private allocatedParameters: Map<string, Parameter> = new Map();
 
     private environments: EnvironmentInfo[] = [];
     private lastEnvId: string = '';
@@ -71,11 +74,37 @@ export class V3asV1 implements TrainingService {
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         await this.startDeferred.promise;
+        logger.trace('submitTrialJob', form);
+
         let trialId: string | null = null;
+        let envId: string | null = null;
         let submitTime: number = 0;
-        this.parameters.push(form.hyperParameters.value);
+
+        if (form.id && form.envId) {
+            submitTime = Date.now();
+            trialId = await this.v3.createTrial(
+                form.envId,
+                this.config.trialCommand,
+                'trial_code',
+                form.sequenceId,
+                form.id
+            );
+            if (trialId === null) {
+                logger.warning(`Failed to resume trial ${form.id} in environment ${form.envId}`);
+            } else {
+                envId = form.envId;
+                logger.debug(`Resumed trial ${trialId} in environment ${envId}`);
+            }
+        }
+
+        if (trialId === null) {
+            this.parameters.push(form.hyperParameters.value);
+        } else {
+            this.allocatedParameters.set(trialId, form.hyperParameters.value);
+        }
+
         while (trialId === null) {
-            const envId = this.schedule();
+            envId = this.schedule();
             if (envId === null) {
                 await setTimeout(1000);
                 continue;
@@ -91,11 +120,13 @@ export class V3asV1 implements TrainingService {
                 submitTime,
                 workingDirectory: '_unset_',  // never set in current remote training service, so it's optional
                 form: form,
+                envId: envId!,
             };
         } else {
             // `await createTrial()` is not atomic, so onTrialStart callback might be invoked before this
             this.trialJobs[trialId].submitTime = submitTime;
             this.trialJobs[trialId].form = form;
+            this.trialJobs[trialId].envId = envId!;
         }
         return this.trialJobs[trialId];
     }
@@ -157,7 +188,7 @@ export class V3asV1 implements TrainingService {
 
     public run(): Promise<void> {
         this.start().catch(error => {
-            getLogger('TrainingServiceCompat').error('Training srevice initialize failed:', error);
+            logger.error('Training srevice initialize failed:', error);
             globals.shutdown.initiate('training service initialize failed');
         });
         return this.runDeferred.promise;
@@ -167,10 +198,13 @@ export class V3asV1 implements TrainingService {
         await this.v3.init();
 
         this.v3.onRequestParameter(async (trialId) => {
-            if (this.parameters.length > 0) {
+            if (this.allocatedParameters.has(trialId)) {
+                await this.v3.sendParameter(trialId, this.allocatedParameters.get(trialId)!);
+                this.allocatedParameters.delete(trialId);
+            } else if (this.parameters.length > 0) {
                 await this.v3.sendParameter(trialId, this.parameters.shift()!);
             } else {
-                getLogger('TrainingServiceCompat').error('No parameters available');
+                logger.error('No parameters available');
             }
         });
         this.v3.onMetric(async (trialId, metric) => {

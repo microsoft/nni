@@ -62,7 +62,13 @@ export interface TrainingServiceV3 {
      *  Return trial ID on success.
      *  Return null if the environment is not available.
      **/
-    createTrial(environmentId: string, trialCommand: string, directoryName: string, sequenceId?: number): Promise<string | null>;
+    createTrial(
+        environmentId: string,
+        trialCommand: string,
+        directoryName: string,
+        sequenceId: number,  // TODO: move to global counter
+        trialId?: string,  // FIXME: temporary solution for resuming trial
+    ): Promise<string | null>;
 
     /**
      *  Kill a trial.
