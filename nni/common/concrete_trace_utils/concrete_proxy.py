@@ -170,7 +170,7 @@ class ConcreteProxy(Proxy):
         elif insts[cur].opname == 'CONTAINS_OP':
             # in executing 'in'
             return _orig_bool(self.value)
-         elif insts[cur].opcode == self.op_call_ex:
+        elif insts[cur].opcode == self.op_call_ex:
             # in executing func(..., *proxy)
             return _orig_bool(self.value)
         elif insts[cur].opcode == self.op_not:
