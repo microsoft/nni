@@ -97,6 +97,23 @@ Tutorials
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Here is a four-minute video to get you started with model quantization.">
+
+.. only:: html
+
+  .. image:: /tutorials/images/thumb/sphx_glr_quantization_quick_start_thumb.png
+    :alt:
+
+  :ref:`sphx_glr_tutorials_quantization_quick_start.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Quantization Quickstart</div>
+    </div>
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Quantization algorithms quantize a deep learning model usually in a simulated way. That is, to ...">
 
 .. only:: html
@@ -210,6 +227,7 @@ Tutorials
    /tutorials/pruning_quick_start_mnist
    /tutorials/quantization_customize
    /tutorials/nasbench_as_dataset
+   /tutorials/quantization_quick_start
    /tutorials/quantization_speedup
    /tutorials/hello_nas
    /tutorials/quantization_bert_glue

@@ -1,38 +1,41 @@
-# Copyright (c) Microsoft Corporation.
-# Licensed under the MIT license.
+"""
+Quantization Quickstart
+=======================
 
-from __future__ import annotations
+Here is a four-minute video to get you started with model quantization.
 
+..  youtube:: MSfV7AyfiA4
+    :align: center
+
+Quantization reduces model size and speeds up inference time by reducing the number of bits required to represent weights or activations.
+
+In NNI, both post-training quantization algorithms and quantization-aware training algorithms are supported.
+Here we use `QATQuantizer` as an example to show the usage of quantization in NNI.
+"""
+
+# %%
+# Preparation
+# -----------
+#
+# In this tutorial, we use a simple model and pre-train on MNIST dataset.
+# If you are familiar with defining a model and training in pytorch, you can skip directly to `Quantizing Model`_.
+
+import functools
 import time
-from typing import Callable
+from typing import Callable, Union, List, Dict, Tuple, Union
 
 import torch
 import torch.nn.functional as F
 from torch.optim import Optimizer, SGD
 from torch.utils.data import DataLoader
-from torchvision import transforms
-from torchvision.datasets import MNIST
+from torch import Tensor
 
-import nni
-from nni.contrib.compression.quantization import QATQuantizer
-from nni.contrib.compression.utils import TorchEvaluator
 from nni.common.types import SCHEDULER
 
 
-torch.manual_seed(1024)
-device = 'cuda:0'
-
-
-MNIST(root='data/mnist', train=True, download=True)
-MNIST(root='data/mnist', train=False, download=True)
-transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-mnist_train = MNIST(root='data/mnist', train=True, transform=transform)
-train_dataloader = DataLoader(mnist_train, batch_size=64)
-mnist_test = MNIST(root='data/mnist', train=False, transform=transform)
-test_dataloader = DataLoader(mnist_test, batch_size=1000)
-
-
-class NaiveModel(torch.nn.Module):
+# %%
+# Define the model
+class Mnist(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = torch.nn.Conv2d(1, 20, 5, 1)
@@ -44,27 +47,48 @@ class NaiveModel(torch.nn.Module):
         self.relu3 = torch.nn.ReLU6()
         self.max_pool1 = torch.nn.MaxPool2d(2, 2)
         self.max_pool2 = torch.nn.MaxPool2d(2, 2)
+        self.batchnorm1 = torch.nn.BatchNorm2d(20)
 
     def forward(self, x):
-        x = self.relu1(self.conv1(x))
+        x = self.relu1(self.batchnorm1(self.conv1(x)))
         x = self.max_pool1(x)
         x = self.relu2(self.conv2(x))
         x = self.max_pool2(x)
-        x = x.view(-1, x.size()[1:].numel())
+        x = x.view(-1, 4 * 4 * 50)
         x = self.relu3(self.fc1(x))
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
 
-def training_step(batch, model):
+# %%
+# Create training and evaluation dataloader
+from torch.utils.data import DataLoader
+from torchvision import transforms
+from torchvision.datasets import MNIST
+
+MNIST(root='data/mnist', train=True, download=True)
+MNIST(root='data/mnist', train=False, download=True)
+transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+mnist_train = MNIST(root='data/mnist', train=True, transform=transform)
+train_dataloader = DataLoader(mnist_train, batch_size=64)
+mnist_test = MNIST(root='data/mnist', train=False, transform=transform)
+test_dataloader = DataLoader(mnist_test, batch_size=1000)
+
+
+# %%
+# Define training and evaluation functions
+device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+
+def training_step(batch, model) -> Tensor:
     x, y = batch[0].to(device), batch[1].to(device)
     logits = model(x)
     loss: torch.Tensor = F.nll_loss(logits, y)
     return loss
 
 
-def training_model(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: SCHEDULER | None = None,
-                   max_steps: int | None = None, max_epochs: int | None = None):
+def training_model(model: torch.nn.Module, optimizer: Optimizer, training_step: Callable, scheduler: Union[SCHEDULER, None] = None,
+                   max_steps: Union[int, None] = None, max_epochs: Union[int, None] = None):
     model.train()
     max_epochs = max_epochs if max_epochs else 1 if max_steps is None else 100
     current_steps = 0
@@ -97,7 +121,9 @@ def evaluating_model(model: torch.nn.Module):
     return correct / len(mnist_test)
 
 
-model = NaiveModel().to(device)
+# %%
+# Pre-train and evaluate the model on MNIST dataset
+model = Mnist().to(device)
 optimizer = SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
 
 start = time.time()
@@ -106,6 +132,19 @@ print(f'pure training 5 epochs: {time.time() - start}s')
 start = time.time()
 acc = evaluating_model(model)
 print(f'pure evaluating: {time.time() - start}s    Acc.: {acc}')
+
+
+# %%
+# Quantizing Model
+# ----------------
+#
+# Initialize a `config_list`.
+# Detailed about how to write ``config_list`` please refer :doc:`Config Specification <../compression_preview/config_list>`.
+
+import nni
+from nni.contrib.compression.quantization import QATQuantizer
+from nni.contrib.compression.utils import TorchEvaluator
+
 
 optimizer = nni.trace(SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
 evaluator = TorchEvaluator(training_model, optimizer, training_step)  # type: ignore
@@ -135,4 +174,4 @@ print(f'pure training 5 epochs: {time.time() - start}s')
 print(calibration_config)
 start = time.time()
 acc = evaluating_model(model)
-print(f'quant evaluating: {time.time() - start}s    Acc.: {acc}')
+print(f'quantization evaluating: {time.time() - start}s    Acc.: {acc}')
