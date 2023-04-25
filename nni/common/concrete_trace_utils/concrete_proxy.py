@@ -170,6 +170,9 @@ class ConcreteProxy(Proxy):
         elif insts[cur].opname == 'CONTAINS_OP':
             # in executing 'in'
             return _orig_bool(self.value)
+         elif insts[cur].opcode == self.op_call_ex:
+            # in executing func(..., *proxy)
+            return _orig_bool(self.value)
         elif insts[cur].opcode == self.op_not:
             # We cannot return a proxy because 'UNARY_NOT' op will check the type.
             _logger.warning('please use the function patcher, or use "x = operator.not_(y)" instead of "x = not y",'
