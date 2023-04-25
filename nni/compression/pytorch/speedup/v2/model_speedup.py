@@ -209,9 +209,8 @@ class ModelSpeedup(torch.fx.Interpreter):
     def propagate_originally(self):
         """
         Propagate normally to get informations of intermediate variables such as shape, dtype of tensors.
-        Default action:
-            execute and store output to node_info.output_origin(intermediate variables when assigned),
-                and node_info.output_inplace(intermediate variables after in-place ops)
+        Default action: execute and store output to node_info.output_origin(intermediate variables when assigned),
+        and node_info.output_inplace(intermediate variables after in-place ops).
         """
         self.logger.info("Propagate original variables")
         for node in self.graph_module.graph.nodes:

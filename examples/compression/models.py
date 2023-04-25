@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from pathlib import Path
+
 import torch
 import torch.nn.functional as F
 from torch.optim import Adam
@@ -28,23 +30,23 @@ def build_resnet18():
     return model.to(device)
 
 
-def prepare_dataloader():
+def prepare_dataloader(batch_size: int = 128):
     normalize = transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
     train_loader = DataLoader(
-        datasets.CIFAR10('./data', train=True, transform=transforms.Compose([
+        datasets.CIFAR10(Path(__file__).parent / 'data', train=True, transform=transforms.Compose([
             transforms.RandomHorizontalFlip(),
             transforms.RandomCrop(32, 4),
             transforms.ToTensor(),
             normalize,
         ]), download=True),
-        batch_size=128, shuffle=True, num_workers=8)
+        batch_size=batch_size, shuffle=True, num_workers=8)
 
     test_loader = DataLoader(
-        datasets.CIFAR10('./data', train=False, transform=transforms.Compose([
+        datasets.CIFAR10(Path(__file__).parent / 'data', train=False, transform=transforms.Compose([
             transforms.ToTensor(),
             normalize,
         ])),
-        batch_size=128, shuffle=False, num_workers=8)
+        batch_size=batch_size, shuffle=False, num_workers=8)
     return train_loader, test_loader
 
 
@@ -67,7 +69,7 @@ def train(model: torch.nn.Module, optimizer: torch.optim.Optimizer, training_ste
         for data, target in train_loader:
             data, target = data.to(device), target.to(device)
             optimizer.zero_grad()
-            loss = training_step(model, (data, target))
+            loss = training_step((data, target), model)
             loss.backward()
             optimizer.step()
             count_steps += 1
@@ -91,7 +93,7 @@ def evaluate(model: torch.nn.Module, test_loader):
     return 100 * correct / len(test_loader.dataset)
 
 
-def training_step(model: torch.nn.Module, batch):
+def training_step(batch, model: torch.nn.Module):
     output = model(batch[0])
     loss = F.cross_entropy(output, batch[1])
     return loss

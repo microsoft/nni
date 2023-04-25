@@ -62,7 +62,8 @@ class MovementPruner(ScheduledPruner):
 
     Examples
     --------
-        TODO
+        Please refer to
+        :githublink:`examples/tutorials/new_pruning_bert_glue.py <examples/tutorials/new_pruning_bert_glue.py>`.
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
