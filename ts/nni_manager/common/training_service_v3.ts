@@ -18,6 +18,8 @@ export type Parameter = string;
 export interface EnvironmentInfo {
     id: string;
     // TODO
+
+    [key: string]: any;
 }
 
 export interface TrainingServiceV3 {

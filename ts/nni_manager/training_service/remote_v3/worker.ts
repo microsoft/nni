@@ -49,7 +49,7 @@ export class Worker {
         this.channelId = channelId;
         this.config = config;
         this.channelUrl = channelUrl;
-        this.env = { id: this.envId };
+        this.env = { id: this.envId, host: config.host };
         this.trialKeeper = new RemoteTrialKeeper(this.envId, 'remote', enableGpuScheduling);
         this.ssh = new Ssh(channelId, config);
     }
@@ -85,6 +85,7 @@ export class Worker {
 
         await this.launchTrialKeeperDaemon();
         this.env = await this.trialKeeper.start();
+        this.env['host'] = this.config.host;
 
         this.log.info(`Worker ${this.config.host} initialized`);
     }

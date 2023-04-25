@@ -80,20 +80,25 @@ export class V3asV1 implements TrainingService {
         let envId: string | null = null;
         let submitTime: number = 0;
 
-        if (form.id && form.envId) {
+        if (form.id && form.envId) {  // resume trial
             submitTime = Date.now();
-            trialId = await this.v3.createTrial(
-                form.envId,
-                this.config.trialCommand,
-                'trial_code',
-                form.sequenceId,
-                form.id
-            );
-            if (trialId === null) {
-                logger.warning(`Failed to resume trial ${form.id} in environment ${form.envId}`);
-            } else {
-                envId = form.envId;
-                logger.debug(`Resumed trial ${trialId} in environment ${envId}`);
+            try {
+                trialId = await this.v3.createTrial(
+                    form.envId,
+                    this.config.trialCommand,
+                    'trial_code',
+                    form.sequenceId,
+                    form.id
+                );
+
+                if (trialId) {
+                    envId = form.envId;
+                    logger.debug(`Resumed trial ${trialId} in environment ${envId}`);
+                } else {
+                    logger.warning(`Failed to resume trial ${form.id} in environment ${form.envId}`);
+                }
+            } catch (error) {
+                logger.error('Exception when resuming trial', form, ':', error);
             }
         }
 
@@ -110,11 +115,16 @@ export class V3asV1 implements TrainingService {
                 continue;
             }
             submitTime = Date.now();
-            trialId = await this.v3.createTrial(envId, this.config.trialCommand, 'trial_code', form.sequenceId);
+            try {
+                trialId = await this.v3.createTrial(envId, this.config.trialCommand, 'trial_code', form.sequenceId);
+            } catch (error) {
+                logger.error('Exception when create trial', form, ':', error);
+            }
         }
 
+        let trial: MutableTrialJobDetail;
         if (this.trialJobs[trialId] === undefined) {
-            this.trialJobs[trialId] = {
+            trial = {
                 id: trialId,
                 status: 'WAITING',
                 submitTime,
@@ -124,11 +134,23 @@ export class V3asV1 implements TrainingService {
             };
         } else {
             // `await createTrial()` is not atomic, so onTrialStart callback might be invoked before this
-            this.trialJobs[trialId].submitTime = submitTime;
-            this.trialJobs[trialId].form = form;
-            this.trialJobs[trialId].envId = envId!;
+            trial = this.trialJobs[trialId];
+            trial.submitTime = submitTime;
+            trial.form = form;
+            trial.envId = envId!;
         }
-        return this.trialJobs[trialId];
+
+        // FIXME: tmp hack
+        const env = this.environments.filter(env => (env.id === trial.envId))[0];
+        if (env && env['host']) {
+            const envDir = `~/nni-experiments/${globals.args.experimentId}/environments/${env.id}`
+            trial.url = `${env['host']}:${envDir}/trials/${trial.id}`;
+        } else {
+            trial.url = path.join(globals.paths.experimentRoot, 'environments', env.id, 'trials', trialId);
+        }
+
+        this.trialJobs[trialId] = trial;
+        return trial;
     }
 
     public async updateTrialJob(_trialJobId: string, _form: TrialJobApplicationForm): Promise<TrialJobDetail> {
@@ -137,12 +159,22 @@ export class V3asV1 implements TrainingService {
     }
 
     public async cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void> {
-        await this.v3.stopTrial(trialJobId);
+        try {
+            await this.v3.stopTrial(trialJobId);
+        } catch (error) {
+            logger.error('Exception when cancel trial', trialJobId, ':', error);
+        }
         this.trialJobs[trialJobId].isEarlyStopped = Boolean(isEarlyStopped);
     }
 
     public async getTrialFile(trialJobId: string, fileName: string): Promise<Buffer | string> {
-        const dir = await this.v3.downloadTrialDirectory(trialJobId);
+        let dir: string;
+        try {
+            dir = await this.v3.downloadTrialDirectory(trialJobId);
+        } catch (error) {
+            logger.error('Exception when get trial file', trialJobId, fileName, ':', error);
+            return `NNI internal error. Please check log file.\n${error}`;
+        }
 
         //const dir = path.join(globals.paths.experimentRoot, 'trials', trialJobId);
 
@@ -182,7 +214,11 @@ export class V3asV1 implements TrainingService {
     }
 
     public async cleanUp(): Promise<void> {
-        await this.v3.stop();
+        try {
+            await this.v3.stop();
+        } catch (error) {
+            logger.error('Exception when stop:', error);
+        }
         this.runDeferred.resolve();
     }
 
