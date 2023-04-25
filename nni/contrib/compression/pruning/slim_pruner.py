@@ -43,6 +43,11 @@ class SlimPruner(Pruner):
         An integer to control steps of training the model and scale factors. Masks will be generated after ``training_steps``.
     regular_scale
         ``regular_scale`` controls the scale factors' penalty.
+    
+    Examples
+    --------
+        Please refer to
+        :githublink:`examples/compression/pruning/slim_pruning.py <examples/compression/pruning/slim_pruning.py>`.
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload

@@ -3,7 +3,7 @@
 
 import torch
 
-from examples.compression.pruning.models import (
+from examples.compression.models import (
     build_resnet18,
     prepare_dataloader,
     prepare_optimizer,

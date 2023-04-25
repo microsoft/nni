@@ -114,10 +114,6 @@ class LevelPruner(_NormPruner):
     config_list
         A list of dict, each dict configure which module need to be pruned, and how to prune.
         Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
-
-    Examples
-    --------
-        TODO
     """
     p = 1
 
@@ -144,7 +140,8 @@ class L1NormPruner(_NormPruner):
 
     Examples
     --------
-        TODO
+        Please refer to
+        :githublink:`examples/compression/pruning/norm_pruning.py <examples/compression/pruning/norm_pruning.py>`.
     """
     p = 1
 
@@ -165,7 +162,8 @@ class L2NormPruner(_NormPruner):
 
     Examples
     --------
-        TODO
+        Please refer to
+        :githublink:`examples/compression/pruning/norm_pruning.py <examples/compression/pruning/norm_pruning.py>`.
     """
     p = 2
 
@@ -188,7 +186,8 @@ class FPGMPruner(_NormPruner):
 
     Examples
     --------
-        TODO
+        Please refer to
+        :githublink:`examples/compression/pruning/norm_pruning.py <examples/compression/pruning/norm_pruning.py>`.
     """
     p = 2
 
