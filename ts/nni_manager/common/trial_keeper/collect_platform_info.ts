@@ -19,10 +19,10 @@ export async function collectPlatformInfo(includeGpu: boolean): Promise<Record<s
 
     /* nni & python */
     try {
-        const versionJson = await runPythonModule('nni.tools.nni_manager_scripts.collection_version_info');
+        const versionJson = await runPythonModule('nni.tools.nni_manager_scripts.collect_version_info');
         info.version = JSON.parse(versionJson);
     } catch (error) {
-        errors.ret = error;
+        errors.version = error;
     }
 
     /* os */

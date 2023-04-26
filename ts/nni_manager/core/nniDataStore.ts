@@ -354,6 +354,9 @@ class NNIDataStore implements DataStore {
                 jobInfo.sequenceId = record.sequenceId;
             }
             jobInfo.message = record.message;
+            if (record.envId) {
+                jobInfo.envId = record.envId;
+            }
             map.set(record.trialJobId, jobInfo);
         }
 
