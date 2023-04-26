@@ -10,7 +10,7 @@ jobs:
     vmImage: ubuntu-latest
 
   steps:
-  - template: config-version.yml
+  - template: templates/config-version.yml
     parameters:
       platform: ubuntu-latest
 
@@ -48,7 +48,7 @@ jobs:
     vmImage: ubuntu-latest
 
   steps:
-  - template: config-version.yml
+  - template: templates/config-version.yml
     parameters:
       platform: ubuntu-latest
 
@@ -93,7 +93,7 @@ jobs:
     vmImage: macOS-latest
 
   steps:
-  - template: config-version.yml
+  - template: templates/config-version.yml
     parameters:
       platform: macOS-latest
 
@@ -120,7 +120,7 @@ jobs:
     vmImage: windows-latest
 
   steps:
-  - template: config-version.yml
+  - template: templates/config-version.yml
     parameters:
       platform: windows-latest
 
