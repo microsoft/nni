@@ -69,7 +69,7 @@ One-shot strategy
 
 One-shot NAS algorithms leverage weight sharing among models in neural architecture search space to train a supernet, and use this supernet to guide the selection of better models. This type of algorihtms greatly reduces computational resource compared to independently training each model from scratch (which we call "Multi-trial NAS").
 
-The usage of one-shot strategies are much alike to multi-trial strategies. Users simply need to create a strategy and run :class:`~nni.nas.experiment.NasExperiment`. Since one-shot strategies will manipulate the training recipe, to use a one-shot strategy, the evaluator needs to be one of the :ref:`PyTorch-Lightning evaluators <lightning-evaluator>`, either built-in or customized. Last but not least, don't forget to set execution engine to ``oneshot``. Example follows:
+The usage of one-shot strategies are much alike to multi-trial strategies. Users simply need to create a strategy and run :class:`~nni.nas.experiment.NasExperiment`. Since one-shot strategies will manipulate the training recipe, to use a one-shot strategy, the evaluator needs to be one of the :ref:`PyTorch-Lightning evaluators <lightning-evaluator>`, either built-in or customized. Example follows:
 
 .. code-block:: python
 
@@ -85,8 +85,6 @@ The usage of one-shot strategies are much alike to multi-trial strategies. Users
      gpus=1,
    )
    exploration_strategy = strategy.DARTS()
-
-   exp_config.execution_engine = 'oneshot'
 
 One-shot strategies only support a limited set of mutation primitives. See the :doc:`reference </reference/nas>` for the detailed support list of each algorithm.
 
