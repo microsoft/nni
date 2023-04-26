@@ -4,4 +4,9 @@ const buttonsGap: IStackTokens = {
     childrenGap: 10
 };
 
-export { buttonsGap };
+const expandTrialGap: IStackTokens = {
+    childrenGap: 10,
+    padding: 10
+};
+
+export { buttonsGap, expandTrialGap };

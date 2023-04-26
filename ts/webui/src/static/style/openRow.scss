@@ -7,50 +7,47 @@ $bgColor: #f2f2f2;
 .openRow {
     width: 100%;
     background-color: $bgColor;
-    margin-bottom: 10px;
-
+    font-size: 14px;
+    
     &Content {
         width: 91%;
         margin: 0 auto;
-        min-height: 150px;
-        padding-bottom: 10px;
+        margin-bottom: 10px;
+        min-height: 122px;
     }
 }
 
-.description {
-    padding: 0 10px;
+/* parameters style */
+.bgHyper ul {
+    margin: 0px !important;
+    background-color: #fff !important;
+    padding-bottom: 3px !important;
+    
+}
 
-    .bgHyper ul {
-        background-color: #fff !important;
-        padding: 3px 0 5px 0 !important;
-        font-size: 14px;
+/* copy parameters btn */
+.copy {
+    button {
+        background-color: #ccc;
+        color: #191919;
+        border: none;
+        outline: none;
     }
 
-    .copy {
-        margin-top: 3px;
-
-        button {
-            background-color: #ccc;
-            color: #191919;
-            border: none;
-            outline: none;
-        }
-
-        button:hover {
-            background-color: #ccc;
-            color: #191919;
-            border: none;
-            outline: none;
-        }
-    }
-
-    .ms-MessageBar {
-        width: 70%;
-        margin-left: 15px;
+    button:hover {
+        background-color: #ccc;
+        color: #191919;
+        border: none;
+        outline: none;
     }
 }
 
-#visualizationText {
-    margin: 5px 0 10px 15px;
-    font-size: 14px;
+.logpath {
+    .logName {
+        color: #268bd2;
+    }
+
+    .error {
+        color: #cb4b16;
+    }
 }
