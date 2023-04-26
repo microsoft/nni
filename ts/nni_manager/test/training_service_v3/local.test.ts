@@ -126,8 +126,8 @@ nni.report_final_result(param['x'])
     await ts.uploadDirectory('dir2', dir2);
 
     const [trial1, trial2] = await Promise.all([
-        ts.createTrial(envId, 'python trial.py', 'dir1'),
-        ts.createTrial(envId, 'python trial.py', 'dir2'),
+        ts.createTrial(envId, 'python trial.py', 'dir1', 1),
+        ts.createTrial(envId, 'python trial.py', 'dir2', 2),
     ]);
 
     // the creation should success
@@ -174,7 +174,7 @@ async function testFailedTrial() {
     const dir = await writeTrialCode('dir1', 'trial_fail.py', trialCode);
     await ts.uploadDirectory('code_dir', dir);
 
-    const trial: string = (await ts.createTrial(envId, 'python trial_fail.py', 'code_dir'))!;
+    const trial: string = (await ts.createTrial(envId, 'python trial_fail.py', 'code_dir', 3))!;
 
     // despite it exit immediately, the creation should be success
     assert.notEqual(trial, null);
@@ -211,7 +211,7 @@ nni.report_final_result(param['x'])
     const dir = await writeTrialCode('dir1', 'trial_long.py', trialCode);
     await ts.uploadDirectory('code_dir', dir);
 
-    const trial: string = (await ts.createTrial(envId, 'python trial_long.py', 'dir1'))!;
+    const trial: string = (await ts.createTrial(envId, 'python trial_long.py', 'dir1', 4))!;
     assert.notEqual(trial, null);
 
     // wait for it to request parameter

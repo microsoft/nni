@@ -22,7 +22,7 @@ interface TrialJobEventRecord {
     readonly logPath?: string;
     readonly sequenceId?: number;
     readonly message?: string;
-    readonly envId: string;
+    readonly envId?: string;
 }
 
 interface MetricData {
