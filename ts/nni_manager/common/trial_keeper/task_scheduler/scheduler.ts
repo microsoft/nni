@@ -126,6 +126,8 @@ export class TaskScheduler {
             return { 'CUDA_VISIBLE_DEVICES': '' };
         }
 
+        this.update();
+
         if (gpuNumber >= this.gpus.length) {
             // TODO: push this message to web portal
             logger.error(`Only have ${this.gpus.length} GPUs, requesting ${gpuNumber}`);
