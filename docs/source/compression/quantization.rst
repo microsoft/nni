@@ -8,4 +8,3 @@ can be represented using 8-bit integers without significant loss in accuracy. Ev
 is an active field of research.
 
 A quantizer is a quantization algorithm implementation in NNI.
-You can also :doc:`create your own quantizer <../tutorials/quantization_customize>` using NNI model compression interface.

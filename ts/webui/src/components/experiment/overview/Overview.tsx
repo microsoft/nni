@@ -1,210 +1,143 @@
-import * as React from 'react';
-import { Stack, Icon, Dropdown, DefaultButton } from '@fluentui/react';
-import { EXPERIMENT, TRIALS } from '@static/datamodel';
+import React, { useContext } from 'react';
+import { Stack, Dropdown, DefaultButton } from '@fluentui/react';
+import { TRIALS } from '@static/datamodel';
 import { Trial } from '@static/model/trial';
 import { AppContext } from '@/App';
-import { Title } from './Title';
 import SuccessTable from './table/SuccessTable';
 import DefaultPoint from '../trialdetail/chart/DefaultMetricPoint';
-import { BasicInfo } from './params/BasicInfo';
-import { ExpDuration } from './count/ExpDuration';
-import { ExpDurationContext } from './count/ExpDurationContext';
-import { TrialCount } from './count/TrialCount';
-import Config from './Config';
-import { TitleContext } from './TitleContext';
-import { itemStyleSucceed, entriesOption } from './overviewConst';
+import { BasicInfo } from './basic/BasicInfo';
+import { Duration } from './count/Duration';
+import { TrialCount } from './count/TrialNumbers';
+import { buttonsGap } from '@components/common/Gap';
 import '@style/experiment/overview/overview.scss';
 import '@style/experiment/overview/topTrial.scss';
 import '@style/table.scss';
 
+const entriesOption = [
+    { key: '10', text: '10' },
+    { key: '20', text: '20' },
+    { key: '30', text: '30' },
+    { key: '50', text: '50' },
+    { key: '100', text: '100' }
+];
 /**
  * single experiment
  * overview page
  */
 
-interface OverviewState {
-    trialConcurrency: number;
-}
-
 export const BestMetricContext = React.createContext({
     bestAccuracy: 0
 });
 
-class Overview extends React.Component<{}, OverviewState> {
-    static contextType = AppContext;
-    context!: React.ContextType<typeof AppContext>;
+const Overview = (): any => {
+    const { changeMetricGraphMode, changeEntries } = useContext(AppContext); // global
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            trialConcurrency: EXPERIMENT.trialConcurrency
-        };
-    }
-
-    clickMaxTop = (event: React.SyntheticEvent<EventTarget>): void => {
+    const clickMaxTop = (event: React.SyntheticEvent<EventTarget>): void => {
         event.stopPropagation();
         // #999 panel active bgcolor; #b3b3b3 as usual
-        const { changeMetricGraphMode } = this.context;
-        changeMetricGraphMode('max');
+        changeMetricGraphMode('Maximize');
     };
 
-    clickMinTop = (event: React.SyntheticEvent<EventTarget>): void => {
+    const clickMinTop = (event: React.SyntheticEvent<EventTarget>): void => {
         event.stopPropagation();
-        const { changeMetricGraphMode } = this.context;
-        changeMetricGraphMode('min');
+        changeMetricGraphMode('Minimize');
     };
 
-    updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
+    const updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
-            this.context.changeEntries(item.key);
+            changeEntries(item.key);
         }
     };
 
-    render(): React.ReactNode {
-        const bestTrials = this.findBestTrials();
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
-        const execDuration = EXPERIMENT.profile.execDuration;
-
-        return (
-            <AppContext.Consumer>
-                {(value): React.ReactNode => {
-                    const {
-                        metricGraphMode,
-                        bestTrialEntries,
-                        maxDurationUnit,
-                        expandRowIDs,
-                        updateOverviewPage,
-                        changeMaxDurationUnit,
-                        changeExpandRowIDs
-                    } = value;
-                    const maxActive = metricGraphMode === 'max' ? 'active' : '';
-                    const minActive = metricGraphMode === 'min' ? 'active' : '';
-                    return (
-                        <div className='overview'>
-                            <div className='overviewWrapper'>
-                                {/* exp params */}
-                                <div className='overviewBasicInfo'>
-                                    <TitleContext.Provider value={{ text: 'Experiment', icon: 'AutoRacing' }}>
-                                        <Title />
-                                    </TitleContext.Provider>
-                                    <BestMetricContext.Provider value={{ bestAccuracy: bestAccuracy }}>
-                                        <BasicInfo />
-                                    </BestMetricContext.Provider>
-                                </div>
-                                {/* duration & trial numbers */}
-                                <div className='duration'>
-                                    <TitleContext.Provider value={{ text: 'Duration', icon: 'Timer' }}>
-                                        <Title />
-                                    </TitleContext.Provider>
-                                    <ExpDurationContext.Provider
-                                        value={{
-                                            maxExecDuration: EXPERIMENT.maxExperimentDurationSeconds,
-                                            execDuration,
-                                            updateOverviewPage,
-                                            maxDurationUnit,
-                                            changeMaxDurationUnit
-                                        }}
-                                    >
-                                        <ExpDuration />
-                                    </ExpDurationContext.Provider>
-                                </div>
-                                <div className='trialCount'>
-                                    <TitleContext.Provider value={{ text: 'Trial numbers', icon: 'NumberSymbol' }}>
-                                        <Title />
-                                    </TitleContext.Provider>
-                                    <ExpDurationContext.Provider
-                                        value={{
-                                            maxExecDuration: EXPERIMENT.maxExperimentDurationSeconds,
-                                            execDuration,
-                                            updateOverviewPage,
-                                            maxDurationUnit,
-                                            changeMaxDurationUnit
-                                        }}
-                                    >
-                                        <TrialCount />
-                                    </ExpDurationContext.Provider>
-                                </div>
-                                {/* table */}
-                                <div className='overviewBestMetric'>
-                                    <Stack horizontal>
-                                        <div style={itemStyleSucceed}>
-                                            <TitleContext.Provider value={{ text: 'Top trials', icon: 'BulletedList' }}>
-                                                <Title />
-                                            </TitleContext.Provider>
-                                        </div>
-                                        <div className='topTrialTitle'>
-                                            <Stack horizontal horizontalAlign='end'>
-                                                <DefaultButton
-                                                    onClick={this.clickMaxTop}
-                                                    className={maxActive}
-                                                    styles={{ root: { minWidth: 70, padding: 0 } }}
-                                                >
-                                                    <Icon iconName='Market' />
-                                                    <span className='max'>Max</span>
-                                                </DefaultButton>
-                                                <div className='mincenter'>
-                                                    <DefaultButton
-                                                        onClick={this.clickMinTop}
-                                                        className={minActive}
-                                                        styles={{ root: { minWidth: 70, padding: 0 } }}
-                                                    >
-                                                        <Icon iconName='MarketDown' />
-                                                        <span className='max'>Min</span>
-                                                    </DefaultButton>
-                                                </div>
-                                                <div>
-                                                    <Stack horizontal>
-                                                        <div className='chooseEntry'>Display top</div>
-                                                        <div>
-                                                            <Dropdown
-                                                                selectedKey={bestTrialEntries}
-                                                                options={entriesOption}
-                                                                onChange={this.updateEntries}
-                                                                styles={{ root: { width: 70 } }}
-                                                            />
-                                                        </div>
-                                                    </Stack>
-                                                </div>
-                                            </Stack>
-                                        </div>
-                                    </Stack>
-                                    <div className='overviewChart'>
-                                        <DefaultPoint
-                                            trialIds={bestTrials.map(trial => trial.info.trialJobId)}
-                                            chartHeight={300}
-                                            hasBestCurve={false}
-                                            changeExpandRowIDs={changeExpandRowIDs}
-                                        />
-                                        <SuccessTable
-                                            trialIds={bestTrials.map(trial => trial.info.trialJobId)}
-                                            updateOverviewPage={updateOverviewPage}
-                                            expandRowIDs={expandRowIDs}
-                                            changeExpandRowIDs={changeExpandRowIDs}
-                                        />
-                                    </div>
-                                </div>
-                                <Stack className='overviewCommand'>
-                                    <Config />
-                                </Stack>
-                            </div>
-                        </div>
-                    );
-                }}
-            </AppContext.Consumer>
-        );
-    }
-
-    private findBestTrials(): Trial[] {
+    const findBestTrials = (): Trial[] => {
         const bestTrials = TRIALS.sort();
-        const { bestTrialEntries, metricGraphMode } = this.context;
-        if (metricGraphMode === 'max') {
+        const { bestTrialEntries, metricGraphMode } = useContext(AppContext);
+        if (metricGraphMode === 'Maximize') {
             bestTrials.reverse().splice(JSON.parse(bestTrialEntries));
         } else {
             bestTrials.splice(JSON.parse(bestTrialEntries));
         }
         return bestTrials;
-    }
-}
+    };
+
+    const bestTrials = findBestTrials();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
+    const { metricGraphMode, bestTrialEntries, expandRowIDs, updateOverviewPage, changeExpandRowIDs } =
+        useContext(AppContext);
+    return (
+        <div className='overview'>
+            <div className='overviewWrapper'>
+                {/* exp params */}
+                <div className='overviewBasicInfo left'>
+                    {/* Provider is required */}
+                    <BestMetricContext.Provider value={{ bestAccuracy: bestAccuracy }}>
+                        <BasicInfo />
+                    </BestMetricContext.Provider>
+                </div>
+                {/* duration & trial numbers */}
+                <div className='duration left'>
+                    <h3 className='title'>Duration</h3>
+                    <Duration />
+                </div>
+                <div className='trialCount left'>
+                    <h3 className='title'>Trial numbers</h3>
+                    <TrialCount />
+                </div>
+                {/* table */}
+                <div className='overviewBestMetric'>
+                    <Stack horizontal horizontalAlign='space-between'>
+                        <div>
+                            <h3 className='title'>
+                                Top trials<span className='font-untheme'>{bestTrialEntries}</span>
+                            </h3>
+                        </div>
+                        <Stack horizontal horizontalAlign='end' tokens={buttonsGap}>
+                            <DefaultButton
+                                text='Maximize'
+                                className={metricGraphMode === 'Maximize' ? 'active' : ''}
+                                styles={{ root: { padding: '0 8px' } }}
+                                iconProps={{ iconName: 'Market' }}
+                                onClick={clickMaxTop}
+                            />
+                            <DefaultButton
+                                text='Minimize'
+                                className={`mincenter ${metricGraphMode === 'Minimize' ? 'active' : ''}`}
+                                styles={{ root: { padding: '0 8px' } }}
+                                iconProps={{ iconName: 'MarketDown' }}
+                                onClick={clickMinTop}
+                            />
+                            <div className='chooseEntry'>Display top</div>
+                            <div>
+                                <Dropdown
+                                    selectedKey={bestTrialEntries}
+                                    options={entriesOption}
+                                    onChange={updateEntries}
+                                    styles={{ root: { width: 70 } }}
+                                />
+                            </div>
+                        </Stack>
+                    </Stack>
+                    <div className='overviewChart'>
+                        <DefaultPoint
+                            trialIds={bestTrials.map(trial => trial.info.trialJobId)}
+                            chartHeight={530}
+                            hasBestCurve={false}
+                            changeExpandRowIDs={changeExpandRowIDs}
+                        />
+                    </div>
+                </div>
+                <div className='bestTable'>
+                    <SuccessTable
+                        trialIds={bestTrials.map(trial => trial.info.trialJobId)}
+                        updateOverviewPage={updateOverviewPage}
+                        expandRowIDs={expandRowIDs}
+                        changeExpandRowIDs={changeExpandRowIDs}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export default Overview;

@@ -1,16 +1,22 @@
-$tableHeight: 432px;
+$tableHeight: 520px;
 
 .scrollPanel {
-    height: $tableHeight;
+    height: $tableHeight - 20px;
 }
 
 #succTable {
     height: $tableHeight;
+    font-size: 16px;
     position: relative;
     top: -10px;
 
     .ms-DetailsHeader {
         padding-top: 0;
+    }
+
+    .positionTopSuccess {
+        position: relative;
+        top: 5px;
     }
 
     .succTable-tooltip {
@@ -27,7 +33,15 @@ $tableHeight: 432px;
     }
 
     .succeed-padding {
-        padding-left: 6px;
+        padding: 0 6px;
         box-sizing: border-box;
+    }
+
+    .No,
+    .id,
+    .metric,
+    .duration-list {
+        font-size: 16px;
+        color: black;
     }
 }

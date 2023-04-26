@@ -1,5 +1,9 @@
 $themeBlue: #0071bc;
 
+.ms-Dialog-main {
+    max-width: 500px;
+}
+
 .ellipsis {
     overflow: hidden;
     white-space: nowrap;
@@ -51,10 +55,6 @@ $themeBlue: #0071bc;
     border: none !important;
 }
 
-.elementMarginLeft {
-    margin-left: 10px;
-}
-
 .operationBtn {
     i {
         color: $themeBlue;
@@ -62,7 +62,7 @@ $themeBlue: #0071bc;
 }
 
 /* for table row border */
-.ms-List-cell {
+#tableList .ms-List-cell {
     border-bottom: 1px solid #eeecea;
 }
 
@@ -95,4 +95,55 @@ $themeBlue: #0071bc;
 
 .ms-DetailsRow-cell {
     padding-top: 8px;
+}
+
+.succTable .ms-DetailsRow-cell {
+    padding-top: 10px;
+}
+
+/* for overview page title style such as Experiment,Duration,Trial numbers,top trials */
+h3.title {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 24px;
+
+    span {
+        margin-left: 16px;
+    }
+}
+
+.font-untheme {
+    color: #9ca3af;
+}
+
+.font-numbers-color {
+    color: #464d5a;
+}
+
+.size16 {
+    font-size: 16px;
+}
+
+.size18 {
+    font-size: 18px;
+}
+
+.size24 {
+    font-size: 24px;
+}
+
+.duration-global-color {
+    b {
+        color: black;
+        margin: 0 1px;
+    }
+
+    span {
+        font-size: 16px;
+        color: #9ca3af;
+    }
+}
+
+.borderRadius {
+    border-radius: 4px;
 }

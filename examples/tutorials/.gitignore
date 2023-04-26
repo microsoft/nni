@@ -4,3 +4,4 @@ log/
 lightning_logs
 models/
 pruning_log/
+output*/

@@ -26,14 +26,11 @@ import type { AddressInfo } from 'net';
 import path from 'path';
 
 import express, { Request, Response, Router } from 'express';
-import expressWs from 'express-ws';
 import httpProxy from 'http-proxy';
-import { Deferred } from 'ts-deferred';
 
+import { Deferred } from 'common/deferred';
 import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
-import * as tunerCommandChannel from 'core/tuner_command_channel';
-import { createRestHandler } from './restHandler';
 
 const logger: Logger = getLogger('RestServer');
 
@@ -61,10 +58,9 @@ export class RestServer {
     public start(): Promise<void> {
         logger.info(`Starting REST server at port ${this.port}, URL prefix: "/${this.urlPrefix}"`);
 
-        const app = express();
-        expressWs(app, undefined, { wsOptions: { maxPayload: 4 * 1024 * 1024 * 1024 }});
-
-        app.use('/' + this.urlPrefix, rootRouter());
+        const app = globals.rest.getExpressApp();
+        app.use('/' + this.urlPrefix, mainRouter());
+        app.use('/' + this.urlPrefix, fallbackRouter());
         app.all('*', (_req: Request, res: Response) => { res.status(404).send(`Outside prefix "/${this.urlPrefix}"`); });
         this.server = app.listen(this.port);
 
@@ -91,6 +87,12 @@ export class RestServer {
             logger.info('REST server stopped.');
             deferred.resolve();
         });
+        setTimeout(() => {
+            if (!deferred.settled) {
+                logger.debug('Killing connections');
+                this.server?.closeAllConnections();
+            }
+        }, 5000);
         return deferred.promise;
     }
 }
@@ -103,15 +105,8 @@ export class RestServer {
  *  
  *  In fact experiments management should have a separate prefix and module.
  **/
-function rootRouter(): Router {
-    const router = Router() as expressWs.Router;
-    router.use(express.json({ limit: '50mb' }));
-
-    /* NNI manager APIs */
-    router.use('/api/v1/nni', restHandlerFactory());
-
-    /* WebSocket APIs */
-    router.ws('/tuner', (ws, _req, _next) => { tunerCommandChannel.serveWebSocket(ws); });
+function mainRouter(): Router {
+    const router = globals.rest.getExpressRouter();
 
     /* Download log files */
     // The REST API path "/logs" does not match file system path "/log".
@@ -122,6 +117,15 @@ function rootRouter(): Router {
 
     /* NAS model visualization */
     router.use('/netron', netronProxy());
+    return router;
+}
+
+function fallbackRouter(): Router {
+    const router = Router();
+
+    // The main router will handle this request once initialized.
+    // So if it reaches here, the status is initializing.
+    router.get('/api/v1/nni/check-status', (_req, res) => { res.send('INITIALIZING'); });
 
     /* Web UI */
     router.get('*', express.static(webuiPath));
@@ -131,6 +135,9 @@ function rootRouter(): Router {
 
     /* 404 as catch-all */
     router.all('*', (_req: Request, res: Response) => { res.status(404).send('Not Found'); });
+
+    // TODO: websocket 404
+
     return router;
 }
 
@@ -146,7 +153,6 @@ function netronProxy(): Router {
 
 let webuiPath: string = path.resolve('static');
 let netronUrl: string = 'https://netron.app';
-let restHandlerFactory = createRestHandler;
 
 export namespace UnitTestHelpers {
     export function getPort(server: RestServer): number {
@@ -161,13 +167,8 @@ export namespace UnitTestHelpers {
         netronUrl = mockUrl;
     }
 
-    export function disableNniManager(): void {
-        restHandlerFactory = (): Router => Router();
-    }
-
     export function reset(): void {
         webuiPath = path.resolve('static');
         netronUrl = 'https://netron.app';
-        restHandlerFactory = createRestHandler;
     }
 }

@@ -18,8 +18,8 @@ from torchvision import datasets, transforms
 from nni.compression.pytorch.utils import count_flops_params
 from nni.compression.pytorch import ModelSpeedup
 
-from nni.algorithms.compression.pytorch.pruning import L1FilterPruner
-from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+from nni.compression.pytorch.pruning import L1FilterPruner
+from nni.compression.pytorch.quantization import QAT_Quantizer
 
 from models.mnist.naive import NaiveModel
 from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
@@ -217,7 +217,7 @@ def main(args):
     }]
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-    quantizer = QAT_Quantizer(model, config_list, optimizer)
+    quantizer = QAT_Quantizer(model, config_list, optimizer, dummy_input)
     quantizer.compress()
 
     # Step6. Quantization Aware Training

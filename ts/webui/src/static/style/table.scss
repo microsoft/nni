@@ -13,20 +13,10 @@
     }
 }
 
-#succeTable,
+#succTable,
 #tableList {
     .commonTableStyle .leftTitle div {
         text-align: left;
-    }
-
-    .durationsty {
-        width: 80%;
-        margin: 0 auto;
-
-        div {
-            text-align: right;
-            margin-right: 9px;
-        }
     }
 }
 
@@ -73,20 +63,5 @@ $checkboxwidth: 18px;
             font-size: 8px;
             font-weight: 600;
         }
-    }
-}
-
-/* trial table: open row style */
-.logpath {
-    margin: 10px 0 10px 10px;
-    font-size: 14px;
-
-    .logName {
-        color: #268bd2;
-        margin-right: 5px;
-    }
-
-    .error {
-        color: #cb4b16;
     }
 }

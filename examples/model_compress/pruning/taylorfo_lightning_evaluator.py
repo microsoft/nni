@@ -8,7 +8,7 @@ from torchmetrics.functional import accuracy
 from torchvision import datasets, transforms
 
 import nni
-from nni.algorithms.compression.v2.pytorch import LightningEvaluator
+from nni.compression.pytorch import LightningEvaluator
 
 import sys
 from pathlib import Path
@@ -37,7 +37,7 @@ class SimpleLightningModel(pl.LightningModule):
         logits = self(x)
         loss = self.criterion(logits, y)
         preds = torch.argmax(logits, dim=1)
-        acc = accuracy(preds, y)
+        acc = accuracy(preds, y, 'multiclass', num_classes=10)
 
         if stage:
             self.log(f"default", loss, prog_bar=False)
