@@ -85,7 +85,7 @@ def tree_map_zip(fn: Any, *pytrees):
 def poss_deepcopy(o, logger: logging.Logger = None) -> Any:
     try:
         new_o = deepcopy(o)
-    except e:
+    except Exception as e:
         if logger is not None:
             logger.warning(str(e))
         else:
