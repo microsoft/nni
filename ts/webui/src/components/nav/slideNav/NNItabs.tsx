@@ -9,9 +9,9 @@ const OVERVIEWTABS = (
 );
 
 const DETAILTABS = (
-    <NavLink to='/detail' className={({ isActive }) => (isActive ? `${activeClassName} link` : 'link')}>
+    <a href='/detail' className='link'>
         <span className='common-tabs'>Trials detail</span>
-    </NavLink>
+    </a>
 );
 
 const NNILOGO = (
