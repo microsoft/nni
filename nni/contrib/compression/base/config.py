@@ -62,7 +62,7 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
         group_id = None
         max_sparse_ratio = config.pop('max_sparsity_per_layer', None)
         if 'sparsity_per_layer' in config or 'sparsity' in config:
-            sparse_ratio = config.pop('sparsity_per_layer', config.pop('sparsity'))
+            sparse_ratio = config.pop('sparsity_per_layer', config.pop('sparsity', None))
         if 'total_sparsity' in config:
             sparse_ratio = config.pop('total_sparsity')
             group_id = group_id_candidate
