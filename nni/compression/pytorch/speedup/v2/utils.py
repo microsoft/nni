@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 from copy import deepcopy
+import logging
 from typing import Any, Dict, List, Tuple
 
 import torch
@@ -79,3 +80,15 @@ def tree_map_zip(fn: Any, *pytrees):
             spec_list.append(spec)
         assert all(len(args) == len(flat_args_list[0]) for args in flat_args_list), 'Inconsistent tree nodes length.'
         return tree_unflatten([fn(*args) for args in zip(*flat_args_list)], spec_list[0])
+
+
+def poss_deepcopy(o, logger: logging.Logger = None) -> Any:
+    try:
+        new_o = deepcopy(o)
+    except Exception as e:
+        if logger is not None:
+            logger.warning(str(e))
+        else:
+            print(str(e))
+        new_o = o
+    return new_o
