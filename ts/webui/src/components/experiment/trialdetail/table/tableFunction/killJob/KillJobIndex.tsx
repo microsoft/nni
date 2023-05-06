@@ -5,7 +5,7 @@ import { MANAGER_IP } from '@static/const';
 import KillJobDialog from './KillJobDialog';
 import { blocked } from '@components/fluent/Icon';
 import { gap10 } from '@components/fluent/ChildrenGap';
-import { styles } from '@components/experiment/overview/params/basicInfoStyles';
+import { styles } from '@components/common/calloutStyles';
 import { AppContext } from '@/App';
 
 interface KillJobIndexProps {
@@ -44,15 +44,14 @@ function KillJobIndex(props: KillJobIndexProps): any {
             })
             .catch(error => {
                 if (error.response) {
-                    setKillDialogVisible(true);
-                    setError({ isError: false, message: error.response.data.error || 'Fail to cancel the job' });
+                    setError({ isError: true, message: error.response.data.error || 'Fail to cancel the job' });
                 } else {
-                    setKillDialogVisible(true);
                     setError({
-                        isError: false,
-                        message: error.response.data.error || '500 error, fail to cancel the job'
+                        isError: true,
+                        message: '500 error, fail to cancel the job'
                     });
                 }
+                setKillDialogVisible(true);
             });
     };
 

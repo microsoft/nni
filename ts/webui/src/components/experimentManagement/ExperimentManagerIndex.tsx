@@ -1,16 +1,25 @@
 import * as React from 'react';
-import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn, IStackTokens } from '@fluentui/react';
+import {
+    Stack,
+    DetailsList,
+    DefaultButton,
+    Icon,
+    SearchBox,
+    IColumn,
+    IStackTokens,
+    MessageBar,
+    MessageBarType
+} from '@fluentui/react';
 import { ExperimentsManager } from '@model/experimentsManager';
 import { expformatTimestamp, copyAndSort } from '@static/function';
 import { AllExperimentList, SortInfo } from '@static/interface';
-import MessageInfo from '@components/common/MessageInfo';
 import { compareDate, filterByStatusOrPlatform, getSortedSource } from './expFunction';
 import { MAXSCREENCOLUMNWIDHT, MINSCREENCOLUMNWIDHT } from './experimentConst';
 import { Hearder } from './Header';
 import TrialIdColumn from './TrialIdColumn';
 import FilterBtns from './FilterBtns';
-import { TitleContext } from '../experiment/overview/TitleContext';
-import { Title } from '../experiment/overview/Title';
+import { TitleContext } from '../title/TitleContext';
+import { Title } from '../title/Title';
 import '@style/App.scss';
 import '@style/nav/nav.scss';
 import '@style/common/common.scss';
@@ -81,11 +90,13 @@ class Experiment extends React.Component<{}, ExpListState> {
             errorMessage
         } = this.state;
         return (
-            <Stack className='nni' style={{ minHeight: window.innerHeight }}>
+            <Stack className='nni experiments-info' style={{ minHeight: window.innerHeight }}>
                 <Hearder />
-                {errorMessage !== undefined ? (
+                {errorMessage !== '' ? (
                     <div className='warning'>
-                        <MessageInfo info={errorMessage} typeInfo='error' />
+                        <MessageBar messageBarType={MessageBarType.error} isMultiline={true} style={{ width: 400 }}>
+                            {errorMessage}
+                        </MessageBar>
                     </div>
                 ) : null}
                 <Stack className='contentBox expBackground'>

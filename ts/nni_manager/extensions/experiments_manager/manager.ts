@@ -3,8 +3,6 @@
 
 import assert from 'assert/strict';
 import fs from 'fs';
-import os from 'os';
-import path from 'path';
 import * as timersPromises from 'timers/promises';
 
 import { Deferred } from 'ts-deferred';
@@ -77,7 +75,7 @@ export class ExperimentsManager {
         } catch (err) {
             logger.error(err);
             logger.debug(`Experiment Manager: Retry set key value: ${experimentId} {${key}: ${value}}`);
-            if (err.code === 'EEXIST' || err.message === 'File has been locked.') {
+            if ((err as any).code === 'EEXIST' || (err as any).message === 'File has been locked.') {
                 this.profileUpdateTimer[key] = setTimeout(() => this.setExperimentInfo(experimentId, key, value), 100);
             }
         }

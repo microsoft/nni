@@ -6,13 +6,6 @@ schedules:
     include: [ master ]
   always: true
 
-resources:
-  repositories:
-    - repository: azpfilter
-      type: github
-      name: microsoft/azure-pipeline-filter
-      endpoint: github-filter-connection
-
 variables:
   filter.modified.globs: 'pipelines/fast-test.yml,!.github/**,!docs/**,!examples/**'
   filter.prbody.heading: '#### Test Options'
@@ -111,14 +104,14 @@ stages:
 
     - script: |
         set -e
-        yarn --cwd ts/nni_manager
-        yarn --cwd ts/nni_manager eslint
+        npm --prefix ts/nni_manager install
+        npm --prefix ts/nni_manager run eslint
       displayName: ESLint (NNI Manager)
 
     - script: |
         set -e
-        yarn --cwd ts/webui
-        yarn --cwd ts/webui sanity-check
+        npm --prefix ts/webui install
+        npm --prefix ts/webui run sanity-check
       displayName: Sanity check (WebUI)
 
 - stage: filter
@@ -156,7 +149,9 @@ stages:
       displayName: Python unit test
 
     - script: |
-        yarn --cwd ts/nni_manager test
+        set -e
+        npm --prefix ts/nni_manager run test
+        npm --prefix ts/nni_manager run test_nnimanager
         cp ts/nni_manager/coverage/cobertura-coverage.xml coverage/typescript.xml
       displayName: TypeScript unit test
 
@@ -180,7 +175,7 @@ stages:
 
   - job: ubuntu_legacy
     pool:
-      vmImage: ubuntu-18.04
+      vmImage: ubuntu-20.04
 
     steps:
     - template: templates/install-dependencies.yml
@@ -202,7 +197,9 @@ stages:
       displayName: Python unit test
 
     - script: |
-        yarn --cwd ts/nni_manager test
+        export PATH=${PWD}/toolchain/node/bin:$PATH
+        npm --prefix ts/nni_manager run test
+        npm --prefix ts/nni_manager run test_nnimanager
       displayName: TypeScript unit test
 
   - job: windows
@@ -224,8 +221,10 @@ stages:
         python -m pytest ut
       displayName: Python unit test
 
+    # temporarily disable this test, add it back after bug fixed
     - script: |
-        yarn --cwd ts/nni_manager test
+        npm --prefix ts/nni_manager run test
+        npm --prefix ts/nni_manager run test_nnimanager
       displayName: TypeScript unit test
 
     - script: |
@@ -245,13 +244,15 @@ stages:
     - template: templates/install-nni.yml
 
     - script: |
-        CI=true yarn --cwd ts/nni_manager test --exclude test/core/nnimanager.test.ts
-      displayName: TypeScript unit test
-
-    - script: |
         cd test
         python -m pytest ut
       displayName: Python unit test
+
+    - script: |
+        CI=true npm --prefix ts/nni_manager run test
+        # # exclude nnimanager's ut because macos in pipeline is pretty slow
+        # CI=true npm --prefix ts/nni_manager run test_nnimanager
+      displayName: TypeScript unit test
 
     - script: |
         cd test

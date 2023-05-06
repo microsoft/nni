@@ -74,3 +74,7 @@ class LogStreamImpl implements LogStream {
 export function initLogStream(args: NniManagerArgs, paths: NniPaths): LogStream {
     return new LogStreamImpl(paths.nniManagerLog, args.foreground);
 }
+
+export function initLogStreamCustom(args: NniManagerArgs, path: string): LogStream {
+    return new LogStreamImpl(path, args.foreground);
+}

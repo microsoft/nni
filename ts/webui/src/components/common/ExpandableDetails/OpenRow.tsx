@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { Stack, PrimaryButton, Pivot, PivotItem, DefaultButton } from '@fluentui/react';
+import { Stack, PrimaryButton, Pivot, PivotItem, DefaultButton, MessageBar, MessageBarType } from '@fluentui/react';
 import * as copy from 'copy-to-clipboard';
-import JSONTree from 'react-json-tree';
+import { JSONTree } from 'react-json-tree';
 import { Trial } from '@model/trial';
 import { MANAGER_IP, RETIARIIPARAMETERS } from '@static/const';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import { reformatRetiariiParameter } from '@static/function';
+import { buttonsGap, expandTrialGap } from '@components/common/Gap';
 import PaiTrialLog from './PaiTrialLog';
 import TrialLog from './TrialLog';
-import MessageInfo from '../MessageInfo';
 import PanelMonacoEditor from '../PanelMonacoEditor';
 import '@style/experiment/overview/overview.scss';
 
@@ -60,9 +60,9 @@ const OpenRow = (props: OpenRowProps): any => {
         // get copy parameters
         const params = JSON.stringify(reformatRetiariiParameter(trial.parameter as any), null, 4);
         if (copy.default(params)) {
-            getCopyStatus('Successfully copy parameters to clipboard in form of python dict !', 'success');
+            getCopyStatus('Successfully copy parameters to clipboard in form of python dict!', 'success');
         } else {
-            getCopyStatus('Failed !', 'error');
+            getCopyStatus('Failed!', 'error');
         }
     };
 
@@ -81,26 +81,26 @@ const OpenRow = (props: OpenRowProps): any => {
                 <Pivot>
                     <PivotItem headerText='Parameters' key='1' itemIcon='TestParameter'>
                         {trial.info.hyperParameters !== undefined ? (
-                            <Stack className='description'>
-                                <Stack className='bgHyper'>
+                            <Stack tokens={expandTrialGap}>
+                                <div className='bgHyper'>
                                     <JSONTree
                                         hideRoot={true}
-                                        shouldExpandNode={() => true} // default expandNode
+                                        shouldExpandNodeInitially={() => true} // default expandNode
                                         getItemString={() => null} // remove the {} items
                                         data={reformatRetiariiParameter(originParameters as any)}
                                     />
-                                </Stack>
-                                <Stack horizontal className='copy'>
-                                    <PrimaryButton
-                                        onClick={copyParams.bind(this, trial)}
-                                        text='Copy as json'
-                                        styles={{ root: { width: 128, marginRight: 10 } }}
-                                    />
+                                </div>
+                                <Stack horizontal className='copy' tokens={buttonsGap}>
+                                    <DefaultButton onClick={copyParams.bind(this, trial)} text='Copy as json' />
                                     {hasVisualHyperParams && (
                                         <DefaultButton onClick={isshowRetiaParamPanel} text='Original parameters' />
                                     )}
                                     {/* copy success | failed message info */}
-                                    {!isHidenInfo && <MessageInfo typeInfo={typeInfo} info={info} />}
+                                    {!isHidenInfo && (
+                                        <div style={{ width: 400 }}>
+                                            <MessageBar messageBarType={MessageBarType[typeInfo]}>{info}</MessageBar>
+                                        </div>
+                                    )}
                                     {showRetiaParamPanel && (
                                         <PanelMonacoEditor
                                             hideConfigPanel={hideRetiaParam}
@@ -111,9 +111,9 @@ const OpenRow = (props: OpenRowProps): any => {
                                 </Stack>
                             </Stack>
                         ) : (
-                            <Stack className='logpath'>
+                            <Stack horizontal className='logpath' tokens={expandTrialGap}>
                                 <span className='logName'>Error: </span>
-                                <span className='error'>{`This trial's parameters are not available.'`}</span>
+                                <span className='error'>{`This trial's parameters are not available.`}</span>
                             </Stack>
                         )}
                     </PivotItem>
@@ -123,39 +123,29 @@ const OpenRow = (props: OpenRowProps): any => {
                             EXPERIMENT.trainingServicePlatform !== 'local' ? (
                                 <PaiTrialLog logStr={logPathRow} />
                             ) : (
-                                <div>
-                                    <TrialLog logStr={logPathRow} logName='LogPath:' />
-                                    {/* view trial log */}
-                                    <div className='copy' style={{ marginTop: 4 }}>
-                                        <PrimaryButton
-                                            onClick={openTrialLog.bind(this, 'trial.log')}
-                                            text='View trial log'
-                                        />
-                                        <PrimaryButton
-                                            onClick={openTrialLog.bind(this, 'stderr')}
-                                            text='View trial error'
-                                            styles={{ root: { marginLeft: 15 } }}
-                                        />
-                                        <PrimaryButton
-                                            onClick={openTrialLog.bind(this, 'stdout')}
-                                            text='View trial stdout'
-                                            styles={{ root: { marginLeft: 15 } }}
-                                        />
-                                    </div>
-                                </div>
+                                <TrialLog logStr={logPathRow} logName='LogPath:' />
                             )
                         }
+                        {/* view trial log */}
+                        {EXPERIMENT.trainingServicePlatform === 'local' ||
+                        EXPERIMENT.trainingServicePlatform === 'remote' ? (
+                            <Stack horizontal tokens={buttonsGap} style={{ marginLeft: 10 }}>
+                                <PrimaryButton onClick={openTrialLog.bind(this, 'trial.log')} text='View trial log' />
+                                <PrimaryButton onClick={openTrialLog.bind(this, 'stderr')} text='View trial error' />
+                                <PrimaryButton onClick={openTrialLog.bind(this, 'stdout')} text='View trial stdout' />
+                            </Stack>
+                        ) : null}
                     </PivotItem>
                     {EXPERIMENT.metadata.tag.includes('retiarii') ? (
                         <PivotItem headerText='Visualization' key='3' itemIcon='FlowChart'>
-                            <div id='visualization'>
-                                <div id='visualizationText'>Visualize models with 3rd-party tools.</div>
+                            <Stack tokens={expandTrialGap}>
+                                <div>Visualize models with 3rd-party tools.</div>
                                 <PrimaryButton
                                     onClick={openModelOnnx.bind(this)}
                                     text='Netron'
-                                    styles={{ root: { marginLeft: 15 } }}
+                                    styles={{ root: { width: 88 } }}
                                 />
-                            </div>
+                            </Stack>
                         </PivotItem>
                     ) : null}
                 </Pivot>

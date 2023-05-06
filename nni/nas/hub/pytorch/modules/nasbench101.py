@@ -1,20 +1,23 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-__all__ = ['NasBench101Cell', 'NasBench101Mutator']
+__all__ = ['NasBench101Cell']
 
 import logging
 from collections import OrderedDict
-from typing import Callable, List, Optional, Union, Dict, Tuple, cast
+from typing import Callable, List, Optional, Union, Dict, Tuple, Callable, Iterable, Any, cast
 
 import numpy as np
 import torch
 import torch.nn as nn
 
-from nni.nas.mutable import InvalidMutation, Mutator
-from nni.nas.execution.common import Model
-from nni.nas.nn.pytorch import InputChoice, ValueChoice, LayerChoice
-from nni.nas.nn.pytorch.mutation_utils import Mutable, generate_new_label, get_fixed_dict
+from nni.mutable import (
+    Constraint, Categorical, CategoricalMultiple, Constraint, ConstraintViolation,
+    Mutable, LabeledMutable, Sample, SampleValidationError,
+    auto_label, label_scope
+)
+from nni.mutable.mutable import _mutable_equal
+from nni.nas.nn.pytorch import InputChoice, LayerChoice, MutableModule
 
 _logger = logging.getLogger(__name__)
 
@@ -120,8 +123,8 @@ def prune(matrix, ops) -> Tuple[np.ndarray, List[Union[str, Callable[[int], nn.M
         visited_from_input.intersection(visited_from_output))
 
     if len(extraneous) > num_vertices - 2:
-        raise InvalidMutation('Non-extraneous graph is less than 2 vertices, '
-                              'the input is not connected to the output and the spec is invalid.')
+        raise ConstraintViolation('Non-extraneous graph is less than 2 vertices, '
+                                  'the input is not connected to the output and the spec is invalid.')
 
     matrix = np.delete(matrix, list(extraneous), axis=0)
     matrix = np.delete(matrix, list(extraneous), axis=1)
@@ -229,7 +232,7 @@ class _NasBench101CellFixed(nn.Module):
         return outputs
 
 
-class NasBench101Cell(Mutable):
+class NasBench101Cell(MutableModule):
     """
     Cell structure that is proposed in NAS-Bench-101.
 
@@ -244,7 +247,7 @@ class NasBench101Cell(Mutable):
     where each possible node (other than IN and OUT) has one of ``op_candidates``, representing the corresponding operation.
     Edges connecting the nodes can be no more than ``max_num_edges``.
     To align with the paper settings, two vertices specially labeled as operation IN and OUT, are also counted into
-    ``max_num_nodes`` in our implementaion, the default value of ``max_num_nodes`` is 7 and ``max_num_edges`` is 9.
+    ``max_num_nodes`` in our implementation, the default value of ``max_num_nodes`` is 7 and ``max_num_edges`` is 9.
 
     Input of this cell should be of shape :math:`[N, C_{in}, *]`, while output should be :math:`[N, C_{out}, *]`. The shape
     of each hidden nodes will be first automatically computed, depending on the cell structure. Each of the ``op_candidates``
@@ -292,7 +295,8 @@ class NasBench101Cell(Mutable):
 
     Warnings
     --------
-    :class:`NasBench101Cell` is not supported in :ref:`graph-based execution engine <graph-based-execution-engine>`.
+    :class:`NasBench101Cell` is not supported for graph-based model format.
+    It's also not supported by most one-shot algorithms currently.
     """
 
     @staticmethod
@@ -302,117 +306,189 @@ class NasBench101Cell(Mutable):
         return OrderedDict(x)
 
     @classmethod
-    def create_fixed_module(cls, op_candidates: Union[Dict[str, Callable[[int], nn.Module]], List[Callable[[int], nn.Module]]],
+    def create_fixed_module(cls, sample: dict,
+                            op_candidates: Union[Dict[str, Callable[[int], nn.Module]], List[Callable[[int], nn.Module]]],
                             in_features: int, out_features: int, projection: Callable[[int, int], nn.Module],
-                            max_num_nodes: int = 7, max_num_edges: int = 9, label: Optional[str] = None):
-        def make_list(x): return x if isinstance(x, list) else [x]
+                            max_num_nodes: int = 7, max_num_edges: int = 9, label: Optional[Union[str, label_scope]] = None):
+        with (label if isinstance(label, label_scope) else label_scope(label)):
+            # Freeze number of nodes.
+            num_nodes = cls._num_nodes_discrete(max_num_nodes)
+            num_nodes_frozen = num_nodes.freeze(sample)
 
-        label, selected = get_fixed_dict(label)
-        op_candidates = cls._make_dict(op_candidates)
-        num_nodes = selected[f'{label}/num_nodes']
-        adjacency_list = [make_list(selected[f'{label}/input{i}']) for i in range(1, num_nodes)]
-        if sum([len(e) for e in adjacency_list]) > max_num_edges:
-            raise InvalidMutation(f'Expected {max_num_edges} edges, found: {adjacency_list}')
-        return _NasBench101CellFixed(
-            [op_candidates[selected[f'{label}/op{i}']] for i in range(1, num_nodes - 1)],
-            adjacency_list, in_features, out_features, num_nodes, projection)
+            # Freeze operations.
+            op_candidates = cls._make_dict(op_candidates)
+            op_choices = [cls._op_discrete(op_candidates, i) for i in range(1, num_nodes_frozen - 1)]
+            op_frozen = [op_candidates[op.freeze(sample)] for op in op_choices]
 
-        # FIXME: weight inheritance on nasbench101 is not supported yet
+            # Freeze inputs.
+            input_choices = [cls._input_discrete(i) for i in range(1, num_nodes_frozen)]
+            input_frozen = [inp.freeze(sample) for inp in input_choices]
+
+            # Check constraint.
+            NasBench101CellConstraint(max_num_edges, num_nodes, op_choices, input_choices).freeze(sample)
+
+            return _NasBench101CellFixed(op_frozen, input_frozen, in_features, out_features, num_nodes_frozen, projection)
+
+    # These should belong to LayerChoice and InputChoice.
+    # But we rewrite them so that we don't have to create the layers in fixed mode.
+    @staticmethod
+    def _op_discrete(op_candidates: Dict[str, Callable[[int], nn.Module]], index: int):
+        return Categorical(list(op_candidates), label=f'op{index}')
+
+    @staticmethod
+    def _input_discrete(index: int):
+        return CategoricalMultiple(range(index), label=f'input{index}')
+
+    @staticmethod
+    def _num_nodes_discrete(max_num_nodes: int):
+        num_vertices_prior = [2 ** i for i in range(2, max_num_nodes + 1)]
+        num_vertices_prior = (np.array(num_vertices_prior) / sum(num_vertices_prior)).tolist()
+        return Categorical(range(2, max_num_nodes + 1), weights=num_vertices_prior, label='num_nodes')
 
     def __init__(self, op_candidates: Union[Dict[str, Callable[[int], nn.Module]], List[Callable[[int], nn.Module]]],
                  in_features: int, out_features: int, projection: Callable[[int, int], nn.Module],
-                 max_num_nodes: int = 7, max_num_edges: int = 9, label: Optional[str] = None):
+                 max_num_nodes: int = 7, max_num_edges: int = 9, label: Optional[Union[str, label_scope]] = None):
 
         super().__init__()
-        self._label = generate_new_label(label)
-        num_vertices_prior = [2 ** i for i in range(2, max_num_nodes + 1)]
-        num_vertices_prior = (np.array(num_vertices_prior) / sum(num_vertices_prior)).tolist()
-        self.num_nodes = ValueChoice(list(range(2, max_num_nodes + 1)),
-                                     prior=num_vertices_prior,
-                                     label=f'{self._label}/num_nodes')
+        if isinstance(label, label_scope):
+            self._scope = label
+        else:
+            self._scope = label_scope(label)
+
         self.max_num_nodes = max_num_nodes
         self.max_num_edges = max_num_edges
+        self.in_features = in_features
+        self.out_features = out_features
 
-        op_candidates = self._make_dict(op_candidates)
+        self.op_candidates = self._make_dict(op_candidates)
+        self.projection = projection
 
-        # this is only for input validation and instantiating enough layer choice and input choice
-        self.hidden_features = out_features
+        with self._scope:
+            self.num_nodes = self._num_nodes_discrete(max_num_nodes)
 
-        self.projections = nn.ModuleList([nn.Identity()])
-        self.ops = nn.ModuleList([nn.Identity()])
-        self.inputs = nn.ModuleList([nn.Identity()])
-        for _ in range(1, max_num_nodes):
-            self.projections.append(projection(in_features, self.hidden_features))
-        for i in range(1, max_num_nodes):
-            if i < max_num_nodes - 1:
-                self.ops.append(LayerChoice(OrderedDict([(k, op(self.hidden_features)) for k, op in op_candidates.items()]),
-                                            label=f'{self._label}/op{i}'))
-            self.inputs.append(InputChoice(i, None, label=f'{self._label}/input{i}'))
+            # Fake hidden features that is large enough.
+            self.hidden_features = out_features
+
+            self.projections = nn.ModuleList([nn.Identity()])
+            self.ops = nn.ModuleList([nn.Identity()])
+            self.inputs = nn.ModuleList([nn.Identity()])
+            for _ in range(1, max_num_nodes):
+                self.projections.append(projection(in_features, self.hidden_features))
+
+            # The underlying `Categorical` of ops and inputs
+            op_inner: List[Categorical] = []
+            input_inner: List[CategoricalMultiple] = []
+            for i in range(1, max_num_nodes):
+                # Create layer
+                if i < max_num_nodes - 1:
+                    layer = LayerChoice({k: op(self.hidden_features) for k, op in self.op_candidates.items()}, label=f'op{i}')
+                    op_inner.append(self._op_discrete(self.op_candidates, i))
+                    assert layer.choice.equals(op_inner[-1])  # Make sure the choice is the same
+                    self.ops.append(layer)
+                # Create input
+                inp = InputChoice(i, None, label=f'input{i}')
+                input_inner.append(self._input_discrete(i))
+                assert inp.choice.equals(input_inner[-1])  # Make sure the input choice is correct
+                self.inputs.append(inp)
+
+            self.constraint = NasBench101CellConstraint(self.max_num_edges, self.num_nodes, op_inner, input_inner)
+            self.add_mutable(self.constraint)
 
     @property
     def label(self):
-        return self._label
+        return self._scope.name
+
+    def freeze(self, sample: Dict[str, Any]) -> nn.Module:
+        return self.create_fixed_module(sample, self.op_candidates, self.in_features, self.out_features, self.projection,
+                                        self.max_num_nodes, self.max_num_edges, self._scope)
 
     def forward(self, x):
-        """
-        The forward of input choice is simply selecting first on all choices.
-        It shouldn't be called directly by users in most cases.
-        """
-        tensors = [x]
-        for i in range(1, self.max_num_nodes):
-            node_input = self.inputs[i]([self.projections[i](tensors[0])] + [t for t in tensors[1:]])
-            if i < self.max_num_nodes - 1:
-                node_output = self.ops[i](node_input)
-            else:
-                node_output = node_input
-            tensors.append(node_output)
-        return tensors[-1]
+        """Forward of NasBench101Cell is unimplemented."""
+        raise NotImplementedError(
+            'The forward of NasBench101Cell should never be called directly. '
+            'Either freeze it or use it in a search algorithm.'
+        )
 
 
-class NasBench101Mutator(Mutator):
-    # for validation purposes
-    # for python execution engine
+class NasBench101CellConstraint(Constraint):
+    def __init__(
+        self,
+        max_num_edges: int,
+        num_nodes: Categorical[int],
+        operations: List[Categorical],
+        inputs: List[CategoricalMultiple],
+    ):
+        self.label = auto_label('final')
+        self.max_num_edges = max_num_edges
+        self.num_nodes = num_nodes
+        self.operations = operations
+        self.inputs = inputs
 
-    def __init__(self, label: str):
-        super().__init__(label=label)
+    def equals(self, other: Any) -> bool:
+        return isinstance(other, NasBench101CellConstraint) and \
+            self.label == other.label and \
+            self.max_num_edges == other.max_num_edges and \
+            self.num_nodes.equals(other.num_nodes) and \
+            _mutable_equal(self.operations, other.operations) and \
+            _mutable_equal(self.inputs, other.inputs)
 
-    @staticmethod
-    def candidates(node):
-        if 'n_candidates' in node.operation.parameters:
-            return list(range(node.operation.parameters['n_candidates']))
-        else:
-            return node.operation.parameters['candidates']
+    def leaf_mutables(self, is_leaf: Callable[[Mutable], bool]) -> Iterable[LabeledMutable]:
+        yield from self.num_nodes.leaf_mutables(is_leaf)
+        for operator in self.operations:
+            yield from operator.leaf_mutables(is_leaf)
+        for inp in self.inputs:
+            yield from inp.leaf_mutables(is_leaf)
+        yield self
 
-    @staticmethod
-    def number_of_chosen(node):
-        if 'n_chosen' in node.operation.parameters:
-            return node.operation.parameters['n_chosen']
-        return 1
+    def check_contains(self, sample: Sample) -> Optional[SampleValidationError]:
+        # Check num_nodes
+        err = self.num_nodes.check_contains(sample)
+        if err is not None:
+            err.paths.append('num_nodes')
+            return err
+        num_nodes = self.num_nodes.freeze(sample)  # must succeed
+        assert num_nodes >= 2
 
-    def mutate(self, model: Model):
-        max_num_edges = cast(int, None)
-        for node in model.get_nodes_by_label(self.label):
-            max_num_edges = node.operation.parameters['max_num_edges']
-            break
-        assert max_num_edges is not None
-        mutation_dict = {mut.mutator.label: mut.samples for mut in model.history}
-        num_nodes = mutation_dict[f'{self.label}/num_nodes'][0]
-        adjacency_list = [mutation_dict[f'{self.label}/input{i}'] for i in range(1, num_nodes)]
-        if sum([len(e) for e in adjacency_list]) > max_num_edges:
-            raise InvalidMutation(f'Expected {max_num_edges} edges, found: {adjacency_list}')
+        # Check connections
+        adjacency_list: List[List[int]] = []
+        for i, inp in enumerate(self.inputs[:num_nodes - 1], start=1):
+            err = inp.check_contains(sample)
+            if err is not None:
+                err.paths.append(f'input{i}')
+                return err
+            adjacency_list.append(inp.freeze(sample))
+        if sum([len(e) for e in adjacency_list]) > self.max_num_edges:
+            return ConstraintViolation(f'Expected at most {self.max_num_edges} edges, found: {adjacency_list}')
         matrix = _NasBench101CellFixed.build_connection_matrix(adjacency_list, num_nodes)
 
-        operations = ['IN'] + [mutation_dict[f'{self.label}/op{i}'][0] for i in range(1, num_nodes - 1)] + ['OUT']
-        assert len(operations) == len(matrix)
-        matrix, operations = prune(matrix, operations)  # possible to raise InvalidMutation inside
+        # Check operations
+        operations: List[str] = ['IN']
+        for i, op in enumerate(self.operations[:num_nodes - 2], start=1):
+            err = op.check_contains(sample)
+            if err is not None:
+                err.paths.append(f'op{i}')
+                return err
+            operations.append(op.freeze(sample))
+        operations.append('OUT')
+        if len(operations) != len(matrix):
+            raise RuntimeError('The number of operations does not match the number of nodes')
 
-        # NOTE: a hack to maintain a clean copy of what nasbench101 cell looks like
-        self._cur_samples = {}
-        for i in range(1, len(matrix)):
-            if i + 1 < len(matrix):
-                self._cur_samples[f'op{i}'] = operations[i]
-            self._cur_samples[f'input{i}'] = [k for k in range(i) if matrix[k, i]]
-        self._cur_samples = [self._cur_samples]  # by design, _cur_samples is a list of samples
+        try:
+            cur_matrix, cur_operations = prune(matrix, operations)
+        except ConstraintViolation as err:
+            err.paths.append('prune')
+            return err
 
-    def dry_run(self, model):
-        return [], model
+        # Maintain a clean copy of what nasbench101 cell looks like.
+        # Modifies sample in-place. A bit hacky here.
+        rv: Dict[str, Any] = {}
+        for i in range(1, len(cur_matrix)):
+            if i + 1 < len(cur_matrix):
+                rv[f'op{i}'] = cur_operations[i]
+            rv[f'input{i}'] = [k for k in range(i) if cur_matrix[k, i]]
+        sample[self.label] = rv
+
+    def freeze(self, sample: Sample) -> Dict[str, Any]:
+        self.validate(sample)
+        assert self.label in sample
+        return sample[self.label]

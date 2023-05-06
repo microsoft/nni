@@ -1,80 +1,105 @@
-import json
-import os
-import unittest
-from pathlib import Path
+import time
+import pytest
 
-import nni.retiarii
-import nni.retiarii.integration_api
-from nni.retiarii import Model, submit_models
-from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.execution import set_execution_engine
-from nni.retiarii.execution.base import BaseExecutionEngine
-from nni.retiarii.execution.python import PurePythonExecutionEngine
-from nni.retiarii.graph import DebugEvaluator
-from nni.retiarii.integration import RetiariiAdvisor
-from nni.runtime.tuner_command_channel.legacy import *
+import nni
 
-class EngineTest(unittest.TestCase):
-    def test_codegen(self):
-        with open(self.enclosing_dir / 'mnist_pytorch.json') as f:
-            model = Model._load(json.load(f))
-            script = model_to_pytorch_script(model)
-        with open(self.enclosing_dir / 'debug_mnist_pytorch.py') as f:
-            reference_script = f.read()
-        self.assertEqual(script.strip(), reference_script.strip())
+from nni.nas.experiment import NasExperiment
+from nni.nas.execution import ExecutionEngine, TrainingServiceExecutionEngine, SequentialExecutionEngine
+from nni.nas.execution.event import ModelEventType
+from nni.nas.evaluator import FunctionalEvaluator
+from nni.nas.space import BaseModelSpace, SimplifiedModelSpace, current_model, ModelStatus
 
-    def test_base_execution_engine(self):
-        nni.retiarii.integration_api._advisor = None
-        nni.retiarii.execution.api._execution_engine = None
-        advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
-        advisor._channel = LegacyCommandChannel()
-        advisor.default_worker.start()
-        advisor.assessor_worker.start()
+@nni.trace
+class MyModelSpace(BaseModelSpace):
+    def __init__(self, a):
+        if current_model() is not None:
+            self.a = current_model()['a']
+        else:
+            self.a = nni.choice('a', a)
 
-        set_execution_engine(BaseExecutionEngine())
-        with open(self.enclosing_dir / 'mnist_pytorch.json') as f:
-            model = Model._load(json.load(f))
-        submit_models(model, model)
+    def call(self, x):
+        return x + self.a
 
-        advisor.stopping = True
-        advisor.default_worker.join()
-        advisor.assessor_worker.join()
+    def leaf_mutables(self, is_leaf):
+        yield self.a
 
-    def test_py_execution_engine(self):
-        nni.retiarii.integration_api._advisor = None
-        nni.retiarii.execution.api._execution_engine = None
-        advisor = RetiariiAdvisor('ws://_unittest_placeholder_')
-        advisor._channel = LegacyCommandChannel()
-        advisor.default_worker.start()
-        advisor.assessor_worker.start()
 
-        set_execution_engine(PurePythonExecutionEngine())
-        model = Model._load({
-            '_model': {
-                'inputs': None,
-                'outputs': None,
-                'nodes': {
-                    'layerchoice_1': {
-                        'operation': {'type': 'LayerChoice', 'parameters': {'candidates': ['0', '1']}}
-                    }
-                },
-                'edges': []
-            }
-        })
-        model.evaluator = DebugEvaluator()
-        model.python_class = object
-        submit_models(model, model)
+def evaluate_fn(model, b):
+    nni.report_intermediate_result(model.call(1))
+    nni.report_intermediate_result(model.call(2))
+    if model.a == 3:
+        raise RuntimeError()
+    nni.report_final_result(model.call(3) + b)
 
-        advisor.stopping = True
-        advisor.default_worker.join()
-        advisor.assessor_worker.join()
 
-    def setUp(self) -> None:
-        self.enclosing_dir = Path(__file__).parent
-        os.makedirs(self.enclosing_dir / 'generated', exist_ok=True)
-        _set_out_file(open(self.enclosing_dir / 'generated/debug_protocol_out_file.py', 'wb'))
+@pytest.fixture(params=['sequential', 'ts'])
+def engine(request):
+    if request.param == 'sequential':
+        yield SequentialExecutionEngine(continue_on_failure=True)
+    elif request.param == 'ts':
+        nodejs = NasExperiment(None, None, None)
+        nodejs._start_nni_manager(8080, True)
+        yield TrainingServiceExecutionEngine(nodejs)
+        nodejs._stop_nni_manager()
 
-    def tearDown(self) -> None:
-        _get_out_file().close()
-        nni.retiarii.execution.api._execution_engine = None
-        nni.retiarii.integration_api._advisor = None
+
+def test_engine(engine: ExecutionEngine):
+    _callback_counter = 0
+    _intermediates = []
+    _finals = []
+    _status = []
+    _callback_disabled = False
+
+    def callback(event):
+        if _callback_disabled:
+            return
+
+        nonlocal _callback_counter
+        _callback_counter += 1
+
+        assert event.model is model
+        assert event.model.status == ModelStatus.Training
+        if event.event_type == ModelEventType.IntermediateMetric:
+            _intermediates.append(event.metric)
+        elif event.event_type == ModelEventType.FinalMetric:
+            _finals.append(event.metric)
+        elif event.event_type == ModelEventType.TrainingEnd:
+            _status.append(event.status)
+
+    engine.register_model_event_callback(ModelEventType.IntermediateMetric, callback)
+    engine.register_model_event_callback(ModelEventType.FinalMetric, callback)
+    engine.register_model_event_callback(ModelEventType.TrainingEnd, callback)
+    model_space = MyModelSpace([1, 2, 3])
+    evaluator = FunctionalEvaluator(evaluate_fn, b=5)
+    exec_model_space = SimplifiedModelSpace.from_model(model_space, evaluator)
+
+    model = exec_model_space.freeze({'a': 2})
+    engine.submit_models(model)
+    engine.wait_models(model)
+    assert _callback_counter == 4
+    assert _intermediates == [3, 4]
+    assert _finals == [10]
+    assert _status == [ModelStatus.Trained]
+    _callback_disabled = True
+
+    assert model.metrics.intermediates == [3, 4]
+    assert model.metric == 10
+    assert model.metrics.final == 10
+    assert model.status == ModelStatus.Trained
+
+    if not engine.idle_worker_available():
+        time.sleep(10)  # The free event may be delayed for up to 5 seconds.
+        assert engine.idle_worker_available()
+    assert engine.budget_available()
+
+    engine.submit_models(exec_model_space.freeze({'a': 3}))
+    # assert engine.query_idle_workers() == 0
+    assert len(list(engine.list_models())) == 2
+    engine.wait_models()
+    for model in engine.list_models():
+        if model.status == ModelStatus.Failed:
+            assert model.metrics.intermediates == [4, 5]
+            assert model.metrics.final is None
+            break
+    else:
+        assert False, 'No failed model found'

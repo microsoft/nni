@@ -6,8 +6,8 @@ import types
 import logging
 import torch
 from nni.common.graph_utils import build_module_graph
-from nni.compression.pytorch.quantization.literal import QuantType, BN_FOLD_OP, BN_FOLD_TAG
-from nni.compression.pytorch.quantization.observers import RecordingObserver
+from .utils.quantization.literal import QuantType, BN_FOLD_OP, BN_FOLD_TAG
+from .utils.quantization.observers import RecordingObserver
 from . import default_layers
 
 _logger = logging.getLogger(__name__)

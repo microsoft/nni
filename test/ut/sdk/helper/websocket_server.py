@@ -32,7 +32,7 @@ async def read_stdin():
         line = line.decode().strip()
         _debug(f'read from stdin: {line}')
         if line == '_close_':
-            exit()
+            break
         await _ws.send(line)
 
 async def ws_server():
@@ -46,9 +46,12 @@ async def on_connect(ws):
     global _ws
     _debug('connected')
     _ws = ws
-    async for msg in ws:
-        _debug(f'received from websocket: {msg}')
-        print(msg, flush=True)
+    try:
+        async for msg in ws:
+            _debug(f'received from websocket: {msg}')
+            print(msg, flush=True)
+    except websockets.exceptions.ConnectionClosedError:
+        pass
 
 def _debug(msg):
     #sys.stderr.write(f'[server-debug] {msg}\n')
