@@ -17,7 +17,7 @@
 .. only:: html
 
   .. image:: /tutorials/hpo_quickstart_pytorch/images/thumb/sphx_glr_main_thumb.png
-    :alt:
+    :alt: HPO Quickstart with PyTorch
 
   :ref:`sphx_glr_tutorials_hpo_quickstart_pytorch_main.py`
 
@@ -34,7 +34,7 @@
 .. only:: html
 
   .. image:: /tutorials/hpo_quickstart_pytorch/images/thumb/sphx_glr_model_thumb.png
-    :alt:
+    :alt: Port PyTorch Quickstart to NNI
 
   :ref:`sphx_glr_tutorials_hpo_quickstart_pytorch_model.py`
 

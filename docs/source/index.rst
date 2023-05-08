@@ -17,7 +17,6 @@ NNI Documentation
    hpo/toctree
    nas/toctree
    compression/toctree
-   compression_preview/toctree
    feature_engineering/toctree
    experiment/toctree
 

@@ -2,11 +2,6 @@
 Quantization Quickstart
 =======================
 
-Here is a four-minute video to get you started with model quantization.
-
-..  youtube:: MSfV7AyfiA4
-    :align: center
-
 Quantization reduces model size and speeds up inference time by reducing the number of bits required to represent weights or activations.
 
 In NNI, both post-training quantization algorithms and quantization-aware training algorithms are supported.
@@ -20,9 +15,8 @@ Here we use `QATQuantizer` as an example to show the usage of quantization in NN
 # In this tutorial, we use a simple model and pre-train on MNIST dataset.
 # If you are familiar with defining a model and training in pytorch, you can skip directly to `Quantizing Model`_.
 
-import functools
 import time
-from typing import Callable, Union, List, Dict, Tuple, Union
+from typing import Callable, Union, Union
 
 import torch
 import torch.nn.functional as F
