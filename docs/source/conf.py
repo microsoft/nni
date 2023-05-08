@@ -117,8 +117,8 @@ linkcheck_ignore = [
     r'https://cla\.opensource\.microsoft\.com',
     r'https://www\.docker\.com/',
 
-    # remove after #5491 merged
-    r'https://github\.com/microsoft/nni/tree/master/examples/compression/pqd_fuse\.py',
+    # remove after 3.0 release
+    r'https://nni\.readthedocs\.io/en/v2\.10/compression/overview\.html',
 ]
 
 # Ignore all links located in release.rst

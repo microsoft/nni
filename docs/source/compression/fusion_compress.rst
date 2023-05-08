@@ -41,7 +41,7 @@ Example
 Pruning + Distillation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The full example can be found `here <https://github.com/microsoft/nni/tree/master/examples/compression/pqd_fuse.py>`__.
+The full example can be found `here <https://github.com/microsoft/nni/tree/master/examples/compression/fusion/pqd_fuse.py>`__.
 
 The following code is a common pipeline with pruning first and then distillation.
 

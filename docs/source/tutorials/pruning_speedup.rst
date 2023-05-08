@@ -46,7 +46,7 @@ thus, we should do shape inference to check are there other unpruned layers shou
 Therefore, in our design, there are two main steps: first, do shape inference to find out all the modules that should be replaced;
 second, replace the modules.
 
-The first step requires topology (i.e., connections) of the model, we use ``jit.trace`` to obtain the model graph for PyTorch.
+The first step requires topology (i.e., connections) of the model, we use a tracer based on ``torch.fx`` to obtain the model graph for PyTorch.
 The new shape of module is auto-inference by NNI, the unchanged parts of outputs during forward and inputs during backward are prepared for reduct.
 For each type of module, we should prepare a function for module replacement.
 The module replacement function returns a newly created module which is smaller.
@@ -138,7 +138,7 @@ Roughly test the original model inference speed.
 
  .. code-block:: none
 
-    Original Model - Elapsed Time :  0.051694393157958984
+    Original Model - Elapsed Time :  0.16419386863708496
 
 
 
@@ -151,7 +151,7 @@ Speedup the model and show the model structure after speedup.
 
 .. code-block:: default
 
-    from nni.compression.pytorch import ModelSpeedup
+    from nni.compression.pytorch.speedup.v2 import ModelSpeedup
     ModelSpeedup(model, torch.rand(10, 1, 28, 28).to(device), masks).speedup_model()
     print(model)
 
@@ -163,8 +163,6 @@ Speedup the model and show the model structure after speedup.
 
  .. code-block:: none
 
-    /home/ningshang/anaconda3/envs/nni-dev/lib/python3.8/site-packages/torch/_tensor.py:1013: UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the .grad field to be populated for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations. (Triggered internally at  aten/src/ATen/core/TensorBody.h:417.)
-      return self._grad
     TorchModel(
       (conv1): Conv2d(1, 3, kernel_size=(5, 5), stride=(1, 1))
       (conv2): Conv2d(3, 16, kernel_size=(5, 5), stride=(1, 1))
@@ -202,7 +200,7 @@ Roughly test the model after speedup inference speed.
 
  .. code-block:: none
 
-    Speedup Model - Elapsed Time :  0.003111600875854492
+    Speedup Model - Elapsed Time :  0.0038301944732666016
 
 
 
@@ -210,7 +208,7 @@ Roughly test the model after speedup inference speed.
 .. GENERATED FROM PYTHON SOURCE LINES 79-239
 
 For combining usage of ``Pruner`` masks generation with ``ModelSpeedup``,
-please refer to :doc:`Pruning Quick Start <pruning_quick_start_mnist>`.
+please refer to :doc:`Pruning Quick Start <pruning_quick_start>`.
 
 NOTE: The current implementation supports PyTorch 1.3.1 or newer.
 
@@ -373,7 +371,7 @@ The latency is measured on one V100 GPU and the input tensor is  ``torch.randn(1
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  10.747 seconds)
+   **Total running time of the script:** ( 0 minutes  16.241 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_speedup.py:

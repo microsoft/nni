@@ -20,7 +20,6 @@ NNI 文档
    超参调优 <hpo/toctree>
    架构搜索 <nas/toctree>
    模型压缩 <compression/toctree>
-   模型压缩（预览） <compression_preview/toctree>
    特征工程 <feature_engineering/toctree>
    实验管理 <experiment/toctree>
 
@@ -111,7 +110,7 @@ NNI 使得自动机器学习技术即插即用
 .. codesnippetcard::
    :icon: ../img/thumbnails/pruning-small.svg
    :title: 模型剪枝
-   :link: tutorials/pruning_quick_start_mnist
+   :link: tutorials/pruning_quick_start
    :seemore: 点这里阅读完整教程
 
    .. code-block::

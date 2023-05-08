@@ -100,10 +100,10 @@ Distillation
 
 Two distillers is supported in NNI 3.0. By pruning or quantization fused distillation, it can get better compression results and higher precision.
 
-Please refer :doc:`Distiller <../reference/compression_preview/distiller>` for more details.
+Please refer :doc:`Distiller <../reference/compression/distiller>` for more details.
 
 
-Fusion Compressoin
+Fusion Compression
 ------------------
 
 Thanks to the new unified compression framework, it is now possible to perform pruning, quantization, and distillation simultaneously,

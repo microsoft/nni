@@ -1,36 +1,10 @@
 Compression Utilities
 =====================
 
-ChannelDependency
------------------
+.. _auto_set_denpendency_group_ids:
 
-.. autoclass:: nni.compression.pytorch.utils.ChannelDependency
+auto_set_denpendency_group_ids
+------------------------------
+
+.. autoclass:: nni.contrib.compression.utils.auto_set_denpendency_group_ids
     :members:
-
-GroupDependency
----------------
-
-.. autoclass:: nni.compression.pytorch.utils.GroupDependency
-    :members:
-
-ChannelMaskConflict
--------------------
-
-.. autoclass:: nni.compression.pytorch.utils.ChannelMaskConflict
-    :members:
-
-GroupMaskConflict
------------------
-
-.. autoclass:: nni.compression.pytorch.utils.GroupMaskConflict
-    :members:
-
-count_flops_params
-------------------
-
-.. autofunction:: nni.compression.pytorch.utils.count_flops_params
-
-compute_sparsity
-----------------
-
-.. autofunction:: nni.compression.pytorch.utils.pruning.compute_sparsity

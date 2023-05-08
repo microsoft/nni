@@ -32,7 +32,7 @@ class Compressor:
     model
         Model to be compressed.
     config_list
-        Config list. Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
+        Config list. Please refer :doc:`Compression Config Specification </compression/config_list>` for more information.
     evaluator
         {evaluator_docstring}
     existed_wrappers
