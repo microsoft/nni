@@ -89,12 +89,13 @@ export class TrialKeeper {
 
     // TODO: support user configurable init command
     public async start(): Promise<EnvironmentInfo> {
+        this.envInfo = { id: this.envId, type: 'hot' } as EnvironmentInfo;
+
         await Promise.all([
             this.scheduler.start(),
             this.channels.start(),
         ]);
 
-        this.envInfo = { id: this.envId, type: 'hot' } as EnvironmentInfo;
         Object.assign(this.envInfo, await collectPlatformInfo(this.gpuEnabled));
         return this.envInfo;
     }

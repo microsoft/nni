@@ -169,6 +169,7 @@ class Experiment:
         if self._proc is not None:
             try:
                 rest.delete(self.port, '/experiment', self.url_prefix)
+                self._proc.wait()
             except Exception as e:
                 _logger.exception(e)
                 _logger.warning('Cannot gracefully stop experiment, killing NNI process...')
