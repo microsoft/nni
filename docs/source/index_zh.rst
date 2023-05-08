@@ -20,7 +20,7 @@ NNI 文档
    超参调优 <hpo/toctree>
    架构搜索 <nas/toctree>
    模型压缩 <compression/toctree>
-   模型压缩（预览） <compression_preview/toctree>
+   模型压缩（预览） <compression/toctree>
    特征工程 <feature_engineering/toctree>
    实验管理 <experiment/toctree>
 

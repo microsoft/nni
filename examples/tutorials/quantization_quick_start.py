@@ -133,7 +133,7 @@ print(f'pure evaluating: {time.time() - start}s    Acc.: {acc}')
 # ----------------
 #
 # Initialize a `config_list`.
-# Detailed about how to write ``config_list`` please refer :doc:`Config Specification <../compression_preview/config_list>`.
+# Detailed about how to write ``config_list`` please refer :doc:`Config Specification <../compression/config_list>`.
 
 import nni
 from nni.contrib.compression.quantization import QATQuantizer
