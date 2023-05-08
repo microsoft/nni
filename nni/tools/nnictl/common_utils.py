@@ -95,6 +95,11 @@ class SimplePreemptiveLock(filelock.SoftFileLock):
     '''this is a lock support check lock expiration, if you do not need check expiration, you can use SoftFileLock'''
     def __init__(self, lock_file, stale=-1):
         super(__class__, self).__init__(lock_file, timeout=-1)
+
+        # FIXME: hack
+        if not hasattr(self, '_lock_file'):
+            self._lock_file = self.lock_file
+
         self._lock_file_name = '{}.{}'.format(self._lock_file, os.getpid())
         self._stale = stale
 
