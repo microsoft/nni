@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        :ref:`Go to the end <sphx_glr_download_tutorials_quantization_quick_start.py>`
+        Click :ref:`here <sphx_glr_download_tutorials_quantization_quick_start.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -21,17 +21,12 @@
 Quantization Quickstart
 =======================
 
-Here is a four-minute video to get you started with model quantization.
-
-..  youtube:: MSfV7AyfiA4
-    :align: center
-
 Quantization reduces model size and speeds up inference time by reducing the number of bits required to represent weights or activations.
 
 In NNI, both post-training quantization algorithms and quantization-aware training algorithms are supported.
 Here we use `QATQuantizer` as an example to show the usage of quantization in NNI.
 
-.. GENERATED FROM PYTHON SOURCE LINES 17-22
+.. GENERATED FROM PYTHON SOURCE LINES 12-17
 
 Preparation
 -----------
@@ -39,14 +34,13 @@ Preparation
 In this tutorial, we use a simple model and pre-train on MNIST dataset.
 If you are familiar with defining a model and training in pytorch, you can skip directly to `Quantizing Model`_.
 
-.. GENERATED FROM PYTHON SOURCE LINES 22-36
+.. GENERATED FROM PYTHON SOURCE LINES 17-30
 
 .. code-block:: default
 
 
-    import functools
     import time
-    from typing import Callable, Union, List, Dict, Tuple, Union
+    from typing import Callable, Union, Union
 
     import torch
     import torch.nn.functional as F
@@ -64,11 +58,11 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 37-38
+.. GENERATED FROM PYTHON SOURCE LINES 31-32
 
 Define the model
 
-.. GENERATED FROM PYTHON SOURCE LINES 38-63
+.. GENERATED FROM PYTHON SOURCE LINES 32-57
 
 .. code-block:: default
 
@@ -104,11 +98,11 @@ Define the model
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 64-65
+.. GENERATED FROM PYTHON SOURCE LINES 58-59
 
 Create training and evaluation dataloader
 
-.. GENERATED FROM PYTHON SOURCE LINES 65-78
+.. GENERATED FROM PYTHON SOURCE LINES 59-72
 
 .. code-block:: default
 
@@ -132,11 +126,11 @@ Create training and evaluation dataloader
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 79-80
+.. GENERATED FROM PYTHON SOURCE LINES 73-74
 
 Define training and evaluation functions
 
-.. GENERATED FROM PYTHON SOURCE LINES 80-124
+.. GENERATED FROM PYTHON SOURCE LINES 74-118
 
 .. code-block:: default
 
@@ -191,11 +185,11 @@ Define training and evaluation functions
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 125-126
+.. GENERATED FROM PYTHON SOURCE LINES 119-120
 
 Pre-train and evaluate the model on MNIST dataset
 
-.. GENERATED FROM PYTHON SOURCE LINES 126-137
+.. GENERATED FROM PYTHON SOURCE LINES 120-131
 
 .. code-block:: default
 
@@ -223,21 +217,21 @@ Pre-train and evaluate the model on MNIST dataset
     Epoch 2 start!
     Epoch 3 start!
     Epoch 4 start!
-    pure training 5 epochs: 47.914021015167236s
-    pure evaluating: 1.2639274597167969s    Acc.: 0.9897
+    pure training 5 epochs: 71.90893840789795s
+    pure evaluating: 1.6302893161773682s    Acc.: 0.9908
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 138-143
+.. GENERATED FROM PYTHON SOURCE LINES 132-137
 
 Quantizing Model
 ----------------
 
 Initialize a `config_list`.
-Detailed about how to write ``config_list`` please refer :doc:`Config Specification <../compression_preview/config_list>`.
+Detailed about how to write ``config_list`` please refer :doc:`Config Specification <../compression/config_list>`.
 
-.. GENERATED FROM PYTHON SOURCE LINES 143-177
+.. GENERATED FROM PYTHON SOURCE LINES 137-171
 
 .. code-block:: default
 
@@ -288,9 +282,9 @@ Detailed about how to write ``config_list`` please refer :doc:`Config Specificat
     Epoch 2 start!
     Epoch 3 start!
     Epoch 4 start!
-    pure training 5 epochs: 78.95339393615723s
-    defaultdict(<class 'dict'>, {'fc2': {'weight': {'scale': tensor(0.0017), 'zero_point': tensor(-5.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(0.2286), 'tracked_min': tensor(-0.2105)}, '_input_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(6.), 'tracked_min': tensor(0.)}, '_output_0': {'scale': tensor(0.1543), 'zero_point': tensor(-35.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(25.0385), 'tracked_min': tensor(-14.1545)}}, 'conv2': {'weight': {'scale': tensor(0.0011), 'zero_point': tensor(-19.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(0.1659), 'tracked_min': tensor(-0.1226)}, '_input_0': {'scale': tensor(0.0230), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(5.8373), 'tracked_min': tensor(0.)}, '_output_0': {'scale': tensor(0.0971), 'zero_point': tensor(-6.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(12.9122), 'tracked_min': tensor(-11.7522)}}, 'fc1': {'weight': {'scale': tensor(0.0007), 'zero_point': tensor(-3.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(0.0885), 'tracked_min': tensor(-0.0844)}, '_input_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(6.), 'tracked_min': tensor(0.)}, '_output_0': {'scale': tensor(0.0611), 'zero_point': tensor(-7.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(8.2104), 'tracked_min': tensor(-7.3205)}}, 'conv1': {'weight': {'scale': tensor(0.0021), 'zero_point': tensor(-19.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(0.3130), 'tracked_min': tensor(-0.2318)}, '_input_0': {'scale': tensor(0.0128), 'zero_point': tensor(-94.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(2.8215), 'tracked_min': tensor(-0.4242)}, '_output_0': {'scale': tensor(0.0311), 'zero_point': tensor(13.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(3.5516), 'tracked_min': tensor(-4.3537)}}, 'relu3': {'_output_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(6.), 'tracked_min': tensor(0.)}}, 'relu1': {'_output_0': {'scale': tensor(0.0232), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(5.8952), 'tracked_min': tensor(0.)}}, 'relu2': {'_output_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(6.), 'tracked_min': tensor(0.)}}})
-    quantization evaluating: 1.2496261596679688s    Acc.: 0.9902
+    pure training 5 epochs: 117.75990748405457s
+    defaultdict(<class 'dict'>, {'fc2': {'weight': {'scale': tensor(0.0020), 'zero_point': tensor(-8.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(0.2640), 'tracked_min': tensor(-0.2319)}, '_input_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(6.), 'tracked_min': tensor(0.)}, '_output_0': {'scale': tensor(0.1541), 'zero_point': tensor(-39.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(25.6346), 'tracked_min': tensor(-13.5170)}}, 'conv1': {'weight': {'scale': tensor(0.0023), 'zero_point': tensor(-12.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(0.3128), 'tracked_min': tensor(-0.2606)}, '_input_0': {'scale': tensor(0.0128), 'zero_point': tensor(-94.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(2.8215), 'tracked_min': tensor(-0.4242)}, '_output_0': {'scale': tensor(0.0265), 'zero_point': tensor(-5.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(3.4957), 'tracked_min': tensor(-3.2373)}}, 'fc1': {'weight': {'scale': tensor(0.0007), 'zero_point': tensor(3.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(0.0894), 'tracked_min': tensor(-0.0943)}, '_input_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(6.), 'tracked_min': tensor(0.)}, '_output_0': {'scale': tensor(0.0678), 'zero_point': tensor(-8.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(9.1579), 'tracked_min': tensor(-8.0707)}}, 'conv2': {'weight': {'scale': tensor(0.0012), 'zero_point': tensor(-35.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(0.1927), 'tracked_min': tensor(-0.1097)}, '_input_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(5.9995), 'tracked_min': tensor(0.)}, '_output_0': {'scale': tensor(0.0893), 'zero_point': tensor(2.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(11.1702), 'tracked_min': tensor(-11.5212)}}, 'relu3': {'_output_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(6.), 'tracked_min': tensor(0.)}}, 'relu2': {'_output_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(6.), 'tracked_min': tensor(0.)}}, 'relu1': {'_output_0': {'scale': tensor(0.0236), 'zero_point': tensor(-127.), 'quant_dtype': 'int8', 'quant_scheme': 'affine', 'quant_bits': 8, 'tracked_max': tensor(5.9996), 'tracked_min': tensor(0.)}}})
+    quantization evaluating: 1.6024222373962402s    Acc.: 0.9915
 
 
 
@@ -298,7 +292,7 @@ Detailed about how to write ``config_list`` please refer :doc:`Config Specificat
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  14.073 seconds)
+   **Total running time of the script:** ( 3 minutes  22.673 seconds)
 
 
 .. _sphx_glr_download_tutorials_quantization_quick_start.py:
@@ -306,8 +300,6 @@ Detailed about how to write ``config_list`` please refer :doc:`Config Specificat
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
-
-
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

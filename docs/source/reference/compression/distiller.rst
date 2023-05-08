@@ -1,5 +1,5 @@
-Distiller (Preview)
-===================
+Distiller
+=========
 
 DynamicLayerwiseDistiller
 -------------------------

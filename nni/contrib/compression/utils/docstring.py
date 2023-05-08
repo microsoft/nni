@@ -6,7 +6,7 @@ _EVALUATOR_DOCSTRING = r"""NNI will use the evaluator to intervene in the model 
         so as to perform training-aware model compression.
         All training-aware model compression will use the evaluator as the entry for intervention training in the future.
         Usually you just need to wrap some classes with ``nni.trace`` or package the training process as a function to initialize the evaluator.
-        Please refer :doc:`/compression_preview/evaluator` for a full tutorial on how to initialize a ``evaluator``.
+        Please refer :doc:`/compression/evaluator` for a full tutorial on how to initialize a ``evaluator``.
 
         The following are two simple examples, if you use native pytorch, please refer to :ref:`new-torch-evaluator`,
         if you use pytorch_lightning, please refer to :ref:`new-lightning-evaluator`,

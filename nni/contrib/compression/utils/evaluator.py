@@ -351,7 +351,7 @@ class LightningEvaluator(Evaluator):
     Additionally, please make sure the ``Optimizer`` class and ``LR_Scheduler`` class used in ``LightningModule.configure_optimizers()``
     are also be traced by ``nni.trace``.
 
-    Please refer to the :doc:`/compression/compression_evaluator` for the evaluator initialization example.
+    Please refer to the :doc:`/compression/evaluator` for the evaluator initialization example.
 
     Parameters
     ----------
@@ -665,7 +665,7 @@ _TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, Optional[_SCHEDU
 class TorchEvaluator(Evaluator):
     """
     TorchEvaluator is the Evaluator for native PyTorch users.
-    Please refer to the :doc:`/compression/compression_evaluator` for the evaluator initialization example.
+    Please refer to the :doc:`/compression/evaluator` for the evaluator initialization example.
 
     Parameters
     ----------

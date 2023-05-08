@@ -17,7 +17,7 @@
 .. only:: html
 
   .. image:: /tutorials/hpo_quickstart_tensorflow/images/thumb/sphx_glr_main_thumb.png
-    :alt:
+    :alt: HPO Quickstart with TensorFlow
 
   :ref:`sphx_glr_tutorials_hpo_quickstart_tensorflow_main.py`
 
@@ -34,7 +34,7 @@
 .. only:: html
 
   .. image:: /tutorials/hpo_quickstart_tensorflow/images/thumb/sphx_glr_model_thumb.png
-    :alt:
+    :alt: Port TensorFlow Quickstart to NNI
 
   :ref:`sphx_glr_tutorials_hpo_quickstart_tensorflow_model.py`
 

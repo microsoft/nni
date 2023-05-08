@@ -27,7 +27,7 @@ class TeacherModelBasedDistiller(Distiller):
         The student model to be distilled.
     config_list
         A list of dict, each dict configure which module need to be distilled, and how to distill.
-        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
+        Please refer :doc:`Compression Config Specification </compression/config_list>` for more information.
     evaluator
         {evaluator_docstring}
     teacher_model
@@ -165,7 +165,7 @@ class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
         The student model to be distilled.
     config_list
         Config list to configure how to distill.
-        Common keys please refer :doc:`Compression Config Specification </compression/compression_config_list>`.
+        Common keys please refer :doc:`Compression Config Specification </compression/config_list>`.
 
         Specific keys:
 
@@ -241,7 +241,7 @@ class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
         The student model to be distilled.
     config_list
         Config list to configure how to distill.
-        Common keys please refer :doc:`Compression Config Specification </compression/compression_config_list>`.
+        Common keys please refer :doc:`Compression Config Specification </compression/config_list>`.
 
         Specific keys:
 
