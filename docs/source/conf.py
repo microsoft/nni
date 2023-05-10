@@ -31,7 +31,7 @@ author = 'Microsoft'
 version = ''
 # The full version, including alpha/beta/rc tags
 # FIXME: this should be written somewhere globally
-release = 'v2.10'
+release = 'v3.0rc1'
 
 # -- General configuration ---------------------------------------------------
 
