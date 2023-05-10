@@ -54,7 +54,6 @@ class ConcreteProxy(Proxy):
     jump_opcodes = _orig_tuple(dis.opmap[name] for name in jump_opnames if name in dis.opmap)
     op_compare = dis.opmap['COMPARE_OP']
     op_extended_arg = dis.opmap['EXTENDED_ARG']
-    op_call = dis.opmap['CALL_FUNCTION']
     op_call_ex = dis.opmap['CALL_FUNCTION_EX']
     op_not = dis.opmap['UNARY_NOT']
     op_unpack_sequence = dis.opmap['UNPACK_SEQUENCE']
