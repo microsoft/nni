@@ -36,6 +36,7 @@ import { NNIManager } from 'core/nnimanager';
 import { SqlDB } from 'core/sqlDatabase';
 import { initExperimentsManager } from 'extensions/experiments_manager';
 import { NNITensorboardManager } from 'extensions/nniTensorboardManager';
+import { enableWebuiStaging } from 'extensions/staging';
 import { RestServer } from 'rest_server';
 import { createRestHandler } from 'rest_server/restHandler';
 
@@ -58,6 +59,10 @@ async function start(): Promise<void> {
     globals.rest.registerExpressRouter('/api/v1/nni', createRestHandler());
 
     initExperimentsManager();
+
+    if (globals.args.logLevel === 'debug' || globals.args.logLevel === 'trace') {
+        enableWebuiStaging();
+    }
 
     globals.shutdown.notifyInitializeComplete();
 }
