@@ -14,6 +14,7 @@ import torch.fx
 from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
 from torch.fx.node import Node, Target
+from torch.fx.passes.shape_prop import ShapeProp
 
 from nni.common.concrete_trace_utils import concrete_trace
 from nni.compression.pytorch.utils import set_nested_attr
@@ -36,6 +37,8 @@ def _normalize_input(dummy_input: Any) -> Any:
         dummy_input = (dummy_input, )
     elif isinstance(dummy_input, list):
         dummy_input = tuple(dummy_input)
+    elif isinstance(dummy_input, dict):
+        dummy_input = tuple(dummy_input.values())
     return dummy_input
 
 
@@ -97,7 +100,9 @@ class ModelSpeedup(torch.fx.Interpreter):
                  logger: logging.Logger | None = None):
         self.dummy_input = _normalize_input(dummy_input)
         self.bound_model = model
-        self.graph_module = graph_module if isinstance(graph_module, GraphModule) else concrete_trace(model, self.dummy_input)
+        self.graph_module = graph_module if isinstance(graph_module, GraphModule) else concrete_trace(model, dummy_input)
+        
+        ShapeProp(self.graph_module).propagate(*self.dummy_input)   # attach shape to graph_module
 
         super().__init__(self.graph_module, garbage_collect_values)
 
