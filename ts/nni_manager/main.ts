@@ -60,9 +60,8 @@ async function start(): Promise<void> {
 
     initExperimentsManager();
 
-    if (globals.args.logLevel === 'debug' || globals.args.logLevel === 'trace') {
-        enableWebuiStaging();
-    }
+    //if (globals.args.logLevel === 'debug' || globals.args.logLevel === 'trace')
+    enableWebuiStaging();
 
     globals.shutdown.notifyInitializeComplete();
 }
