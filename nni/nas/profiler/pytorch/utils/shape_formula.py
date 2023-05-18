@@ -172,7 +172,7 @@ def maxpool2d_formula(module: nn.MaxPool2d | nas_nn.MutableMaxPool2d, input: Sha
     return MutableShape(*shape)
 
 def avgpool2d_formula(module: nn.AvgPool2d , input: ShapeTensor) -> MutableShape:
-    shape = list(input.real_shape)  # type: ignore
+    shape = list(input.real_shape)  # type: ignore 
 
     padding, kernel_size, stride = map(
         lambda name: _getattr(module, name, expected_type=tuple_2_t),
