@@ -377,6 +377,12 @@ def test_adaptive_avg_pool2d():
     assert shape_inference(nn.AdaptiveAvgPool2d(3), t).real_shape == MutableShape(4, 2, 3, 3)
     assert shape_inference(nn.AdaptiveAvgPool2d((3, 4)), t).real_shape == MutableShape(4, 2, 3, 4)
 
+def test_avg_pool2d():
+    t = ShapeTensor(torch.randn(4, 2, 5, 5), True)
+    assert shape_inference(nn.AvgPool2d(1), t).real_shape == MutableShape(4, 2, 5, 5)
+    assert shape_inference(nn.AvgPool2d(3,stride=1), t).real_shape == MutableShape(4, 2, 3, 3)
+    assert shape_inference(nn.AvgPool2d((3, 4),stride=1), t).real_shape == MutableShape(4, 2, 3, 2)
+
 
 def test_linear():
     input = ShapeTensor(torch.randn(4, 2), True)
