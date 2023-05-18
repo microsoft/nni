@@ -4,17 +4,16 @@
 import fs from 'fs';
 import path from 'path';
 import tkill from 'tree-kill';
-import * as component from 'common/component';
-import { getLogger, Logger } from 'common/log';
 import { ExperimentConfig } from 'common/experimentConfig';
 import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { IocShim } from 'common/ioc_shim';
+import { getLogger, Logger } from 'common/log';
 import { powershellString, createScriptFile } from 'common/shellUtils';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { isAlive, getNewLine } from 'common/utils';
 import { execMkdir, runScript, getScriptName, execCopydir } from 'training_service/common/util';
 import { SharedStorageService } from '../sharedStorage'
 
-@component.Singleton
 export class LocalEnvironmentService extends EnvironmentService {
 
     private readonly log: Logger = getLogger('LocalEnvironmentService');
@@ -106,7 +105,7 @@ export class LocalEnvironmentService extends EnvironmentService {
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
         // Need refactor, this temp folder path is not appropriate, there are two expId in this path
-        const sharedStorageService = component.get<SharedStorageService>(SharedStorageService);
+        const sharedStorageService = IocShim.get<SharedStorageService>(SharedStorageService);
         if (environment.useSharedStorage && sharedStorageService.canLocalMounted) {
             this.experimentRootDir = sharedStorageService.localWorkingRoot;
         }

@@ -4,7 +4,7 @@
 import { Request, Response, Router } from 'express';
 import path from 'path';
 
-import * as component from '../common/component';
+import { IocShim } from 'common/ioc_shim';
 import { DataStore, MetricDataRecord, TrialJobInfo } from '../common/datastore';
 import { NNIError, NNIErrorNames } from '../common/errors';
 import { isNewExperiment, isReadonly } from '../common/experimentStartupInfo';
@@ -27,8 +27,8 @@ class NNIRestHandler {
     private log: Logger;
 
     constructor() {
-        this.nniManager = component.get(Manager);
-        this.tensorboardManager = component.get(TensorboardManager);
+        this.nniManager = IocShim.get(Manager);
+        this.tensorboardManager = IocShim.get(TensorboardManager);
         this.log = getLogger('NNIRestHandler');
     }
 
@@ -113,7 +113,7 @@ class NNIRestHandler {
     // TODO add validators for request params, query, body
     private checkStatus(router: Router): void {
         router.get('/check-status', (_req: Request, res: Response) => {
-            const ds: DataStore = component.get<DataStore>(DataStore);
+            const ds: DataStore = IocShim.get<DataStore>(DataStore);
             ds.init().then(() => {
                 res.send(this.nniManager.getStatus());
             }).catch(async (err: Error) => {
