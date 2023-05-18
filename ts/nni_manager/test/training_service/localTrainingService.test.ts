@@ -8,7 +8,6 @@ import chaiAsPromised from 'chai-as-promised';
 import fs from 'fs';
 import path from 'path';
 import tmp from 'tmp';
-import * as component from '../../common/component';
 import { TrialJobApplicationForm, TrialJobDetail} from '../../common/trainingService';
 import { cleanupUnitTest, delay, prepareUnitTest, getExperimentRootDir } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';

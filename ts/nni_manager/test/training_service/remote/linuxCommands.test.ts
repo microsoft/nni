@@ -5,7 +5,6 @@
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import * as component from '../../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../../common/utils';
 import { LinuxCommands } from '../../../training_service/remote_machine/extends/linuxCommands';
 
@@ -25,7 +24,7 @@ describe('Unit Test for linuxCommands', () => {
     });
 
     beforeEach(() => {
-        linuxCommands = component.get(LinuxCommands);
+        linuxCommands = new LinuxCommands();
     });
 
     afterEach(() => {

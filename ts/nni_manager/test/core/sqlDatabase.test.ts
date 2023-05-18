@@ -6,8 +6,6 @@
 import * as assert from 'assert';
 import * as os from 'os';
 import * as path from 'path';
-import { Container } from 'typescript-ioc';
-import * as component from '../../common/component';
 import { Database, MetricDataRecord, TrialJobEvent, TrialJobEventRecord } from '../../common/datastore';
 import { ExperimentConfig, ExperimentProfile } from '../../common/manager';
 import { cleanupUnitTest, getDefaultDatabaseDir, mkDirP, prepareUnitTest } from '../../common/utils';
