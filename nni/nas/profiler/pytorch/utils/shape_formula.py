@@ -178,7 +178,7 @@ def avgpool2d_formula(module: nn.AvgPool2d , input: ShapeTensor) -> MutableShape
         lambda name: _getattr(module, name, expected_type=tuple_2_t),
         ['padding', 'kernel_size', 'stride']
     ) 
- 
+  
     # H_out and W_out
     shape[-2] = (shape[-2] + 2 * padding[0] -  (kernel_size[0])) // stride[0] + 1
     shape[-1] = (shape[-1] + 2 * padding[1] -  (kernel_size[1])) // stride[1] + 1
