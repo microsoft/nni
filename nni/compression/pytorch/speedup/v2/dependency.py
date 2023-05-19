@@ -195,6 +195,32 @@ def dependency_to_list(dependency: Dict):
     return dependency_list
 
 
+def build_weight_sharing_dependency(graph_module: torch.fx.GraphModule):
+    """
+    This model analyze the weight sharing dependencies between the conv
+    layers in a model. (e.g. different node refer to same module)
+
+    Parameters
+    ----------
+    graph_module : torch.fx.GraphModule
+        The target graph and module.
+    
+    Returns
+    -------
+    dependency : List
+        The weight sharing dependency for the target graph.
+    """
+
+    dependency = {}
+    target_types = [torch.nn.Conv2d, torch.nn.Linear, torch.nn.ConvTranspose2d, torch.nn.Embedding]
+    for node in graph_module.graph.nodes:
+        if node.op == 'call_module':
+            target_module = graph_module.get_submodule(node.target)
+            if isinstance(target_module, tuple(target_types)):
+                dependency[node.target] = dependency.get(node.target, []) + [node]
+    return [dep for dep in dependency.values() if len(dep) > 1]
+
+
 def build_channel_dependency(graph_module: torch.fx.GraphModule, prune_type='Filter', prune_axis=1):
     """
     This model analyze the channel dependencies between the conv
