@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_tutorials_hello_nas.py>`
+        :ref:`Go to the end <sphx_glr_download_tutorials_hello_nas.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -31,7 +31,7 @@ There are mainly three crucial components for a neural architecture search task,
 * A proper strategy as the method to explore this model space.
 * A model evaluator that reports the performance of every model in the space.
 
-Currently, PyTorch is the only supported framework by Retiarii, and we have only tested **PyTorch 1.7 to 1.10**.
+Currently, PyTorch is the only supported framework by Retiarii, and we have only tested **PyTorch 1.9 to 1.13**.
 This tutorial assumes PyTorch context but it should also apply to other frameworks, which is in our future plan.
 
 Define your Model Space
@@ -40,30 +40,28 @@ Define your Model Space
 Model space is defined by users to express a set of models that users want to explore, which contains potentially good-performing models.
 In this framework, a model space is defined with two parts: a base model and possible mutations on the base model.
 
-.. GENERATED FROM PYTHON SOURCE LINES 26-34
+.. GENERATED FROM PYTHON SOURCE LINES 26-32
 
 Define Base Model
 ^^^^^^^^^^^^^^^^^
 
 Defining a base model is almost the same as defining a PyTorch (or TensorFlow) model.
-Usually, you only need to replace the code ``import torch.nn as nn`` with
-``import nni.retiarii.nn.pytorch as nn`` to use our wrapped PyTorch modules.
 
 Below is a very simple example of defining a base model.
 
-.. GENERATED FROM PYTHON SOURCE LINES 35-61
+.. GENERATED FROM PYTHON SOURCE LINES 33-59
 
 .. code-block:: default
 
 
     import torch
+    import torch.nn as nn
     import torch.nn.functional as F
-    import nni.retiarii.nn.pytorch as nn
-    from nni.retiarii import model_wrapper
+    import nni
+    from nni.nas.nn.pytorch import LayerChoice, ModelSpace, MutableDropout, MutableLinear
 
 
-    @model_wrapper      # this decorator should be put on the out most
-    class Net(nn.Module):
+    class Net(ModelSpace):  # should inherit ModelSpace rather than nn.Module
         def __init__(self):
             super().__init__()
             self.conv1 = nn.Conv2d(1, 32, 3, 1)
@@ -88,14 +86,10 @@ Below is a very simple example of defining a base model.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 62-104
+.. GENERATED FROM PYTHON SOURCE LINES 60-97
 
-.. tip:: Always keep in mind that you should use ``import nni.retiarii.nn.pytorch as nn`` and :meth:`nni.retiarii.model_wrapper`.
-         Many mistakes are a result of forgetting one of those.
-         Also, please use ``torch.nn`` for submodules of ``nn.init``, e.g., ``torch.nn.init`` instead of ``nn.init``.
-
-Define Model Mutations
-^^^^^^^^^^^^^^^^^^^^^^
+Define Model Variations
+^^^^^^^^^^^^^^^^^^^^^^^
 
 A base model is only one concrete model not a model space. We provide :doc:`API and Primitives </nas/construct_space>`
 for users to express how the base model can be mutated. That is, to build a model space which includes many models.
@@ -104,24 +98,23 @@ Based on the above base model, we can define a model space as below.
 
 .. code-block:: diff
 
-  @model_wrapper
-  class Net(nn.Module):
+  class Net(ModelSpace):
     def __init__(self):
       super().__init__()
       self.conv1 = nn.Conv2d(1, 32, 3, 1)
   -   self.conv2 = nn.Conv2d(32, 64, 3, 1)
-  +   self.conv2 = nn.LayerChoice([
+  +   self.conv2 = LayerChoice([
   +       nn.Conv2d(32, 64, 3, 1),
   +       DepthwiseSeparableConv(32, 64)
-  +   ])
+  +   ], label='conv2)
   -   self.dropout1 = nn.Dropout(0.25)
-  +   self.dropout1 = nn.Dropout(nn.ValueChoice([0.25, 0.5, 0.75]))
+  +   self.dropout1 = MutableDropout(nni.choice('dropout', [0.25, 0.5, 0.75]))
       self.dropout2 = nn.Dropout(0.5)
   -   self.fc1 = nn.Linear(9216, 128)
   -   self.fc2 = nn.Linear(128, 10)
-  +   feature = nn.ValueChoice([64, 128, 256])
-  +   self.fc1 = nn.Linear(9216, feature)
-  +   self.fc2 = nn.Linear(feature, 10)
+  +   feature = nni.choice('feature', [64, 128, 256])
+  +   self.fc1 = MutableLinear(9216, feature)
+  +   self.fc2 = MutableLinear(feature, 10)
 
     def forward(self, x):
       x = F.relu(self.conv1(x))
@@ -133,7 +126,7 @@ Based on the above base model, we can define a model space as below.
 
 This results in the following code:
 
-.. GENERATED FROM PYTHON SOURCE LINES 104-147
+.. GENERATED FROM PYTHON SOURCE LINES 98-139
 
 .. code-block:: default
 
@@ -149,24 +142,22 @@ This results in the following code:
             return self.pointwise(self.depthwise(x))
 
 
-    @model_wrapper
-    class ModelSpace(nn.Module):
+    class MyModelSpace(ModelSpace):
         def __init__(self):
             super().__init__()
             self.conv1 = nn.Conv2d(1, 32, 3, 1)
             # LayerChoice is used to select a layer between Conv2d and DwConv.
-            self.conv2 = nn.LayerChoice([
+            self.conv2 = LayerChoice([
                 nn.Conv2d(32, 64, 3, 1),
                 DepthwiseSeparableConv(32, 64)
-            ])
-            # ValueChoice is used to select a dropout rate.
-            # ValueChoice can be used as parameter of modules wrapped in `nni.retiarii.nn.pytorch`
-            # or customized modules wrapped with `@basic_unit`.
-            self.dropout1 = nn.Dropout(nn.ValueChoice([0.25, 0.5, 0.75]))  # choose dropout rate from 0.25, 0.5 and 0.75
+            ], label='conv2')
+            # nni.choice is used to select a dropout rate.
+            # The result can be used as parameters of `MutableXXX`.
+            self.dropout1 = MutableDropout(nni.choice('dropout', [0.25, 0.5, 0.75]))  # choose dropout rate from 0.25, 0.5 and 0.75
             self.dropout2 = nn.Dropout(0.5)
-            feature = nn.ValueChoice([64, 128, 256])
-            self.fc1 = nn.Linear(9216, feature)
-            self.fc2 = nn.Linear(feature, 10)
+            feature = nni.choice('feature', [64, 128, 256])
+            self.fc1 = MutableLinear(9216, feature)
+            self.fc2 = MutableLinear(feature, 10)
 
         def forward(self, x):
             x = F.relu(self.conv1(x))
@@ -177,7 +168,7 @@ This results in the following code:
             return output
 
 
-    model_space = ModelSpace()
+    model_space = MyModelSpace()
     model_space
 
 
@@ -186,35 +177,36 @@ This results in the following code:
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
 
-    ModelSpace(
+    MyModelSpace(
       (conv1): Conv2d(1, 32, kernel_size=(3, 3), stride=(1, 1))
-      (conv2): LayerChoice([Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1)), DepthwiseSeparableConv(
-        (depthwise): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), groups=32)
-        (pointwise): Conv2d(32, 64, kernel_size=(1, 1), stride=(1, 1))
-      )], label='model_1')
-      (dropout1): Dropout(p=0.25, inplace=False)
+      (conv2): LayerChoice(
+        label='conv2'
+        (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1))
+        (1): DepthwiseSeparableConv(
+          (depthwise): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), groups=32)
+          (pointwise): Conv2d(32, 64, kernel_size=(1, 1), stride=(1, 1))
+        )
+      )
+      (dropout1): MutableDropout(p=Categorical([0.25, 0.5, 0.75], label='dropout'))
       (dropout2): Dropout(p=0.5, inplace=False)
-      (fc1): Linear(in_features=9216, out_features=64, bias=True)
-      (fc2): Linear(in_features=64, out_features=10, bias=True)
+      (fc1): MutableLinear(in_features=9216, out_features=Categorical([64, 128, 256], label='feature'))
+      (fc2): MutableLinear(in_features=Categorical([64, 128, 256], label='feature'), out_features=10)
     )
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 148-182
+.. GENERATED FROM PYTHON SOURCE LINES 140-173
 
 This example uses two mutation APIs,
-:class:`nn.LayerChoice <nni.retiarii.nn.pytorch.LayerChoice>` and
-:class:`nn.InputChoice <nni.retiarii.nn.pytorch.ValueChoice>`.
-:class:`nn.LayerChoice <nni.retiarii.nn.pytorch.LayerChoice>`
+:class:`nn.LayerChoice <nni.nas.nn.pytorch.LayerChoice>` and
+:func:`nni.choice`.
+:class:`nn.LayerChoice <nni.nas.nn.pytorch.LayerChoice>`
 takes a list of candidate modules (two in this example), one will be chosen for each sampled model.
 It can be used like normal PyTorch module.
-:class:`nn.InputChoice <nni.retiarii.nn.pytorch.ValueChoice>` takes a list of candidate values,
-one will be chosen to take effect for each sampled model.
+:func:`nni.choice` is used as parameter of `MutableDropout`, which then takes the result as dropout rate.
 
 More detailed API description and usage can be found :doc:`here </nas/construct_space>`.
 
@@ -238,36 +230,26 @@ Second, users need to pick or customize a model evaluator to evaluate the perfor
 Pick an exploration strategy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Retiarii supports many :doc:`exploration strategies </nas/exploration_strategy>`.
+NNI NAS supports many :doc:`exploration strategies </nas/exploration_strategy>`.
 
 Simply choosing (i.e., instantiate) an exploration strategy as below.
 
-.. GENERATED FROM PYTHON SOURCE LINES 182-186
+.. GENERATED FROM PYTHON SOURCE LINES 173-177
 
 .. code-block:: default
 
 
-    import nni.retiarii.strategy as strategy
-    search_strategy = strategy.Random(dedup=True)  # dedup=False if deduplication is not wanted
+    import nni.nas.strategy as strategy
+    search_strategy = strategy.Random()  # dedup=False if deduplication is not wanted
 
 
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-
-    /home/yugzhan/miniconda3/envs/cu102/lib/python3.8/site-packages/ray/autoscaler/_private/cli_logger.py:57: FutureWarning: Not all Ray CLI dependencies were found. In Ray 1.4+, the Ray CLI, autoscaler, and dashboard will only be usable via `pip install 'ray[default]'`. Please update your install command.
-      warnings.warn(
 
 
 
-
-.. GENERATED FROM PYTHON SOURCE LINES 187-200
+.. GENERATED FROM PYTHON SOURCE LINES 178-191
 
 Pick or customize a model evaluator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -276,14 +258,14 @@ In the exploration process, the exploration strategy repeatedly generates new mo
 and validating each generated model to obtain the model's performance.
 The performance is sent to the exploration strategy for the strategy to generate better models.
 
-Retiarii has provided :doc:`built-in model evaluators </nas/evaluator>`, but to start with,
-it is recommended to use :class:`FunctionalEvaluator <nni.retiarii.evaluator.FunctionalEvaluator>`,
+NNI NAS has provided :doc:`built-in model evaluators </nas/evaluator>`, but to start with,
+it is recommended to use :class:`FunctionalEvaluator <nni.nas.evaluator.FunctionalEvaluator>`,
 that is, to wrap your own training and evaluation code with one single function.
 This function should receive one single model class and uses :func:`nni.report_final_result` to report the final score of this model.
 
 An example here creates a simple evaluator that runs on MNIST dataset, trains for 2 epochs, and reports its validation accuracy.
 
-.. GENERATED FROM PYTHON SOURCE LINES 200-268
+.. GENERATED FROM PYTHON SOURCE LINES 191-257
 
 .. code-block:: default
 
@@ -331,10 +313,8 @@ An example here creates a simple evaluator that runs on MNIST dataset, trains fo
         return accuracy
 
 
-    def evaluate_model(model_cls):
-        # "model_cls" is a class, need to instantiate
-        model = model_cls()
-
+    def evaluate_model(model):
+        # By v3.0, the model will be instantiated by default.
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         model.to(device)
 
@@ -362,16 +342,16 @@ An example here creates a simple evaluator that runs on MNIST dataset, trains fo
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 269-270
+.. GENERATED FROM PYTHON SOURCE LINES 258-259
 
 Create the evaluator
 
-.. GENERATED FROM PYTHON SOURCE LINES 270-274
+.. GENERATED FROM PYTHON SOURCE LINES 259-263
 
 .. code-block:: default
 
 
-    from nni.retiarii.evaluator import FunctionalEvaluator
+    from nni.nas.evaluator import FunctionalEvaluator
     evaluator = FunctionalEvaluator(evaluate_model)
 
 
@@ -381,29 +361,27 @@ Create the evaluator
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 275-286
+.. GENERATED FROM PYTHON SOURCE LINES 264-275
 
 The ``train_epoch`` and ``test_epoch`` here can be any customized function,
 where users can write their own training recipe.
 
-It is recommended that the ``evaluate_model`` here accepts no additional arguments other than ``model_cls``.
+It is recommended that the ``evaluate_model`` here accepts no additional arguments other than ``model``.
 However, in the :doc:`advanced tutorial </nas/evaluator>`, we will show how to use additional arguments in case you actually need those.
-In future, we will support mutation on the arguments of evaluators, which is commonly called "Hyper-parmeter tuning".
+In future, we will support mutation on the arguments of evaluators, which is commonly called "Hyper-parameter tuning".
 
 Launch an Experiment
 --------------------
 
 After all the above are prepared, it is time to start an experiment to do the model search. An example is shown below.
 
-.. GENERATED FROM PYTHON SOURCE LINES 287-293
+.. GENERATED FROM PYTHON SOURCE LINES 276-280
 
 .. code-block:: default
 
 
-    from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
-    exp = RetiariiExperiment(model_space, evaluator, [], search_strategy)
-    exp_config = RetiariiExeConfig('local')
-    exp_config.experiment_name = 'mnist_search'
+    from nni.nas.experiment import NasExperiment
+    exp = NasExperiment(model_space, evaluator, search_strategy)
 
 
 
@@ -412,17 +390,21 @@ After all the above are prepared, it is time to start an experiment to do the mo
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 294-295
+.. GENERATED FROM PYTHON SOURCE LINES 281-285
 
-The following configurations are useful to control how many trials to run at most / at the same time.
+Different from HPO experiment, NAS experiment will generate an experiment config automatically.
+It should work for most cases. For example, when using multi-trial strategies,
+local training service with concurrency 1 will be used by default.
+Users can customize the config. For example,
 
-.. GENERATED FROM PYTHON SOURCE LINES 295-299
+.. GENERATED FROM PYTHON SOURCE LINES 285-290
 
 .. code-block:: default
 
 
-    exp_config.max_trial_number = 4   # spawn 4 trials at most
-    exp_config.trial_concurrency = 2  # will run two trials concurrently
+    exp.config.max_trial_number = 3   # spawn 3 trials at most
+    exp.config.trial_concurrency = 1  # will run 1 trial concurrently
+    exp.config.trial_gpu_number = 0   # will not use GPU
 
 
 
@@ -431,36 +413,22 @@ The following configurations are useful to control how many trials to run at mos
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 300-302
+.. GENERATED FROM PYTHON SOURCE LINES 291-298
 
 Remember to set the following config if you want to GPU.
-``use_active_gpu`` should be set true if you wish to use an occupied GPU (possibly running a GUI).
+``use_active_gpu`` should be set true if you wish to use an occupied GPU (possibly running a GUI)::
 
-.. GENERATED FROM PYTHON SOURCE LINES 302-306
-
-.. code-block:: default
-
-
-    exp_config.trial_gpu_number = 1
-    exp_config.training_service.use_active_gpu = True
-
-
-
-
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 307-308
+   exp.config.trial_gpu_number = 1
+   exp.config.training_service.use_active_gpu = True
 
 Launch the experiment. The experiment should take several minutes to finish on a workstation with 2 GPUs.
 
-.. GENERATED FROM PYTHON SOURCE LINES 308-311
+.. GENERATED FROM PYTHON SOURCE LINES 298-301
 
 .. code-block:: default
 
 
-    exp.run(exp_config, 8081)
+    exp.run(port=8081)
 
 
 
@@ -468,31 +436,16 @@ Launch the experiment. The experiment should take several minutes to finish on a
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    INFO:nni.experiment:Creating experiment, Experiment ID: z8ns5fv7
-    INFO:nni.experiment:Connecting IPC pipe...
-    INFO:nni.experiment:Starting web server...
-    INFO:nni.experiment:Setting up...
-    INFO:nni.runtime.msg_dispatcher_base:Dispatcher started
-    INFO:nni.retiarii.experiment.pytorch:Web UI URLs: http://127.0.0.1:8081 http://10.190.172.35:8081 http://192.168.49.1:8081 http://172.17.0.1:8081
-    INFO:nni.retiarii.experiment.pytorch:Start strategy...
-    INFO:root:Successfully update searchSpace.
-    INFO:nni.retiarii.strategy.bruteforce:Random search running in fixed size mode. Dedup: on.
-    INFO:nni.retiarii.experiment.pytorch:Stopping experiment, please wait...
-    INFO:nni.retiarii.experiment.pytorch:Strategy exit
-    INFO:nni.retiarii.experiment.pytorch:Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...
-    INFO:nni.runtime.msg_dispatcher_base:Dispatcher exiting...
-    INFO:nni.retiarii.experiment.pytorch:Experiment stopped
+
+    True
 
 
 
+.. GENERATED FROM PYTHON SOURCE LINES 302-320
 
-.. GENERATED FROM PYTHON SOURCE LINES 312-330
-
-Users can also run Retiarii Experiment with :doc:`different training services </experiment/training_service/overview>`
+Users can also run NAS Experiment with :doc:`different training services </experiment/training_service/overview>`
 besides ``local`` training service.
 
 Visualize the Experiment
@@ -511,7 +464,7 @@ Built-in evaluators (e.g., Classification) will automatically export the model i
 For your own evaluator, you need to save your file into ``$NNI_OUTPUT_DIR/model.onnx`` to make this work.
 For instance,
 
-.. GENERATED FROM PYTHON SOURCE LINES 330-344
+.. GENERATED FROM PYTHON SOURCE LINES 320-333
 
 .. code-block:: default
 
@@ -520,14 +473,13 @@ For instance,
     from pathlib import Path
 
 
-    def evaluate_model_with_visualization(model_cls):
-        model = model_cls()
+    def evaluate_model_with_visualization(model):
         # dump the model into an onnx
         if 'NNI_OUTPUT_DIR' in os.environ:
             dummy_input = torch.zeros(1, 3, 32, 32)
             torch.onnx.export(model, (dummy_input, ),
                               Path(os.environ['NNI_OUTPUT_DIR']) / 'model.onnx')
-        evaluate_model(model_cls)
+        evaluate_model(model)
 
 
 
@@ -536,7 +488,7 @@ For instance,
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 345-353
+.. GENERATED FROM PYTHON SOURCE LINES 334-342
 
 Relaunch the experiment, and a button is shown on Web portal.
 
@@ -547,7 +499,7 @@ Export Top Models
 
 Users can export top models after the exploration is done using ``export_top_models``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 353-357
+.. GENERATED FROM PYTHON SOURCE LINES 342-345
 
 .. code-block:: default
 
@@ -558,35 +510,11 @@ Users can export top models after the exploration is done using ``export_top_mod
 
 
 
-
 .. rst-class:: sphx-glr-script-out
-
- Out:
 
  .. code-block:: none
 
-    {'model_1': '0', 'model_2': 0.25, 'model_3': 64}
-
-
-
-
-.. GENERATED FROM PYTHON SOURCE LINES 358-362
-
-The output is ``json`` object which records the mutation actions of the top model.
-If users want to output source code of the top model,
-they can use :ref:`graph-based execution engine <graph-based-execution-engine>` for the experiment,
-by simply adding the following two lines.
-
-.. GENERATED FROM PYTHON SOURCE LINES 362-365
-
-.. code-block:: default
-
-
-    exp_config.execution_engine = 'base'
-    export_formatter = 'code'
-
-
-
+    {'conv2': 1, 'dropout': 0.25, 'feature': 256}
 
 
 
@@ -594,28 +522,25 @@ by simply adding the following two lines.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  4.499 seconds)
+   **Total running time of the script:** ( 13 minutes  8.330 seconds)
 
 
 .. _sphx_glr_download_tutorials_hello_nas.py:
 
+.. only:: html
 
-.. only :: html
-
- .. container:: sphx-glr-footer
-    :class: sphx-glr-footer-example
+  .. container:: sphx-glr-footer sphx-glr-footer-example
 
 
 
-  .. container:: sphx-glr-download sphx-glr-download-python
 
-     :download:`Download Python source code: hello_nas.py <hello_nas.py>`
+    .. container:: sphx-glr-download sphx-glr-download-python
 
+      :download:`Download Python source code: hello_nas.py <hello_nas.py>`
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-  .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-     :download:`Download Jupyter notebook: hello_nas.ipynb <hello_nas.ipynb>`
+      :download:`Download Jupyter notebook: hello_nas.ipynb <hello_nas.ipynb>`
 
 
 .. only:: html

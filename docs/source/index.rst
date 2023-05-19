@@ -16,7 +16,7 @@ NNI Documentation
 
    hpo/toctree
    nas/toctree
-   Model Compression <compression/toctree>
+   compression/toctree
    feature_engineering/toctree
    experiment/toctree
 
@@ -106,7 +106,7 @@ NNI makes AutoML techniques plug-and-play
 .. codesnippetcard::
    :icon: ../img/thumbnails/pruning-small.svg
    :title: Model Pruning
-   :link: tutorials/pruning_quick_start_mnist
+   :link: tutorials/pruning_quick_start
 
    .. code-block::
 
@@ -128,7 +128,7 @@ NNI makes AutoML techniques plug-and-play
 .. codesnippetcard::
    :icon: ../img/thumbnails/quantization-small.svg
    :title: Quantization
-   :link: tutorials/quantization_quick_start_mnist
+   :link: tutorials/quantization_quick_start
 
    .. code-block::
 

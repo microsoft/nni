@@ -61,7 +61,7 @@ def send(command, data):
     try:
         _lock.acquire()
         data = data.encode('utf8')
-        msg = b'%b%014d%b' % (command.value, len(data), data)
+        msg = b'%b%014d%b' % (command.value.encode(), len(data), data)
         _logger.debug('Sending command, data: [%s]', msg)
         _out_file.write(msg)
         _out_file.flush()
@@ -81,7 +81,7 @@ def receive():
         return None, None
     length = int(header[2:])
     data = _in_file.read(length)
-    command = CommandType(header[:2])
+    command = CommandType(header[:2].decode())
     data = data.decode('utf8')
     _logger.debug('Received command, data: [%s]', data)
     return command, data

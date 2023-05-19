@@ -9,18 +9,18 @@ from typing import Callable, List, Dict, Union, Optional
 import torch
 import torch.nn as nn
 
-from nni.nas.nn.pytorch import LayerChoice
-from nni.nas.nn.pytorch.mutation_utils import generate_new_label
+from nni.mutable import label_scope
+from nni.nas.nn.pytorch import LayerChoice, MutableModule
 
 
-class NasBench201Cell(nn.Module):
+class NasBench201Cell(MutableModule):
     """
     Cell structure that is proposed in NAS-Bench-201.
 
     Proposed by `NAS-Bench-201: Extending the Scope of Reproducible Neural Architecture Search <https://arxiv.org/abs/2001.00326>`__.
 
     This cell is a densely connected DAG with ``num_tensors`` nodes, where each node is tensor.
-    For every i < j, there is an edge from i-th node to j-th node.
+    For every :math:`i < j`, there is an edge from i-th node to j-th node.
     Each edge in this DAG is associated with an operation transforming the hidden state from the source node
     to the target node. All possible operations are selected from a predefined operation set, defined in ``op_candidates``.
     Each of the ``op_candidates`` should be a callable that accepts input dimension and output dimension,
@@ -55,7 +55,6 @@ class NasBench201Cell(nn.Module):
                  in_features: int, out_features: int, num_tensors: int = 4,
                  label: Optional[str] = None):
         super().__init__()
-        self._label = generate_new_label(label)
 
         self.layers = nn.ModuleList()
         self.in_features = in_features
@@ -64,20 +63,22 @@ class NasBench201Cell(nn.Module):
 
         op_candidates = self._make_dict(op_candidates)
 
-        for tid in range(1, num_tensors):
-            node_ops = nn.ModuleList()
-            for j in range(tid):
-                inp = in_features if j == 0 else out_features
-                op_choices = OrderedDict([(key, cls(inp, out_features))
-                                          for key, cls in op_candidates.items()])
-                node_ops.append(LayerChoice(op_choices, label=f'{self._label}/{j}_{tid}'))
-            self.layers.append(node_ops)
+        with label_scope(label) as self._scope:
+            for tid in range(1, num_tensors):
+                node_ops = nn.ModuleList()
+                for j in range(tid):
+                    inp = in_features if j == 0 else out_features
+                    op_choices = OrderedDict([(key, cls(inp, out_features))
+                                              for key, cls in op_candidates.items()])
+                    node_ops.append(LayerChoice(op_choices, label=f'{j}_{tid}'))
+                self.layers.append(node_ops)
+
+    @torch.jit.unused
+    @property
+    def label(self) -> str:
+        return self._scope.name
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        """
-        The forward of input choice is simply selecting first on all choices.
-        It shouldn't be called directly by users in most cases.
-        """
         tensors: List[torch.Tensor] = [inputs]
         for layer in self.layers:
             current_tensor: List[torch.Tensor] = []

@@ -1,162 +1,133 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Stack, StackItem, Panel, PrimaryButton, DefaultButton, Pivot, PivotItem } from '@fluentui/react';
 import { DOWNLOAD_IP } from '@static/const';
 import { downFile } from '@static/function';
-import { infoIcon } from '@components/fluent/Icon';
 import MonacoHTML from '@components/common/MonacoEditor';
 import '@style/logPanel.scss';
+
+// TODO: the same as the file ExperimentSummaryPanel.tsx, should clear the timerIdList rather than only the timer Id
+
+// child component
+interface PivotProps {
+    content: string;
+    loading: boolean;
+    height: number;
+    downloadLog: () => void;
+    close: () => void;
+}
+
+export const PivotItemContent = (props: PivotProps): any => {
+    const { content, loading, height, downloadLog, close } = props;
+    return (
+        <div className='panel logMargin'>
+            <MonacoHTML content={content || 'Loading...'} loading={loading} height={height} />
+            <Stack horizontal className='buttons'>
+                <StackItem grow={12} className='download'>
+                    <PrimaryButton text='Download' onClick={downloadLog} />
+                </StackItem>
+                <StackItem grow={12} className='close'>
+                    <DefaultButton text='Close' onClick={close} />
+                </StackItem>
+            </Stack>
+        </div>
+    );
+};
 
 interface LogPanelProps {
     closePanel: () => void;
     activeTab?: string;
 }
 
-interface LogPanelState {
-    nniManagerLogStr: string | null;
-    dispatcherLogStr: string | null;
-    isLoading: boolean;
-    logPanelHeight: number;
-}
+const LogPanel = (props: LogPanelProps): any => {
+    const [nniManagerLogStr, setnniManagerLogStr] = useState(null as string | null);
+    const [dispatcherLogStr, setdispatcherLogStr] = useState(null as string | null);
+    const [logPanelHeight, setlogPanelHeight] = useState(window.innerHeight as number);
+    const [isLoading, setLoading] = useState(true as boolean);
+    let timerId: number | undefined;
 
-class LogPanel extends React.Component<LogPanelProps, LogPanelState> {
-    private timerId: number | undefined;
-
-    constructor(props: LogPanelProps) {
-        super(props);
-
-        this.state = {
-            nniManagerLogStr: null,
-            dispatcherLogStr: null,
-            isLoading: true,
-            logPanelHeight: window.innerHeight
-        };
-    }
-
-    downloadNNImanager = (): void => {
-        if (this.state.nniManagerLogStr !== null) {
-            downFile(this.state.nniManagerLogStr, 'nnimanager.log');
+    const downloadNNImanager = (): void => {
+        if (nniManagerLogStr !== null) {
+            downFile(nniManagerLogStr, 'nnimanager.log');
         }
     };
 
-    downloadDispatcher = (): void => {
-        if (this.state.dispatcherLogStr !== null) {
-            downFile(this.state.dispatcherLogStr, 'dispatcher.log');
+    const downloadDispatcher = (): void => {
+        if (dispatcherLogStr !== null) {
+            downFile(dispatcherLogStr, 'dispatcher.log');
         }
     };
 
-    dispatcherHTML = (): React.ReactNode => (
-        <div>
-            <span>Dispatcher log</span>
-            <span className='refresh' onClick={this.manualRefresh}>
-                {infoIcon}
-            </span>
-        </div>
-    );
-
-    nnimanagerHTML = (): React.ReactNode => (
-        <div>
-            <span>NNImanager log</span>
-            <span className='refresh' onClick={this.manualRefresh}>
-                {infoIcon}
-            </span>
-        </div>
-    );
-
-    setLogPanelHeight = (): void => {
-        this.setState(() => ({ logPanelHeight: window.innerHeight }));
+    const setLogPanelHeight = (): void => {
+        setlogPanelHeight(window.innerHeight);
     };
 
-    async componentDidMount(): Promise<void> {
-        this.refresh();
-        window.addEventListener('resize', this.setLogPanelHeight);
-    }
-
-    componentWillUnmount(): void {
-        window.clearTimeout(this.timerId);
-        window.removeEventListener('resize', this.setLogPanelHeight);
-    }
-
-    render(): React.ReactNode {
-        const { closePanel, activeTab } = this.props;
-        const { nniManagerLogStr, dispatcherLogStr, isLoading, logPanelHeight } = this.state;
-        // tab[height: 56] + tab[margin-bottom: 20] + button[32] + button[margin-top: 45, -bottom: 7] + fluent-panel own paddingBottom[20] + title-border[2]
-        const monacoHeight = logPanelHeight - 182;
-        return (
-            <Stack>
-                <Panel
-                    isOpen={true}
-                    hasCloseButton={false}
-                    isFooterAtBottom={true}
-                    isLightDismiss={true}
-                    onLightDismissClick={closePanel}
-                    className='logPanel'
-                >
-                    <Pivot selectedKey={activeTab} style={{ minHeight: 190 }}>
-                        <PivotItem headerText='Dispatcher log' key='dispatcher'>
-                            <div className='panel logMargin'>
-                                <MonacoHTML
-                                    content={dispatcherLogStr || 'Loading...'}
-                                    loading={isLoading}
-                                    height={monacoHeight}
-                                />
-                                <Stack horizontal className='buttons'>
-                                    <StackItem grow={12} className='download'>
-                                        <PrimaryButton text='Download' onClick={this.downloadDispatcher} />
-                                    </StackItem>
-                                    <StackItem grow={12} className='close'>
-                                        <DefaultButton text='Close' onClick={closePanel} />
-                                    </StackItem>
-                                </Stack>
-                            </div>
-                        </PivotItem>
-                        <PivotItem headerText='NNIManager log' key='nnimanager'>
-                            <div className='panel logMargin'>
-                                <MonacoHTML
-                                    content={nniManagerLogStr || 'Loading...'}
-                                    loading={isLoading}
-                                    height={monacoHeight}
-                                />
-                                <Stack horizontal className='buttons'>
-                                    <StackItem grow={12} className='download'>
-                                        <PrimaryButton text='Download' onClick={this.downloadNNImanager} />
-                                    </StackItem>
-                                    <StackItem grow={12} className='close'>
-                                        <DefaultButton text='Close' onClick={closePanel} />
-                                    </StackItem>
-                                </Stack>
-                            </div>
-                        </PivotItem>
-                    </Pivot>
-                </Panel>
-            </Stack>
-        );
-    }
-
-    private refresh = (): void => {
-        window.clearTimeout(this.timerId);
+    const refresh = (): void => {
+        window.clearTimeout(timerId);
         const dispatcherPromise = axios.get(`${DOWNLOAD_IP}/dispatcher.log`);
         const nniManagerPromise = axios.get(`${DOWNLOAD_IP}/nnimanager.log`);
         dispatcherPromise.then(res => {
             if (res.status === 200) {
-                this.setState({ dispatcherLogStr: res.data });
+                setdispatcherLogStr(res.data);
             }
         });
         nniManagerPromise.then(res => {
             if (res.status === 200) {
-                this.setState({ nniManagerLogStr: res.data });
+                setnniManagerLogStr(res.data);
             }
         });
+
         Promise.all([dispatcherPromise, nniManagerPromise]).then(() => {
-            this.setState({ isLoading: false });
-            this.timerId = window.setTimeout(this.refresh, 10000);
+            setLoading(false);
+            timerId = window.setTimeout(refresh, 10000);
         });
     };
 
-    private manualRefresh = (): void => {
-        this.setState({ isLoading: true });
-        this.refresh();
-    };
-}
+    useEffect(() => {
+        refresh();
+        window.addEventListener('resize', setLogPanelHeight);
+        return function () {
+            window.clearTimeout(timerId);
+            window.removeEventListener('resize', setLogPanelHeight);
+        };
+    }, []);
+
+    const { closePanel, activeTab } = props;
+    // tab[height: 56] + tab[margin-bottom: 20] + button[32] + button[margin-top: 45, -bottom: 7] + fluent-panel own paddingBottom[20] + title-border[2]
+    const monacoHeight = logPanelHeight - 182;
+    return (
+        <Stack>
+            <Panel
+                isOpen={true}
+                hasCloseButton={false}
+                isFooterAtBottom={true}
+                isLightDismiss={true}
+                onLightDismissClick={closePanel}
+                className='logPanel'
+            >
+                <Pivot selectedKey={activeTab} style={{ minHeight: 190 }}>
+                    <PivotItem headerText='Dispatcher log' key='dispatcher'>
+                        <PivotItemContent
+                            content={dispatcherLogStr as string}
+                            loading={isLoading}
+                            height={monacoHeight}
+                            downloadLog={downloadDispatcher}
+                            close={closePanel}
+                        />
+                    </PivotItem>
+                    <PivotItem headerText='NNIManager log' key='nnimanager'>
+                        <PivotItemContent
+                            content={nniManagerLogStr as string}
+                            loading={isLoading}
+                            height={monacoHeight}
+                            downloadLog={downloadNNImanager}
+                            close={closePanel}
+                        />
+                    </PivotItem>
+                </Pivot>
+            </Panel>
+        </Stack>
+    );
+};
 
 export default LogPanel;

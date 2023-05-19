@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: NNI \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-05-27 16:52+0800\n"
+"POT-Creation-Date: 2023-05-08 16:52+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,340 +16,6 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
-
-#: ../../source/tutorials/hello_nas.rst:13
-msgid ""
-"Click :ref:`here <sphx_glr_download_tutorials_hello_nas.py>` to download "
-"the full example code"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:22
-msgid "Hello, NAS!"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:24
-msgid ""
-"This is the 101 tutorial of Neural Architecture Search (NAS) on NNI. In "
-"this tutorial, we will search for a neural architecture on MNIST dataset "
-"with the help of NAS framework of NNI, i.e., *Retiarii*. We use multi-"
-"trial NAS as an example to show how to construct and explore a model "
-"space."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:28
-msgid ""
-"There are mainly three crucial components for a neural architecture "
-"search task, namely,"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:30
-msgid "Model search space that defines a set of models to explore."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:31
-msgid "A proper strategy as the method to explore this model space."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:32
-msgid ""
-"A model evaluator that reports the performance of every model in the "
-"space."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:34
-msgid ""
-"Currently, PyTorch is the only supported framework by Retiarii, and we "
-"have only tested **PyTorch 1.7 to 1.10**. This tutorial assumes PyTorch "
-"context but it should also apply to other frameworks, which is in our "
-"future plan."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:38
-msgid "Define your Model Space"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:40
-msgid ""
-"Model space is defined by users to express a set of models that users "
-"want to explore, which contains potentially good-performing models. In "
-"this framework, a model space is defined with two parts: a base model and"
-" possible mutations on the base model."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:46
-msgid "Define Base Model"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:48
-msgid ""
-"Defining a base model is almost the same as defining a PyTorch (or "
-"TensorFlow) model. Usually, you only need to replace the code ``import "
-"torch.nn as nn`` with ``import nni.retiarii.nn.pytorch as nn`` to use our"
-" wrapped PyTorch modules."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:52
-msgid "Below is a very simple example of defining a base model."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:93
-msgid ""
-"Always keep in mind that you should use ``import nni.retiarii.nn.pytorch "
-"as nn`` and :meth:`nni.retiarii.model_wrapper`. Many mistakes are a "
-"result of forgetting one of those. Also, please use ``torch.nn`` for "
-"submodules of ``nn.init``, e.g., ``torch.nn.init`` instead of "
-"``nn.init``."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:98
-msgid "Define Model Mutations"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:100
-msgid ""
-"A base model is only one concrete model not a model space. We provide "
-":doc:`API and Primitives </nas/construct_space>` for users to express how"
-" the base model can be mutated. That is, to build a model space which "
-"includes many models."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:103
-msgid "Based on the above base model, we can define a model space as below."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:134
-msgid "This results in the following code:"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:189
-#: ../../source/tutorials/hello_nas.rst:259
-#: ../../source/tutorials/hello_nas.rst:471
-#: ../../source/tutorials/hello_nas.rst:564
-#: ../../source/tutorials/hpo_quickstart_pytorch/main.rst:244
-#: ../../source/tutorials/hpo_quickstart_pytorch/main.rst:281
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:70
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:112
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:177
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:223
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:260
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:288
-msgid "Out:"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:210
-msgid ""
-"This example uses two mutation APIs, :class:`nn.LayerChoice "
-"<nni.retiarii.nn.pytorch.LayerChoice>` and :class:`nn.InputChoice "
-"<nni.retiarii.nn.pytorch.ValueChoice>`. :class:`nn.LayerChoice "
-"<nni.retiarii.nn.pytorch.LayerChoice>` takes a list of candidate modules "
-"(two in this example), one will be chosen for each sampled model. It can "
-"be used like normal PyTorch module. :class:`nn.InputChoice "
-"<nni.retiarii.nn.pytorch.ValueChoice>` takes a list of candidate values, "
-"one will be chosen to take effect for each sampled model."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:219
-msgid ""
-"More detailed API description and usage can be found :doc:`here "
-"</nas/construct_space>`."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:223
-msgid ""
-"We are actively enriching the mutation APIs, to facilitate easy "
-"construction of model space. If the currently supported mutation APIs "
-"cannot express your model space, please refer to :doc:`this doc "
-"</nas/mutator>` for customizing mutators."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:228
-msgid "Explore the Defined Model Space"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:230
-msgid ""
-"There are basically two exploration approaches: (1) search by evaluating "
-"each sampled model independently, which is the search approach in :ref"
-":`multi-trial NAS <multi-trial-nas>` and (2) one-shot weight-sharing "
-"based search, which is used in one-shot NAS. We demonstrate the first "
-"approach in this tutorial. Users can refer to :ref:`here <one-shot-nas>` "
-"for the second approach."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:235
-msgid ""
-"First, users need to pick a proper exploration strategy to explore the "
-"defined model space. Second, users need to pick or customize a model "
-"evaluator to evaluate the performance of each explored model."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:239
-msgid "Pick an exploration strategy"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:241
-msgid ""
-"Retiarii supports many :doc:`exploration strategies "
-"</nas/exploration_strategy>`."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:243
-msgid "Simply choosing (i.e., instantiate) an exploration strategy as below."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:273
-msgid "Pick or customize a model evaluator"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:275
-msgid ""
-"In the exploration process, the exploration strategy repeatedly generates"
-" new models. A model evaluator is for training and validating each "
-"generated model to obtain the model's performance. The performance is "
-"sent to the exploration strategy for the strategy to generate better "
-"models."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:279
-msgid ""
-"Retiarii has provided :doc:`built-in model evaluators </nas/evaluator>`, "
-"but to start with, it is recommended to use :class:`FunctionalEvaluator "
-"<nni.retiarii.evaluator.FunctionalEvaluator>`, that is, to wrap your own "
-"training and evaluation code with one single function. This function "
-"should receive one single model class and uses "
-":func:`nni.report_final_result` to report the final score of this model."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:284
-msgid ""
-"An example here creates a simple evaluator that runs on MNIST dataset, "
-"trains for 2 epochs, and reports its validation accuracy."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:367
-msgid "Create the evaluator"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:386
-msgid ""
-"The ``train_epoch`` and ``test_epoch`` here can be any customized "
-"function, where users can write their own training recipe."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:389
-msgid ""
-"It is recommended that the ``evaluate_model`` here accepts no additional "
-"arguments other than ``model_cls``. However, in the :doc:`advanced "
-"tutorial </nas/evaluator>`, we will show how to use additional arguments "
-"in case you actually need those. In future, we will support mutation on "
-"the arguments of evaluators, which is commonly called \"Hyper-parmeter "
-"tuning\"."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:394
-msgid "Launch an Experiment"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:396
-msgid ""
-"After all the above are prepared, it is time to start an experiment to do"
-" the model search. An example is shown below."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:417
-msgid ""
-"The following configurations are useful to control how many trials to run"
-" at most / at the same time."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:436
-msgid ""
-"Remember to set the following config if you want to GPU. "
-"``use_active_gpu`` should be set true if you wish to use an occupied GPU "
-"(possibly running a GUI)."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:456
-msgid ""
-"Launch the experiment. The experiment should take several minutes to "
-"finish on a workstation with 2 GPUs."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:495
-msgid ""
-"Users can also run Retiarii Experiment with :doc:`different training "
-"services </experiment/training_service/overview>` besides ``local`` "
-"training service."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:499
-msgid "Visualize the Experiment"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:501
-msgid ""
-"Users can visualize their experiment in the same way as visualizing a "
-"normal hyper-parameter tuning experiment. For example, open "
-"``localhost:8081`` in your browser, 8081 is the port that you set in "
-"``exp.run``. Please refer to :doc:`here "
-"</experiment/web_portal/web_portal>` for details."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:505
-msgid ""
-"We support visualizing models with 3rd-party visualization engines (like "
-"`Netron <https://netron.app/>`__). This can be used by clicking "
-"``Visualization`` in detail panel for each trial. Note that current "
-"visualization is based on `onnx <https://onnx.ai/>`__ , thus "
-"visualization is not feasible if the model cannot be exported into onnx."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:510
-msgid ""
-"Built-in evaluators (e.g., Classification) will automatically export the "
-"model into a file. For your own evaluator, you need to save your file "
-"into ``$NNI_OUTPUT_DIR/model.onnx`` to make this work. For instance,"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:541
-msgid "Relaunch the experiment, and a button is shown on Web portal."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:546
-msgid "Export Top Models"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:548
-msgid ""
-"Users can export top models after the exploration is done using "
-"``export_top_models``."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:575
-msgid ""
-"The output is ``json`` object which records the mutation actions of the "
-"top model. If users want to output source code of the top model, they can"
-" use :ref:`graph-based execution engine <graph-based-execution-engine>` "
-"for the experiment, by simply adding the following two lines."
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:597
-msgid "**Total running time of the script:** ( 2 minutes  4.499 seconds)"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:612
-msgid ":download:`Download Python source code: hello_nas.py <hello_nas.py>`"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:618
-msgid ":download:`Download Jupyter notebook: hello_nas.ipynb <hello_nas.ipynb>`"
-msgstr ""
-
-#: ../../source/tutorials/hello_nas.rst:625
-#: ../../source/tutorials/hpo_quickstart_pytorch/main.rst:335
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:362
-msgid "`Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_"
-msgstr ""
 
 #: ../../source/tutorials/hpo_quickstart_pytorch/main.rst:13
 msgid ""
@@ -585,6 +251,11 @@ msgid ""
 "http://localhost:8080."
 msgstr ""
 
+#: ../../source/tutorials/hpo_quickstart_pytorch/main.rst:244
+#: ../../source/tutorials/hpo_quickstart_pytorch/main.rst:281
+msgid "Out:"
+msgstr ""
+
 #: ../../source/tutorials/hpo_quickstart_pytorch/main.rst:260
 msgid "After the experiment is done"
 msgstr ""
@@ -636,122 +307,8 @@ msgstr ""
 msgid ":download:`Download Jupyter notebook: main.ipynb <main.ipynb>`"
 msgstr ""
 
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:13
-msgid ""
-"Click :ref:`here "
-"<sphx_glr_download_tutorials_pruning_quick_start_mnist.py>` to download "
-"the full example code"
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:22
-msgid "Pruning Quickstart"
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:24
-msgid "Here is a three-minute video to get you started with model pruning."
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:29
-msgid ""
-"Model pruning is a technique to reduce the model size and computation by "
-"reducing model weight size or intermediate state size. There are three "
-"common practices for pruning a DNN model:"
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:32
-msgid "Pre-training a model -> Pruning the model -> Fine-tuning the pruned model"
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:33
-msgid ""
-"Pruning a model during training (i.e., pruning aware training) -> Fine-"
-"tuning the pruned model"
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:34
-msgid "Pruning a model -> Training the pruned model from scratch"
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:36
-msgid ""
-"NNI supports all of the above pruning practices by working on the key "
-"pruning stage. Following this tutorial for a quick look at how to use NNI"
-" to prune a model in a common practice."
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:42
-msgid "Preparation"
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:44
-msgid ""
-"In this tutorial, we use a simple model and pre-trained on MNIST dataset."
-" If you are familiar with defining a model and training in pytorch, you "
-"can skip directly to `Pruning Model`_."
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:126
-msgid "Pruning Model"
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:128
-msgid ""
-"Using L1NormPruner to prune the model and generate the masks. Usually, a "
-"pruner requires original model and ``config_list`` as its inputs. "
-"Detailed about how to write ``config_list`` please refer "
-":doc:`compression config specification "
-"<../compression/compression_config_list>`."
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:132
-msgid ""
-"The following `config_list` means all layers whose type is `Linear` or "
-"`Conv2d` will be pruned, except the layer named `fc3`, because `fc3` is "
-"`exclude`. The final sparsity ratio for each layer is 50%. The layer "
-"named `fc3` will not be pruned."
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:158
-msgid "Pruners usually require `model` and `config_list` as input arguments."
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:237
-msgid ""
-"Speedup the original model with masks, note that `ModelSpeedup` requires "
-"an unwrapped model. The model becomes smaller after speedup, and reaches "
-"a higher sparsity ratio because `ModelSpeedup` will propagate the masks "
-"across layers."
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:274
-msgid "the model will become real smaller after speedup"
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:312
-msgid "Fine-tuning Compacted Model"
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:313
-msgid ""
-"Note that if the model has been sped up, you need to re-initialize a new "
-"optimizer for fine-tuning. Because speedup will replace the masked big "
-"layers with dense small ones."
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:334
-msgid "**Total running time of the script:** ( 1 minutes  30.730 seconds)"
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:349
-msgid ""
-":download:`Download Python source code: pruning_quick_start_mnist.py "
-"<pruning_quick_start_mnist.py>`"
-msgstr ""
-
-#: ../../source/tutorials/pruning_quick_start_mnist.rst:355
-msgid ""
-":download:`Download Jupyter notebook: pruning_quick_start_mnist.ipynb "
-"<pruning_quick_start_mnist.ipynb>`"
+#: ../../source/tutorials/hpo_quickstart_pytorch/main.rst:335
+msgid "`Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_"
 msgstr ""
 
 #~ msgid "**Total running time of the script:** ( 2 minutes  15.810 seconds)"
@@ -776,5 +333,572 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "**Total running time of the script:** ( 0 minutes  58.337 seconds)"
+#~ msgstr ""
+
+#~ msgid "**Total running time of the script:** ( 1 minutes  30.730 seconds)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Click :ref:`here "
+#~ "<sphx_glr_download_tutorials_hello_nas.py>` to download"
+#~ " the full example code"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Currently, PyTorch is the only supported"
+#~ " framework by Retiarii, and we have"
+#~ " only tested **PyTorch 1.7 to 1.10**."
+#~ " This tutorial assumes PyTorch context "
+#~ "but it should also apply to other"
+#~ " frameworks, which is in our future"
+#~ " plan."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Defining a base model is almost "
+#~ "the same as defining a PyTorch (or"
+#~ " TensorFlow) model. Usually, you only "
+#~ "need to replace the code ``import "
+#~ "torch.nn as nn`` with ``import "
+#~ "nni.retiarii.nn.pytorch as nn`` to use "
+#~ "our wrapped PyTorch modules."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Always keep in mind that you "
+#~ "should use ``import nni.retiarii.nn.pytorch as"
+#~ " nn`` and :meth:`nni.retiarii.model_wrapper`. "
+#~ "Many mistakes are a result of "
+#~ "forgetting one of those. Also, please"
+#~ " use ``torch.nn`` for submodules of "
+#~ "``nn.init``, e.g., ``torch.nn.init`` instead "
+#~ "of ``nn.init``."
+#~ msgstr ""
+
+#~ msgid "Define Model Mutations"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "This example uses two mutation APIs, "
+#~ ":class:`nn.LayerChoice <nni.retiarii.nn.pytorch.LayerChoice>`"
+#~ " and :class:`nn.InputChoice "
+#~ "<nni.retiarii.nn.pytorch.ValueChoice>`. :class:`nn.LayerChoice"
+#~ " <nni.retiarii.nn.pytorch.LayerChoice>` takes a "
+#~ "list of candidate modules (two in "
+#~ "this example), one will be chosen "
+#~ "for each sampled model. It can be"
+#~ " used like normal PyTorch module. "
+#~ ":class:`nn.InputChoice <nni.retiarii.nn.pytorch.ValueChoice>`"
+#~ " takes a list of candidate values,"
+#~ " one will be chosen to take "
+#~ "effect for each sampled model."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Retiarii supports many :doc:`exploration "
+#~ "strategies </nas/exploration_strategy>`."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Retiarii has provided :doc:`built-in "
+#~ "model evaluators </nas/evaluator>`, but to "
+#~ "start with, it is recommended to "
+#~ "use :class:`FunctionalEvaluator "
+#~ "<nni.retiarii.evaluator.FunctionalEvaluator>`, that is,"
+#~ " to wrap your own training and "
+#~ "evaluation code with one single "
+#~ "function. This function should receive "
+#~ "one single model class and uses "
+#~ ":func:`nni.report_final_result` to report the "
+#~ "final score of this model."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "It is recommended that the "
+#~ "``evaluate_model`` here accepts no additional"
+#~ " arguments other than ``model_cls``. "
+#~ "However, in the :doc:`advanced tutorial "
+#~ "</nas/evaluator>`, we will show how to"
+#~ " use additional arguments in case you"
+#~ " actually need those. In future, we"
+#~ " will support mutation on the "
+#~ "arguments of evaluators, which is "
+#~ "commonly called \"Hyper-parmeter tuning\"."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The following configurations are useful "
+#~ "to control how many trials to run"
+#~ " at most / at the same time."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Remember to set the following config "
+#~ "if you want to GPU. ``use_active_gpu``"
+#~ " should be set true if you wish"
+#~ " to use an occupied GPU (possibly "
+#~ "running a GUI)."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Users can also run Retiarii Experiment"
+#~ " with :doc:`different training services "
+#~ "</experiment/training_service/overview>` besides ``local``"
+#~ " training service."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The output is ``json`` object which "
+#~ "records the mutation actions of the "
+#~ "top model. If users want to output"
+#~ " source code of the top model, "
+#~ "they can use :ref:`graph-based execution"
+#~ " engine <graph-based-execution-engine>` "
+#~ "for the experiment, by simply adding "
+#~ "the following two lines."
+#~ msgstr ""
+
+#~ msgid "**Total running time of the script:** ( 2 minutes  4.499 seconds)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ ":ref:`Go to the end "
+#~ "<sphx_glr_download_tutorials_hello_nas.py>` to download"
+#~ " the full example code"
+#~ msgstr ""
+
+#~ msgid "Hello, NAS!"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "This is the 101 tutorial of Neural"
+#~ " Architecture Search (NAS) on NNI. In"
+#~ " this tutorial, we will search for"
+#~ " a neural architecture on MNIST "
+#~ "dataset with the help of NAS "
+#~ "framework of NNI, i.e., *Retiarii*. We"
+#~ " use multi-trial NAS as an "
+#~ "example to show how to construct "
+#~ "and explore a model space."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "There are mainly three crucial "
+#~ "components for a neural architecture "
+#~ "search task, namely,"
+#~ msgstr ""
+
+#~ msgid "Model search space that defines a set of models to explore."
+#~ msgstr ""
+
+#~ msgid "A proper strategy as the method to explore this model space."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "A model evaluator that reports the "
+#~ "performance of every model in the "
+#~ "space."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Currently, PyTorch is the only supported"
+#~ " framework by Retiarii, and we have"
+#~ " only tested **PyTorch 1.9 to 1.13**."
+#~ " This tutorial assumes PyTorch context "
+#~ "but it should also apply to other"
+#~ " frameworks, which is in our future"
+#~ " plan."
+#~ msgstr ""
+
+#~ msgid "Define your Model Space"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Model space is defined by users to"
+#~ " express a set of models that "
+#~ "users want to explore, which contains"
+#~ " potentially good-performing models. In "
+#~ "this framework, a model space is "
+#~ "defined with two parts: a base "
+#~ "model and possible mutations on the "
+#~ "base model."
+#~ msgstr ""
+
+#~ msgid "Define Base Model"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Defining a base model is almost "
+#~ "the same as defining a PyTorch (or"
+#~ " TensorFlow) model."
+#~ msgstr ""
+
+#~ msgid "Below is a very simple example of defining a base model."
+#~ msgstr ""
+
+#~ msgid "Define Model Variations"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "A base model is only one concrete"
+#~ " model not a model space. We "
+#~ "provide :doc:`API and Primitives "
+#~ "</nas/construct_space>` for users to express"
+#~ " how the base model can be "
+#~ "mutated. That is, to build a model"
+#~ " space which includes many models."
+#~ msgstr ""
+
+#~ msgid "Based on the above base model, we can define a model space as below."
+#~ msgstr ""
+
+#~ msgid "This results in the following code:"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "This example uses two mutation APIs, "
+#~ ":class:`nn.LayerChoice <nni.nas.nn.pytorch.LayerChoice>` "
+#~ "and :func:`nni.choice`. :class:`nn.LayerChoice "
+#~ "<nni.nas.nn.pytorch.LayerChoice>` takes a list "
+#~ "of candidate modules (two in this "
+#~ "example), one will be chosen for "
+#~ "each sampled model. It can be used"
+#~ " like normal PyTorch module. "
+#~ ":func:`nni.choice` is used as parameter "
+#~ "of `MutableDropout`, which then takes "
+#~ "the result as dropout rate."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "More detailed API description and usage"
+#~ " can be found :doc:`here "
+#~ "</nas/construct_space>`."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "We are actively enriching the mutation"
+#~ " APIs, to facilitate easy construction "
+#~ "of model space. If the currently "
+#~ "supported mutation APIs cannot express "
+#~ "your model space, please refer to "
+#~ ":doc:`this doc </nas/mutator>` for customizing"
+#~ " mutators."
+#~ msgstr ""
+
+#~ msgid "Explore the Defined Model Space"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "There are basically two exploration "
+#~ "approaches: (1) search by evaluating "
+#~ "each sampled model independently, which "
+#~ "is the search approach in :ref"
+#~ ":`multi-trial NAS <multi-trial-nas>` "
+#~ "and (2) one-shot weight-sharing "
+#~ "based search, which is used in "
+#~ "one-shot NAS. We demonstrate the "
+#~ "first approach in this tutorial. Users"
+#~ " can refer to :ref:`here <one-"
+#~ "shot-nas>` for the second approach."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "First, users need to pick a proper"
+#~ " exploration strategy to explore the "
+#~ "defined model space. Second, users need"
+#~ " to pick or customize a model "
+#~ "evaluator to evaluate the performance of"
+#~ " each explored model."
+#~ msgstr ""
+
+#~ msgid "Pick an exploration strategy"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "NNI NAS supports many :doc:`exploration "
+#~ "strategies </nas/exploration_strategy>`."
+#~ msgstr ""
+
+#~ msgid "Simply choosing (i.e., instantiate) an exploration strategy as below."
+#~ msgstr ""
+
+#~ msgid "Pick or customize a model evaluator"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "In the exploration process, the "
+#~ "exploration strategy repeatedly generates new"
+#~ " models. A model evaluator is for "
+#~ "training and validating each generated "
+#~ "model to obtain the model's performance."
+#~ " The performance is sent to the "
+#~ "exploration strategy for the strategy to"
+#~ " generate better models."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "NNI NAS has provided :doc:`built-in "
+#~ "model evaluators </nas/evaluator>`, but to "
+#~ "start with, it is recommended to "
+#~ "use :class:`FunctionalEvaluator "
+#~ "<nni.nas.evaluator.FunctionalEvaluator>`, that is, "
+#~ "to wrap your own training and "
+#~ "evaluation code with one single "
+#~ "function. This function should receive "
+#~ "one single model class and uses "
+#~ ":func:`nni.report_final_result` to report the "
+#~ "final score of this model."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "An example here creates a simple "
+#~ "evaluator that runs on MNIST dataset,"
+#~ " trains for 2 epochs, and reports "
+#~ "its validation accuracy."
+#~ msgstr ""
+
+#~ msgid "Create the evaluator"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The ``train_epoch`` and ``test_epoch`` here"
+#~ " can be any customized function, "
+#~ "where users can write their own "
+#~ "training recipe."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "It is recommended that the "
+#~ "``evaluate_model`` here accepts no additional"
+#~ " arguments other than ``model``. However,"
+#~ " in the :doc:`advanced tutorial "
+#~ "</nas/evaluator>`, we will show how to"
+#~ " use additional arguments in case you"
+#~ " actually need those. In future, we"
+#~ " will support mutation on the "
+#~ "arguments of evaluators, which is "
+#~ "commonly called \"Hyper-parameter tuning\"."
+#~ msgstr ""
+
+#~ msgid "Launch an Experiment"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "After all the above are prepared, "
+#~ "it is time to start an experiment"
+#~ " to do the model search. An "
+#~ "example is shown below."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Different from HPO experiment, NAS "
+#~ "experiment will generate an experiment "
+#~ "config automatically. It should work for"
+#~ " most cases. For example, when using"
+#~ " multi-trial strategies, local training "
+#~ "service with concurrency 1 will be "
+#~ "used by default. Users can customize "
+#~ "the config. For example,"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Remember to set the following config "
+#~ "if you want to GPU. ``use_active_gpu``"
+#~ " should be set true if you wish"
+#~ " to use an occupied GPU (possibly "
+#~ "running a GUI)::"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Launch the experiment. The experiment "
+#~ "should take several minutes to finish"
+#~ " on a workstation with 2 GPUs."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Users can also run NAS Experiment "
+#~ "with :doc:`different training services "
+#~ "</experiment/training_service/overview>` besides ``local``"
+#~ " training service."
+#~ msgstr ""
+
+#~ msgid "Visualize the Experiment"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Users can visualize their experiment in"
+#~ " the same way as visualizing a "
+#~ "normal hyper-parameter tuning experiment. "
+#~ "For example, open ``localhost:8081`` in "
+#~ "your browser, 8081 is the port "
+#~ "that you set in ``exp.run``. Please "
+#~ "refer to :doc:`here "
+#~ "</experiment/web_portal/web_portal>` for details."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "We support visualizing models with "
+#~ "3rd-party visualization engines (like "
+#~ "`Netron <https://netron.app/>`__). This can be"
+#~ " used by clicking ``Visualization`` in "
+#~ "detail panel for each trial. Note "
+#~ "that current visualization is based on"
+#~ " `onnx <https://onnx.ai/>`__ , thus "
+#~ "visualization is not feasible if the "
+#~ "model cannot be exported into onnx."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Built-in evaluators (e.g., Classification) "
+#~ "will automatically export the model into"
+#~ " a file. For your own evaluator, "
+#~ "you need to save your file into"
+#~ " ``$NNI_OUTPUT_DIR/model.onnx`` to make this "
+#~ "work. For instance,"
+#~ msgstr ""
+
+#~ msgid "Relaunch the experiment, and a button is shown on Web portal."
+#~ msgstr ""
+
+#~ msgid "Export Top Models"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Users can export top models after "
+#~ "the exploration is done using "
+#~ "``export_top_models``."
+#~ msgstr ""
+
+#~ msgid "**Total running time of the script:** ( 13 minutes  8.330 seconds)"
+#~ msgstr ""
+
+#~ msgid ":download:`Download Python source code: hello_nas.py <hello_nas.py>`"
+#~ msgstr ""
+
+#~ msgid ""
+#~ ":download:`Download Jupyter notebook: "
+#~ "hello_nas.ipynb <hello_nas.ipynb>`"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Click :ref:`here "
+#~ "<sphx_glr_download_tutorials_pruning_quick_start_mnist.py>` to"
+#~ " download the full example code"
+#~ msgstr ""
+
+#~ msgid "Pruning Quickstart"
+#~ msgstr ""
+
+#~ msgid "Here is a three-minute video to get you started with model pruning."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Model pruning is a technique to "
+#~ "reduce the model size and computation"
+#~ " by reducing model weight size or "
+#~ "intermediate state size. There are three"
+#~ " common practices for pruning a DNN"
+#~ " model:"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Pre-training a model -> Pruning "
+#~ "the model -> Fine-tuning the "
+#~ "pruned model"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Pruning a model during training (i.e.,"
+#~ " pruning aware training) -> Fine-"
+#~ "tuning the pruned model"
+#~ msgstr ""
+
+#~ msgid "Pruning a model -> Training the pruned model from scratch"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "NNI supports all of the above "
+#~ "pruning practices by working on the "
+#~ "key pruning stage. Following this "
+#~ "tutorial for a quick look at how"
+#~ " to use NNI to prune a model"
+#~ " in a common practice."
+#~ msgstr ""
+
+#~ msgid "Preparation"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "In this tutorial, we use a simple"
+#~ " model and pre-trained on MNIST "
+#~ "dataset. If you are familiar with "
+#~ "defining a model and training in "
+#~ "pytorch, you can skip directly to "
+#~ "`Pruning Model`_."
+#~ msgstr ""
+
+#~ msgid "Pruning Model"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Using L1NormPruner to prune the model"
+#~ " and generate the masks. Usually, a"
+#~ " pruner requires original model and "
+#~ "``config_list`` as its inputs. Detailed "
+#~ "about how to write ``config_list`` "
+#~ "please refer :doc:`compression config "
+#~ "specification <../compression/compression_config_list>`."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "The following `config_list` means all "
+#~ "layers whose type is `Linear` or "
+#~ "`Conv2d` will be pruned, except the "
+#~ "layer named `fc3`, because `fc3` is "
+#~ "`exclude`. The final sparsity ratio for"
+#~ " each layer is 50%. The layer "
+#~ "named `fc3` will not be pruned."
+#~ msgstr ""
+
+#~ msgid "Pruners usually require `model` and `config_list` as input arguments."
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Speedup the original model with masks,"
+#~ " note that `ModelSpeedup` requires an "
+#~ "unwrapped model. The model becomes "
+#~ "smaller after speedup, and reaches a "
+#~ "higher sparsity ratio because `ModelSpeedup`"
+#~ " will propagate the masks across "
+#~ "layers."
+#~ msgstr ""
+
+#~ msgid "the model will become real smaller after speedup"
+#~ msgstr ""
+
+#~ msgid "Fine-tuning Compacted Model"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "Note that if the model has been"
+#~ " sped up, you need to re-"
+#~ "initialize a new optimizer for fine-"
+#~ "tuning. Because speedup will replace the"
+#~ " masked big layers with dense small"
+#~ " ones."
+#~ msgstr ""
+
+#~ msgid "**Total running time of the script:** ( 1 minutes  0.810 seconds)"
+#~ msgstr ""
+
+#~ msgid ""
+#~ ":download:`Download Python source code: "
+#~ "pruning_quick_start_mnist.py <pruning_quick_start_mnist.py>`"
+#~ msgstr ""
+
+#~ msgid ""
+#~ ":download:`Download Jupyter notebook: "
+#~ "pruning_quick_start_mnist.ipynb "
+#~ "<pruning_quick_start_mnist.ipynb>`"
 #~ msgstr ""
 

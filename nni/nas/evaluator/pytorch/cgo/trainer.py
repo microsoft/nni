@@ -4,11 +4,13 @@
 import pytorch_lightning as pl
 from pytorch_lightning.strategies import SingleDeviceStrategy
 
+
 class BypassStrategy(SingleDeviceStrategy):
     strategy_name = "single_device"
 
     def model_to_device(self) -> None:
         pass
+
 
 class Trainer(pl.Trainer):
     """

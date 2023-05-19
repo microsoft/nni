@@ -7,20 +7,19 @@ pr: none
 jobs:
 - job: validate_version_number
   pool:
-    vmImage: Ubuntu 18.04
+    vmImage: ubuntu-latest
 
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.8
-    displayName: Configure Python version
+  - template: templates/config-version.yml
+    parameters:
+      platform: ubuntu-latest
 
   - script: |
       echo $(build_type)
       echo $(NNI_RELEASE)
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      if [[ $BRANCH_TAG == v$(NNI_RELEASE) && $(NNI_RELEASE) =~ ^[0-9](.[0-9])+$ ]]; then
+      if [[ $BRANCH_TAG == v$(NNI_RELEASE) && $(NNI_RELEASE) =~ ^[0-9](.(0|[1-9][0-9]*))+$ ]]; then
         echo 'Build version match branch tag'
       else
         echo 'Build version does not match branch tag'
@@ -32,7 +31,7 @@ jobs:
   - script: |
       echo $(build_type)
       echo $(NNI_RELEASE)
-      if [[ $(NNI_RELEASE) =~ ^[0-9](.[0-9])+(a|b|rc)[0-9]$ ]]; then
+      if [[ $(NNI_RELEASE) =~ ^[0-9](.(0|[1-9][0-9]*))+(a|b|rc)[0-9]$ ]]; then
         echo 'Valid prerelease version $(NNI_RELEASE)'
         echo `git describe --tags --abbrev=0`
       else
@@ -46,13 +45,12 @@ jobs:
   dependsOn: validate_version_number
   condition: succeeded()
   pool:
-    vmImage: Ubuntu 18.04
+    vmImage: ubuntu-latest
 
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.8
-    displayName: Configure Python version
+  - template: templates/config-version.yml
+    parameters:
+      platform: ubuntu-latest
 
   - script: |
       python -m pip install --upgrade pip setuptools wheel twine
@@ -92,13 +90,12 @@ jobs:
   dependsOn: validate_version_number
   condition: succeeded()
   pool:
-    vmImage: macOS-10.15
+    vmImage: macOS-latest
 
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.8
-    displayName: Configure Python version
+  - template: templates/config-version.yml
+    parameters:
+      platform: macOS-latest
 
   - script: |
       python -m pip install --upgrade pip setuptools wheel twine
@@ -120,13 +117,12 @@ jobs:
   dependsOn: validate_version_number
   condition: succeeded()
   pool:
-    vmImage: windows-2019
+    vmImage: windows-latest
 
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.8
-    displayName: Configure Python version
+  - template: templates/config-version.yml
+    parameters:
+      platform: windows-latest
 
   - powershell: |
       python -m pip install --upgrade pip setuptools wheel twine

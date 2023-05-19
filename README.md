@@ -20,7 +20,7 @@ NNI automates feature engineering, neural architecture search, hyperparameter tu
 
 ## What's NEW! &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
 
-* **New release**: [v2.9 is available](https://github.com/microsoft/nni/releases/tag/v2.9) - _released on Sept-8-2022_
+* **New release**: [v3.0 preview is available](https://github.com/microsoft/nni/releases/tag/v3.0rc1) - _released on May-5-2022_
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on June-22-2022_
 * **New research paper**: [SparTA: Deep-Learning Model Sparsity via Tensor-with-Sparsity-Attribute](https://www.usenix.org/system/files/osdi22-zheng-ningxin.pdf) - _published in OSDI 2022_
 * **New research paper**: [Privacy-preserving Online AutoML for Domain-Specific Face Detection](https://openaccess.thecvf.com/content/CVPR2022/papers/Yan_Privacy-Preserving_Online_AutoML_for_Domain-Specific_Face_Detection_CVPR_2022_paper.pdf) - _published in CVPR 2022_
@@ -193,9 +193,9 @@ To update NNI to the latest version, add `--upgrade` flag to the above commands.
 </ul>
 <li><b>Compression</b></li>
 <ul>
-<li><a href="https://nni.readthedocs.io/en/latest/tutorials/pruning_quick_start_mnist.html">Pruning</a></li>
+<li><a href="https://nni.readthedocs.io/en/latest/tutorials/pruning_quick_start.html">Pruning</a></li>
 <li><a href="https://nni.readthedocs.io/en/latest/tutorials/pruning_speed_up.html">Pruning Speedup</a></li>
-<li><a href="https://nni.readthedocs.io/en/latest/tutorials/quantization_quick_start_mnist.html">Quantization</a></li>
+<li><a href="https://nni.readthedocs.io/en/latest/tutorials/quantization_quick_start.html">Quantization</a></li>
 <li><a href="https://nni.readthedocs.io/en/latest/tutorials/quantization_speed_up.html">Quantization Speedup</a></li>
 </ul>
 </ul>

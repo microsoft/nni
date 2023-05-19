@@ -84,6 +84,18 @@ class ExperimentConfig(ConfigBase):
     training_service: Union[TrainingServiceConfig, List[TrainingServiceConfig]]
     shared_storage: Optional[SharedStorageConfig] = None
 
+    def __new__(cls, *args, **kwargs) -> 'ExperimentConfig':
+        if cls is not ExperimentConfig:
+            # The __new__ only applies to the base class.
+            return super().__new__(cls)
+        if kwargs.get('experimentType') == 'nas':
+            # Loaded by JSON or YAML.
+            # Send the kwargs to the NAS config constructor.
+            from nni.nas.experiment import NasExperimentConfig
+            return NasExperimentConfig.__new__(NasExperimentConfig)
+        else:
+            return super().__new__(cls)
+
     def __init__(self, training_service_platform=None, **kwargs):
         super().__init__(**kwargs)
         if training_service_platform is not None:
@@ -174,7 +186,7 @@ class ExperimentConfig(ConfigBase):
         # currently I have only seen one issue of this kind
         #Path(self.experiment_working_directory).mkdir(parents=True, exist_ok=True)
 
-        if type(self).__name__ != 'RetiariiExeConfig':
+        if type(self).__name__ != 'NasExperimentConfig':
             utils.validate_gpu_indices(self.tuner_gpu_indices)
 
             if self.tuner is None:

@@ -107,7 +107,7 @@ class NNITensorboardManager implements TensorboardManager {
             }
             return [ 'tensorboard', `${logdirCmd}=${logRealPaths.join(',')}`, `--port=${port}` ];
         } catch (error) {
-            throw new Error(`${error.message}`);
+            throw new Error(`${(error as any).message}`);
         }
     }
 

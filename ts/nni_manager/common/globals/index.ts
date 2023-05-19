@@ -17,8 +17,9 @@
 import assert from 'assert/strict';
 
 import { NniManagerArgs, parseArgs } from './arguments';
-import { LogStream, initLogStream } from './log_stream';
+import { LogStream, initLogStream, initLogStreamCustom } from './log_stream';
 import { NniPaths, createPaths } from './paths';
+import { RestManager } from './rest';
 import { ShutdownManager } from './shutdown';
 
 export { NniManagerArgs, NniPaths };
@@ -32,6 +33,7 @@ export { NniManagerArgs, NniPaths };
 export interface NniGlobals {
     readonly args: NniManagerArgs;
     readonly paths: NniPaths;
+    readonly rest: RestManager;
     readonly shutdown: ShutdownManager;
 
     readonly logStream: LogStream;
@@ -46,7 +48,7 @@ declare global {
 if (global.nni === undefined) {
     global.nni = {} as NniGlobals;
 }
-const globals: NniGlobals = global.nni;
+export const globals: NniGlobals = global.nni;
 export default globals;
 
 /**
@@ -59,8 +61,21 @@ export function initGlobals(): void {
     const args = parseArgs(process.argv.slice(2));
     const paths = createPaths(args);
     const logStream = initLogStream(args, paths);
+    const rest = new RestManager();
     const shutdown = new ShutdownManager();
 
-    const globals: NniGlobals = { args, paths, logStream, shutdown };
+    const globals: NniGlobals = { args, paths, logStream, rest, shutdown };
+    Object.assign(global.nni, globals);
+}
+
+export function initGlobalsCustom(args: NniManagerArgs, logPath: string): void {
+    assert.deepEqual(global.nni, {});
+
+    const paths = createPaths(args);
+    const logStream = initLogStreamCustom(args, logPath);
+    const rest = new RestManager();
+    const shutdown = new ShutdownManager();
+
+    const globals: NniGlobals = { args, paths, logStream, rest, shutdown };
     Object.assign(global.nni, globals);
 }
