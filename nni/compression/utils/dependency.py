@@ -9,7 +9,7 @@ import uuid
 
 import torch
 
-from .dependency import ChannelDependency, GroupDependency
+from .shape_dependency import ChannelDependency, GroupDependency
 from ..base.config import select_modules_by_config, trans_legacy_config_list
 
 

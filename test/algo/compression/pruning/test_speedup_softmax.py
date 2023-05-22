@@ -10,10 +10,10 @@ import unittest
 import torch
 import torch.nn.functional as F
 
-from nni.compression.pytorch.utils import count_flops_params
-from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+from nni.compression.utils import count_flops_params
+from nni.compression.speedup import ModelSpeedup
 
-from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import L1NormPruner
+from nni.compression.pruning import L1NormPruner
 
 class NaiveModel(torch.nn.Module):
     def __init__(self, acti, acti_kw):

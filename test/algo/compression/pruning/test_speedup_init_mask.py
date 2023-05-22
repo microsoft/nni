@@ -8,10 +8,9 @@ import torch
 import torch.nn.functional as F
 
 from nni.common.concrete_trace_utils import concrete_trace
-from nni.compression.pytorch.pruning import L1NormPruner
-from nni.compression.pytorch.speedup.compress_modules import no_replace
-from nni.compression.pytorch.speedup.v2 import ModelSpeedup
-from nni.compression.pytorch.utils import count_flops_params
+from nni.compression.pruning import L1NormPruner
+from nni.compression.speedup import ModelSpeedup
+from nni.compression.utils import count_flops_params
 
 def simple_annotation():
     def simple_wrapper(old_func):

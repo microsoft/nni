@@ -5,8 +5,9 @@ import csv
 import logging
 import torch
 import numpy as np
-from ..base.wrapper import ModuleWrapper
+
 from .attr import get_nested_attr
+from ..base.wrapper import ModuleWrapper
 
 
 __all__ = ['ChannelDependency', 'GroupDependency', 'ReshapeDependency',
