@@ -100,7 +100,12 @@ class ModelSpeedup(torch.fx.Interpreter):
                  logger: logging.Logger | None = None):
         self.dummy_input = _normalize_input(dummy_input)
         self.bound_model = model
-        self.graph_module = graph_module if isinstance(graph_module, GraphModule) else concrete_trace(model, dummy_input)
+        if isinstance(graph_module, GraphModule):
+            self.graph_module = graph_module
+        elif isinstance(dummy_input, dict):
+            self.graph_module = concrete_trace(model, dummy_input)
+        else:
+            self.graph_module = concrete_trace(model, self.dummy_input)
 
         ShapeProp(self.graph_module).propagate(*self.dummy_input)   # attach shape to graph_module
 

@@ -3,23 +3,27 @@
 
 import logging
 import operator
-from typing import (Dict, List)
+from copy import deepcopy
+from typing import (Any, Dict, List)
+from uuid import uuid4
 
 import numpy as np
 import torch
 import torch.fx
 from torch.fx.passes.shape_prop import TensorMetadata
 
-__all__ = ['build_channel_dependency', 'build_group_dependency']
+from nni.contrib.compression.base.config import trans_legacy_config_list, select_modules_by_config
+
+__all__ = ['build_channel_dependency', 'build_group_dependency', 'au']
 
 # see https://pytorch.org/docs/stable/torch.html#pointwise-ops
-CALL_FUNCTION_ADD_MUL = [
+CALL_FUNCTION_REDUCE = [
     torch.add, torch.sub, torch.subtract, torch.mul, torch.div, torch.multiply, torch.divide,
     torch.addcmul, torch.addcdiv, torch.logical_xor, torch.logical_and, torch.logical_or,
     operator.add, operator.iadd, operator.sub, operator.isub, operator.mul, operator.imul,
     operator.truediv, operator.floordiv, operator.or_, operator.and_, operator.xor,
 ]
-CALL_METHOD_ADD_MUL = [
+CALL_METHOD_REDUCE = [
     'add', 'add_', 'sub', 'sub_', 'subtract', 'subtract_', 'mul', 'mul_', 
     'div', 'div_', 'multiply', 'multiply_', 'divide', 'divide_',
     'addcmul', 'addcmul_', 'addcdiv', 'addcdiv_', 'logical_xor', 'logical_xor_',
@@ -27,10 +31,10 @@ CALL_METHOD_ADD_MUL = [
 ]
 
 # see https://pytorch.org/docs/stable/torch.html#indexing-slicing-joining-mutating-ops
-CALL_FUNCTION_CAT = [torch.cat, torch.concat, torch.concatenate, torch.column_stack, torch.dstack,
+CALL_FUNCTION_CONCAT = [torch.cat, torch.concat, torch.concatenate, torch.column_stack, torch.dstack,
                      torch.hstack, torch.row_stack, torch.stack]
 CALL_FUNCTION_RESHAPE = [
-    *CALL_FUNCTION_CAT,
+    *CALL_FUNCTION_CONCAT,
     torch.chunk, torch.diagonal, torch.flatten, torch.flip, torch.fliplr, torch.flipud, torch.moveaxis, torch.movedim, torch.narrow,
     torch.reshape, torch.split, torch.split_with_sizes, torch.squeeze, torch.unsqueeze, torch.transpose, torch.t, torch.permute,
     torch.repeat_interleave,
@@ -119,6 +123,56 @@ def get_child_layers(node: torch.fx.Node, module: torch.fx.GraphModule, target_t
             continue
         child_layers.extend(get_child_layers(child, module, target_types))
     return child_layers
+
+
+def auto_set_denpendency_group_ids(graph_module: torch.fx.GraphModule, config_list: List[Dict[str, Any]], prune_type='Filter', prune_axis=1) -> List[Dict[str, Any]]:
+    """
+    Auto find the output dependency between all 'Conv2d', 'Linear', 'ConvTranspose2d', 'Embedding' modules,
+    then set the ``dependency_group_id`` in config list.
+
+    Note that a new dependency group id will be set as a shortcut in one config,
+    it will replace the old configured one in that config.
+
+    Parameters
+    ----------
+    graph_module : torch.fx.GraphModule
+        The traced model to be analyzed.
+    config_list : list
+        The compression config list.
+
+    Returns
+    config_list : list
+        The new config list with dependency group id.
+    """
+    def trans_target(target:str):
+        target = target.split('_')
+        return '.'.join(target)
+    
+    channel_dependency = build_channel_dependency(graph_module, prune_type, prune_axis)
+    module2uid = {}
+    for d_set in channel_dependency:
+        uid = uuid4().hex
+        module2uid.update({trans_target(node.target): uid for node in d_set})
+
+    group_dependency, _ = build_group_dependency(graph_module)
+    group_dependency = {trans_target(node.target): num_groups for node, num_groups in group_dependency.items()}
+
+    config_list = trans_legacy_config_list(config_list)
+    new_config_list = []
+    for config in config_list:
+        modules, public_config, _ = select_modules_by_config(graph_module, config)
+        for target in modules.keys():
+            sub_config = deepcopy(public_config)
+            if target in module2uid:
+                sub_config['dependency_group_id'] = module2uid[target]
+            if target in group_dependency:
+                sub_config['internal_metric_block'] = group_dependency[target]
+            new_config_list.append({
+                'op_names': [target],
+                **sub_config
+            })
+
+    return new_config_list
 
 
 def reshape_break_channel_dependency(node: torch.fx.Node):
@@ -288,7 +342,7 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule, prune_type='Fil
                                                                                     torch.nn.ConvTranspose2d]))
 
             elif node.op == 'call_function':
-                if node.target in CALL_FUNCTION_ADD_MUL:
+                if node.target in CALL_FUNCTION_REDUCE:
                         # refer issue 4540 for more details. Multiplication actually
                         # will not introduce the channel dependency, cause the misaligned
                         # channels can propagate to each other. However, when one of the input
@@ -297,7 +351,7 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule, prune_type='Fil
                         # pruned), in this case, we need to fix the conflict maunally.
                         d_set = set(get_parent_layers(node, graph_module, target_types))
 
-                elif node.target in CALL_FUNCTION_CAT:
+                elif node.target in CALL_FUNCTION_CONCAT:
                     # To determine if this cat operation will introduce channel
                     # dependency, we need the specific input parameters of the cat
                     # operation.
@@ -306,7 +360,7 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule, prune_type='Fil
                         d_set = set(get_parent_layers(node, graph_module, target_types))
 
             elif node.op == 'call_method':
-                if node.target in CALL_METHOD_ADD_MUL:
+                if node.target in CALL_METHOD_REDUCE:
                     d_set = set(get_parent_layers(node, graph_module, target_types))
 
         # merge dependencies
