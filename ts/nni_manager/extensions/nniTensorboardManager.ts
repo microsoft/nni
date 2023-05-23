@@ -6,12 +6,12 @@ import cp from 'child_process';
 import path from 'path';
 import { ChildProcess } from 'child_process';
 
-import * as component from '../common/component';
 import { getLogger, Logger } from '../common/log';
 import { getTunerProc, isAlive, uniqueString, mkDirPSync, getFreePort } from '../common/utils';
 import { Manager } from '../common/manager';
 import { TensorboardParams, TensorboardTaskStatus, TensorboardTaskInfo, TensorboardManager } from '../common/tensorboardManager';
-import globals from 'common/globals';
+import { globals } from 'common/globals';
+import { IocShim } from 'common/ioc_shim';
 
 class TensorboardTaskDetail implements TensorboardTaskInfo {
     public id: string;
@@ -39,7 +39,7 @@ class NNITensorboardManager implements TensorboardManager {
         this.log = getLogger('NNITensorboardManager');
         this.tensorboardTaskMap = new Map<string, TensorboardTaskDetail>();
         this.setTensorboardVersion();
-        this.nniManager = component.get(Manager);
+        this.nniManager = IocShim.get(Manager);
     }
 
     public async startTensorboardTask(tensorboardParams: TensorboardParams): Promise<TensorboardTaskDetail> {
@@ -107,7 +107,7 @@ class NNITensorboardManager implements TensorboardManager {
             }
             return [ 'tensorboard', `${logdirCmd}=${logRealPaths.join(',')}`, `--port=${port}` ];
         } catch (error) {
-            throw new Error(`${error.message}`);
+            throw new Error(`${(error as any).message}`);
         }
     }
 

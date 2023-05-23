@@ -4,7 +4,7 @@
 import assert from 'assert';
 import { ChildProcess, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
-import * as component from '../common/component';
+import { IocShim } from 'common/ioc_shim';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
 import { getExperimentId } from '../common/experimentStartupInfo';
@@ -14,7 +14,9 @@ import {
     ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
-import { ExperimentConfig, LocalConfig, toSeconds, toCudaVisibleDevices } from '../common/experimentConfig';
+import {
+    ExperimentConfig, TrainingServiceConfig, toSeconds, toCudaVisibleDevices
+} from '../common/experimentConfig';
 import { getExperimentsManager } from 'extensions/experiments_manager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
@@ -31,6 +33,7 @@ import { createDispatcherInterface, IpcInterface } from './ipcInterface';
  * NNIManager which implements Manager interface
  */
 class NNIManager implements Manager {
+    private pollInterval: number; // for unittest to modify the polling interval
     private trainingService!: TrainingService;
     private dispatcher: IpcInterface | undefined;
     private currSubmittedTrialNum: number;  // need to be recovered
@@ -50,6 +53,7 @@ class NNIManager implements Manager {
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
 
     constructor() {
+        this.pollInterval = 5;
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
         this.dispatcherPid = 0;
@@ -60,7 +64,7 @@ class NNIManager implements Manager {
         this.readonly = false;
 
         this.log = getLogger('NNIManager');
-        this.dataStore = component.get(DataStore);
+        this.dataStore = IocShim.get(DataStore);
         this.status = {
             status: 'INITIALIZED',
             errors: []
@@ -120,7 +124,7 @@ class NNIManager implements Manager {
         return this.dataStore.exportTrialHpConfigs();
     }
 
-    public addRecoveredTrialJob(allTrialJobs: Array<TrialJobInfo>): void {
+    public addRecoveredTrialJob(allTrialJobs: Array<TrialJobInfo>): number {
         const jobs: Array<TrialJobInfo> = allTrialJobs.filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING');
         const trialData: any[] = [];
         let maxSequeceId = 0;
@@ -135,10 +139,10 @@ class NNIManager implements Manager {
             
             const hyperParams = JSON.parse(params);
             const packedParameter = {
-                parameter_id: hyperParams['parameter_id'], // eslint-disable-line @typescript-eslint/camelcase
-                parameter_source: 'resumed', // eslint-disable-line @typescript-eslint/camelcase
+                parameter_id: hyperParams['parameter_id'],
+                parameter_source: 'resumed',
                 parameters: hyperParams['parameters'],
-                parameter_index: hyperParams['parameter_index'], // eslint-disable-line @typescript-eslint/camelcase
+                parameter_index: hyperParams['parameter_index'],
             }
             const form: TrialJobApplicationForm = {
                 id: job.trialJobId,
@@ -147,6 +151,7 @@ class NNIManager implements Manager {
                     value: JSON.stringify(packedParameter),
                     index: 0
                 },
+                envId: job.envId,
             };
 
             this.waitingTrials.push(form);
@@ -157,6 +162,7 @@ class NNIManager implements Manager {
 
         // next sequenceId
         this.experimentProfile.nextSequenceId = maxSequeceId + 1;
+        return trialData.length;
     }
 
     public addCustomizedTrialJob(hyperParams: string): Promise<number> {
@@ -169,8 +175,8 @@ class NNIManager implements Manager {
 
         // TODO: NNI manager should not peek tuner's internal protocol, let's refactor this later
         const packedParameter = {
-            parameter_id: null, // eslint-disable-line @typescript-eslint/camelcase
-            parameter_source: 'customized', // eslint-disable-line @typescript-eslint/camelcase
+            parameter_id: null,
+            parameter_source: 'customized',
             parameters: JSON.parse(hyperParams)
         }
 
@@ -261,7 +267,11 @@ class NNIManager implements Manager {
 
         // Resume currSubmittedTrialNum
         this.currSubmittedTrialNum = allTrialJobs.length;
-        this.addRecoveredTrialJob(allTrialJobs);
+        const recoveredTrialNum = this.addRecoveredTrialJob(allTrialJobs);
+        // minus the number of the recovered trials,
+        // the recovered trials should not be counted in maxTrialNumber.
+        this.log.info(`Number of current submitted trials: ${this.currSubmittedTrialNum}, where ${recoveredTrialNum} is resuming.`);
+        this.currSubmittedTrialNum -= recoveredTrialNum;
 
         // Collect generated trials and imported trials
         const finishedTrialData: string = await this.exportData();
@@ -303,11 +313,6 @@ class NNIManager implements Manager {
                 case 'frameworkcontroller_config': {
                     const fcModule = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
                     this.trainingService = new fcModule.FrameworkControllerTrainingService();
-                    break;
-                }
-                case 'adl_config': {
-                    const adlModule = await import('../training_service/kubernetes/adl/adlTrainingService');
-                    this.trainingService = new adlModule.AdlTrainingService();
                     break;
                 }
                 default:
@@ -376,7 +381,7 @@ class NNIManager implements Manager {
             }
             await this.trainingService.cleanUp();
         } catch (err) {
-            this.log.error(`${err.stack}`);
+            this.log.error(`${(err as any).stack}`);
         }
         if (this.experimentProfile.endTime === undefined) {
             this.setEndtime();
@@ -385,7 +390,7 @@ class NNIManager implements Manager {
         this.setStatus('STOPPED');
         this.log.info('Experiment stopped.');
 
-        await component.get<TensorboardManager>(TensorboardManager).stop();
+        await IocShim.get<TensorboardManager>(TensorboardManager).stop();
         await this.dataStore.close();
     }
 
@@ -476,21 +481,16 @@ class NNIManager implements Manager {
         if (reuseMode) {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
-        } else if (platform === 'local') {
-            const module_ = await import('../training_service/local/localTrainingService');
-            return new module_.LocalTrainingService(<LocalConfig>config.trainingService);
         } else if (platform === 'kubeflow') {
             const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
             return new module_.KubeflowTrainingService();
         } else if (platform === 'frameworkcontroller') {
             const module_ = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
             return new module_.FrameworkControllerTrainingService();
-        } else if (platform === 'adl') {
-            const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
-            return new module_.AdlTrainingService();
         } else {
-            const module_ = await import('../training_service/reusable/routerTrainingService');
-            return await module_.RouterTrainingService.construct(config);
+            this.pollInterval = 0.5;
+            const module_ = await import('../training_service/v3/compat');
+            return new module_.V3asV1(config.trainingService as TrainingServiceConfig);
         }
     }
 
@@ -580,7 +580,7 @@ class NNIManager implements Manager {
         }
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
             this.dispatcher.sendCommand(PING);
-            await delay(1000 * 5);
+            await delay(1000 * this.pollInterval); // 5 seconds
         }
     }
 
@@ -630,9 +630,9 @@ class NNIManager implements Manager {
                     finishedTrialJobNum++;
                     hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
-                        trial_job_id: trialJobDetail.id, // eslint-disable-line @typescript-eslint/camelcase
+                        trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
-                        hyper_params: hyperParams // eslint-disable-line @typescript-eslint/camelcase
+                        hyper_params: hyperParams
                     }));
                     break;
                 case 'FAILED':
@@ -643,9 +643,9 @@ class NNIManager implements Manager {
                     finishedTrialJobNum++;
                     hyperParams = trialJobDetail.form.hyperParameters.value;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
-                        trial_job_id: trialJobDetail.id, // eslint-disable-line @typescript-eslint/camelcase
+                        trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
-                        hyper_params: hyperParams // eslint-disable-line @typescript-eslint/camelcase
+                        hyper_params: hyperParams
                     }));
                     break;
                 case 'WAITING':
@@ -741,7 +741,7 @@ class NNIManager implements Manager {
                     }
                 }
             }
-            await delay(1000 * 5); // 5 seconds
+            await delay(1000 * this.pollInterval); // 5 seconds
         }
     }
 

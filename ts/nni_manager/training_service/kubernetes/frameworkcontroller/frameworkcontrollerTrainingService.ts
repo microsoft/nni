@@ -5,7 +5,6 @@ import assert from 'assert';
 import cpp from 'child-process-promise';
 import fs from 'fs';
 import path from 'path';
-import * as component from 'common/component';
 import {getExperimentId} from 'common/experimentStartupInfo';
 import {
     NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
@@ -16,8 +15,8 @@ import {TrialConfigMetadataKey} from 'training_service/common/trialConfigMetadat
 import {validateCodeDir} from 'training_service/common/util';
 import {NFSConfig} from '../kubernetesConfig';
 import {KubernetesTrialJobDetail} from '../kubernetesData';
+import { KubernetesJobRestServer } from '../kubernetesJobRestServer';
 import {KubernetesTrainingService} from '../kubernetesTrainingService';
-import {KubernetesJobRestServer} from '../kubernetesJobRestServer';
 import {FrameworkControllerClientFactory} from './frameworkcontrollerApiClient';
 import {
     FrameworkControllerClusterConfig,
@@ -28,14 +27,12 @@ import {
     FrameworkControllerTrialConfigTemplate,
 } from './frameworkcontrollerConfig';
 import {FrameworkControllerJobInfoCollector} from './frameworkcontrollerJobInfoCollector';
-import {FrameworkControllerJobRestServer} from './frameworkcontrollerJobRestServer';
 
 const yaml = require('js-yaml');
 
 /**
  * Training Service implementation for frameworkcontroller
  */
-@component.Singleton
 class FrameworkControllerTrainingService extends KubernetesTrainingService implements KubernetesTrainingService {
     private fcTrialConfig?: FrameworkControllerTrialConfig; // frameworkcontroller trial configuration
     private fcTemplate: any = undefined; // custom frameworkcontroller template
@@ -122,8 +119,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         this.genericK8sClient.setNamespace = namespace;
 
         if (this.kubernetesRestServerPort === undefined) {
-            const restServer: FrameworkControllerJobRestServer = component.get(FrameworkControllerJobRestServer);
-            this.kubernetesRestServerPort = restServer.clusterRestServerPort;
+            this.kubernetesRestServerPort = this.kubernetesJobRestServer!.clusterRestServerPort;
         }
 
         // wait upload of code Dir to finish
@@ -261,7 +257,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 } catch (error) {
                     this.log.error(error);
 
-                    return Promise.reject(new Error(error));
+                    return Promise.reject(new Error(error as any));
                 }
                 break;
             }

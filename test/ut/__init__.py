@@ -12,7 +12,7 @@ if it has multiple test cases, they should be placed in `test/ut/tool/annotation
 
   + Directory `sdk` contains old test cases previously in `src/sdk/pynni/tests`.
   + Directory `tools/nnictl` contains old test cases previously in `tools/nni_cmd/tests`.
-  + Directory `tools/annotation` contains old test cases previously in `tools/nni_annotation`.
+  + Directory `tools/annotation` contains old test cases previously in `tools/nni_annotation` (removed).
   + Directory `tools/trial_tool` contains old test cases previously in `tools/nni_trial_tool/test`.
 """
 
@@ -20,3 +20,4 @@ import os
 
 os.environ['NNI_PLATFORM'] = 'unittest'
 os.environ['NNI_TRIAL_JOB_ID'] = 'test_trial_job_id'
+os.environ['NNI_EXP_ID'] = 'test_experiment'

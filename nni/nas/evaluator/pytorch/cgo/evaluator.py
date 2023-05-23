@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 
 import nni
 
-from ..lightning import LightningModule, AccuracyWithLogits, Lightning
+from ..lightning import LightningModule, _AccuracyWithLogits, Lightning
 from .trainer import Trainer
 
 __all__ = [
@@ -24,11 +24,11 @@ __all__ = [
 
 @nni.trace
 class _MultiModelSupervisedLearningModule(LightningModule):
-    def __init__(self, criterion: Type[nn.Module], metrics: Dict[str, torchmetrics.Metric],
+    def __init__(self, criterion: Type[nn.Module], metrics: Dict[str, Type[torchmetrics.Metric]],
                  n_models: int = 0,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam):
+                 optimizer: Type[optim.Optimizer] = optim.Adam):
         super().__init__()
         self.save_hyperparameters('criterion', 'optimizer', 'learning_rate', 'weight_decay')
         self.criterion = criterion()
@@ -47,7 +47,6 @@ class _MultiModelSupervisedLearningModule(LightningModule):
         kwargs['weight_decay'] = self.hparams['weight_decay']
         kwargs['optimizer'] = self.optimizer
         return kwargs
-
 
     def forward(self, x):
         y_hat = self.model(x)
@@ -97,14 +96,14 @@ class _MultiModelSupervisedLearningModule(LightningModule):
                 self.log(f'test_{idx}_' + name, metric(y_hat.to("cpu"), y.to("cpu")), prog_bar=True)
 
     def configure_optimizers(self):
-        return self.optimizer(self.parameters(), lr=self.hparams.learning_rate, weight_decay=self.hparams.weight_decay)
+        return self.optimizer(self.parameters(), lr=self.hparams.learning_rate, weight_decay=self.hparams.weight_decay)  # type: ignore
 
     def on_validation_epoch_end(self):
-        nni.report_intermediate_result(self._get_validation_metrics())
+        nni.report_intermediate_result(self._get_validation_metrics())  # type: ignore
 
     def teardown(self, stage):
         if stage == 'fit':
-            nni.report_final_result(self._get_validation_metrics())
+            nni.report_final_result(self._get_validation_metrics())  # type: ignore
 
     def _get_validation_metrics(self):
         # TODO: split metric of multiple models?
@@ -136,19 +135,19 @@ class MultiModelSupervisedLearningModule(_MultiModelSupervisedLearningModule):
         Class for optimizer (not an instance). default: ``Adam``
     """
 
-    def __init__(self, criterion: nn.Module, metrics: Dict[str, torchmetrics.Metric],
+    def __init__(self, criterion: Type[nn.Module], metrics: Dict[str, Type[torchmetrics.Metric]],
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam):
+                 optimizer: Type[optim.Optimizer] = optim.Adam):
         super().__init__(criterion, metrics, learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
 
 
 class _ClassificationModule(_MultiModelSupervisedLearningModule):
-    def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
+    def __init__(self, criterion: Type[nn.Module] = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam):
-        super().__init__(criterion, {'acc': AccuracyWithLogits},
+                 optimizer: Type[optim.Optimizer] = optim.Adam):
+        super().__init__(criterion, {'acc': _AccuracyWithLogits},  # type: ignore
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
 
 
@@ -180,7 +179,7 @@ class Classification(Lightning):
     def __init__(self, criterion: Type[nn.Module] = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam,
+                 optimizer: Type[optim.Optimizer] = optim.Adam,
                  train_dataloader: Optional[DataLoader] = None,
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None,
                  **trainer_kwargs):
@@ -189,11 +188,12 @@ class Classification(Lightning):
         super().__init__(module, Trainer(use_cgo=True, **trainer_kwargs),
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
 
+
 class _RegressionModule(_MultiModelSupervisedLearningModule):
     def __init__(self, criterion: Type[nn.Module] = nn.MSELoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam):
+                 optimizer: Type[optim.Optimizer] = optim.Adam):
         super().__init__(criterion, {'mse': torchmetrics.MeanSquaredError},
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
 
@@ -223,10 +223,10 @@ class Regression(Lightning):
         `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details.
     """
 
-    def __init__(self, criterion: nn.Module = nn.MSELoss,
+    def __init__(self, criterion: Type[nn.Module] = nn.MSELoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam,
+                 optimizer: Type[optim.Optimizer] = optim.Adam,
                  train_dataloader: Optional[DataLoader] = None,
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None,
                  **trainer_kwargs):

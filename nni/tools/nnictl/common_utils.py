@@ -20,7 +20,7 @@ from .constants import ERROR_INFO, NORMAL_INFO, WARNING_INFO
 def get_yml_content(file_path):
     '''Load yaml file content'''
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path, 'r', encoding='utf_8') as file:
             return yaml.safe_load(file)
     except yaml.scanner.ScannerError as err:
         print_error('yaml file format error!')
@@ -95,6 +95,11 @@ class SimplePreemptiveLock(filelock.SoftFileLock):
     '''this is a lock support check lock expiration, if you do not need check expiration, you can use SoftFileLock'''
     def __init__(self, lock_file, stale=-1):
         super(__class__, self).__init__(lock_file, timeout=-1)
+
+        # FIXME: hack
+        if not hasattr(self, '_lock_file'):
+            self._lock_file = self.lock_file
+
         self._lock_file_name = '{}.{}'.format(self._lock_file, os.getpid())
         self._stale = stale
 

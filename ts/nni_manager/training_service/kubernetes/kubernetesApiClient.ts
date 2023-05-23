@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// eslint-disable-next-line @typescript-eslint/camelcase
 import {Client1_10, config} from 'kubernetes-client';
 import {getLogger, Logger} from 'common/log';
 

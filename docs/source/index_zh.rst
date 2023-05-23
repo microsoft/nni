@@ -110,7 +110,7 @@ NNI 使得自动机器学习技术即插即用
 .. codesnippetcard::
    :icon: ../img/thumbnails/pruning-small.svg
    :title: 模型剪枝
-   :link: tutorials/pruning_quick_start_mnist
+   :link: tutorials/pruning_quick_start
    :seemore: 点这里阅读完整教程
 
    .. code-block::

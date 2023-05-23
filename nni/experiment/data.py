@@ -1,9 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 import json
-from typing import List
+from typing import Any, List, Optional
 
 
 @dataclass
@@ -82,11 +84,17 @@ class TrialHyperParameters:
         Hyper parameters.
     parameter_index: int
         Parameter index.
+    placement_constraint: Optional[dict]
+        Placement constraint.
+    version_info: Optional[dict]
+        Version info.
     """
     parameter_id: int
     parameter_source: str
     parameters: dict
     parameter_index: int
+    placement_constraint: Optional[dict] = None
+    version_info: Optional[dict] = None
 
 
 @dataclass
@@ -130,7 +138,7 @@ class TrialJob:
 
     def __init__(self, trialJobId: str, status: str, startTime: int, sequenceId: int, logPath: str = '',
                  endTime: int = -1, stderrPath: str = '', hyperParameters: List = [], finalMetricData: List = [],
-                 message: str = '--'):
+                 message: str = '--', **kwargs: dict[str, Any]):
         self.trialJobId = trialJobId
         self.status = status
         self.hyperParameters = [TrialHyperParameters(**json.loads(e)) for e in hyperParameters]

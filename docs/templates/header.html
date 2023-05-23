@@ -4,14 +4,8 @@
       <div class="md-flex__cell md-flex__cell--shrink">
         <a href="{{ pathto(master_doc)|e }}" title="{{ docstitle|e }}"
             class="md-header-nav__button md-logo">
-          {% if theme_logo_icon|e %}
-            <i class="md-icon">{{ theme_logo_icon }}</i>
-          {% elif logo %}
-              <img src="{{ pathto('_static/' ~ logo, 1) }}" height="26"
-                    alt="{{ shorttitle|striptags|e }} logo">
-          {% else %}
-            &nbsp;
-          {% endif %}
+          <img src="{{ pathto('_static/img/nni-icon.svg', 1) }}" height="26"
+                alt="{{ shorttitle|striptags|e }} logo">
         </a>
       </div>
       <div class="md-flex__cell md-flex__cell--shrink">

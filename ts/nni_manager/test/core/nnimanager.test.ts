@@ -5,292 +5,396 @@
 
 import * as fs from 'fs';
 import * as os from 'os';
-import { assert, expect } from 'chai';
-import { Container, Scope } from 'typescript-ioc';
+import { assert } from 'chai';
 
-import * as component from '../../common/component';
-import { Database, DataStore } from '../../common/datastore';
-import { Manager, ExperimentProfile} from '../../common/manager';
-import { TrainingService } from '../../common/trainingService';
-import { cleanupUnitTest, prepareUnitTest, killPid } from '../../common/utils';
+import { IocShim } from 'common/ioc_shim';
+import { Database, DataStore, TrialJobInfo } from '../../common/datastore';
+import { Manager, TrialJobStatistics} from '../../common/manager';
+import { TrialJobDetail } from '../../common/trainingService';
+import { killPid } from '../../common/utils';
 import { NNIManager } from '../../core/nnimanager';
 import { SqlDB } from '../../core/sqlDatabase';
+import { NNIDataStore } from '../../core/nniDataStore';
 import { MockedTrainingService } from '../mock/trainingService';
-import { MockedDataStore } from '../mock/datastore';
 import { TensorboardManager } from '../../common/tensorboardManager';
-import { NNITensorboardManager } from 'extensions/nniTensorboardManager';
+import { NNITensorboardManager } from '../../extensions/nniTensorboardManager';
 import * as path from 'path';
-import { UnitTestHelpers } from 'core/ipcInterface';
+import { RestServer } from '../../rest_server';
+import globals from '../../common/globals/unittest';
+import { UnitTestHelpers } from '../../core/tuner_command_channel';
+import * as timersPromises from 'timers/promises';
 
-async function initContainer(): Promise<void> {
-    prepareUnitTest();
-    UnitTestHelpers.disableTuner();
-    Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
-    Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
-    Container.bind(DataStore).to(MockedDataStore).scope(Scope.Singleton);
-    Container.bind(TensorboardManager).to(NNITensorboardManager).scope(Scope.Singleton);
-    await component.get<DataStore>(DataStore).init();
+let nniManager: NNIManager;
+let experimentParams: any = {
+    experimentName: 'naive_experiment',
+    trialConcurrency: 3,
+    maxExperimentDuration: '10s',
+    maxTrialNumber: 3,
+    trainingService: {
+        platform: 'local'
+    },
+    searchSpace: {'lr': {'_type': 'choice', '_value': [0.01,0.001,0.002,0.003,0.004]}},
+    // use Random because no metric data from mocked training service
+    tuner: {
+        name: 'Random'
+    },
+    // skip assessor
+    // assessor: {
+    //     name: 'Medianstop'
+    // },
+    // trialCommand does not take effect in mocked training service
+    trialCommand: 'sleep 2',
+    trialCodeDirectory: '',
+    debug: true
+}
+let experimentProfile: any = {
+    params: experimentParams,
+    // the experiment profile can only keep params,
+    // because the update logic only touch key-values in params.
+    // it violates the type of ExperimentProfile, but it is okay.
+}
+let mockedInfo = {
+    "id": "unittest",
+    "port": 8080,
+    "startTime": 1605246730756,
+    "endTime": "N/A",
+    "status": "INITIALIZED",
+    "platform": "local",
+    "experimentName": "testExp",
+    "tag": [],
+    "pid": 11111,
+    "webuiUrl": [],
+    "logDir": null
 }
 
-// FIXME: timeout on macOS
-describe('Unit test for nnimanager', function () {
+let restServer: RestServer;
 
-    let nniManager: NNIManager;
-
-    let ClusterMetadataKey = 'mockedMetadataKey';
-
-    let experimentParams: any = {
-        experimentName: 'naive_experiment',
-        trialConcurrency: 3,
-        maxExperimentDuration: '5s',
-        maxTrialNumber: 3,
-        trainingService: {
-            platform: 'local'
-        },
-        searchSpace: {'lr': {'_type': 'choice', '_value': [0.01,0.001]}},
-        tuner: {
-            name: 'TPE',
-            classArgs: {
-                optimize_mode: 'maximize'
-            }
-        },
-        assessor: {
-            name: 'Medianstop'
-        },
-        trialCommand: 'sleep 2',
-        trialCodeDirectory: '',
-        debug: true
+async function initContainer(mode: string = 'create'): Promise<void> {
+    // updating the action is not necessary for the correctness of the tests.
+    // keep it here as a reminder.
+    if (mode === 'resume') {
+        const globalAsAny = global as any;
+        globalAsAny.nni.args.action = mode;
     }
+    restServer = new RestServer(globals.args.port, globals.args.urlPrefix);
+    await restServer.start();
+    IocShim.bind(Database, SqlDB);
+    IocShim.bind(DataStore, NNIDataStore);
+    IocShim.bind(Manager, NNIManager);
+    IocShim.bind(TensorboardManager, NNITensorboardManager);
+    await IocShim.get<DataStore>(DataStore).init();
+}
 
-    let updateExperimentParams = {
-        experimentName: 'another_experiment',
-        trialConcurrency: 2,
-        maxExperimentDuration: '6s',
-        maxTrialNumber: 2,
-        trainingService: {
-            platform: 'local'
-        },
-        searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
-        tuner: {
-            name: 'TPE',
-            classArgs: {
-                optimize_mode: 'maximize'
-            }
-        },
-        assessor: {
-            name: 'Medianstop'
-        },
-        trialCommand: 'sleep 2',
-        trialCodeDirectory: '',
-        debug: true
+async function prepareExperiment(): Promise<void> {
+    // globals.showLog();
+    // create ~/nni-experiments/.experiment
+    const expsFile = path.join(globals.args.experimentsDirectory, '.experiment');
+    if (!fs.existsSync(expsFile)) {
+        fs.writeFileSync(expsFile, '{}');
     }
+    // clean the db file under the unittest experiment directory.
+    // NOTE: cannot remove the whole exp directory, it seems the directory is created before this line.
+    const unittestPath = path.join(globals.args.experimentsDirectory, globals.args.experimentId, 'db');
+    fs.rmSync(unittestPath, { recursive: true, force: true });
 
-    let experimentProfile: any = {
-        params: updateExperimentParams,
-        id: 'test',
-        execDuration: 0,
-        logDir: '',
-        startTime: 0,
-        nextSequenceId: 0,
-        revision: 0
+    // Write the experiment info to ~/nni-experiments/.experiment before experiment start.
+    // Do not use file lock for simplicity.
+    // The ut also works if not updating experiment info but ExperimentsManager will complain.
+    const fileInfo: Buffer = fs.readFileSync(globals.paths.experimentsList);
+    let experimentsInformation = JSON.parse(fileInfo.toString());
+    experimentsInformation['unittest'] = mockedInfo;
+    fs.writeFileSync(globals.paths.experimentsList, JSON.stringify(experimentsInformation, null, 4));
+
+    await initContainer();
+    nniManager = IocShim.get(Manager);
+
+    // if trainingService is assigned, startExperiment won't create training service again
+    const manager = nniManager as any;
+    manager.trainingService = new MockedTrainingService('create_stage');
+    // making the trial status polling more frequent to reduce testing time, i.e., to 1 second
+    manager.pollInterval = 1;
+    const expId: string = await nniManager.startExperiment(experimentParams);
+    assert.strictEqual(expId, 'unittest');
+
+    // Sleep here because the start of tuner takes a while.
+    // Also, wait for that some trials are submitted, waiting for at most 10 seconds.
+    // NOTE: this waiting period should be long enough depending on different running environment and randomness.
+    for (let i = 0; i < 10; i++) {
+        await timersPromises.setTimeout(1000);
+        if (manager.currSubmittedTrialNum >= 2)
+            break;
     }
+    assert.isAtLeast(manager.currSubmittedTrialNum, 2);
+}
 
-    let mockedInfo = {
-        "unittest": {
-            "port": 8080,
-            "startTime": 1605246730756,
-            "endTime": "N/A",
-            "status": "INITIALIZED",
-            "platform": "local",
-            "experimentName": "testExp",
-            "tag": [], "pid": 11111,
-            "webuiUrl": [],
-            "logDir": null
+async function cleanExperiment(): Promise<void> {
+    const manager: any = nniManager;
+    await killPid(manager.dispatcherPid);
+    manager.dispatcherPid = 0;
+    await manager.stopExperimentTopHalf();
+    await manager.stopExperimentBottomHalf();
+    await restServer.shutdown();
+    IocShim.clear();
+}
+
+async function testListTrialJobs(): Promise<void> {
+    await timersPromises.setTimeout(200);
+    const trialJobDetails = await nniManager.listTrialJobs();
+    assert.isAtLeast(trialJobDetails.length, 2);
+}
+
+async function testGetTrialJobValid(): Promise<void> {
+    const trialJobDetail = await nniManager.getTrialJob('1234');
+    assert.strictEqual(trialJobDetail.trialJobId, '1234');
+}
+
+async function testGetTrialJobWithInvalidId(): Promise<void> {
+    // query a not exist id, getTrialJob returns undefined,
+    // because getTrialJob queries data from db
+    const trialJobDetail = await nniManager.getTrialJob('4321');
+    assert.strictEqual(trialJobDetail, undefined);
+}
+
+async function testCancelTrialJobByUser(): Promise<void> {
+    await nniManager.cancelTrialJobByUser('1234');
+    // test datastore to verify the trial is cancelled and the event is stored in db
+    // NOTE: it seems a SUCCEEDED trial can also be cancelled
+    const manager = nniManager as any;
+    const trialJobInfo: TrialJobInfo = await manager.dataStore.getTrialJob('1234');
+    assert.strictEqual(trialJobInfo.status, 'USER_CANCELED');
+}
+
+async function testGetExperimentProfile(): Promise<void> {
+    const profile = await nniManager.getExperimentProfile();
+    assert.strictEqual(profile.id, 'unittest');
+    assert.strictEqual(profile.logDir, path.join(os.homedir(),'nni-experiments','unittest'));
+}
+
+async function testUpdateExperimentProfileTrialConcurrency(concurrency: number): Promise<void> {
+    let expParams = Object.assign({}, experimentParams); // skip deep copy of inner object
+    expParams.trialConcurrency = concurrency;
+    experimentProfile.params = expParams;
+    await nniManager.updateExperimentProfile(experimentProfile, 'TRIAL_CONCURRENCY');
+    const profile = await nniManager.getExperimentProfile();
+    assert.strictEqual(profile.params.trialConcurrency, concurrency);
+}
+
+async function testUpdateExperimentProfileMaxExecDuration(): Promise<void> {
+    let expParams = Object.assign({}, experimentParams); // skip deep copy of inner object
+    expParams.maxExperimentDuration = '11s';
+    experimentProfile.params = expParams;
+    await nniManager.updateExperimentProfile(experimentProfile, 'MAX_EXEC_DURATION');
+    const profile = await nniManager.getExperimentProfile();
+    assert.strictEqual(profile.params.maxExperimentDuration, '11s');
+}
+
+async function testUpdateExperimentProfileSearchSpace(space: number[]): Promise<void> {
+    let expParams = Object.assign({}, experimentParams); // skip deep copy of inner object
+    // The search space here should be dict, it is stringified within nnimanager's updateSearchSpace
+    const newSearchSpace = {'lr': {'_type': 'choice', '_value': space}};
+    expParams.searchSpace = newSearchSpace;
+    experimentProfile.params = expParams;
+    await nniManager.updateExperimentProfile(experimentProfile, 'SEARCH_SPACE');
+    const profile = await nniManager.getExperimentProfile();
+    assert.strictEqual(profile.params.searchSpace, newSearchSpace);
+}
+
+async function testUpdateExperimentProfileMaxTrialNum(maxTrialNum: number): Promise<void> {
+    let expParams = Object.assign({}, experimentParams); // skip deep copy of inner object
+    expParams.maxTrialNumber = maxTrialNum;
+    experimentProfile.params = expParams;
+    await nniManager.updateExperimentProfile(experimentProfile, 'MAX_TRIAL_NUM');
+    const profile = await nniManager.getExperimentProfile();
+    assert.strictEqual(profile.params.maxTrialNumber, maxTrialNum);
+}
+
+async function testGetStatus(): Promise<void> {
+    const status = nniManager.getStatus();
+    // it is possible that the submitted trials run too fast to reach status NO_MORE_TRIAL
+    assert.include(['RUNNING', 'NO_MORE_TRIAL'], status.status);
+}
+
+async function testGetMetricDataWithTrialJobId(): Promise<void> {
+    // Query an exist trialJobId
+    // The metric is synthesized in the mocked training service
+    await timersPromises.setTimeout(600);
+    const metrics = await nniManager.getMetricData('1234');
+    assert.strictEqual(metrics.length, 1);
+    assert.strictEqual(metrics[0].type, 'FINAL');
+    assert.strictEqual(metrics[0].data, '"0.9"');
+}
+
+async function testGetMetricDataWithInvalidTrialJobId(): Promise<void> {
+    // Query an invalid trialJobId
+    const metrics = await nniManager.getMetricData('4321');
+    // The returned is an empty list
+    assert.strictEqual(metrics.length, 0);
+}
+
+async function testGetTrialJobStatistics(): Promise<void> {
+    // Waiting for 1 second to make sure SUCCEEDED status has been sent from
+    // the mocked training service. There would be at least one trials has
+    // SUCCEEDED status, i.e., '3456'.
+    // '1234' may be in SUCCEEDED status or USER_CANCELED status,
+    // depending on the order of SUCCEEDED and USER_CANCELED events.
+    // There are 4 trials, because maxTrialNumber is updated to 4.
+    // Then accordingly to the mocked training service, there are two trials
+    // SUCCEEDED, one trial RUNNING, and one trial WAITING.
+    // NOTE: The WAITING trial is not always submitted before the running of this test.
+    // An example statistics:
+    // [
+    // { trialJobStatus: 'SUCCEEDED', trialJobNumber: 2 },
+    // { trialJobStatus: 'RUNNING', trialJobNumber: 1 },
+    // { trialJobStatus: 'WAITING', trialJobNumber: 1 }
+    // ]
+    // or
+    // [
+    // { trialJobStatus: 'USER_CANCELED', trialJobNumber: 1 },
+    // { trialJobStatus: 'SUCCEEDED', trialJobNumber: 1 },
+    // { trialJobStatus: 'RUNNING', trialJobNumber: 1 },
+    // { trialJobStatus: 'WAITING', trialJobNumber: 1 }
+    // ]
+    for (let i = 0; i < 5; i++) {
+        await timersPromises.setTimeout(500);
+        const trialJobDetails = await nniManager.listTrialJobs();
+        if (trialJobDetails.length >= 4)
+            break;
+    }
+    const statistics = await nniManager.getTrialJobStatistics();
+    assert.isAtLeast(statistics.length, 2);
+    const succeededTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'SUCCEEDED');
+    if (succeededTrials) {
+        if (succeededTrials.trialJobNumber !== 2) {
+            const canceledTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'USER_CANCELED');
+            if (canceledTrials)
+                assert.strictEqual(canceledTrials.trialJobNumber, 1);
+            else
+                assert.fail('USER_CANCELED trial not found when succeeded trial number is not 2!');
         }
     }
+    else
+        assert.fail('SUCCEEDED trial not found!');
+    const runningTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'RUNNING');
+    if (runningTrials)
+        assert.strictEqual(runningTrials.trialJobNumber, 1);
+    else
+        assert.fail('RUNNING trial not found!');
+    const waitingTrials: TrialJobStatistics | undefined = statistics.find(element => element.trialJobStatus === 'WAITING');
+    if (waitingTrials)
+        assert.strictEqual(waitingTrials.trialJobNumber, 1);
+    else
+        assert.fail('RUNNING trial not found!');
+}
+
+async function testFinalExperimentStatus(): Promise<void> {
+    const status = nniManager.getStatus();
+    assert.notEqual(status.status, 'ERROR');
+}
 
 
-    before(async () => {
-        await initContainer();
-        fs.writeFileSync('.experiment.test', JSON.stringify(mockedInfo));
-        nniManager = component.get(Manager);
+describe('Unit test for nnimanager basic testing', function () {
 
-        const expId: string = await nniManager.startExperiment(experimentParams);
-        assert.strictEqual(expId, 'unittest');
+    before(prepareExperiment);
 
-        // TODO:
-        // In current architecture we cannot prevent NNI manager from creating a training service.
-        // The training service must be manually stopped here or its callbacks will block exit.
-        // I'm planning on a custom training service register system similar to custom tuner,
-        // and when that is done we can let NNI manager to use MockedTrainingService through config.
-        const manager = nniManager as any;
-        manager.trainingService.removeTrialJobMetricListener(manager.trialJobMetricListener);
-        manager.trainingService.cleanUp();
+    // it('test addCustomizedTrialJob', () => testAddCustomizedTrialJob());
+    it('test listTrialJobs', () => testListTrialJobs());
+    it('test getTrialJob valid', () => testGetTrialJobValid());
+    it('test getTrialJob with invalid id', () => testGetTrialJobWithInvalidId());
+    it('test cancelTrialJobByUser', () => testCancelTrialJobByUser());
+    it('test getExperimentProfile', () => testGetExperimentProfile());
+    it('test updateExperimentProfile TRIAL_CONCURRENCY', () => testUpdateExperimentProfileTrialConcurrency(4));
+    it('test updateExperimentProfile MAX_EXEC_DURATION', () => testUpdateExperimentProfileMaxExecDuration());
+    it('test updateExperimentProfile SEARCH_SPACE', () => testUpdateExperimentProfileSearchSpace([0.01,0.001,0.002,0.003,0.004,0.005]));
+    it('test updateExperimentProfile MAX_TRIAL_NUM', () => testUpdateExperimentProfileMaxTrialNum(4));
+    it('test getStatus', () => testGetStatus());
+    it('test getMetricData with trialJobId', () => testGetMetricDataWithTrialJobId());
+    it('test getMetricData with invalid trialJobId', () => testGetMetricDataWithInvalidTrialJobId());
+    it('test getTrialJobStatistics', () => testGetTrialJobStatistics());
+    // TODO: test experiment changes from Done to Running, after maxTrialNumber/maxExecutionDuration is updated.
+    // FIXME: make sure experiment crash leads to the ERROR state.
+    it('test the final experiment status is not ERROR', () => testFinalExperimentStatus());
 
-        manager.trainingService = new MockedTrainingService();
-    })
+    after(cleanExperiment);
 
-    after(async () => {
-        // FIXME: more proper clean up
-        const manager: any = nniManager;
-        await killPid(manager.dispatcherPid);
-        manager.dispatcherPid = 0;
-        await manager.stopExperimentTopHalf();
-        cleanupUnitTest();
-    })
+});
 
+async function resumeExperiment(): Promise<void> {
+    globals.reset();
+    // the following function call show nnimanager.log in console
+    // globals.showLog();
+    // explicitly reset the websocket channel because it is singleton, does not work when two experiments
+    // (one is start and the other is resume) run in the same process.
+    UnitTestHelpers.reset();
+    await initContainer('resume');
+    nniManager = IocShim.get(Manager);
 
+    // if trainingService is assigned, startExperiment won't create training service again
+    const manager = nniManager as any;
+    manager.trainingService = new MockedTrainingService('resume_stage');
+    // making the trial status polling more frequent to reduce testing time, i.e., to 1 second
+    manager.pollInterval = 1;
+    // as nniManager is a singleton, manually reset its member variables here.
+    manager.currSubmittedTrialNum = 0;
+    manager.trialConcurrencyChange = 0;
+    manager.dispatcherPid = 0;
+    manager.waitingTrials = [];
+    manager.trialJobs = new Map<string, TrialJobDetail>();
+    manager.trialDataForTuner = '';
+    manager.trialDataForResume = '';
+    manager.readonly = false;
+    manager.status = {
+        status: 'INITIALIZED',
+        errors: []
+    };
+    await nniManager.resumeExperiment(false);
+}
 
-    it('test addCustomizedTrialJob', () => {
-        return nniManager.addCustomizedTrialJob('"hyperParams"').then(() => {
+async function testMaxTrialNumberAfterResume(): Promise<void> {
+    // testing the resumed nnimanager correctly counts (max) trial number
+    // waiting 18 seconds to make trials reach maxTrialNum, waiting this long
+    // because trial concurrency is set to 1 and macos CI is pretty slow.
+    await timersPromises.setTimeout(18000);
+    const trialJobDetails = await nniManager.listTrialJobs();
+    assert.strictEqual(trialJobDetails.length, 5);
+}
 
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
+async function testAddCustomizedTrialJobFail(): Promise<void> {
+    // will fail because the max trial number has already reached
+    await nniManager.addCustomizedTrialJob('{"lr": 0.006}')
+    .catch((err: Error) => {
+        assert.strictEqual(err.message, 'reach maxTrialNum');
+    });
+}
 
+async function testAddCustomizedTrialJob(): Promise<void> {
+    // max trial number has been extended to 7, adding customized trial here will be succeeded
+    const sequenceId = await nniManager.addCustomizedTrialJob('{"lr": 0.006}');
+    await timersPromises.setTimeout(1000);
+    const trialJobDetails = await nniManager.listTrialJobs();
+    const customized = trialJobDetails.find(element =>
+        element.hyperParameters !== undefined
+        && element.hyperParameters[0] === '{"parameter_id":null,"parameter_source":"customized","parameters":{"lr":0.006}}');
+    assert.notEqual(customized, undefined);
+}
 
-    it('test listTrialJobs', () => {
-        return nniManager.listTrialJobs().then(function (trialjobdetails) {
-            expect(trialjobdetails.length).to.be.equal(2);
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
+// NOTE: this describe should be executed in couple with the above describe
+describe('Unit test for nnimanager resume testing', function() {
 
-    it('test getTrialJob valid', () => {
-        //query a exist id
-        return nniManager.getTrialJob('1234').then(function (trialJobDetail) {
-            expect(trialJobDetail.trialJobId).to.be.equal('1234');
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
+    before(resumeExperiment);
 
-    it('test getTrialJob with invalid id', () => {
-        //query a not exist id, and the function should throw error, and should not process then() method
-        return nniManager.getTrialJob('4567').then((_jobid) => {
-            assert.fail();
-        }).catch((_error) => {
-            assert.isTrue(true);
-        })
-    })
+    // First update maxTrialNumber to 5 for the second test
+    it('test updateExperimentProfile TRIAL_CONCURRENCY', () => testUpdateExperimentProfileTrialConcurrency(1));
+    it('test updateExperimentProfile MAX_TRIAL_NUM', () => testUpdateExperimentProfileMaxTrialNum(5));
+    it('test max trial number after resume', () => testMaxTrialNumberAfterResume());
+    it('test add customized trial job failure', () => testAddCustomizedTrialJobFail());
+    // update search to contain only one hyper config, update maxTrialNum to add additional two trial budget,
+    // then a customized trial can be submitted successfully.
+    // NOTE: trial concurrency should be set to 1 to avoid tuner sending too many trials before the space is updated
+    it('test updateExperimentProfile SEARCH_SPACE', () => testUpdateExperimentProfileSearchSpace([0.008]));
+    it('test updateExperimentProfile MAX_TRIAL_NUM', () => testUpdateExperimentProfileMaxTrialNum(7));
+    it('test add customized trial job succeeded', () => testAddCustomizedTrialJob());
+    it('test the final experiment status is not ERROR', () => testFinalExperimentStatus());
 
-    it('test cancelTrialJobByUser', () => {
-        return nniManager.cancelTrialJobByUser('1234').then(() => {
+    after(cleanExperiment);
 
-        }).catch((error) => {
-            console.log(error);
-            assert.fail(error);
-        })
-    })
-
-    it('test getExperimentProfile', () => {
-        return nniManager.getExperimentProfile().then((experimentProfile) => {
-            expect(experimentProfile.id).to.be.equal('unittest');
-            expect(experimentProfile.logDir).to.be.equal(path.join(os.homedir(),'nni-experiments','unittest'));
-
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
-
-    it('test updateExperimentProfile TRIAL_CONCURRENCY',  () => {
-        return nniManager.updateExperimentProfile(experimentProfile, 'TRIAL_CONCURRENCY').then(() => {
-            nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.trialConcurrency).to.be.equal(2);
-            });
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
-
-    it('test updateExperimentProfile MAX_EXEC_DURATION',  () => {
-        return nniManager.updateExperimentProfile(experimentProfile, 'MAX_EXEC_DURATION').then(() => {
-            nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.maxExperimentDuration).to.be.equal('6s');
-            });
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
-
-    it('test updateExperimentProfile SEARCH_SPACE',  () => {
-        return nniManager.updateExperimentProfile(experimentProfile, 'SEARCH_SPACE').then(() => {
-            nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.searchSpace).to.be.equal('{"lr": {"_type": "choice", "_value": [0.01,0.001]}}');
-            });
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
-
-    it('test updateExperimentProfile MAX_TRIAL_NUM',  () => {
-        return nniManager.updateExperimentProfile(experimentProfile, 'MAX_TRIAL_NUM').then(() => {
-            nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.maxTrialNumber).to.be.equal(2);
-            });
-        }).catch((error: any) => {
-            assert.fail(error);
-        })
-    })
-
-    it('test getStatus', () => {
-        assert.strictEqual(nniManager.getStatus().status,'RUNNING');
-    })
-
-    it('test getMetricData with trialJobId', () => {
-        //query a exist trialJobId
-        return nniManager.getMetricData('4321', 'CUSTOM').then((metricData) => {
-            expect(metricData.length).to.be.equal(1);
-            expect(metricData[0].trialJobId).to.be.equal('4321');
-            expect(metricData[0].parameterId).to.be.equal('param1');
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
-
-    it('test getMetricData with invalid trialJobId', () => {
-        //query an invalid trialJobId
-        return nniManager.getMetricData('43210', 'CUSTOM').then((_metricData) => {
-            assert.fail();
-        }).catch((_error) => {
-        })
-    })
-
-    it('test getTrialJobStatistics', () => {
-        // get 3 trial jobs (init, addCustomizedTrialJob, cancelTrialJobByUser)
-        return nniManager.getTrialJobStatistics().then(function (trialJobStatistics) {
-            expect(trialJobStatistics.length).to.be.equal(2);
-            if (trialJobStatistics[0].trialJobStatus === 'WAITING') {
-                expect(trialJobStatistics[0].trialJobNumber).to.be.equal(2);
-                expect(trialJobStatistics[1].trialJobNumber).to.be.equal(1);
-            }
-            else {
-                expect(trialJobStatistics[1].trialJobNumber).to.be.equal(2);
-                expect(trialJobStatistics[0].trialJobNumber).to.be.equal(1);
-            }
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
-
-    it('test addCustomizedTrialJob reach maxTrialNumber', () => {
-        // test currSubmittedTrialNum reach maxTrialNumber
-        return nniManager.addCustomizedTrialJob('"hyperParam"').then(() => {
-            nniManager.getTrialJobStatistics().then(function (trialJobStatistics) {
-                if (trialJobStatistics[0].trialJobStatus === 'WAITING')
-                    expect(trialJobStatistics[0].trialJobNumber).to.be.equal(2);
-                else
-                    expect(trialJobStatistics[1].trialJobNumber).to.be.equal(2);
-            })
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
-
-    //it('test resumeExperiment', async () => {
-       //TODO: add resume experiment unit test
-    //})
-
-})
+});

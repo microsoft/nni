@@ -1,10 +1,119 @@
 $seriesIconMargin: 10px;
-$margin: 24px;
+$margin: 20px;
 
+/* for duration.tsx file */
+
+/* circle progress bar chart */
+.circle-progress {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .progress {
+        width: 180px;
+        height: 180px;
+        margin: 20px auto;
+    }
+
+    .text {
+        position: absolute;
+        font-size: 24px;
+        color: #464d5a;
+    }
+}
+
+/* for start and end time style */
+.time {
+    width: 80%;
+    margin: 0 auto;
+    margin-top: 18px;
+
+    .startMargin {
+        margin-bottom: 18px;
+    }
+
+    .bg {
+        padding: 0 6px;
+        margin-top: 1px;
+        line-height: 21px;
+        background: #f3f5f7;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .text {
+        font-weight: 400;
+        font-size: 16px;
+        color: #81868f;
+    }
+}
+
+/* for TrialNumbers.tsx file */
+
+/* style for fluent progress bar */
+.fluent-progress {
+    margin-bottom: 10px;
+
+    .ms-ProgressIndicator-progressBar {
+        width: 92px;
+    }
+}
+
+/* succeed trials number color */
+.complete-tirals {
+    color: #707070;
+}
+
+/* TrialNumbers.tsx container */
+.count {
+    margin-bottom: 20px;
+
+    /* text Succeeded position */
+    &-succeed {
+        position: relative;
+        top: 7px;
+    }
+
+    /* succeed trials number style */
+    .succeed-trials-number {
+        margin: 21px 0;
+        text-align: center;
+    }
+
+    .trial-status-style {
+        margin-top: 4px;
+        margin-bottom: 8px;
+    }
+
+    /* running waiting failed stopped trials colorful imgae */
+    .border {
+        width: 12px;
+        height: 4px;
+    }
+
+    .run {
+        background: #fff4ca;
+    }
+
+    .stop {
+        background: #ffe1e1;
+    }
+
+    .wait {
+        background: #f8d4f8;
+    }
+
+    .failed {
+        background: #9ce7f1;
+    }
+}
+
+/* TrialNumbers row gap */
 .marginTop {
     margin-top: $margin;
 }
 
+/* for trial numbers, max duration, trial concurrency style */
 .exp-progress {
     margin-top: 9px;
 
@@ -14,19 +123,6 @@ $margin: 24px;
 
     .joiner {
         padding: 0 3px;
-    }
-}
-
-.status-count {
-    span {
-        font-size: 14px;
-        color: #8f8f8f;
-    }
-
-    p {
-        font-size: 16px;
-        font-weight: 500;
-        color: #484848;
     }
 }
 
@@ -40,21 +136,16 @@ $margin: 24px;
 }
 
 .noEditDuration {
-    position: relative;
-    top: -7px;
+    height: 50px;
+    text-align: center;
 }
 
 .editDuration {
+    width: 252px;
+    height: 50px;
+    margin: 0 auto;
     position: relative;
-    top: -4px;
-}
-
-.editExpDuration {
-    box-sizing: border-box;
-    width: 31%;
-    position: relative;
-    left: 69%;
-    bottom: 33%;
+    top: -8px;
 }
 
 .concurrency {
@@ -103,7 +194,9 @@ $margin: 24px;
     }
 
     .confirm {
-        margin: 0 $seriesIconMargin;
+        margin: 0 4px;
+        position: relative;
+        top: 2px;
 
         i {
             color: green;
@@ -128,6 +221,103 @@ $margin: 24px;
 .info {
     position: absolute;
     z-index: 999;
-    left: -50%;
-    width: 270%;
+    left: -24px;
+    top: -192px;
+}
+
+.edit-position {
+    position: relative;
+}
+
+/*  edit duration style */
+div.maxExperimentDuration {
+    width: 200px;
+}
+
+/* trial-number & concurrency */
+.show-params {
+    width: 139px;
+    height: 32px;
+    border: 1px solid #ccc;
+    margin: 0 auto;
+    position: relative;
+
+    >span {
+        display: inline-block;
+        padding: 0 6px;
+        line-height: 32px;
+    }
+
+    .title {
+        color: #81868f;
+        border-right: 1px solid #ccc;
+    }
+
+    .number {
+        width: 34px;
+        text-align: center;
+    }
+
+    .unit {
+        width: 34px;
+        line-height: 28px;
+        text-align: center;
+        background-color: #f3f5f7;
+        position: absolute;
+        right: 2px;
+        top: 2px;
+    }
+}
+
+.edit-params {
+    min-width: 156px;
+    height: 52px;
+    background: #fff;
+    border: 1px solid #f3f5f7;
+    margin: 0 auto;
+    padding: 0 10px;
+    box-sizing: border-box;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    position: absolute;
+    top: -60px;
+
+    .edit-input {
+        width: 48px;
+        height: 28px;
+        border: 1px solid #3582ec;
+        margin-top: 10px;
+        padding-left: 4px;
+        outline: none;
+    }
+
+    input.maxExperimentDuration {
+        width: 68px;
+    }
+
+    .dropdown {
+        width: 70px;
+        height: 32px;
+        background: #f3f5f7;
+        margin-top: 10px;
+    }
+
+    .series {
+        position: relative;
+        top: 8px;
+
+        >span {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+            text-align: center;
+            background: #f9fafb;
+            border-radius: 4px;
+        }
+    }
+}
+
+/* edit params trialnumber & concurrency box */
+.edit-numbers {
+    margin-top: 10px;
 }

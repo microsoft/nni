@@ -87,10 +87,32 @@
     max-width: 350px;
     max-height: 350px;
     white-space: normal;
-    padding: 10px;
     overflow: auto;
-    background: #6f6f6f;
     color: #fff;
+    background: #24252d;
+    border-radius: 10px;
+
+    .trial-No {
+        padding: 18px;
+        box-sizing: border-box;
+        font-size: 16px;
+        color: #fefefe;
+        background: #35363f;
+        border-bottom: 1px solid #35363f;
+    }
+
+    .main {
+        padding: 18px;
+        box-sizing: border-box;
+
+        >div {
+            margin-bottom: 8px;
+        }
+
+        span {
+            color: #969aa7;
+        }
+    }
 
     pre {
         overflow: inherit;

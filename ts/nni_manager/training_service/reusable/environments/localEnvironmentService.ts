@@ -4,17 +4,16 @@
 import fs from 'fs';
 import path from 'path';
 import tkill from 'tree-kill';
-import * as component from 'common/component';
-import { getLogger, Logger } from 'common/log';
 import { ExperimentConfig } from 'common/experimentConfig';
 import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
-import { powershellString } from 'common/shellUtils';
+import { IocShim } from 'common/ioc_shim';
+import { getLogger, Logger } from 'common/log';
+import { powershellString, createScriptFile } from 'common/shellUtils';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { isAlive, getNewLine } from 'common/utils';
 import { execMkdir, runScript, getScriptName, execCopydir } from 'training_service/common/util';
 import { SharedStorageService } from '../sharedStorage'
 
-@component.Singleton
 export class LocalEnvironmentService extends EnvironmentService {
 
     private readonly log: Logger = getLogger('LocalEnvironmentService');
@@ -71,7 +70,7 @@ export class LocalEnvironmentService extends EnvironmentService {
                     }
                 }
             } catch (error) {
-                this.log.error(`Update job status exception, error is ${error.message}`);
+                this.log.error(`Update job status exception, error is ${(error as any).message}`);
             }
         });
     }
@@ -106,7 +105,7 @@ export class LocalEnvironmentService extends EnvironmentService {
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
         // Need refactor, this temp folder path is not appropriate, there are two expId in this path
-        const sharedStorageService = component.get<SharedStorageService>(SharedStorageService);
+        const sharedStorageService = IocShim.get<SharedStorageService>(SharedStorageService);
         if (environment.useSharedStorage && sharedStorageService.canLocalMounted) {
             this.experimentRootDir = sharedStorageService.localWorkingRoot;
         }
@@ -121,8 +120,7 @@ export class LocalEnvironmentService extends EnvironmentService {
         await execMkdir(environment.runnerWorkingFolder);
         environment.command = this.getScript(environment).join(getNewLine());
         const scriptName: string = getScriptName('run');
-        await fs.promises.writeFile(path.join(localEnvCodeFolder, scriptName),
-                                    environment.command, { encoding: 'utf8', mode: 0o777 });
+        await createScriptFile(path.join(localEnvCodeFolder, scriptName), environment.command);
 
         // Execute command in local machine
         runScript(path.join(localEnvCodeFolder, scriptName));

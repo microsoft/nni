@@ -21,13 +21,11 @@
 
 import 'app-module-path/register';  // so we can use absolute path to import
 
-import fs from 'fs';
+import { globals, initGlobals } from 'common/globals';
+initGlobals();
 
-import { Container, Scope } from 'typescript-ioc';
-
-import * as component from 'common/component';
 import { Database, DataStore } from 'common/datastore';
-import globals, { initGlobals } from 'common/globals';
+import { IocShim } from 'common/ioc_shim';
 import { Logger, getLogger } from 'common/log';
 import { Manager } from 'common/manager';
 import { TensorboardManager } from 'common/tensorboardManager';
@@ -37,24 +35,25 @@ import { SqlDB } from 'core/sqlDatabase';
 import { initExperimentsManager } from 'extensions/experiments_manager';
 import { NNITensorboardManager } from 'extensions/nniTensorboardManager';
 import { RestServer } from 'rest_server';
-
-import path from 'path';
+import { createRestHandler } from 'rest_server/restHandler';
 
 const logger: Logger = getLogger('main');
 
 async function start(): Promise<void> {
     logger.info('Start NNI manager');
 
-    Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
-    Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
-    Container.bind(DataStore).to(NNIDataStore).scope(Scope.Singleton);
-    Container.bind(TensorboardManager).to(NNITensorboardManager).scope(Scope.Singleton);
-
-    const ds: DataStore = component.get(DataStore);
-    await ds.init();
-
     const restServer = new RestServer(globals.args.port, globals.args.urlPrefix);
     await restServer.start();
+
+    IocShim.bind(Database, SqlDB);
+    IocShim.bind(DataStore, NNIDataStore);
+    IocShim.bind(Manager, NNIManager);
+    IocShim.bind(TensorboardManager, NNITensorboardManager);
+
+    const ds: DataStore = IocShim.get(DataStore);
+    await ds.init();
+
+    globals.rest.registerExpressRouter('/api/v1/nni', createRestHandler());
 
     initExperimentsManager();
 
@@ -69,8 +68,6 @@ process.on('SIGBREAK', () => { globals.shutdown.initiate('SIGBREAK'); });
 process.on('SIGINT', () => { globals.shutdown.initiate('SIGINT'); });
 
 /* main */
-
-initGlobals();
 
 start().then(() => {
     logger.debug('start() returned.');

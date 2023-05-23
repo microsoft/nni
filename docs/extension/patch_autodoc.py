@@ -31,13 +31,13 @@ class ClassNewBlacklistPatch:
 
         blacklist = []
 
-        import nni.retiarii.nn.pytorch
-        for name in dir(nni.retiarii.nn.pytorch):
-            obj = getattr(nni.retiarii.nn.pytorch, name)
-            if inspect.isclass(obj):
-                new_name = "{0.__module__}.{0.__qualname__}".format(obj.__new__)
-                if new_name not in blacklist:
-                    blacklist.append(new_name)
+        # import nni.retiarii.nn.pytorch
+        # for name in dir(nni.retiarii.nn.pytorch):
+        #     obj = getattr(nni.retiarii.nn.pytorch, name)
+        #     if inspect.isclass(obj):
+        #         new_name = "{0.__module__}.{0.__qualname__}".format(obj.__new__)
+        #         if new_name not in blacklist:
+        #             blacklist.append(new_name)
 
         sphinx.ext.autodoc._CLASS_NEW_BLACKLIST = self.original + blacklist
 

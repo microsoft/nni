@@ -18,6 +18,6 @@ Quickstart
 .. cardlinkitem::
    :header: Model Compression Quickstart
    :description: Familiarize yourself with pruning to compress your model.
-   :link: tutorials/pruning_quick_start_mnist
+   :link: tutorials/pruning_quick_start
    :image: ../img/thumbnails/pruning-tutorial.svg
    :background: blue
