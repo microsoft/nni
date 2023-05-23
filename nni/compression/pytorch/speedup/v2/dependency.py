@@ -4,7 +4,7 @@
 import logging
 import operator
 from copy import deepcopy
-from typing import (Any, Dict, List)
+from typing import (Any, Dict, List, Set)
 from uuid import uuid4
 
 import numpy as np
@@ -61,9 +61,62 @@ def gcd_list(L):
     return gcd
 
 
-def get_parent_layers(node: torch.fx.Node, module: torch.fx.GraphModule, target_types: List[torch.nn.Module]):
+def reshape_break_channel_dependency(node: torch.fx.Node):
     """
-    Find the nearest father layers of `target_types` in module for the target node.
+    The reshape operations such as (reshape, view, flatten) may break
+    the channel dependency. We need to check the input parameters of
+    these reshape operations to check if this reshape node will break
+    the channel dependency. However, it's complicated to analyze the the input
+    parameters for each reshape function and infer if it will break the channel
+    dependency. So currently, we just check if the input channel and the output
+    channel is the same, if so, then we can say the original reshape function
+    doesn't want to change the number of the channels, which means the channel
+    dependency is not broken. In contrast, the original reshape operation wants
+    to change the number of channels, so it breaks the channel dependency.
+
+    Parameters
+    ----------
+    node : torch.fx.Node
+
+    Returns
+    -------
+    bool
+        If this operation will break the channel dependency.
+    """
+
+    if node.target not in CALL_FUNCTION_RESHAPE and node.target not in CALL_METHOD_RESHAPE:
+        return False
+
+    def find_parent(node: torch.fx.Node):
+        par_arg = node.all_input_nodes[0]
+
+        while isinstance(par_arg, tuple):
+            par_arg = par_arg[0]
+        return par_arg
+
+    def get_shape(node):
+        meta = node.meta.get('tensor_meta', None)
+        if isinstance(meta, TensorMetadata):
+            return meta[0]
+        elif isinstance(meta, tuple):
+            return meta[0][0]
+        return None
+
+    in_shape = get_shape(find_parent(node))
+    out_shape = get_shape(node)
+    if not in_shape or not out_shape or len(in_shape) <= 1 or len(out_shape) <= 1:
+        return True
+    in_channel = in_shape[1]
+    out_channel = out_shape[1]
+    return in_channel != out_channel
+
+
+def find_adjacent_layers(node: torch.fx.Node,
+                         module: torch.fx.GraphModule,
+                         target_types: List[torch.nn.Module],
+                         direction: str = 'parent') -> List[torch.fx.Node]:
+    """
+    Find the nearest layers of `target_types` in module for the target node given search direction.
 
     Parameters
     ---------
@@ -73,6 +126,8 @@ def get_parent_layers(node: torch.fx.Node, module: torch.fx.GraphModule, target_
         The model to be analyzed.
     target_types : list
         The target types of the father layers.
+    direction : str
+        The search direction, 'parent' or 'child'.
 
     Returns
     -------
@@ -80,55 +135,30 @@ def get_parent_layers(node: torch.fx.Node, module: torch.fx.GraphModule, target_
         The nearest father conv/linear layers for the target worknode.
     """
 
-    parent_layers = []
-    for parent in node.all_input_nodes:
-        if parent.op == 'call_module':
-            target_module = module.get_submodule(parent.target)
+    layers = []
+    if direction == 'parent':
+        nodes = node.all_input_nodes
+    elif direction == 'child':
+        nodes = node.users
+    else:
+        raise ValueError("search direction should be 'parent' or 'child'")
+
+    for node in nodes:
+        if node.op == 'call_module':
+            target_module = module.get_submodule(node.target)
             if isinstance(target_module, tuple(target_types)):
-                parent_layers.append(parent)
+                layers.append(node)
                 continue
-        elif reshape_break_channel_dependency(parent):
+        elif reshape_break_channel_dependency(node):
             continue
-        parent_layers.extend(get_parent_layers(parent, module, target_types))
-    return parent_layers
-
-
-def get_child_layers(node: torch.fx.Node, module: torch.fx.GraphModule, target_types: List[torch.nn.Module]):
-    """
-    Find the nearest child layers of `target_types` in module for the target node.
-
-    Parameters
-    ---------
-    node : torch.fx.Node
-        The target node.
-    module : torch.fx.GraphModule
-        The model to be analyzed.
-    target_types : list
-        The target types of the child layers.
-
-    Returns
-    -------
-    child_layers: list
-        The nearest child conv/linear layers for the target worknode.
-    """
-
-    child_layers = []
-    for child in node.users:
-        if child.op == 'call_module':
-            target_module = module.get_submodule(child.target)
-            if isinstance(target_module, tuple(target_types)):
-                child_layers.append(child)
-                continue
-        elif reshape_break_channel_dependency(child):
-            continue
-        child_layers.extend(get_child_layers(child, module, target_types))
-    return child_layers
+        layers.extend(find_adjacent_layers(node, module, target_types, direction))
+    return layers
 
 
 def auto_set_denpendency_group_ids(graph_module: torch.fx.GraphModule,
                                    config_list: List[Dict[str, Any]],
-                                   prune_type='Filter',
-                                   prune_axis=1) -> List[Dict[str, Any]]:
+                                   prune_type: str = 'Filter',
+                                   prune_axis: int = 1) -> List[Dict[str, Any]]:
     """
     Auto find the output dependency between all 'Conv2d', 'Linear', 'ConvTranspose2d', 'Embedding' modules,
     then set the ``dependency_group_id`` in config list.
@@ -157,8 +187,8 @@ def auto_set_denpendency_group_ids(graph_module: torch.fx.GraphModule,
         uid = uuid4().hex
         module2uid.update({trans_target(node.target): uid for node in d_set})
 
-    group_dependency, _ = build_group_dependency(graph_module)
-    group_dependency = {trans_target(node.target): num_groups for node, num_groups in group_dependency.items()}
+    group_dependency = build_group_dependency(graph_module)
+    group_dependency = {trans_target(node.target): group_max for node, (group_max, group_min) in group_dependency.items()}
 
     config_list = trans_legacy_config_list(config_list)
     new_config_list = []
@@ -178,58 +208,9 @@ def auto_set_denpendency_group_ids(graph_module: torch.fx.GraphModule,
     return new_config_list
 
 
-def reshape_break_channel_dependency(node: torch.fx.Node):
+def convert_dependency_to_set(dependency: Dict[Any, Set[Any]]) -> List[Set[Any]]:
     """
-    The reshape operations such as (reshape, view, flatten) may break
-    the channel dependency. We need to check the input parameters of
-    these reshape operations to check if this reshape node will break
-    the channel dependency. However, it's complicated to analyze the the input
-    parameters for each reshape function and infer if it will break the channel
-    dependency. So currently, we just check if the input channel and the output
-    channel is the same, if so, then we can say the original reshape function
-    doesn't want to change the number of the channels, which means the channel
-    dependency is not broken. In contrast, the original reshape operation wants
-    to change the number of channels, so it breaks the channel dependency.
-
-    Parameters
-    ----------
-    node : torch.fx.Node
-
-    Returns
-    -------
-    bool
-        If this operation will break the channel dependency.
-    """
-
-    if node.target not in CALL_FUNCTION_RESHAPE and node.target not in CALL_METHOD_RESHAPE:
-        return False
-
-    def get_parent(node: torch.fx.Node):
-        par_arg = node.all_input_nodes[0]
-
-        while isinstance(par_arg, tuple):
-            par_arg = par_arg[0]
-        return par_arg
-
-    def get_shape(node):
-        meta = node.meta.get('tensor_meta', None)
-        if isinstance(meta, TensorMetadata):
-            return meta[0]
-        elif isinstance(meta, tuple):
-            return meta[0][0]
-        return None
-
-    in_shape = get_shape(get_parent(node))
-    out_shape = get_shape(node)
-    if not in_shape or not out_shape or len(in_shape) <= 1 or len(out_shape) <= 1:
-        return True
-    in_channel = in_shape[1]
-    out_channel = out_shape[1]
-    return in_channel != out_channel
-
-def dependency_to_list(dependency: Dict):
-    """
-    Convert the dependency dict to a list.
+    Convert the dependency dict to sets of dependent nodes.
 
     Parameters
     ----------
@@ -242,17 +223,17 @@ def dependency_to_list(dependency: Dict):
         A list of dependencies for the target graph.
     """
     visited = set()
-    dependency_list = []
+    d_sets = []
     for key, value in dependency.items():
         if key not in visited:
             tmp = set([key]) | value
             visited.update(tmp)
             if len(tmp) > 1:
-                dependency_list.append(tmp)
-    return dependency_list
+                d_sets.append(tmp)
+    return d_sets
 
 
-def build_weight_sharing_dependency(graph_module: torch.fx.GraphModule):
+def build_weight_sharing_dependency(graph_module: torch.fx.GraphModule) -> List[List[torch.fx.Node]]:
     """
     This model analyze the weight sharing dependencies between the conv
     layers in a model. (e.g. different node refer to same module)
@@ -278,7 +259,9 @@ def build_weight_sharing_dependency(graph_module: torch.fx.GraphModule):
     return [dep for dep in dependency.values() if len(dep) > 1]
 
 
-def build_channel_dependency(graph_module: torch.fx.GraphModule, prune_type='Filter', prune_axis=1):
+def build_channel_dependency(graph_module: torch.fx.GraphModule,
+                             prune_type: str = 'Filter',
+                             prune_axis: int = 1) -> List[Set[Any]]:
     """
     This model analyze the channel dependencies between the conv
     layers in a model.
@@ -291,7 +274,7 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule, prune_type='Fil
         The channel pruning type. `Filter` prune the filter of the conv
         layer to prune the corresponding channels. `BatchNorm` prune the
         batchnorm layer to prune the corresponding channels.
-    channel_axis : int
+    prune_axis : int
         The pruned axis of the conv layer. 1 for output channel, 0 for input channel.
 
     Returns
@@ -329,7 +312,7 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule, prune_type='Fil
             # whether the number of channels before and after the operation has changed.
             # If not, the input channel dependency will be passed to the following nodes.
 
-            d_set = set(get_child_layers(node, graph_module, [torch.nn.Conv2d, torch.nn.Linear, torch.nn.ConvTranspose2d]))
+            d_set = set(find_adjacent_layers(node, graph_module, target_types, 'child'))
 
         # output channel dependency
         else:
@@ -341,8 +324,7 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule, prune_type='Fil
                 # additional denpendency for (group number == output channel number) depth-wise conv:
                 if (isinstance(submodule, (torch.nn.Conv2d, torch.nn.ConvTranspose2d)) and submodule.groups == submodule.out_channels) \
                     or (isinstance(submodule, torch.nn.GroupNorm) and submodule.num_groups == submodule.num_channels):
-                        d_set = set([node] + get_parent_layers(node, graph_module, [torch.nn.Conv2d, torch.nn.Linear,
-                                                                                    torch.nn.ConvTranspose2d]))
+                        d_set = set([node] + find_adjacent_layers(node, graph_module, target_types, 'parent'))
 
             elif node.op == 'call_function':
                 if node.target in CALL_FUNCTION_REDUCE:
@@ -352,7 +334,7 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule, prune_type='Fil
                         # tensor is from skip connection(residual), the channel propagation
                         # may be failed(the input is also used by another layer and cannot be
                         # pruned), in this case, we need to fix the conflict maunally.
-                        d_set = set(get_parent_layers(node, graph_module, target_types))
+                        d_set = set(find_adjacent_layers(node, graph_module, target_types, 'parent'))
 
                 elif node.target in CALL_FUNCTION_CONCAT:
                     # To determine if this cat operation will introduce channel
@@ -360,11 +342,11 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule, prune_type='Fil
                     # operation.
                     cat_dim = node.kwargs.get('dim', None)
                     if cat_dim != 1:
-                        d_set = set(get_parent_layers(node, graph_module, target_types))
+                        d_set = set(find_adjacent_layers(node, graph_module, target_types, 'parent'))
 
             elif node.op == 'call_method':
                 if node.target in CALL_METHOD_REDUCE:
-                    d_set = set(get_parent_layers(node, graph_module, target_types))
+                    d_set = set(find_adjacent_layers(node, graph_module, target_types, 'parent'))
 
         # merge dependencies
         for parent in tuple(d_set):
@@ -374,7 +356,7 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule, prune_type='Fil
         for parent in d_set:
             dependency[parent] = d_set
 
-    return dependency_to_list(dependency)
+    return convert_dependency_to_set(dependency)
 
 
 def build_group_dependency(graph_module: torch.fx.GraphModule):
@@ -389,7 +371,7 @@ def build_group_dependency(graph_module: torch.fx.GraphModule):
 
     Returns
     -------
-    dependency : List
+    dependency : Dict
         The group dependency for the target graph.
     """
     graph = graph_module.graph
@@ -427,17 +409,19 @@ def build_group_dependency(graph_module: torch.fx.GraphModule):
             if num_groups > 1:
                 # for the conv layer whose group is larger than 1, it will require the number
                 # of output channels of their parent conv layer to be divisible by group.
-                d_set = get_parent_layers(node, graph_module, [torch.nn.Conv2d, torch.nn.ConvTranspose2d, torch.nn.Linear])
+                d_set = find_adjacent_layers(node, graph_module, [torch.nn.Conv2d, torch.nn.ConvTranspose2d, torch.nn.Linear], 'parent')
                 for parent in d_set:
                     groups[parent] = groups.get(parent, []) + [num_groups]
 
     for node in groups:
-        dependency[node] = lcm_list(groups[node])
-        if min(groups[node]) == gcd_list(groups[node]):
-            groups[node] = min(groups[node])
-        else:
-            groups[node] = 1
-    return dependency, groups
+        group_max = lcm_list(groups[node])
+        group_min = gcd_list(groups[node]) if min(groups[node]) == gcd_list(groups[node]) else 1
+
+        if group_max == 1 and group_min == 1:
+            continue
+
+        dependency[node] = (group_max, group_min)
+    return dependency
 
 
 def build_reshape_dependency(graph_module: torch.fx.GraphModule):
@@ -449,9 +433,18 @@ def build_reshape_dependency(graph_module: torch.fx.GraphModule):
     speeduped model, please try remove these layers from the pruner config list and try again.
     """
 
-    pass
-    # graph = graph_module.graph
-    # dependency = dict()
+    graph = graph_module.graph
+    dependency = dict()
 
-    # for node in graph.nodes:
-    #     pass
+    for node in graph.nodes:
+        parent_layers = []
+        # find the node that contains the reshape-like function
+        if node.op == 'call_function' and node.target in CALL_FUNCTION_RESHAPE:
+            logger.info('Detect reshape-like functions: %s', node.target)
+            parent_layers = find_adjacent_layers(node, graph_module, [torch.nn.Conv2d, torch.nn.ConvTranspose2d, torch.nn.Linear], 'parent')
+            dependency[node] = parent_layers
+        elif node.op == 'call_method' and node.target in CALL_METHOD_RESHAPE:
+            logger.info('Detect reshape-like method: %s', node.target)
+            parent_layers = find_adjacent_layers(node, graph_module, [torch.nn.Conv2d, torch.nn.ConvTranspose2d, torch.nn.Linear], 'parent')
+            dependency[node] = parent_layers
+    return dependency
