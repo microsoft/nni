@@ -19,13 +19,13 @@ from examples.compression.models import (
     device
 )
 
-from nni.contrib.compression import TorchEvaluator
-from nni.contrib.compression.base.compressor import Quantizer
-from nni.contrib.compression.distillation import DynamicLayerwiseDistiller
-from nni.contrib.compression.pruning import TaylorPruner, AGPPruner
-from nni.contrib.compression.quantization import QATQuantizer
-from nni.contrib.compression.utils import auto_set_denpendency_group_ids
-from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+from nni.compression import TorchEvaluator
+from nni.compression.base.compressor import Quantizer
+from nni.compression.distillation import DynamicLayerwiseDistiller
+from nni.compression.pruning import TaylorPruner, AGPPruner
+from nni.compression.quantization import QATQuantizer
+from nni.compression.utils import auto_set_denpendency_group_ids
+from nni.compression.speedup import ModelSpeedup
 
 
 if __name__ == '__main__':

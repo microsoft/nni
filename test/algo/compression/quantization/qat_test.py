@@ -15,8 +15,8 @@ from torch.utils.data import DataLoader
 from torch import Tensor
 
 import nni
-from nni.contrib.compression.quantization import QATQuantizer
-from nni.contrib.compression.utils import TorchEvaluator
+from nni.compression.quantization import QATQuantizer
+from nni.compression.utils import TorchEvaluator
 
 from ..assets.simple_mnist import (
     SimpleTorchModel, 

@@ -9,7 +9,7 @@ from collections import defaultdict
 
 import torch
 
-from nni.contrib.compression.base.compressor import Pruner, Quantizer
+from nni.compression.base.compressor import Pruner, Quantizer
 
 from ..assets.simple_mnist import SimpleTorchModel
 

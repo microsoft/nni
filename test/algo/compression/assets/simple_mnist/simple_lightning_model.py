@@ -38,7 +38,7 @@ class SimpleLightningModel(pl.LightningModule):
         logits = self(x)
         loss = F.nll_loss(logits, y)
         preds = torch.argmax(logits, dim=1)
-        acc = accuracy(preds, y, 'multiclass', num_classes=10)
+        acc = accuracy(preds, y, num_classes=10)
 
         if stage:
             self.log(f"default", acc, prog_bar=False)

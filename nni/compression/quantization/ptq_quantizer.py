@@ -28,8 +28,8 @@ class PtqQuantizer(Quantizer):
 
     Examples
     --------
-        >>> from nni.contrib.compression.quantization import PtqQuantizer
-        >>> from nni.contrib.compression.utils import TorchEvaluator
+        >>> from nni.compression.quantization import PtqQuantizer
+        >>> from nni.compression.utils import TorchEvaluator
         >>> model = ...
         >>> optimizer = ...
         >>> max_steps, max_epochs = ..., ...

@@ -10,7 +10,7 @@ from copy import deepcopy
 import torch
 import torch.nn.functional as F
 
-from nni.contrib.compression.base.wrapper import IdentityModuleWrapper, register_wrappers
+from nni.compression.base.wrapper import IdentityModuleWrapper, register_wrappers
 from ..assets.simple_mnist import SimpleTorchModel
 
 def test_fused_wrapper_register():

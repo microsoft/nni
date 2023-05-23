@@ -7,7 +7,6 @@ import torch
 import numpy as np
 
 from .attr import get_nested_attr
-from ..base.wrapper import ModuleWrapper
 
 
 __all__ = ['ChannelDependency', 'GroupDependency', 'ReshapeDependency',
@@ -232,8 +231,6 @@ class ChannelDependency(Dependency):
     def _conv_condition(self, node_group):
         node_name = node_group.name
         leaf_module = get_nested_attr(self.model, node_name)
-        if isinstance(leaf_module, ModuleWrapper):
-            leaf_module = leaf_module.module
         assert isinstance(
             leaf_module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d))
         group = leaf_module.groups
@@ -243,8 +240,6 @@ class ChannelDependency(Dependency):
     def _group_norm_condition(self, node_group) -> int:
         node_name = node_group.name
         leaf_module = get_nested_attr(self.model, node_name)
-        if isinstance(leaf_module, ModuleWrapper):
-            leaf_module = leaf_module.module
         assert isinstance(leaf_module, (torch.nn.GroupNorm))
         return leaf_module.num_groups == leaf_module.num_channels
 
@@ -471,8 +466,6 @@ class GroupDependency(Dependency):
         """
         node_name = node_group.name
         leaf_module = get_nested_attr(self.model, node_name)
-        if isinstance(leaf_module, ModuleWrapper):
-            leaf_module = leaf_module.module
         assert isinstance(
             leaf_module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d))
         group = leaf_module.groups
@@ -498,8 +491,6 @@ class GroupDependency(Dependency):
         """
         node_name = node_group.name
         leaf_module = get_nested_attr(self.model, node_name)
-        if isinstance(leaf_module, ModuleWrapper):
-            leaf_module = leaf_module.module
         assert isinstance(leaf_module, (torch.nn.GroupNorm))
 
         return leaf_module.num_groups

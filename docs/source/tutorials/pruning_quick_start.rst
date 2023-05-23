@@ -151,7 +151,7 @@ Pruners usually require `model` and `config_list` as input arguments.
 .. code-block:: default
 
 
-    from nni.contrib.compression.pruning import L1NormPruner
+    from nni.compression.pruning import L1NormPruner
     pruner = L1NormPruner(model, config_list)
 
     # show the wrapped model structure, `PrunerModuleWrapper` have wrapped the layers that configured in the config_list.
@@ -236,7 +236,7 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
     pruner.unwrap_model()
 
     # speedup the model, for more information about speedup, please refer :doc:`pruning_speedup`.
-    from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+    from nni.compression.speedup import ModelSpeedup
 
     ModelSpeedup(model, torch.rand(3, 1, 28, 28).to(device), masks).speedup_model()
 

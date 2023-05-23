@@ -13,13 +13,13 @@ from examples.compression.models import (
     device
 )
 
-from nni.contrib.compression.pruning import (
+from nni.compression.pruning import (
     L1NormPruner,
     L2NormPruner,
     FPGMPruner
 )
-from nni.contrib.compression.utils import auto_set_denpendency_group_ids
-from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+from nni.compression.utils import auto_set_denpendency_group_ids
+from nni.compression.speedup import ModelSpeedup
 
 prune_type = 'l1'
 

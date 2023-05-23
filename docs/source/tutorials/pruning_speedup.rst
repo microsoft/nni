@@ -151,7 +151,7 @@ Speedup the model and show the model structure after speedup.
 
 .. code-block:: default
 
-    from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+    from nni.compression.speedup import ModelSpeedup
     ModelSpeedup(model, torch.rand(10, 1, 28, 28).to(device), masks).speedup_model()
     print(model)
 

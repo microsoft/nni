@@ -5,7 +5,7 @@ import pytest
 
 import torch
 
-from nni.contrib.compression.distillation import (
+from nni.compression.distillation import (
     Adaptive1dLayerwiseDistiller,
     DynamicLayerwiseDistiller
 )

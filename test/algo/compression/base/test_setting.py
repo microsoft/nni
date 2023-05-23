@@ -7,7 +7,7 @@ import pytest
 
 import torch
 
-from nni.contrib.compression.base.setting import canonicalize_settings
+from nni.compression.base.setting import canonicalize_settings
 
 
 @pytest.mark.parametrize("module_cls_or_name", ['instance', 'cls', 'name'])

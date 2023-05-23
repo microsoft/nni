@@ -17,7 +17,7 @@ _EVALUATOR_DOCSTRING = r"""NNI will use the evaluator to intervene in the model 
             lightning_trainer = nni.trace(pytorch_lightning.Trainer)(max_epochs=1, max_steps=50, logger=TensorBoardLogger(...))
             lightning_data_module = nni.trace(pytorch_lightning.LightningDataModule)(...)
 
-            from nni.contrib.compression import LightningEvaluator
+            from nni.compression import LightningEvaluator
             evaluator = LightningEvaluator(lightning_trainer, lightning_data_module)
 
             # TorchEvaluator example
@@ -61,13 +61,13 @@ _EVALUATOR_DOCSTRING = r"""NNI will use the evaluator to intervene in the model 
             import nni
             traced_optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01)
 
-            from nni.contrib.compression import TorchEvaluator
+            from nni.compression import TorchEvaluator
             evaluator = TorchEvaluator(training_func=training_model, optimziers=traced_optimizer, training_step=training_step)
 
             # TransformersEvaluator example
             from transformers.trainer import Trainer
             trainer = nni.trace(Trainer)(model=model, args=training_args)
 
-            from nni.contrib.compression import TransformersEvaluator
+            from nni.compression import TransformersEvaluator
             evaluator = TransformersEvaluator(trainer)
     """

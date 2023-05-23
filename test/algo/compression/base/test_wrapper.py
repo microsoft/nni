@@ -8,7 +8,7 @@ import pytest
 import torch
 from torch.nn.functional import conv2d
 
-from nni.contrib.compression.base.wrapper import ModuleWrapper, register_wrappers
+from nni.compression.base.wrapper import ModuleWrapper, register_wrappers
 
 from ..assets.simple_mnist import SimpleTorchModel
 

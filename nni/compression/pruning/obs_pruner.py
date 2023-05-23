@@ -6,10 +6,10 @@ import math
 from typing import Dict, List
 import torch
 
-from nni.contrib.compression.base.compressor import Pruner
-from nni.contrib.compression.base.wrapper import ModuleWrapper
-from nni.contrib.compression.utils import Evaluator, ForwardHook
-from nni.contrib.compression.pruning.tools.utils import is_active_target
+from nni.compression.base.compressor import Pruner
+from nni.compression.base.wrapper import ModuleWrapper
+from nni.compression.utils import Evaluator, ForwardHook
+from nni.compression.pruning.tools.utils import is_active_target
 
 
 class OBSPruner(Pruner):
@@ -147,7 +147,7 @@ import torch
 from torch.utils.data import ConcatDataset
 
 import nni
-from nni.contrib.compression import TransformersEvaluator
+from nni.compression import TransformersEvaluator
 
 from datasets import load_dataset, load_metric
 from transformers import BertTokenizerFast, DataCollatorWithPadding, BertForSequenceClassification, EvalPrediction
@@ -281,7 +281,7 @@ print(metric)
 model = build_model('bert-base-uncased', 'mnli')
 model.load_state_dict(torch.load('./mnli.bin'))
 
-from nni.contrib.compression.pruning import LevelPruner
+from nni.compression.pruning import LevelPruner
 pruner = LevelPruner(model, config_list)
 _, masks = pruner.compress(None, None)
 

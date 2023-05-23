@@ -15,7 +15,7 @@ New compression version import path:
     # most new compression related, include pruners, quantizers, distillers, except new pruning speedup
     from nni.contrib.compression.xxx import xxx
     # new pruning speedup
-    from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+    from nni.compression.speedup import ModelSpeedup
 
 
 Old compression version import path:

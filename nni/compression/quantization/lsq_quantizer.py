@@ -39,8 +39,8 @@ class LsqQuantizer(Quantizer):
 
     Examples
     --------
-        >>> from nni.contrib.compression.quantization import LsqQuantizer
-        >>> from nni.contrib.compression.utils import TorchEvaluator
+        >>> from nni.compression.quantization import LsqQuantizer
+        >>> from nni.compression.utils import TorchEvaluator
         >>> model = ...
         >>> optimizer = ...
         >>> max_steps, max_epochs = ..., ...

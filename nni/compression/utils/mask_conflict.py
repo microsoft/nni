@@ -4,8 +4,8 @@ import os
 import logging
 import torch
 import numpy as np
+from .attr import get_nested_attr
 from .shape_dependency import ChannelDependency, GroupDependency, InputChannelDependency
-from .utils import get_module_by_name
 # logging.basicConfig(level = logging.DEBUG)
 _logger = logging.getLogger('FixMaskConflict')
 
@@ -235,7 +235,7 @@ class ChannelMaskConflict(MaskFix):
             fine_grained = False
             for name in dset:
                 if name in self.masks and 'weight' in self.masks[name]:
-                    _, m = get_module_by_name(self.model, name)
+                    m = get_nested_attr(self.model, name)
                     assert m is not None
                     mask = self.masks[name]['weight']
                     if type(m).__name__ == 'Conv2d':
@@ -303,7 +303,7 @@ class ChannelMaskConflict(MaskFix):
                     assert all(merged_channel_mask)
                     continue
                 orig_mask = self.masks[name]['weight']
-                _, m = get_module_by_name(self.model, name)
+                m = get_nested_attr(self.model, name)
                 new_mask = torch.zeros_like(orig_mask)
                 if type(m).__name__ == 'Conv2d':
                     if self.conv_prune_dim == 0:
@@ -354,7 +354,7 @@ def detect_channel_prune_type(masks, model):
     prune_type = 'Filter'
     all_batch_norm = True
     for layer_name in masks:
-        _, m = get_module_by_name(model, layer_name)
+        m = get_nested_attr(model, layer_name)
         if m is None or (not isinstance(m, torch.nn.BatchNorm2d)):
             all_batch_norm = False
             break
@@ -390,7 +390,7 @@ def detect_mask_prune_dim(masks, model):
         if 'weight' not in masks[module_name]:
             continue
 
-        _, m = get_module_by_name(model, module_name)
+        m = get_nested_attr(model, module_name)
         if m is None or type(m).__name__ != 'Conv2d':
             continue
 

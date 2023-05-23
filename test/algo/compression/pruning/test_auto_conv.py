@@ -175,7 +175,7 @@ class AutoConvTestCase(unittest.TestCase):
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.5}]
         pruner = L1NormPruner(model=model, config_list=config_list)
         pruned_model, masks = pruner.compress()
-        pruner._unwrap_model()
+        pruner.unwrap_model()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         # torch.manual_seed(100)
         speedup_model = ModelSpeedup(model, dummy_input, masks).speedup_model()

@@ -74,7 +74,7 @@ class MyModule(pl.LightningModule):
 class MyDataModule(pl.LightningDataModule):
     pass
 
-from nni.contrib.compression import LightningEvaluator
+from nni.compression import LightningEvaluator
 
 pl_trainer = nni.trace(pl.Trainer)(
     accelerator='auto',

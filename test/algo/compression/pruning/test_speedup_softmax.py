@@ -10,7 +10,7 @@ import unittest
 import torch
 import torch.nn.functional as F
 
-from nni.compression.utils import count_flops_params
+from nni.compression.utils.counter import count_flops_params
 from nni.compression.speedup import ModelSpeedup
 
 from nni.compression.pruning import L1NormPruner
@@ -56,8 +56,7 @@ class SpeedupSoftmaxTestCase(unittest.TestCase):
 
         pruner = L1NormPruner(model=model, config_list=config_list)
         _, masks = pruner.compress()
-        pruner.show_pruned_weights()
-        pruner._unwrap_model()  # unwrap all modules to normal state
+        pruner.unwrap_model()  # unwrap all modules to normal state
 
         # torch.manual_seed(100)
         speedup_model = ModelSpeedup(model, dummy_input, masks).speedup_model()

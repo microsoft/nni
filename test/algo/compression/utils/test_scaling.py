@@ -5,7 +5,7 @@ import pytest
 
 import torch
 
-from nni.contrib.compression.utils.scaling import Scaling
+from nni.compression.utils.scaling import Scaling
 
 
 @pytest.mark.parametrize("kernel_padding_mode", ['front', 'back'])

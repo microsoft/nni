@@ -7,7 +7,7 @@ from typing import Dict, Type
 
 import torch
 
-from nni.contrib.compression.pruning import (
+from nni.compression.pruning import (
     LevelPruner,
     L1NormPruner,
     L2NormPruner,
@@ -18,10 +18,10 @@ from nni.contrib.compression.pruning import (
     LinearPruner,
     AGPPruner
 )
-from nni.contrib.compression.base.compressor import Pruner
-from nni.contrib.compression.utils import auto_set_denpendency_group_ids
+from nni.compression.base.compressor import Pruner
+from nni.compression.utils import auto_set_denpendency_group_ids
 
-from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+from nni.compression.speedup import ModelSpeedup
 
 from ..assets.common import create_model
 from ..assets.simple_mnist import create_lighting_evaluator, create_pytorch_evaluator

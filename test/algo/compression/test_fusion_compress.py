@@ -3,11 +3,11 @@
 
 import pytest
 
-from nni.contrib.compression.distillation import (
+from nni.compression.distillation import (
     DynamicLayerwiseDistiller,
     Adaptive1dLayerwiseDistiller
 )
-from nni.contrib.compression.pruning import (
+from nni.compression.pruning import (
     LevelPruner,
     L1NormPruner,
     L2NormPruner,
@@ -18,7 +18,7 @@ from nni.contrib.compression.pruning import (
     LinearPruner,
     AGPPruner,
 )
-from nni.contrib.compression.quantization import (
+from nni.compression.quantization import (
     BNNQuantizer,
     DoReFaQuantizer,
     LsqQuantizer,
@@ -26,7 +26,7 @@ from nni.contrib.compression.quantization import (
     QATQuantizer,
 )
 
-from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+from nni.compression.speedup import ModelSpeedup
 
 from .assets.common import create_model
 from .assets.device import device

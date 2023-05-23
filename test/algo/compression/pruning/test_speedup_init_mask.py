@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from nni.common.concrete_trace_utils import concrete_trace
 from nni.compression.pruning import L1NormPruner
 from nni.compression.speedup import ModelSpeedup
-from nni.compression.utils import count_flops_params
+from nni.compression.utils.counter import count_flops_params
 
 def simple_annotation():
     def simple_wrapper(old_func):
@@ -92,8 +92,7 @@ class InitMaskTestCase(unittest.TestCase):
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.5}]
         pruner = L1NormPruner(model=model, config_list=config_list)
         _, masks = pruner.compress()
-        pruner.show_pruned_weights()
-        pruner._unwrap_model()  # unwrap all modules to normal state
+        pruner.unwrap_model()  # unwrap all modules to normal state
 
         masks['relu1'] = {
             '_input_input': torch.ones((8, 20, 24, 24)),
