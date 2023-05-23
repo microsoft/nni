@@ -14,7 +14,13 @@ from torch.fx.passes.shape_prop import TensorMetadata
 
 from nni.contrib.compression.base.config import trans_legacy_config_list, select_modules_by_config
 
-__all__ = ['build_channel_dependency', 'build_group_dependency', 'auto_set_denpendency_group_ids']
+__all__ = [
+    'build_channel_dependency',
+    'build_group_dependency',
+    'build_reshape_dependency',
+    'build_weight_sharing_dependency',
+    'auto_set_denpendency_group_ids',
+]
 
 # see https://pytorch.org/docs/stable/torch.html#pointwise-ops
 CALL_FUNCTION_REDUCE = [
