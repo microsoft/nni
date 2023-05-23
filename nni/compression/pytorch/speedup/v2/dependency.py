@@ -14,7 +14,7 @@ from torch.fx.passes.shape_prop import TensorMetadata
 
 from nni.contrib.compression.base.config import trans_legacy_config_list, select_modules_by_config
 
-__all__ = ['build_channel_dependency', 'build_group_dependency', 'au']
+__all__ = ['build_channel_dependency', 'build_group_dependency', 'auto_set_denpendency_group_ids']
 
 # see https://pytorch.org/docs/stable/torch.html#pointwise-ops
 CALL_FUNCTION_REDUCE = [
@@ -24,7 +24,7 @@ CALL_FUNCTION_REDUCE = [
     operator.truediv, operator.floordiv, operator.or_, operator.and_, operator.xor,
 ]
 CALL_METHOD_REDUCE = [
-    'add', 'add_', 'sub', 'sub_', 'subtract', 'subtract_', 'mul', 'mul_', 
+    'add', 'add_', 'sub', 'sub_', 'subtract', 'subtract_', 'mul', 'mul_',
     'div', 'div_', 'multiply', 'multiply_', 'divide', 'divide_',
     'addcmul', 'addcmul_', 'addcdiv', 'addcdiv_', 'logical_xor', 'logical_xor_',
     'logical_and', 'logical_and_', 'logical_or', 'logical_or_',
@@ -125,7 +125,10 @@ def get_child_layers(node: torch.fx.Node, module: torch.fx.GraphModule, target_t
     return child_layers
 
 
-def auto_set_denpendency_group_ids(graph_module: torch.fx.GraphModule, config_list: List[Dict[str, Any]], prune_type='Filter', prune_axis=1) -> List[Dict[str, Any]]:
+def auto_set_denpendency_group_ids(graph_module: torch.fx.GraphModule,
+                                   config_list: List[Dict[str, Any]],
+                                   prune_type='Filter',
+                                   prune_axis=1) -> List[Dict[str, Any]]:
     """
     Auto find the output dependency between all 'Conv2d', 'Linear', 'ConvTranspose2d', 'Embedding' modules,
     then set the ``dependency_group_id`` in config list.
@@ -147,7 +150,7 @@ def auto_set_denpendency_group_ids(graph_module: torch.fx.GraphModule, config_li
     def trans_target(target:str):
         target = target.split('_')
         return '.'.join(target)
-    
+
     channel_dependency = build_channel_dependency(graph_module, prune_type, prune_axis)
     module2uid = {}
     for d_set in channel_dependency:
@@ -258,7 +261,7 @@ def build_weight_sharing_dependency(graph_module: torch.fx.GraphModule):
     ----------
     graph_module : torch.fx.GraphModule
         The target graph and module.
-    
+
     Returns
     -------
     dependency : List
@@ -290,7 +293,7 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule, prune_type='Fil
         batchnorm layer to prune the corresponding channels.
     channel_axis : int
         The pruned axis of the conv layer. 1 for output channel, 0 for input channel.
-    
+
     Returns
     -------
     dependency : List
@@ -446,8 +449,9 @@ def build_reshape_dependency(graph_module: torch.fx.GraphModule):
     speeduped model, please try remove these layers from the pruner config list and try again.
     """
 
-    graph = graph_module.graph
-    dependency = dict()
+    pass
+    # graph = graph_module.graph
+    # dependency = dict()
 
-    for node in graph.nodes:
-        pass
+    # for node in graph.nodes:
+    #     pass
