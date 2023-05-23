@@ -27,12 +27,15 @@ const WebRouters = (props: WebRoutersInterface): any => {
     const [overviewMouhover, setOverviewMouhover] = useState(false);
     const [detailMouhover, setDetailMouhover] = useState(false);
     useEffect(() => {
-        if (overviewMouhover === false && window.location.pathname !== '/oview') {
+        if (
+            overviewMouhover === false &&
+            !(window.location.pathname.endsWith('/oview') || window.location.pathname.endsWith('/'))
+        ) {
             setOverviewImgsrc(`${getPrefix() || ''}/icons/overview.png`);
         } else {
             setOverviewImgsrc(`${getPrefix() || ''}/icons/overview-1.png`);
         }
-        if (detailMouhover === false && window.location.pathname !== '/detail') {
+        if (detailMouhover === false && !window.location.pathname.endsWith('/detail')) {
             setdetailImgsrc(`${getPrefix() || ''}/icons/detail.png`);
         } else {
             setdetailImgsrc(`${getPrefix() || ''}/icons/detail-1.png`);

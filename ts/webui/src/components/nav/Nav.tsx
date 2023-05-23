@@ -28,7 +28,7 @@ const NavCon = (): any => {
     const [version, setVersion] = useState('999' as string);
     const { changeInterval, refreshPage } = useContext(NavContext);
     const [currentPage, setcurrentPage] = useState(
-        window.location.pathname === '/oview' || window.location.pathname === '/'
+        window.location.pathname.endsWith('/oview') || window.location.pathname.endsWith('/')
             ? 'Overview'
             : ('Trials detail' as 'Overview' | 'Trials detail')
     );
