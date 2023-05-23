@@ -439,12 +439,12 @@ def build_reshape_dependency(graph_module: torch.fx.GraphModule):
     for node in graph.nodes:
         parent_layers = []
         # find the node that contains the reshape-like function
-        if node.op == 'call_function' and node.target in CALL_FUNCTION_RESHAPE:
-            logger.info('Detect reshape-like functions: %s', node.target)
+        if node.op == 'call_function' and node.target in [torch.narrow, torch.reshape]:
+            logger.info(f'Detect reshape-like functions: {node.target}, args = {node.args}, kwargs = {node.kwargs}')
             parent_layers = find_adjacent_layers(node, graph_module, [torch.nn.Conv2d, torch.nn.ConvTranspose2d, torch.nn.Linear], 'parent')
             dependency[node] = parent_layers
-        elif node.op == 'call_method' and node.target in CALL_METHOD_RESHAPE:
-            logger.info('Detect reshape-like method: %s', node.target)
+        elif node.op == 'call_method' and node.target in ['narrow', 'reshape', 'view']:
+            logger.info(f'Detect reshape-like methods: {node.target}, args = {node.args}, kwargs = {node.kwargs}')
             parent_layers = find_adjacent_layers(node, graph_module, [torch.nn.Conv2d, torch.nn.ConvTranspose2d, torch.nn.Linear], 'parent')
             dependency[node] = parent_layers
     return dependency
