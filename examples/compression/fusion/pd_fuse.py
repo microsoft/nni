@@ -72,7 +72,6 @@ if __name__ == '__main__':
 
     config_list = [{
         'op_types': ['Conv2d'],
-        'op_names_re': ['features.*'],
         'lambda': 0.1,
         'apply_method': 'mse',
     }]
