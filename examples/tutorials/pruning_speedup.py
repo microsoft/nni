@@ -77,7 +77,7 @@ print('Speedup Model - Elapsed Time : ', time.time() - start)
 
 # %%
 # For combining usage of ``Pruner`` masks generation with ``ModelSpeedup``,
-# please refer to :doc:`Pruning Quick Start <pruning_quick_start_mnist>`.
+# please refer to :doc:`Pruning Quick Start <pruning_quick_start>`.
 #
 # NOTE: The current implementation supports PyTorch 1.3.1 or newer.
 #

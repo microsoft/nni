@@ -250,8 +250,10 @@ def evaluate():
     print(f"Evaluate metrics={metrics}")
 
 
-fake_quantize()
-evaluate()
+skip_exec = True
+if not skip_exec:
+    fake_quantize()
+    evaluate()
 
 
 # %%

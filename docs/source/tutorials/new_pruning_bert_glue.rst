@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_tutorials_new_pruning_bert_glue.py>`
+        :ref:`Go to the end <sphx_glr_download_tutorials_new_pruning_bert_glue.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -858,7 +858,7 @@ Results
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.990 seconds)
+   **Total running time of the script:** ( 0 minutes  0.020 seconds)
 
 
 .. _sphx_glr_download_tutorials_new_pruning_bert_glue.py:
@@ -866,6 +866,8 @@ Results
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

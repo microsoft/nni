@@ -9,8 +9,8 @@ from torchvision import datasets, transforms
 import unittest
 from unittest import TestCase, main
 
-from nni.compression.pytorch.quantization import QAT_Quantizer
-from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
+from nni.compression.quantization import QATQuantizer
+from nni.compression.quantization_speedup import ModelSpeedupTensorRT
 
 torch.manual_seed(0)
 
@@ -147,7 +147,7 @@ class QuantizationSpeedupTestCase(TestCase):
         # finetune the model by using QAT
         dummy_input = torch.randn(1, 1, 28, 28)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-        quantizer = QAT_Quantizer(model, configure_list, optimizer, dummy_input)
+        quantizer = QATQuantizer(model, configure_list, optimizer, dummy_input)
         quantizer.compress()
 
         model.to(self.device)
