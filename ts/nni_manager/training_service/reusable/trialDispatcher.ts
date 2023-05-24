@@ -5,11 +5,10 @@ import { EventEmitter } from 'events';
 import fs from 'fs';
 import path from 'path';
 import { Writable } from 'stream';
-import { Container, Scope } from 'typescript-ioc';
 import { String } from 'typescript-string-operations';
-import * as component from 'common/component';
 import { NNIError, NNIErrorNames, MethodNotImplementedError } from 'common/errors';
 import { getBasePort, getExperimentId } from 'common/experimentStartupInfo';
+import { IocShim } from 'common/ioc_shim';
 import { getLogger, Logger } from 'common/log';
 import { TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from 'common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, mkDirPSync, randomSelect, uniqueString } from 'common/utils';
@@ -35,7 +34,7 @@ import { TrialDetail } from './trial';
  * It uses to manage jobs on training platforms 
  * and expose trial as trial job to upper level.
 **/
-@component.Singleton
+//@component.Singleton  MARK
 class TrialDispatcher implements TrainingService {
     private log: Logger;
     private isDeveloping: boolean = false;
@@ -213,10 +212,10 @@ class TrialDispatcher implements TrainingService {
         let storageService: StorageService;
         if (this.useSharedStorage) {
             this.log.debug(`TrialDispatcher: use shared storage service.`);
-            storageService = component.get<SharedStorageService>(SharedStorageService).storageService;
+            storageService = IocShim.get<SharedStorageService>(SharedStorageService).storageService;
         } else if (environmentService.hasStorageService) {
             this.log.debug(`TrialDispatcher: use existing storage service.`);
-            storageService = component.get<StorageService>(StorageService);
+            storageService = IocShim.get<StorageService>(StorageService);
         } else {
             this.log.debug(`TrialDispatcher: create temp storage service to temp folder.`);
             storageService = new MountedStorageService();
@@ -322,7 +321,7 @@ class TrialDispatcher implements TrainingService {
         }
         if (this.useSharedStorage) {
             this.log.info(`stopping shared storage...`)
-            await component.get<SharedStorageService>(SharedStorageService).cleanUp();
+            await IocShim.get<SharedStorageService>(SharedStorageService).cleanUp();
             this.log.info(`shared storage stopped.`)
         }
     }
@@ -736,10 +735,10 @@ class TrialDispatcher implements TrainingService {
         }
         trial.message = `Platform: ${environment.environmentService.getName}, environment: ${environment.id}`;
         if (this.useSharedStorage) {
-            const storageService = component.get<SharedStorageService>(SharedStorageService).storageService;
+            const storageService = IocShim.get<SharedStorageService>(SharedStorageService).storageService;
             trial.workingDirectory = storageService.joinPath('trials', trial.id);
         } else if (environment.environmentService.hasStorageService) {	
-            const storageService = component.get<StorageService>(StorageService);
+            const storageService = IocShim.get<StorageService>(StorageService);
             trial.workingDirectory = storageService.joinPath('trials', trial.id);
         }	
         trial.settings = {
@@ -919,14 +918,10 @@ class TrialDispatcher implements TrainingService {
     private async initializeSharedStorage(config: SharedStorageConfig): Promise<void> {
         switch (config.storageType) {
             case 'NFS':
-                Container.bind(SharedStorageService)
-                         .to(NFSSharedStorageService)
-                         .scope(Scope.Singleton);
+                IocShim.bind(SharedStorageService, NFSSharedStorageService);
                 break;
             case 'AzureBlob':
-                Container.bind(SharedStorageService)
-                         .to(AzureBlobSharedStorageService)
-                         .scope(Scope.Singleton);
+                IocShim.bind(SharedStorageService, AzureBlobSharedStorageService);
                 break;
             default: {
                 const errorMessage = `Shared storage type '${config.storageType}' not support.`;
@@ -934,7 +929,7 @@ class TrialDispatcher implements TrainingService {
                 return Promise.reject(errorMessage);
             }
         }
-        await component.get<SharedStorageService>(SharedStorageService).config(config);
+        await IocShim.get<SharedStorageService>(SharedStorageService).config(config);
         this.useSharedStorage = true;
         return Promise.resolve();
     }
@@ -942,7 +937,7 @@ class TrialDispatcher implements TrainingService {
     public async getTrialOutputLocalPath(trialJobId: string): Promise<string> {
         // TODO: support non shared storage
         if (this.useSharedStorage) {
-            const localWorkingRoot = component.get<SharedStorageService>(SharedStorageService).localWorkingRoot;
+            const localWorkingRoot = IocShim.get<SharedStorageService>(SharedStorageService).localWorkingRoot;
             return Promise.resolve(path.join(localWorkingRoot, 'trials', trialJobId));
         } else {
             return Promise.reject(new Error('Only support shared storage right now.'));
