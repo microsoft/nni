@@ -319,7 +319,7 @@ class BaseOneShotLightningModule(LightningModule):
     ):
         """:meth:`advance_optimization` for Lightning 1.x."""
 
-        if self.trainer.optimizer_frequencies:
+        if self.trainer.optimizer_frequencies:  # type: ignore
             warnings.warn('optimizer_frequencies is not supported in NAS. It will be ignored.', UserWarning)
 
         opt_idx = self._optimizer_progress % len(optimizers)
@@ -327,13 +327,13 @@ class BaseOneShotLightningModule(LightningModule):
 
         # There should be many before/after hooks called here, but they are omitted in this implementation.
         # 1. zero gradient
-        self.training_module.optimizer_zero_grad(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)
+        self.training_module.optimizer_zero_grad(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)  # type: ignore
         # 2. backward
         self.manual_backward(loss)
         # 3. grad clip
-        self.training_module.configure_gradient_clipping(optimizer, opt_idx, gradient_clip_val, gradient_clip_algorithm)
+        self.training_module.configure_gradient_clipping(optimizer, opt_idx, gradient_clip_val, gradient_clip_algorithm)  # type: ignore
         # 4. optimizer step
-        self.training_module.optimizer_step(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)
+        self.training_module.optimizer_step(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)  # type: ignore
 
     def advance_lr_schedulers(self, batch_idx: int):
         """
@@ -360,14 +360,14 @@ class BaseOneShotLightningModule(LightningModule):
             for config in self.trainer.lr_scheduler_configs:
                 if hasattr(config, 'opt_idx'):
                     # lightning < 2.0
-                    scheduler, opt_idx = config.scheduler, config.opt_idx
+                    scheduler, opt_idx = config.scheduler, config.opt_idx  # type: ignore
                 else:
                     scheduler, opt_idx = config.scheduler, None
                 if config.reduce_on_plateau:
                     warnings.warn('Reduce-lr-on-plateau is not supported in NAS. It will be ignored.', UserWarning)
                 if config.interval == interval and current_idx % config.frequency == 0:
                     if opt_idx is not None:
-                        self.training_module.lr_scheduler_step(cast(Any, scheduler), cast(int, opt_idx), None)
+                        self.training_module.lr_scheduler_step(cast(Any, scheduler), cast(int, opt_idx), None)  # type: ignore
                     else:
                         self.training_module.lr_scheduler_step(cast(Any, scheduler), None)
         except AttributeError:

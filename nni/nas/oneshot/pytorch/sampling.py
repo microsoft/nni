@@ -228,6 +228,9 @@ class EnasLightningModule(BaseOneShotLightningModule):
             self.log_probs(self.export_probs())
 
         if self._trajectory_counter > 0 and self._trajectory_counter % self.batches_per_update == 0:
+            # Export could be just called.
+            # The policy must be in train mode to make update work.
+            self.policy.train()
             update_times = self.update_kwargs.get('update_times', 1)
             for _ in range(update_times):
                 self.policy.update(0, self._replay_buffer, **self.update_kwargs)
