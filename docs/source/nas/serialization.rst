@@ -16,7 +16,7 @@ The recommendation is, unless you are absolutely certain that there is no proble
 
     It is likely that the program can still run. NNI will try to serialize the untraced object into a binary. It might fail in complex cases. For example, when the object is too large. Even if it succeeds, the result might be a substantially large object. For example, if you forgot to add :func:`nni.trace <nni.common.serializer.trace>` on ``MNIST``, the MNIST dataset object wil be serialized into binary, which will be dozens of megabytes because the object has the whole 60k images stored inside. You might see warnings and even errors when running experiments. To avoid such issues, the easiest way is to always remember to add :func:`nni.trace <nni.common.serializer.trace>` to non-primitive objects.
 
-.. note:: In Retiarii, serializer will throw exception when one of an single object in the recursive serialization is larger than 64 KB when binary serialized. This indicates that such object needs to be wrapped by :func:`nni.trace <nni.common.serializer.trace>`. In rare cases, if you insist on pickling large data, the limit can be overridden by setting an environment variable ``PICKLE_SIZE_LIMIT``, whose unit is byte. Please note that even if the experiment might be able to run, this can still cause performance issues and even the crash of NNI experiment.
+.. note:: In NAS, serializer will throw exception when one of an single object in the recursive serialization is larger than 64 KB when binary serialized. This indicates that such object needs to be wrapped by :func:`nni.trace <nni.common.serializer.trace>`. In rare cases, if you insist on pickling large data, the limit can be overridden by setting an environment variable ``PICKLE_SIZE_LIMIT``, whose unit is byte. Please note that even if the experiment might be able to run, this can still cause performance issues and even the crash of NNI experiment.
 
 To trace a function or class, users can use decorator like,
 
@@ -34,12 +34,12 @@ Inline trace that traces instantly on the object instantiation or function invok
 
 Assuming a class ``cls`` is already traced, when it is serialized, its class type along with initialization parameters will be dumped. As the parameters are possibly class instances (if not primitive types like ``int`` and ``str``), their serialization will be a similar problem. We recommend decorate them with :func:`nni.trace <nni.common.serializer.trace>` as well. In other words, :func:`nni.trace <nni.common.serializer.trace>` should be applied recursively if necessary.
 
-Below is an example, ``transforms.Compose``, ``transforms.Normalize``, and ``MNIST`` are serialized manually using :func:`nni.trace <nni.common.serializer.trace>`. :func:`nni.trace <nni.common.serializer.trace>` takes a class / function as its argument, and returns a wrapped class and function that has the same behavior with the original class / function. The usage of the wrapped class / function is also identical to the original one, except that the arguments are recorded. No need to apply :func:`nni.trace <nni.common.serializer.trace>` to :class:`pl.Classification <nni.retiarii.evaluator.pytorch.Classification>` and :class:`pl.DataLoader <nni.retiarii.evaluator.pytorch.DataLoader>` because they are already traced.
+Below is an example, ``transforms.Compose``, ``transforms.Normalize``, and ``MNIST`` are serialized manually using :func:`nni.trace <nni.common.serializer.trace>`. :func:`nni.trace <nni.common.serializer.trace>` takes a class / function as its argument, and returns a wrapped class and function that has the same behavior with the original class / function. The usage of the wrapped class / function is also identical to the original one, except that the arguments are recorded. No need to apply :func:`nni.trace <nni.common.serializer.trace>` to :class:`pl.Classification <nni.nas.evaluator.pytorch.lightning.Classification>` and :class:`pl.DataLoader <nni.nas.evaluator.pytorch.lightning.DataLoader>` because they are already traced.
 
 .. code-block:: python
 
   import nni
-  import nni.retiarii.evaluator.pytorch.lightning as pl
+  import nni.nas.evaluator.pytorch.lightning as pl
   from torchvision import transforms
 
   def create_mnist_dataset(root, transform):
@@ -56,11 +56,3 @@ Below is an example, ``transforms.Compose``, ``transforms.Normalize``, and ``MNI
   evaluator = pl.Classification(train_dataloaders=pl.DataLoader(train_dataset, batch_size=100),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=10)
-
-.. note::
-
-    **What's the relationship between model_wrapper, basic_unit and nni.trace?**
-
-    They are fundamentally different. :func:`model_wrapper <nni.retiarii.model_wrapper>` is used to wrap a base model (search space), :func:`basic_unit <nni.retiarii.basic_unit>` to annotate a module as primitive. :func:`nni.trace <nni.common.serializer.trace>` is to enable serialization of general objects. Though they share similar underlying implementations, but do keep in mind that you will experience errors if you mix them up.
-
-    Please refer to API reference of :meth:`nni.retiarii.model_wrapper`, :meth:`nni.retiarii.basic_unit`, and :func:`nni.trace <nni.common.serializer.trace>`.

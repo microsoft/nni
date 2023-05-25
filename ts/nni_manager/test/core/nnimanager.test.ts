@@ -6,9 +6,8 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import { assert } from 'chai';
-import { Container, Scope } from 'typescript-ioc';
 
-import * as component from '../../common/component';
+import { IocShim } from 'common/ioc_shim';
 import { Database, DataStore, TrialJobInfo } from '../../common/datastore';
 import { Manager, TrialJobStatistics} from '../../common/manager';
 import { TrialJobDetail } from '../../common/trainingService';
@@ -22,7 +21,7 @@ import { NNITensorboardManager } from '../../extensions/nniTensorboardManager';
 import * as path from 'path';
 import { RestServer } from '../../rest_server';
 import globals from '../../common/globals/unittest';
-import { UnitTestHelpers } from '../../core/tuner_command_channel/websocket_channel';
+import { UnitTestHelpers } from '../../core/tuner_command_channel';
 import * as timersPromises from 'timers/promises';
 
 let nniManager: NNIManager;
@@ -79,11 +78,11 @@ async function initContainer(mode: string = 'create'): Promise<void> {
     }
     restServer = new RestServer(globals.args.port, globals.args.urlPrefix);
     await restServer.start();
-    Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
-    Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
-    Container.bind(DataStore).to(NNIDataStore).scope(Scope.Singleton);
-    Container.bind(TensorboardManager).to(NNITensorboardManager).scope(Scope.Singleton);
-    await component.get<DataStore>(DataStore).init();
+    IocShim.bind(Database, SqlDB);
+    IocShim.bind(DataStore, NNIDataStore);
+    IocShim.bind(Manager, NNIManager);
+    IocShim.bind(TensorboardManager, NNITensorboardManager);
+    await IocShim.get<DataStore>(DataStore).init();
 }
 
 async function prepareExperiment(): Promise<void> {
@@ -107,7 +106,7 @@ async function prepareExperiment(): Promise<void> {
     fs.writeFileSync(globals.paths.experimentsList, JSON.stringify(experimentsInformation, null, 4));
 
     await initContainer();
-    nniManager = component.get(Manager);
+    nniManager = IocShim.get(Manager);
 
     // if trainingService is assigned, startExperiment won't create training service again
     const manager = nniManager as any;
@@ -135,6 +134,7 @@ async function cleanExperiment(): Promise<void> {
     await manager.stopExperimentTopHalf();
     await manager.stopExperimentBottomHalf();
     await restServer.shutdown();
+    IocShim.clear();
 }
 
 async function testListTrialJobs(): Promise<void> {
@@ -324,9 +324,9 @@ async function resumeExperiment(): Promise<void> {
     // globals.showLog();
     // explicitly reset the websocket channel because it is singleton, does not work when two experiments
     // (one is start and the other is resume) run in the same process.
-    UnitTestHelpers.resetChannelSingleton();
+    UnitTestHelpers.reset();
     await initContainer('resume');
-    nniManager = component.get(Manager);
+    nniManager = IocShim.get(Manager);
 
     // if trainingService is assigned, startExperiment won't create training service again
     const manager = nniManager as any;

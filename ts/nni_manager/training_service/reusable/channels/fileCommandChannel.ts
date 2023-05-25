@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as component from "common/component";
+import { IocShim } from 'common/ioc_shim';
 import { delay } from "common/utils";
 import { CommandChannel, RunnerConnection } from "../commandChannel";
 import { Channel, EnvironmentInformation } from "../environment";
@@ -65,7 +65,7 @@ export class FileCommandChannel extends CommandChannel {
             const start = new Date();
 
             if (this.sendQueues.length > 0) {
-                const storageService = component.get<StorageService>(StorageService);
+                const storageService = IocShim.get<StorageService>(StorageService);
 
                 while (this.sendQueues.length > 0) {
                     const item = this.sendQueues.shift();
@@ -90,7 +90,7 @@ export class FileCommandChannel extends CommandChannel {
 
     private async receiveLoop(): Promise<void> {
         const intervalSeconds = 2;
-        const storageService = component.get<StorageService>(StorageService);
+        const storageService = IocShim.get<StorageService>(StorageService);
 
         while (!this.stopping) {
             const start = new Date();

@@ -23,7 +23,7 @@ from ..assets.simple_mnist import SimpleLightningModel, SimpleTorchModel, create
 @pytest.mark.parametrize('model_type', ['lightning', 'pytorch'])
 @pytest.mark.parametrize('distil_type', ['adaptive1d', 'dynamic'])
 def test_adaptive_distiller(model_type: str, distil_type: str):
-    model, config_list_dict, _ = create_model(model_type)
+    model, config_list_dict, dummy_input = create_model(model_type)
     config_list = config_list_dict['distillation']
 
     if model_type == 'lightning':
@@ -39,7 +39,7 @@ def test_adaptive_distiller(model_type: str, distil_type: str):
 
     if distil_type == 'adaptive1d':
         distiller = Adaptive1dLayerwiseDistiller(model, config_list, evaluator, teacher_model, teacher_predict)
-        distiller.track_forward(torch.rand(8, 1, 28, 28).to(device))
+        distiller.track_forward(dummy_input)
     elif distil_type == 'dynamic':
         distiller = DynamicLayerwiseDistiller(model, config_list, evaluator, teacher_model, teacher_predict)
     distiller.compress(100, None)

@@ -10,23 +10,23 @@ from nni.utils import MetricType
 
 class CommandType(Enum):
     # in
-    Initialize = b'IN'
-    RequestTrialJobs = b'GE'
-    ReportMetricData = b'ME'
-    UpdateSearchSpace = b'SS'
-    ImportData = b'FD'
-    AddCustomizedTrialJob = b'AD'
-    TrialEnd = b'EN'
-    Terminate = b'TE'
-    Ping = b'PI'
+    Initialize = 'IN'
+    RequestTrialJobs = 'GE'
+    ReportMetricData = 'ME'
+    UpdateSearchSpace = 'SS'
+    ImportData = 'FD'
+    AddCustomizedTrialJob = 'AD'
+    TrialEnd = 'EN'
+    Terminate = 'TE'
+    Ping = 'PI'
 
     # out
-    Initialized = b'ID'
-    NewTrialJob = b'TR'
-    SendTrialJobParameter = b'SP'
-    NoMoreTrialJobs = b'NO'
-    KillTrialJob = b'KI'
-    Error = b'ER'
+    Initialized = 'ID'
+    NewTrialJob = 'TR'
+    SendTrialJobParameter = 'SP'
+    NoMoreTrialJobs = 'NO'
+    KillTrialJob = 'KI'
+    Error = 'ER'
 
 class TunerIncomingCommand:
     # For type checking.

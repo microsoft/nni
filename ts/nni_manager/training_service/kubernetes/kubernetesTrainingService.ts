@@ -8,9 +8,9 @@ import azureStorage from 'azure-storage';
 import {EventEmitter} from 'events';
 import {Base64} from 'js-base64';
 import {String} from 'typescript-string-operations';
+import {MethodNotImplementedError} from 'common/errors';
 import {getExperimentId} from 'common/experimentStartupInfo';
 import {getLogger, Logger} from 'common/log';
-import {MethodNotImplementedError} from 'common/errors';
 import {
     NNIManagerIpConfig, TrialJobDetail, TrialJobMetric
 } from 'common/trainingService';

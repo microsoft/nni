@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
 import inspect
 import logging
 from pathlib import Path
@@ -29,7 +28,7 @@ from .mask_updater import (MaskUpdater,
                            NoMaskUpdater,
                            NoChangeMaskUpdater)
 from .replacer import Replacer, DefaultReplacer
-from .utils import tree_map_zip
+from .utils import tree_map_zip, poss_deepcopy
 
 
 def _normalize_input(dummy_input: Any) -> Any:
@@ -38,6 +37,7 @@ def _normalize_input(dummy_input: Any) -> Any:
     elif isinstance(dummy_input, list):
         dummy_input = tuple(dummy_input)
     return dummy_input
+
 
 @compatibility(is_backward_compatible=True)
 class ModelSpeedup(torch.fx.Interpreter):
@@ -210,9 +210,8 @@ class ModelSpeedup(torch.fx.Interpreter):
     def propagate_originally(self):
         """
         Propagate normally to get informations of intermediate variables such as shape, dtype of tensors.
-        Default action:
-            execute and store output to node_info.output_origin(intermediate variables when assigned),
-                and node_info.output_inplace(intermediate variables after in-place ops)
+        Default action: execute and store output to node_info.output_origin(intermediate variables when assigned),
+        and node_info.output_inplace(intermediate variables after in-place ops).
         """
         self.logger.info("Propagate original variables")
         for node in self.graph_module.graph.nodes:
@@ -226,7 +225,7 @@ class ModelSpeedup(torch.fx.Interpreter):
 
             self.node_infos[node].output_origin = output
             self.node_infos[node].output_inplace = \
-                tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else deepcopy(t), output)
+                tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else poss_deepcopy(t, self.logger), output)
             self.node_infos[node].output_masks = \
                 tree_map_zip(lambda t: torch.ones_like(t).clone().detach() if isinstance(t, torch.Tensor) else None, output)
 
@@ -370,7 +369,7 @@ class ModelSpeedup(torch.fx.Interpreter):
                         assert isinstance(self.node_infos[node_kw[key]].output_masks, torch.Tensor)
                         self.node_infos[node_kw[key]].output_masks *= mask.detach().clone()
 
-    def speedup_model(self) -> GraphModule:
+    def speedup_model(self) -> torch.nn.Module:
         try:
             ori_state_dict_file = tempfile.NamedTemporaryFile(delete=False)
             torch.save(self.graph_module.state_dict(), ori_state_dict_file)
@@ -404,4 +403,4 @@ class ModelSpeedup(torch.fx.Interpreter):
         return self.bound_model
 
     def run(self):
-        self.speedup_model()
+        return self.speedup_model()

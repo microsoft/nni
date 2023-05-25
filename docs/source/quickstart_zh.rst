@@ -20,6 +20,6 @@
 .. cardlinkitem::
    :header: 模型压缩快速入门
    :description: 学习剪枝以压缩您的模型。
-   :link: tutorials/pruning_quick_start_mnist
+   :link: tutorials/pruning_quick_start
    :image: ../img/thumbnails/pruning-tutorial.svg
    :background: blue

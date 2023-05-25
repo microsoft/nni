@@ -31,7 +31,7 @@ author = 'Microsoft'
 version = ''
 # The full version, including alpha/beta/rc tags
 # FIXME: this should be written somewhere globally
-release = 'v2.10'
+release = 'v3.0rc1'
 
 # -- General configuration ---------------------------------------------------
 
@@ -116,6 +116,9 @@ linkcheck_ignore = [
     r'https://docs\.nvidia\.com/deeplearning/',
     r'https://cla\.opensource\.microsoft\.com',
     r'https://www\.docker\.com/',
+
+    # remove after 3.0 release
+    r'https://nni\.readthedocs\.io/en/v2\.10/compression/overview\.html',
 ]
 
 # Ignore all links located in release.rst
@@ -210,8 +213,8 @@ gettext_documents = [
     r'^index$',
     r'^quickstart$',
     r'^installation$',
-    r'^(nas|hpo|compression)/overview$',
-    r'^tutorials/(hello_nas|pruning_quick_start_mnist|hpo_quickstart_pytorch/main)$',
+    r'^(hpo|compression)/overview$',
+    r'^tutorials/(pruning_quick_start_mnist|hpo_quickstart_pytorch/main)$',
 ]
 
 # List of patterns, relative to source directory, that match files and

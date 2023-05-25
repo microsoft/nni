@@ -11,7 +11,7 @@ from nni.compression.pytorch.utils import get_nested_attr, set_nested_attr
 if TYPE_CHECKING:
     from .model_speedup import ModelSpeedup
 
-_logger = logging.getLogger()
+_logger = logging.getLogger(__name__)
 
 
 class Replacer:
@@ -44,10 +44,13 @@ class DefaultReplacer(Replacer):
         self.replace_module_func_dict = replace_module_func_dict
 
     def replace_modules(self, speedup: 'ModelSpeedup'):
+        visited = set()
         for node, node_info in speedup.node_infos.items():
-            if node.op == 'call_module' and not node_info.replaced:
-                # module = speedup.fetch_attr(node.target)
-                # module_type = module._get_name()
+            if node.op == 'call_module':
+                if node.target in visited:
+                    node_info.replaced = True
+                    continue
+                visited.add(node.target)
                 module = get_nested_attr(speedup.bound_model, node.target)
                 module_type = type(module).__name__
                 replace_function = self.replace_module_func_dict.get(module_type, None)
@@ -56,7 +59,6 @@ class DefaultReplacer(Replacer):
                     assert len(node.kwargs) == 0
                     in_masks = tree_map(lambda n: speedup.node_infos[n].output_masks, node.args)
                     compressed_module = replace_function(module, (in_masks, node_info.output_masks, node_info.param_masks))
-                    # speedup.store_attr(node.target, compressed_module)
                     set_nested_attr(speedup.bound_model, node.target, compressed_module)
                     node_info.replaced = True
             else:

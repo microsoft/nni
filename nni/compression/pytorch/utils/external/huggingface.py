@@ -14,7 +14,9 @@ try:
         PreTrainedModel,
         BartConfig,
         BertConfig,
-        T5Config
+        DistilBertConfig,
+        T5Config,
+        ViTConfig
     )
 except ImportError:
     TRANSFORMERS_INSTALLED = False
@@ -105,6 +107,15 @@ class HuggingfaceBertParser(HuggingfaceModelParser):
     ATTENTION = ('attention',)
 
 
+class HuggingfaceDistilBertParser(HuggingfaceModelParser):
+    TRANSFORMER_PREFIX = r'distilbert\.transformer\.layer\.[0-9]+\.'
+    QKV = ('attention.q_lin', 'attention.k_lin', 'attention.v_lin')
+    QKVO = QKV + ('attention.out_lin',)
+    FFN1 = ('ffn.lin1',)
+    FFN2 = ('ffn.lin2',)
+    ATTENTION = ('attention',)
+
+
 class HuggingfaceBartParser(HuggingfaceModelParser):
     TRANSFORMER_PREFIX = r'(en|de)coder\.layer\.[0-9]+\.'
     QKV = ('self_attn.q_proj', 'self_attn.k_proj', 'self_attn.v_proj', 'encoder_attn.q_proj', 'encoder_attn.k_proj', 'encoder_attn.v_proj')
@@ -123,18 +134,31 @@ class HuggingfaceT5Parser(HuggingfaceModelParser):
     ATTENTION = ('SelfAttention', 'EncDecAttention')
 
 
+class HuggingfaceViTParser(HuggingfaceModelParser):
+    TRANSFORMER_PREFIX = r'vit\.encoder\.layer\.[0-9]+\.'
+    QKV = ('attention.attention.query', 'attention.attention.key', 'attention.attention.value')
+    QKVO = QKV + ('attention.output.dense',)
+    FFN1 = ('intermediate.dense',)
+    FFN2 = ('output.dense',)
+    ATTENTION = ('attention.attention',)
+
+
 # huggingface transformers pretrained model parser supported: bart, bert, t5
 def parser_factory(model: Module) -> HuggingfaceModelParser | None:
     if TRANSFORMERS_INSTALLED and isinstance(model, PreTrainedModel):
         cls2parser = {
             BartConfig: HuggingfaceBartParser,
             BertConfig: HuggingfaceBertParser,
-            T5Config: HuggingfaceT5Parser
+            DistilBertConfig: HuggingfaceDistilBertParser,
+            T5Config: HuggingfaceT5Parser,
+            ViTConfig: HuggingfaceViTParser
         }
         type2parser = {
             'bart': HuggingfaceBartParser,
             'bert': HuggingfaceBertParser,
-            't5': HuggingfaceT5Parser
+            'distilbert': HuggingfaceDistilBertParser,
+            't5': HuggingfaceT5Parser,
+            'vit': HuggingfaceViTParser
         }
 
         if hasattr(model, 'config_class'):

@@ -22,6 +22,7 @@ interface TrialJobEventRecord {
     readonly logPath?: string;
     readonly sequenceId?: number;
     readonly message?: string;
+    readonly envId?: string;
 }
 
 interface MetricData {
@@ -52,6 +53,7 @@ interface TrialJobInfo {
     logPath?: string;
     finalMetricData?: MetricDataRecord[];
     stderrPath?: string;
+    envId?: string;
 }
 
 interface HyperParameterFormat {

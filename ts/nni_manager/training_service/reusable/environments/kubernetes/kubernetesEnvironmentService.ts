@@ -6,7 +6,6 @@ import path from 'path';
 import azureStorage from 'azure-storage';
 import {Base64} from 'js-base64';
 import {String} from 'typescript-string-operations';
-import { ExperimentConfig } from 'common/experimentConfig';
 import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
 import { getLogger, Logger } from 'common/log';
 import { EnvironmentInformation, EnvironmentService } from 'training_service/reusable/environment';

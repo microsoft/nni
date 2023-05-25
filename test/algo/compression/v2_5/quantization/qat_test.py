@@ -11,7 +11,6 @@ from typing import Callable, Union, List, Dict, Tuple
 import torch
 import torch.nn.functional as F
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from torch import Tensor
 
@@ -32,11 +31,11 @@ def test_qat_forward_with_torch_model():
     torch.manual_seed(0)
     model = SimpleTorchModel().to(device)
     configure_list = [{
-        'target_names':['_input_', 'weight', '_output_'],
+        'target_names':['weight'],
         'op_names': ['fc1', 'fc2'],
         'quant_dtype': 'int8',
         'quant_scheme': 'affine',
-        'granularity': 'default',
+        'granularity': 'in_channel',
     },
     {
         'target_names':['_input_', 'weight', '_output_'],
@@ -54,11 +53,11 @@ def test_qat_forward_with_torch_model():
 def test_qat_forward_with_lighting_model():
     torch.manual_seed(0)
     configure_list = [{
-        'target_names':['_input_', 'weight', '_output_'],
+        'target_names':['weight'],
         'op_names': ['model.fc1', 'model.fc2'],
         'quant_dtype': 'int8',
         'quant_scheme': 'affine',
-        'granularity': 'default',
+        'granularity': 'in_channel',
     },
     {
         'target_names':['_input_', 'weight', '_output_'],

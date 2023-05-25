@@ -49,7 +49,7 @@ export class Worker {
         this.channelId = channelId;
         this.config = config;
         this.channelUrl = channelUrl;
-        this.env = { id: this.envId };
+        this.env = { id: this.envId, host: config.host };
         this.trialKeeper = new RemoteTrialKeeper(this.envId, 'remote', enableGpuScheduling);
         this.ssh = new Ssh(channelId, config);
     }
@@ -85,6 +85,7 @@ export class Worker {
 
         await this.launchTrialKeeperDaemon();
         this.env = await this.trialKeeper.start();
+        this.env['host'] = this.config.host;
 
         this.log.info(`Worker ${this.config.host} initialized`);
     }
@@ -104,9 +105,9 @@ export class Worker {
     }
 
     private async findPython(): Promise<string> {
-        const python = await this.findInitPython();
+        let python = await this.findInitPython();
         if (this.config.pythonPath) {
-            return await this.updatePath(python);
+            python = await this.updatePath(python);
         }
         return python;
     }
@@ -181,8 +182,7 @@ export class Worker {
         const env = JSON.parse(envJson);
 
         const delimiter = (os === 'win32' ? ';' : ':');
-        env['PATH'] = this.config.pythonPath + delimiter + env['PATH'];
-        this.ssh.setEnv(env);
+        this.ssh.setPath(this.config.pythonPath + delimiter + env['PATH']);
 
         for (const newPython of ['python', 'python3']) {
             const result = await this.ssh.exec(newPython + ' --version');

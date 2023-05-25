@@ -108,7 +108,7 @@ class Cell(MutableModule):
     `review article <https://sh-tsang.medium.com/review-nasnet-neural-architecture-search-network-image-classification-23139ea0425d>`__
     if you are interested in details.
 
-    .. image:: ../../../img/nasnet_cell.png
+    .. image:: ../../img/nasnet_cell.png
        :width: 900
        :align: center
 
@@ -230,7 +230,7 @@ class Cell(MutableModule):
 
     Warnings
     --------
-    :class:`Cell` is not supported in :ref:`graph-based execution engine <graph-based-execution-engine>`.
+    :class:`Cell` is not supported in :class:`~nni.nas.space.GraphModelSpace` model format.
 
     Attributes
     ----------

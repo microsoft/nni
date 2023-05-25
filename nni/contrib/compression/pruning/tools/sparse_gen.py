@@ -139,7 +139,12 @@ def _generate_align_sparsity(masks: _MASKS, target_spaces: _PRUNING_TARGET_SPACE
             src_mask = masks[align_module_name][target_space.align['target_name']]  # type: ignore
             align_dims: List[int] = target_space.align['dims']  # type: ignore
             reduce_dims = [d for d in range(len(src_mask.shape)) if d not in align_dims and d - len(src_mask.shape) not in align_dims]
-            align_masks[module_name][target_name] = src_mask.sum(reduce_dims).bool().float()
+            align_mask = src_mask.sum(reduce_dims).bool().float()
+            if target_space._scaler is not None:
+                assert target_space.shape is not None, f'The shape of {module_name}.{target_name} is not tracked'
+                align_mask = \
+                    target_space._scaler.shrink(target_space._scaler.expand(align_mask, target_space.shape), keepdim=True).bool().float()
+            align_masks[module_name][target_name] = align_mask
     return align_masks
 
 
@@ -302,7 +307,8 @@ def _expand_masks(masks: _MASKS, target_spaces: _PRUNING_TARGET_SPACES) -> _MASK
         for target_name, target_mask in module_masks.items():
             target_space = target_spaces[module_name][target_name]
             if target_space._scaler:
-                new_masks[module_name][target_name] = target_space._scaler.expand(target_mask, target_space.shape)  # type: ignore
+                new_masks[module_name][target_name] = \
+                    target_space._scaler.expand(target_mask, target_space.shape, keepdim=True, full_expand=False)  # type: ignore
             else:
                 new_masks[module_name][target_name] = target_mask
     return new_masks

@@ -62,7 +62,7 @@ def trans_legacy_config_list(config_list: List[Dict[str, Any]]) -> List[Dict[str
         group_id = None
         max_sparse_ratio = config.pop('max_sparsity_per_layer', None)
         if 'sparsity_per_layer' in config or 'sparsity' in config:
-            sparse_ratio = config.pop('sparsity_per_layer', config.pop('sparsity'))
+            sparse_ratio = config.pop('sparsity_per_layer', config.pop('sparsity', None))
         if 'total_sparsity' in config:
             sparse_ratio = config.pop('total_sparsity')
             group_id = group_id_candidate
@@ -151,39 +151,41 @@ def select_modules_by_config(model: torch.nn.Module, \
         type2names[type(module).__name__].add(module_name)
 
     config = deepcopy(config)
-    op_names = set(config.pop('op_names', list()))
-    op_types = config.pop('op_types', list())
-    op_names_re = config.pop('op_names_re', list())
+    op_names = config.pop('op_names', None)
+    op_types = config.pop('op_types', None)
+    op_names_re = config.pop('op_names_re', None)
     exclude_op_names = config.pop('exclude_op_names', list())
     exclude_op_types = config.pop('exclude_op_types', list())
     exclude_op_names_re = config.pop('exclude_op_names_re', list())
     fuse_names = config.pop('fuse_names', list())
 
-    for op_name_re in op_names_re:
+    selected_op_names = set(op_names) if op_names else set()
+
+    for op_name_re in (op_names_re if op_names_re else []):
         for op_name in name2module:
             if re.match(op_name_re, op_name):
-                op_names.add(op_name)
+                selected_op_names.add(op_name)
 
     if op_types:
         selected_by_op_types = set()
         for op_type in op_types:
             selected_by_op_types.update(type2names.get(op_type, set()))
-        if op_names:
-            op_names.intersection_update(selected_by_op_types)
+        if op_names or op_names_re:
+            selected_op_names.intersection_update(selected_by_op_types)
         else:
-            op_names.update(selected_by_op_types)
+            selected_op_names.update(selected_by_op_types)
 
-    op_names.difference_update(exclude_op_names)
+    selected_op_names.difference_update(exclude_op_names)
 
     for op_name_re in exclude_op_names_re:
         for op_name in name2module:
-            if re.match(op_name_re, op_name) and op_name in op_names:
-                op_names.remove(op_name)
+            if re.match(op_name_re, op_name) and op_name in selected_op_names:
+                selected_op_names.remove(op_name)
 
     for op_type in exclude_op_types:
-        op_names.difference_update(type2names.get(op_type, set()))
+        selected_op_names.difference_update(type2names.get(op_type, set()))
 
-    return {module_name: name2module[module_name] for module_name in op_names}, config, fuse_names
+    return {module_name: name2module[module_name] for module_name in selected_op_names}, config, fuse_names
 
 
 # a temporary verification function, need a wider coverage, customizable, and easy-to-extend implementation.

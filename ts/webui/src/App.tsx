@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Stack } from '@fluentui/react';
+import { Stack, MessageBar, MessageBarType } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import NavCon from '@components/nav/Nav';
-import MessageInfo from '@components/common/MessageInfo';
 import { COLUMN } from '@static/const';
 import { isManagerExperimentPage } from '@static/function';
 import '@style/App.scss';
@@ -14,7 +13,12 @@ const echarts = require('echarts/lib/echarts');
 echarts.registerTheme('nni_theme', {
     color: '#3c8dbc'
 });
-
+export const NavContext = React.createContext({
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeInterval: (_val: number) => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    refreshPage: (): void => {}
+});
 export const AppContext = React.createContext({
     interval: 10, // sendons
     columnList: COLUMN,
@@ -136,7 +140,14 @@ class App extends React.Component<{}, AppState> {
                     <Stack className='nni' style={{ minHeight: window.innerHeight }}>
                         <div className='header'>
                             <div className='headerCon'>
-                                <NavCon changeInterval={this.changeInterval} />
+                                <NavContext.Provider
+                                    value={{
+                                        changeInterval: this.changeInterval,
+                                        refreshPage: this.lastRefresh
+                                    }}
+                                >
+                                    <NavCon />
+                                </NavContext.Provider>
                             </div>
                         </div>
                         <Stack className='contentBox'>
@@ -146,13 +157,17 @@ class App extends React.Component<{}, AppState> {
                                     (item, key) =>
                                         item.errorWhere && (
                                             <div key={key} className='warning'>
-                                                <MessageInfo info={item.errorMessage} typeInfo='error' />
+                                                <MessageBar messageBarType={MessageBarType.error}>
+                                                    {item.errorMessage}
+                                                </MessageBar>
                                             </div>
                                         )
                                 )}
                                 {isillegalFinal && (
                                     <div className='warning'>
-                                        <MessageInfo info={expWarningMessage} typeInfo='warning' />
+                                        <MessageBar messageBarType={MessageBarType.warning}>
+                                            {expWarningMessage}
+                                        </MessageBar>
                                     </div>
                                 )}
                                 {/* <AppContext.Provider */}

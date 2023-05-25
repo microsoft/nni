@@ -14,7 +14,7 @@ from torch.nn import functional as F
 from torch.fx.node import Node
 from torch.utils._pytree import tree_flatten, tree_unflatten
 
-from .utils import randomize_tensor_inplace, randomize_if_tensor, tree_map_zip, torch_float_dtype
+from .utils import randomize_tensor_inplace, randomize_if_tensor, tree_map_zip, torch_float_dtype, poss_deepcopy
 
 
 class MaskUpdater:
@@ -154,8 +154,8 @@ class DefaultMaskUpdater(MaskUpdater):
 
         # Some operator may have the in_place operations, so we need to clone the input
         # before passing to the model_speedup.module
-        args_cloned = tree_map_zip(lambda t: t.clone() if isinstance(t, torch.Tensor) else t, args)
-        kwargs_cloned = tree_map_zip(lambda t: t.clone() if isinstance(t, torch.Tensor) else t, kwargs)
+        args_cloned = tree_map_zip(lambda t: t.clone() if isinstance(t, torch.Tensor) else poss_deepcopy(t), args)
+        kwargs_cloned = tree_map_zip(lambda t: t.clone() if isinstance(t, torch.Tensor) else poss_deepcopy(t), kwargs)
 
         output = getattr(model_speedup, node.op)(node.target, args_cloned, kwargs_cloned)
 
@@ -243,7 +243,7 @@ class NoMaskUpdater(DefaultMaskUpdater):
                 return True
         elif node.op == 'call_method':
             if isinstance(node.args[0], Node) and isinstance(model_speedup.node_infos[node.args[0]].output_origin, torch.Tensor):
-                if node.target in ('dim', 'size', 'clone', 'detach'):
+                if node.target in ('dim', 'size'):
                     return True
         return False
 
@@ -372,7 +372,7 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
             input_node = node.kwargs['input']
         input_mask = model_speedup.node_infos[input_node].output_masks
         model_speedup.node_infos[node].output_masks = \
-            tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else t, input_mask)
+            tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else poss_deepcopy(t), input_mask)
 
     def indirect_activation(self, model_speedup: 'ModelSpeedup', node: Node):
         if len(node.args) != 0:
@@ -393,7 +393,7 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
         sub_mask = operator.getitem(arg_0_masks, arg_1_val)
 
         model_speedup.node_infos[node].output_masks = \
-            tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else t, sub_mask)
+            tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else poss_deepcopy(t), sub_mask)
 
     def indirect_getitem(self, model_speedup: 'ModelSpeedup', node: Node):
         assert len(node.args) == 2
@@ -434,6 +434,10 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
             module: torch.nn.Module = model_speedup.fetch_attr(node.target)
             if isinstance(module, self.no_change_act_module):
                 return self.direct_activation, self.indirect_activation
+        elif node.op == 'call_method':
+            if isinstance(node.args[0], Node) and isinstance(model_speedup.node_infos[node.args[0]].output_origin, torch.Tensor):
+                if node.target in ('clone', 'detach'):
+                    return self.direct_activation, self.indirect_activation
         return None
 
     def direct_update_process(self, model_speedup: 'ModelSpeedup', node: Node):

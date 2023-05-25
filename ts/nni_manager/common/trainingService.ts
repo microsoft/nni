@@ -35,6 +35,7 @@ interface TrialJobApplicationForm {
     readonly hyperParameters: HyperParameters;
     readonly placementConstraint?: PlacementConstraint;
     id?: string;
+    envId?: string;
 }
 
 interface TrialCommandContent {
@@ -59,6 +60,7 @@ interface TrialJobDetail {
     readonly form: TrialJobApplicationForm;
     isEarlyStopped?: boolean;
     message?: string;
+    envId?: string;
 }
 
 /**

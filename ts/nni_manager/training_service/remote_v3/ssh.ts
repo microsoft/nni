@@ -26,7 +26,8 @@ export class Ssh {
     private config: RemoteMachineConfig;
     private client: Client | null = null;
     private sftpSession: SFTPWrapper | null = null;
-    private env: Record<string, string> | null = null;
+    //private env: Record<string, string> | null = null;
+    private path: string | null = null;
     private log: Logger;
 
     constructor(name: string, config: RemoteMachineConfig) {
@@ -66,10 +67,15 @@ export class Ssh {
 
     /**
      *  Set env for all future exec() and run() calls.
+     *  FIXME: may not work (ssh2 bug)
      **/
-    public setEnv(env: Record<string, string>): void {
-        this.log.trace('Update env:', env);
-        this.env = structuredClone(env);
+    //public setEnv(env: Record<string, string>): void {
+    //    this.log.trace('Update env:', env);
+    //    this.env = structuredClone(env);
+    //}
+
+    public setPath(path: string): void {
+        this.path = path;
     }
 
     /**
@@ -81,8 +87,12 @@ export class Ssh {
         const deferred = new Deferred<void>();
         const result: ExecResult = { stdout: '', stderr: '' };
 
-        const opts = this.env ? { env: this.env } : {};
-        this.client!.exec(command, opts, (error, stream) => {
+        //const opts = this.env ? { env: this.env } : {};
+        if (this.path !== null) {  // FIXME: workaround
+            command = `PATH="${this.path}" ${command}`;
+        }
+
+        this.client!.exec(command, (error, stream) => {
             if (error) {
                 deferred.reject(error);
             } else {
@@ -103,7 +113,11 @@ export class Ssh {
         await deferred.promise;
 
         if (result.stdout.length > 100) {
-            this.log.debug('Command result:', { code: result.code, stderr: result.stderr });
+            this.log.debug('Command result:', {
+                code: result.code,
+                stdout: result.stdout.slice(0, 80) + ' ...',
+                stderr: result.stderr,
+            });
             this.log.trace('Full result:', result);
         } else {
             this.log.debug('Command result:', result);

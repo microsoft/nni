@@ -110,6 +110,8 @@ while True:
 }
 
 async function testKillHelper(trialId: string, script: string, stdout?: string, stderr?: string): Promise<void> {
+    const timeout = (process.platform === 'darwin' ? 200 : 50);
+
     await fs.writeFile(path.join(tmpDir, `trial_${trialId}.py`), script);
     options.command = `python trial_${trialId}.py`;
 
@@ -124,10 +126,10 @@ async function testKillHelper(trialId: string, script: string, stdout?: string, 
     assert.ok(success);
 
     await started.promise;
-    await setTimeout(50);  // the python script needs some time to reach "while True"
+    await setTimeout(timeout);  // the python script needs some time to reach "while True"
     assert.ok(!stopped.settled);
 
-    await proc.kill(50);
+    await proc.kill(timeout);
     await stopped.promise;
     assert.ok(stopped.settled);
 

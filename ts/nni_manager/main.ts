@@ -21,13 +21,11 @@
 
 import 'app-module-path/register';  // so we can use absolute path to import
 
-import fs from 'fs';
+import { globals, initGlobals } from 'common/globals';
+initGlobals();
 
-import { Container, Scope } from 'typescript-ioc';
-
-import * as component from 'common/component';
 import { Database, DataStore } from 'common/datastore';
-import globals, { initGlobals } from 'common/globals';
+import { IocShim } from 'common/ioc_shim';
 import { Logger, getLogger } from 'common/log';
 import { Manager } from 'common/manager';
 import { TensorboardManager } from 'common/tensorboardManager';
@@ -47,12 +45,12 @@ async function start(): Promise<void> {
     const restServer = new RestServer(globals.args.port, globals.args.urlPrefix);
     await restServer.start();
 
-    Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
-    Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
-    Container.bind(DataStore).to(NNIDataStore).scope(Scope.Singleton);
-    Container.bind(TensorboardManager).to(NNITensorboardManager).scope(Scope.Singleton);
+    IocShim.bind(Database, SqlDB);
+    IocShim.bind(DataStore, NNIDataStore);
+    IocShim.bind(Manager, NNIManager);
+    IocShim.bind(TensorboardManager, NNITensorboardManager);
 
-    const ds: DataStore = component.get(DataStore);
+    const ds: DataStore = IocShim.get(DataStore);
     await ds.init();
 
     globals.rest.registerExpressRouter('/api/v1/nni', createRestHandler());
@@ -70,8 +68,6 @@ process.on('SIGBREAK', () => { globals.shutdown.initiate('SIGBREAK'); });
 process.on('SIGINT', () => { globals.shutdown.initiate('SIGINT'); });
 
 /* main */
-
-initGlobals();
 
 start().then(() => {
     logger.debug('start() returned.');

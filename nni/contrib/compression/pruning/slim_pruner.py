@@ -10,11 +10,11 @@ from typing import Dict, List, Literal, Tuple, overload
 import torch
 from torch.optim import Adam
 
-from .tools import _METRICS, _MASKS, norm_metrics, generate_sparsity, is_active_target
+from .tools import _METRICS, _MASKS, generate_sparsity, is_active_target
 from ..base.compressor import Compressor, Pruner
 from ..base.target_space import TargetType
 from ..base.wrapper import ModuleWrapper
-from ..utils.evaluator import Evaluator
+from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 
 _logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ SLIM_SCALING_FACTOR_PNAME = '{}_slim_factor'
 
 
 class SlimPruner(Pruner):
-    """
+    __doc__ = r"""
     Slim pruner adds sparsity regularization on the scaling factors of batch normalization (BN) layers during training
     to identify unimportant channels. The channels with small scaling factor values will be pruned.
 
@@ -36,14 +36,19 @@ class SlimPruner(Pruner):
         Model to be pruned.
     config_list
         A list of dict, each dict configure which module need to be pruned, and how to prune.
-        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
+        Please refer :doc:`Compression Config Specification </compression/config_list>` for more information.
     evaluator
-        TODO: {evaluator_docstring}
+        {evaluator_docstring}
     training_steps
         An integer to control steps of training the model and scale factors. Masks will be generated after ``training_steps``.
     regular_scale
         ``regular_scale`` controls the scale factors' penalty.
-    """
+    
+    Examples
+    --------
+        Please refer to
+        :githublink:`examples/compression/pruning/slim_pruning.py <examples/compression/pruning/slim_pruning.py>`.
+    """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, training_steps: int,
@@ -97,7 +102,7 @@ class SlimPruner(Pruner):
                         # TODO: here using a shrinked score to save memory, but need to test the speed.
                         scaling_factor = torch.ones_like(target_space.target)  # type: ignore
                         if target_space._scaler is not None:
-                            scaling_factor = target_space._scaler.shrink(scaling_factor)
+                            scaling_factor = target_space._scaler.shrink(scaling_factor, keepdim=True)
                         target_space._wrapper.register_parameter(SLIM_SCALING_FACTOR_PNAME.format(target_name),
                                                                  torch.nn.Parameter(scaling_factor))
                         scaling_factor = target_space._get_wrapper_attr(SLIM_SCALING_FACTOR_PNAME.format(target_name))
@@ -144,7 +149,7 @@ class SlimPruner(Pruner):
         return data
 
     def _calculate_metrics(self, data: Dict[str, Dict[str, torch.Tensor]]) -> _METRICS:
-        return norm_metrics(p=1, data=data, target_spaces=self._target_spaces)
+        return {k: {p: q.abs() for p, q in v.items()} for k, v in data.items()}
 
     def _generate_sparsity(self, metrics: _METRICS) -> _MASKS:
         return generate_sparsity(metrics, self._target_spaces)

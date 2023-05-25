@@ -6,7 +6,6 @@ from __future__ import annotations
 import logging
 import time
 
-import nni
 from ..base import Command, CommandChannel
 from .connection import WsConnection
 
@@ -25,19 +24,25 @@ class WsChannelClient(CommandChannel):
 
     def disconnect(self) -> None:
         _logger.debug(f'Disconnect from {self._url}')
-        self.send({'type': '_bye_'})
-        self._closing = True
-        self._close_conn('client intentionally close')
+        if self._closing:
+            _logger.debug('Already closing')
+        else:
+            try:
+                if self._conn is not None:
+                    self._conn.send({'type': '_bye_'})
+            except Exception as e:
+                _logger.debug(f'Failed to send bye: {repr(e)}')
+            self._closing = True
+            self._close_conn('client intentionally close')
 
     def send(self, command: Command) -> None:
         if self._closing:
             return
         _logger.debug(f'Send {command}')
-        msg = nni.dump(command)
         for i in range(5):
             try:
                 conn = self._ensure_conn()
-                conn.send(msg)
+                conn.send(command)
                 return
             except Exception:
                 _logger.exception(f'Failed to send command. Retry in {i}s')
@@ -45,16 +50,15 @@ class WsChannelClient(CommandChannel):
                 time.sleep(i)
         _logger.warning(f'Failed to send command {command}. Last retry')
         conn = self._ensure_conn()
-        conn.send(msg)
+        conn.send(command)
 
     def receive(self) -> Command | None:
         while True:
             if self._closing:
                 return None
-            msg = self._receive_msg()
-            if msg is None:
+            command = self._receive_command()
+            if command is None:
                 return None
-            command = nni.load(msg)
             if command['type'] == '_nop_':
                 continue
             if command['type'] == '_bye_':
@@ -88,15 +92,14 @@ class WsChannelClient(CommandChannel):
                 pass
             self._conn = None
 
-    def _receive_msg(self) -> str | None:
+    def _receive_command(self) -> Command | None:
         for i in range(5):
             try:
                 conn = self._ensure_conn()
-                msg = conn.receive()
-                _logger.debug(f'Receive {msg}')
+                command = conn.receive()
                 if not self._closing:
-                    assert msg is not None
-                return msg
+                    assert command is not None
+                return command
             except Exception:
                 _logger.exception(f'Failed to receive command. Retry in {i}s')
                 self._terminate_conn('receive fail')
