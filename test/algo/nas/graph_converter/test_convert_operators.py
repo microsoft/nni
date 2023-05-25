@@ -257,7 +257,7 @@ class TestOperators(unittest.TestCase, ConvertMixin):
         x = torch.randn(3, 4, requires_grad=True)
         self.checkExportImport(SimpleOp(), (x, ))
 
-
+    @unittest.skip('No longer works for pytorch 2.0')
     def test_basic_max(self):
         class SimpleOp(nn.Module):
             def forward(self, x, y):

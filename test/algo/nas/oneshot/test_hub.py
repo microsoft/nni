@@ -268,7 +268,8 @@ def test_expectation_profiler():
         train_dataloaders=train_loader,
         val_dataloaders=valid_loader,
         max_epochs=1,
-        gpus=1 if torch.cuda.is_available() else 0,
+        accelerator='auto',
+        devices=1,
         num_classes=1000
     )
 

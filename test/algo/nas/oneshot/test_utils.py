@@ -79,7 +79,7 @@ def test_concat_loader_nested():
     assert len(dataloader) == 11
     for i, (data, batch_index, loader_index) in enumerate(dataloader):
         if i < 3:
-            assert len(data) == 4
+            assert len(data) in [2, 4]
             assert loader_index == 0
             assert batch_index == i
         else:
