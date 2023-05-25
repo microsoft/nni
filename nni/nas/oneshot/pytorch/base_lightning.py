@@ -358,11 +358,18 @@ class BaseOneShotLightningModule(LightningModule):
         try:
             # lightning >= 1.6
             for config in self.trainer.lr_scheduler_configs:
-                scheduler, opt_idx = config.scheduler, config.opt_idx
+                if hasattr(config, 'opt_idx'):
+                    # lightning < 2.0
+                    scheduler, opt_idx = config.scheduler, config.opt_idx
+                else:
+                    scheduler, opt_idx = config.scheduler, None
                 if config.reduce_on_plateau:
                     warnings.warn('Reduce-lr-on-plateau is not supported in NAS. It will be ignored.', UserWarning)
                 if config.interval == interval and current_idx % config.frequency == 0:
-                    self.training_module.lr_scheduler_step(cast(Any, scheduler), cast(int, opt_idx), None)
+                    if opt_idx is not None:
+                        self.training_module.lr_scheduler_step(cast(Any, scheduler), cast(int, opt_idx), None)
+                    else:
+                        self.training_module.lr_scheduler_step(cast(Any, scheduler), None)
         except AttributeError:
             # lightning < 1.6
             for lr_scheduler in self.trainer.lr_schedulers:  # type: ignore

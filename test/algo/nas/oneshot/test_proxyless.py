@@ -70,7 +70,7 @@ def test_proxyless_bp_hook_once():
     trainer = Trainer(
         max_epochs=1,
         accelerator='cpu', devices=1, num_nodes=1, strategy='ddp',
-        replace_sampler_ddp=False,
+        use_distributed_sampler=False,
     )
 
     trainer.fit(DistributedModule(), dataloader)
