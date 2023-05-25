@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Tuple, Optional
+from typing import Any, Optional
 
 from pytorch_lightning.utilities.combined_loader import (
     CombinedLoader, _CombinationMode, _SUPPORTED_MODES, _Sequential,

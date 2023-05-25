@@ -6,7 +6,7 @@ import torch.nn as nn
 import torchmetrics
 from torchvision.datasets import MNIST
 from torchvision import transforms
-from pytorch_lightning.utilities.seed import seed_everything
+from pytorch_lightning import seed_everything
 
 import nni
 from nni.experiment.config import RemoteConfig, RemoteMachineConfig
