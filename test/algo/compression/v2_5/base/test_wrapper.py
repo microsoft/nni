@@ -17,7 +17,7 @@ def test_wrapper_forward():
     module = torch.nn.Conv2d(3, 3, 3)
 
     config = {
-        'pruning': {
+        'pruning': [{
             'target_names': ['_input_', 'weight', 'bias', '_output_'],
             'target_settings': {
                 '_input_': {
@@ -27,13 +27,13 @@ def test_wrapper_forward():
                     'apply_method': 'mul',
                 },
             },
-        },
-        'quantization': {
+        }],
+        'quantization': [{
             'target_names': ['_input_', 'weight', '_output_'],
-        },
-        'distillation': {
+        }],
+        'distillation': [{
             'target_names': ['_output_']
-        }
+        }]
     }
     wrapper = ModuleWrapper(module, '', config)
 
