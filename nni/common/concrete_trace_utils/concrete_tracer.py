@@ -1500,27 +1500,27 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
     Returns:
         fx.GraphModule: a Module created from the recorded operations from ``root``.
     """
-    tracer = ConcreteTracer(cpu_offload=cpu_offload)
+    tracer = ConcreteTracer(cpu_offload = cpu_offload)
 
     graph = tracer.trace(root,
         autowrap_leaf_function = autowrap_leaf_function,
         autowrap_leaf_class = autowrap_leaf_class,
         leaf_module = leaf_module,
         fake_middle_class = fake_middle_class,
-        concrete_args=concrete_args,
-        use_operator_patch=use_operator_patch,
-        operator_patch_backlist=operator_patch_backlist,
-        forward_function_name=forward_function_name,
+        concrete_args = concrete_args,
+        use_operator_patch = use_operator_patch,
+        operator_patch_backlist = operator_patch_backlist,
+        forward_function_name = forward_function_name,
     )
     graph_check = tracer.trace(root,
         autowrap_leaf_function = autowrap_leaf_function,
         autowrap_leaf_class = autowrap_leaf_class,
         leaf_module = leaf_module,
         fake_middle_class = fake_middle_class,
-        concrete_args=concrete_args,
-        use_operator_patch=use_operator_patch,
-        operator_patch_backlist=operator_patch_backlist,
-        forward_function_name=forward_function_name,
+        concrete_args = concrete_args,
+        use_operator_patch = use_operator_patch,
+        operator_patch_backlist = operator_patch_backlist,
+        forward_function_name = forward_function_name,
     )
     # compare to check equal
     assert len(graph.nodes) == len(graph_check.nodes), f'number nodes: {len(graph.nodes)} vs {len(graph_check.nodes)}'
