@@ -19,6 +19,7 @@ from contextlib import contextmanager
 import torch
 from torch._C import ScriptObject
 from torch.nn.modules.container import Sequential, ModuleList, ModuleDict, ParameterList, ParameterDict
+from torch.utils._pytree import tree_map
 
 import torch.fx
 from torch.fx import GraphModule
@@ -214,7 +215,7 @@ class ConcreteTracer(TracerBase):
     node_to_originating_module : Dict[torch.fx.Node, str] = {}
 
     @compatibility(is_backward_compatible=True)
-    def __init__(self):
+    def __init__(self, cpu_offload = False):
         """
         similar to _symbolic_trace.Tracer.__init__.
         remove the 'param_shapes_constant' because we can get real shape when executing.
@@ -223,6 +224,7 @@ class ConcreteTracer(TracerBase):
         self.scope = Scope("", None)
         self.module_stack = collections.OrderedDict()
         self.node_name_to_scope = {}
+        self.cpu_offload = cpu_offload
 
     @contextmanager
     def do_temp_disable(self, call=False, attr=False, agfunc_apply=False):
@@ -271,40 +273,65 @@ class ConcreteTracer(TracerBase):
             return attr_itr
 
     def run_target(self, kind: str, target: Target, args: Tuple[Any, ...], kwargs: Dict[str, Any]):
-        """
-        actually execute the code.
-        apply the patcher, and the _autowrap_check to the target function.
-        """
-        if kind == 'call_function':
-            assert isinstance(target, Callable)
-            fn = target
-            if _orig_getattr(fn, '__module__', None) != 'nni.common.concrete_trace_utils.concrete_tracer' and hasattr(fn, '__globals__'):
-                _autowrap_check(self, fn.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs, self.agfunc_dict)
-            with self.do_temp_disable(call=True):
+        self.temp_disable_call, self.temp_disable_agfunc_apply, self.temp_disable_attr = True, True, True
+        to_cpu = lambda t: t.cpu() if _orig_isinstance(t, torch.Tensor) else t
+        to_cuda = lambda t: t.cuda() if _orig_isinstance(t, torch.Tensor) else t
+
+        def run(kind: str, target: Target, args: Tuple[Any, ...], kwargs: Dict[str, Any]):
+            """
+            actually execute the code.
+            apply the patcher, and the _autowrap_check to the target function.
+            """
+            if self.cpu_offload:
+                args = tree_map(to_cuda, args)
+                kwargs = tree_map(to_cuda, kwargs)
+
+            if kind == 'call_function':
+                assert isinstance(target, Callable)
+                fn = target
+                if _orig_getattr(fn, '__module__', None) != 'nni.common.concrete_trace_utils.concrete_tracer' \
+                    and hasattr(fn, '__globals__'):
+                    _autowrap_check(self, fn.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs, self.agfunc_dict)
                 return OperatorPatcherContext.patch_run(fn, *args, **kwargs)
-        elif kind == 'call_method':
-            self_obj, *args_tail = args
-            fn = _orig_getattr(self_obj, target)
-            if _orig_getattr(fn, '__module__', None) != 'nni.common.concrete_trace_utils.concrete_tracer' and hasattr(fn, '__globals__'):
-                _autowrap_check(self, fn.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs, self.agfunc_dict)
-            with self.do_temp_disable(call=True):
-                return OperatorPatcherContext.patch_run(fn, *args_tail, **kwargs)
-        elif kind == 'call_module':
-            assert isinstance(target, str)
-            mod = self.fetch_attr(target)
-            if _orig_getattr(mod, '__module__', None) != 'nni.common.concrete_trace_utils.concrete_tracer' and hasattr(mod, '__globals__'):
-                _autowrap_check(self, mod.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs, self.agfunc_dict)
-            with self.do_temp_disable(call=True):
-                return OperatorPatcherContext.patch_run(mod, *args, **kwargs)
-        elif kind == 'get_attr':
-            assert isinstance(target, str)
-            return self.fetch_attr(target)
-        elif kind == 'output':
-            return args[0]
-        elif kind == 'placeholder':
-            return self.placeholder_dict[target]
-        else:
-            raise RuntimeError()
+            elif kind == 'call_method':
+                self_obj, *args_tail = args
+                fn = _orig_getattr(self_obj, target)
+                if _orig_getattr(fn, '__module__', None) != 'nni.common.concrete_trace_utils.concrete_tracer' \
+                    and hasattr(fn, '__globals__'):
+                    _autowrap_check(self, fn.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs, self.agfunc_dict)
+                result = fn(*args_tail, **kwargs)
+            elif kind == 'call_module':
+                assert isinstance(target, str)
+                mod = self.fetch_attr(target)
+                mod.cuda()  # how it works in ddp?
+                if _orig_getattr(mod, '__module__', None) != 'nni.common.concrete_trace_utils.concrete_tracer' \
+                    and hasattr(mod, '__globals__'):
+                    _autowrap_check(self, mod.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs, self.agfunc_dict)
+                result = OperatorPatcherContext.patch_run(mod, *args, **kwargs)
+                if self.cpu_offload:
+                    mod.cpu()
+            elif kind == 'get_attr':
+                assert isinstance(target, str)
+                return self.fetch_attr(target)
+            elif kind == 'output':
+                return args[0]
+            elif kind == 'placeholder':
+                return self.placeholder_dict[target]
+            else:
+                raise RuntimeError()
+            return result
+
+        result = run(kind, target, args, kwargs)
+        if self.cpu_offload:
+            if isinstance(result, torch.Tensor):
+                result = result.cpu()
+            elif isinstance(result, (list, dict, tuple)):
+                result = tree_map(to_cpu, result)
+
+            torch.cuda.empty_cache()
+
+        self.temp_disable_call, self.temp_disable_attr, self.temp_disable_agfunc_apply = False, False, False
+        return result
 
     @compatibility(is_backward_compatible=True)
     def proxy(self, value: Any, node: Node) -> ep.ConcreteProxy:
@@ -315,8 +342,8 @@ class ConcreteTracer(TracerBase):
 
     @compatibility(is_backward_compatible=True)
     def create_proxy(self, kind: str, target: Target, args: Tuple[Any, ...], kwargs: Dict[str, Any],
-                     name: Optional[str] = None, type_expr: Optional[Any] = None,
-                     proxy_factory_fn: Optional[Callable[[Node], Any]] = None):
+                    name: Optional[str] = None, type_expr: Optional[Any] = None,
+                    proxy_factory_fn: Optional[Callable[[Node], Any]] = None):
         """
         similar to _symbolic_trace.Tracer.create_proxy.
         use the 'run_target' to actually execute the code, and store the value in 'value' field.
@@ -431,7 +458,7 @@ class ConcreteTracer(TracerBase):
         """
         similar to _symbolic_trace.Tracer.is_leaf_module
         """
-        return (m.__module__.startswith('torch.nn') and not _orig_isinstance(m, (Sequential, ModuleList, ModuleDict)))\
+        return (m.__module__.startswith('torch.nn.functional') and not _orig_isinstance(m, (Sequential, ModuleList, ModuleDict)))\
             or _orig_isinstance(m, self.leaf_module)
 
     @compatibility(is_backward_compatible=True)
@@ -502,10 +529,10 @@ class ConcreteTracer(TracerBase):
         cnt = 0
         self.placeholder_dict = {}
         arg_names = [next(names_iter) for idx in range(skip_arg_idx, total_args)]
-        diff_len = len(arg_names) - len(default_value_list)
+        diff_len = _orig_len(arg_names) - _orig_len(default_value_list)
         default_args = {arg_names[idx + diff_len]: default_value_list[idx] for idx in range(len(default_value_list))}
         if isinstance(concrete_args, tuple):
-            if len(arg_names) != len(concrete_args):
+            if _orig_len(arg_names) != _orig_len(concrete_args):
                 raise RuntimeError(f"Tracing expected {len(arg_names)} arguments but got {len(concrete_args)} concrete arguments")
             concrete_args = {name: val for name, val in zip(arg_names, concrete_args)}
         def proxy_placeholder(name: str):
@@ -542,15 +569,15 @@ class ConcreteTracer(TracerBase):
 
     @compatibility(is_backward_compatible=True)
     def trace(self, root: Union[torch.nn.Module, Callable[..., Any]], *,
-              autowrap_modules: Tuple[str] | None = None,
-              autowrap_leaf_function = None,
-              autowrap_leaf_class = None,
-              leaf_module = None,
-              fake_middle_class = None,
-              concrete_args: Union[Dict[str, Any], Tuple],
-              use_operator_patch: bool = True,
-              operator_patch_backlist: List[str] | None = None,
-              forward_function_name: str = 'forward') -> Graph:
+            autowrap_modules: Tuple[str] | None = None,
+            autowrap_leaf_function = None,
+            autowrap_leaf_class = None,
+            leaf_module = None,
+            fake_middle_class = None,
+            concrete_args: Union[Dict[str, Any], Tuple],
+            use_operator_patch: bool = True,
+            operator_patch_backlist: List[str] | None = None,
+            forward_function_name: str = 'forward') -> Graph:
         """
         similar to _symbolic_trace.Tracer.trace
         different args:
@@ -671,7 +698,7 @@ class ConcreteTracer(TracerBase):
                     return _orig_module_getattribute(mod, attr)
                 except AttributeError:
                     return _orig_module_getattr(mod, attr)
-            with self.do_temp_disable(call=True, attr=True):
+            with self.do_temp_disable(attr=True):
                 try:
                     attr_val = _orig_module_getattribute(mod, attr)
                 except AttributeError:
@@ -992,6 +1019,7 @@ class ConcreteTracer(TracerBase):
             pass
 
         self.submodule_paths = None
+        self.graph.eliminate_dead_code()
         return self.graph
 
 # List of pairs of (global dict, function name) functions
@@ -1334,17 +1362,19 @@ def _retain_weight_consistency(root: torch.nn.Module):
     return root
 
 def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
-                   concrete_args: Union[Dict[str, Any], Tuple],
-                   *,
-                   use_operator_patch: bool = True,
-                   operator_patch_backlist: List[str] | None = None,
-                   forward_function_name: str = 'forward',
-                   check_args: Optional[Dict[str, Any]] = None,
-                   autowrap_leaf_function = None,
-                   autowrap_leaf_class = None,
-                   leaf_module: Tuple | None = None,
-                   fake_middle_class = None,
-                   dce = False) -> GraphModule:
+                concrete_args: Union[Dict[str, Any], Tuple],
+                *,
+                use_operator_patch: bool = True,
+                operator_patch_backlist: List[str] | None = None,
+                forward_function_name: str = 'forward',
+                check_args: Optional[Dict[str, Any]] = None,
+                autowrap_leaf_function = None,
+                autowrap_leaf_class = None,
+                leaf_module: Tuple | None = None,
+                fake_middle_class = None,
+                dce = False,
+                cpu_offload = False,
+                ) -> GraphModule:
     """
     Concrete tracing API
 
@@ -1470,7 +1500,7 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
     Returns:
         fx.GraphModule: a Module created from the recorded operations from ``root``.
     """
-    tracer = ConcreteTracer()
+    tracer = ConcreteTracer(cpu_offload=cpu_offload)
 
     graph = tracer.trace(root,
         autowrap_leaf_function = autowrap_leaf_function,
@@ -1493,7 +1523,7 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         forward_function_name=forward_function_name,
     )
     # compare to check equal
-    assert len(graph.nodes) == len(graph_check.nodes)
+    assert len(graph.nodes) == len(graph_check.nodes), f'number nodes: {len(graph.nodes)} vs {len(graph_check.nodes)}'
     for node_a, node_b in zip(graph.nodes, graph_check.nodes):
         node_a: Node
         node_b: Node
@@ -1507,14 +1537,13 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
             assert node_b.op == 'call_function' and isinstance(target_b, Callable) and target_b.__name__ == 'apply' and\
             hasattr(target_b, '__self__') and issubclass(target_b.__self__, torch.autograd.Function)
         else:
-            assert node_a.op == node_b.op and target_a == target_b
+            assert node_a.op == node_b.op and target_a == target_b, f'op: {node_a.op} vs {node_b.op}, target: {target_a} vs {target_b}'
 
     with MagicMethodPatcher():
         name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
         traced = GraphModule(tracer.root, graph, name)
 
     # TODO: better infomation
-    # # assert root(**concrete_args) == traced(**concrete_args)
     if check_args is not None:
         assert root(**check_args) == traced(**check_args)
 
