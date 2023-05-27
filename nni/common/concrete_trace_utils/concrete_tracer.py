@@ -273,7 +273,8 @@ class ConcreteTracer(TracerBase):
             return attr_itr
 
     def run_target(self, kind: str, target: Target, args: Tuple[Any, ...], kwargs: Dict[str, Any]):
-        self.temp_disable_call, self.temp_disable_agfunc_apply, self.temp_disable_attr = True, True, True
+        tmp = getattr(self, 'temp_disable_call', False)
+        self.temp_disable_call = True
         to_cpu = lambda t: t.cpu() if _orig_isinstance(t, torch.Tensor) else t
         to_cuda = lambda t: t.cuda() if _orig_isinstance(t, torch.Tensor) else t
 
@@ -331,7 +332,7 @@ class ConcreteTracer(TracerBase):
 
             torch.cuda.empty_cache()
 
-        self.temp_disable_call, self.temp_disable_attr, self.temp_disable_agfunc_apply = False, False, False
+        self.temp_disable_call = tmp
         return result
 
     @compatibility(is_backward_compatible=True)
