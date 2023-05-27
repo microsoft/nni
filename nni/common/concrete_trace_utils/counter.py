@@ -215,7 +215,7 @@ class GraphCounter(Interpreter):
         ]
 
         return tabulate(node_summaries, headers=headers, stralign='right')
-    
+
     def as_dict(self) -> Dict[str, int]:
         """
         Returns the profiled statistics as a dictionary.
