@@ -216,7 +216,7 @@ class GraphCounter(Interpreter):
 
         return tabulate(node_summaries, headers=headers, stralign='right')
 
-    def as_dict(self) -> Dict[str, Dict[str, int | None]]:
+    def as_dict(self) -> Dict[str, Dict[str, Union[int, None]]]:
         """
         Returns the profiled statistics as a dictionary.
         """
@@ -228,7 +228,7 @@ class GraphCounter(Interpreter):
         }
 
 
-def counter_pass(module: torch.fx.GraphModule, *args, verbose=False) -> Dict[str, Dict[str, int | None]]:
+def counter_pass(module: torch.fx.GraphModule, *args, verbose=False) -> Dict[str, Dict[str, Union[int, None]]]:
     """A pass that counts the number of FLOPs and parameters in a model.
 
     Parameters
