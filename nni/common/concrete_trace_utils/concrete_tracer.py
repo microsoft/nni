@@ -1020,6 +1020,7 @@ class ConcreteTracer(TracerBase):
             pass
 
         self.submodule_paths = None
+        GraphModule(self.root, self.graph)
         self.graph.eliminate_dead_code()
         return self.graph
 
