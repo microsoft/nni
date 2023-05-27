@@ -8,7 +8,7 @@ from ..registry import model_zoo
 def dummy_inputs(*_):
     return {'ims': torch.randn(1, 3, 640, 640)}
 
-def config_list(*_):
+def config_list(*__):
     return [{
         'sparsity': 0.2,
         'op_types': ['Conv2d'],
