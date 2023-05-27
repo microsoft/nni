@@ -241,8 +241,7 @@ def counter_pass(module: torch.fx.GraphModule, *args, verbose=False) -> Dict[str
 
     Returns
     -------
-    module: torch.fx.GraphModule
-        The same module as the input.
+    dictionary: A dictionary that contains the profiled statistics.
     """
     interp = GraphCounter(module)
     interp.run(*args)
