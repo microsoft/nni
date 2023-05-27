@@ -215,6 +215,17 @@ class GraphCounter(Interpreter):
         ]
 
         return tabulate(node_summaries, headers=headers, stralign='right')
+    
+    def as_dict(self) -> Dict[str, int]:
+        """
+        Returns the profiled statistics as a dictionary.
+        """
+        return {
+            'flops':
+            {node.name: NInfo(node).flops for node in self.module.graph.nodes if node.op == 'call_module'},
+            'params':
+            {node.name: NInfo(node).param_size for node in self.module.graph.nodes if node.op == 'call_module'}
+        }
 
 
 def counter_pass(module: torch.fx.GraphModule, *args, verbose=False) -> torch.fx.GraphModule:
@@ -237,4 +248,4 @@ def counter_pass(module: torch.fx.GraphModule, *args, verbose=False) -> torch.fx
     interp.run(*args)
     if verbose:
         print(interp.summarize())
-    return module
+    return interp.as_dict()
