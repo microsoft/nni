@@ -4,7 +4,6 @@
 from typing import Any, Callable, Dict, List, Tuple, Optional, Union
 from dataclasses import dataclass, field
 
-
 import torch
 import torch.fx
 from torch.fx import Interpreter
@@ -12,6 +11,7 @@ from torch.fx.node import Argument, Node
 
 from .flop_utils import flop_count
 
+# pyright: reportUnboundVariable=false
 
 Target = Union[Callable[..., Any], str]
 
@@ -186,7 +186,7 @@ class GraphCounter(Interpreter):
         """
         # https://github.com/pytorch/pytorch/blob/master/torch/fx/graph.py
         try:
-            from tabulate import tabulate   # pyright: reportUnboundVariable=false
+            from tabulate import tabulate
         except ImportError:
             print("`summary` relies on the library `tabulate`, "
                   "which could not be found on this machine. Run `pip "
@@ -216,7 +216,7 @@ class GraphCounter(Interpreter):
 
         return tabulate(node_summaries, headers=headers, stralign='right')
 
-    def as_dict(self) -> Dict[str, int]:
+    def as_dict(self) -> Dict[str, Dict[str, int | None]]:
         """
         Returns the profiled statistics as a dictionary.
         """
@@ -228,7 +228,7 @@ class GraphCounter(Interpreter):
         }
 
 
-def counter_pass(module: torch.fx.GraphModule, *args, verbose=False) -> torch.fx.GraphModule:
+def counter_pass(module: torch.fx.GraphModule, *args, verbose=False) -> Dict[str, Dict[str, int | None]]:
     """A pass that counts the number of FLOPs and parameters in a model.
 
     Parameters
