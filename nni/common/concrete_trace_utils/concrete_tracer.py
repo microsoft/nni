@@ -303,7 +303,8 @@ class ConcreteTracer(TracerBase):
             elif kind == 'call_module':
                 assert isinstance(target, str)
                 mod = self.fetch_attr(target)
-                mod.cuda()  # how it works in ddp?
+                if self.cpu_offload:
+                    mod.cuda()  # how it works in ddp?
                 if _orig_getattr(mod, '__module__', None) != 'nni.common.concrete_trace_utils.concrete_tracer' \
                     and hasattr(mod, '__globals__'):
                     _autowrap_check(self, mod.__globals__, self._autowrap_function_ids, self.autowrap_leaf_pairs, self.agfunc_dict)
