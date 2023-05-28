@@ -200,7 +200,7 @@ class OperatorPatcher:
 
         lines, lnum = inspect.findsource(func_inner)
         # align with original source code
-        source = ''.join([('\n' * lnum, *inspect.getblock(lines[lnum:]))])
+        source = ''.join(('\n' * lnum, *inspect.getblock(lines[lnum:])))
         dedent_src = dedent(source)
         tree = ast.parse(dedent_src)
 
