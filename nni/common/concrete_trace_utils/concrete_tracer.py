@@ -274,15 +274,19 @@ class ConcreteTracer(TracerBase):
             return attr_itr
 
     def run_target(self, kind: str, target: Target, args: Tuple[Any, ...], kwargs: Dict[str, Any]):
-        self.temp_disable_call = True
+        """
+        actually execute the code.
+        apply the patcher, and the _autowrap_check to the target function.
+        """
+        if kind == 'output':
+            return args[0]
+        elif kind == 'placeholder':
+            return self.placeholder_dict[target]
+
         to_cpu = lambda t: t.cpu() if _orig_isinstance(t, torch.Tensor) else t
         to_cuda = lambda t: t.cuda() if _orig_isinstance(t, torch.Tensor) else t
 
         def run(kind: str, target: Target, args: Tuple[Any, ...], kwargs: Dict[str, Any]):
-            """
-            actually execute the code.
-            apply the patcher, and the _autowrap_check to the target function.
-            """
             if self.cpu_offload:
                 args = tree_map(to_cuda, args)
                 kwargs = tree_map(to_cuda, kwargs)
@@ -315,22 +319,19 @@ class ConcreteTracer(TracerBase):
             elif kind == 'get_attr':
                 assert isinstance(target, str)
                 return self.fetch_attr(target)
-            elif kind == 'output':
-                return args[0]
-            elif kind == 'placeholder':
-                return self.placeholder_dict[target]
             else:
                 raise RuntimeError()
             return result
 
-        result = run(kind, target, args, kwargs)
-        if self.cpu_offload:
-            if isinstance(result, torch.Tensor):
-                result = result.cpu()
-            elif isinstance(result, (list, dict, tuple)):
-                result = tree_map(to_cpu, result)
+        with self.do_temp_disable(call=True):
+            result = run(kind, target, args, kwargs)
+            if self.cpu_offload:
+                if isinstance(result, torch.Tensor):
+                    result = result.cpu()
+                elif isinstance(result, (list, dict, tuple)):
+                    result = tree_map(to_cpu, result)
 
-            torch.cuda.empty_cache()
+                torch.cuda.empty_cache()
 
         self.temp_disable_call = False
         return result
@@ -1021,8 +1022,10 @@ class ConcreteTracer(TracerBase):
             pass
 
         self.submodule_paths = None
-        GraphModule(self.root, self.graph)  # assign graph.owning_module
-        self.graph.eliminate_dead_code()
+        with MagicMethodPatcher():
+            name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
+            GraphModule(self.root, self.graph)  # assign graph.owning_module
+            self.graph.eliminate_dead_code()
         return self.graph
 
 # List of pairs of (global dict, function name) functions
