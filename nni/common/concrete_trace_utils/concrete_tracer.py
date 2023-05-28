@@ -87,6 +87,7 @@ from .utils import (
 )
 
 
+# pyright: reportGeneralTypeIssues=false
 _logger = logging.getLogger(__name__)
 HAS_VARSTUFF = inspect.CO_VARARGS | inspect.CO_VARKEYWORDS
 
@@ -1348,13 +1349,13 @@ def _retain_weight_consistency(root: torch.nn.Module):
     for module in root.modules():
         for name, param in module.named_parameters():
             if _orig_isinstance(param, ep.ConcreteProxy):
-                param: ep.ConcreteProxy     # pyright: reportGeneralTypeIssues=false
+                param: ep.ConcreteProxy
                 _logger.warning(f'Parameter {name} of {module} is a ConcreteProxy. Some weight may be modified inplace within forward().')
                 setattr(module, name, param.value)
                 _flag |= 1
         for name, buffer in module.named_buffers():
             if _orig_isinstance(buffer, ep.ConcreteProxy):
-                buffer: ep.ConcreteProxy    # pyright: reportGeneralTypeIssues=false
+                buffer: ep.ConcreteProxy
                 _logger.warning(f'Buffer {name} of {module} is a ConcreteProxy. Some buffer may be modified inplace within forward().')
                 setattr(module, name, buffer.value)
                 _flag |= 1
