@@ -1,0 +1,15 @@
+<nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="{{ pathto(master_doc)|e }}" title="{{ docstitle|striptags|e }}" class="md-nav__button md-logo">
+      <img src="{{ pathto('_static/img/nni-icon.svg', 1) }}" alt="{{ html_title }} logo" width="48" height="48">
+    </a>
+    <a href="{{ pathto(master_doc)|e }}"
+       title="{{ docstitle|striptags|e }}">{{ theme_nav_title or shorttitle }}</a>
+  </label>
+  {%- if theme_repo_url %}
+    <div class="md-nav__source">
+      {% include "repo.html" %}
+    </div>
+  {% endif %}
+  {% include "globaltoc.html" %}
+</nav>
