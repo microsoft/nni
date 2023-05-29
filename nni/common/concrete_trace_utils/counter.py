@@ -12,6 +12,7 @@ from torch.fx.node import Argument, Node
 from .flop_utils import flop_count
 
 # pyright: reportUnboundVariable=false
+# pyright: reportGeneralTypeIssues=false
 
 Target = Union[Callable[..., Any], str]
 
