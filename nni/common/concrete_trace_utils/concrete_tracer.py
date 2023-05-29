@@ -572,15 +572,15 @@ class ConcreteTracer(TracerBase):
 
     @compatibility(is_backward_compatible=True)
     def trace(self, root: Union[torch.nn.Module, Callable[..., Any]], *,
-            autowrap_modules: Tuple[str] | None = None,
-            autowrap_leaf_function = None,
-            autowrap_leaf_class = None,
-            leaf_module = None,
-            fake_middle_class = None,
-            concrete_args: Union[Dict[str, Any], Tuple],
-            use_operator_patch: bool = True,
-            operator_patch_backlist: List[str] | None = None,
-            forward_function_name: str = 'forward') -> Graph:
+             autowrap_modules: Tuple[str] | None = None,
+             autowrap_leaf_function = None,
+             autowrap_leaf_class = None,
+             leaf_module = None,
+             fake_middle_class = None,
+             concrete_args: Union[Dict[str, Any], Tuple],
+             use_operator_patch: bool = True,
+             operator_patch_backlist: List[str] | None = None,
+             forward_function_name: str = 'forward') -> Graph:
         """
         similar to _symbolic_trace.Tracer.trace
         different args:
@@ -1023,7 +1023,6 @@ class ConcreteTracer(TracerBase):
 
         self.submodule_paths = None
         with MagicMethodPatcher():
-            name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
             GraphModule(self.root, self.graph)  # assign graph.owning_module
             self.graph.eliminate_dead_code()
         return self.graph
@@ -1368,19 +1367,19 @@ def _retain_weight_consistency(root: torch.nn.Module):
     return root
 
 def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
-                concrete_args: Union[Dict[str, Any], Tuple],
-                *,
-                use_operator_patch: bool = True,
-                operator_patch_backlist: List[str] | None = None,
-                forward_function_name: str = 'forward',
-                check_args: Optional[Dict[str, Any]] = None,
-                autowrap_leaf_function = None,
-                autowrap_leaf_class = None,
-                leaf_module: Tuple | None = None,
-                fake_middle_class = None,
-                dce = False,
-                cpu_offload = False,
-                ) -> GraphModule:
+                   concrete_args: Union[Dict[str, Any], Tuple],
+                   *,
+                   use_operator_patch: bool = True,
+                   operator_patch_backlist: List[str] | None = None,
+                   forward_function_name: str = 'forward',
+                   check_args: Optional[Dict[str, Any]] = None,
+                   autowrap_leaf_function = None,
+                   autowrap_leaf_class = None,
+                   leaf_module: Tuple | None = None,
+                   fake_middle_class = None,
+                   dce = False,
+                   cpu_offload = False,
+                   ) -> GraphModule:
     """
     Concrete tracing API
 
@@ -1502,6 +1501,10 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
 
             The struct of dict is: leaf_class: ([(module_path, module_name)], is_iterator_class).
                 is_iterator_class: Is the class init from an iterator. Only 'tuple', 'list', 'set' or 'dict' needs to set it to True.
+
+        cpu_offload (bool): Whether to offload the module to CPU during tracing. If set to True, the traced code will be executed on GPU,
+            but is offloaded to CPU afterward. This is useful for reducing memory usage during tracing, but may cause performance issues.
+            If set to False, there will be no offloading during tracing, but the traced code will be executed on default device.
 
     Returns:
         fx.GraphModule: a Module created from the recorded operations from ``root``.
