@@ -572,15 +572,15 @@ class ConcreteTracer(TracerBase):
 
     @compatibility(is_backward_compatible=True)
     def trace(self, root: Union[torch.nn.Module, Callable[..., Any]], *,
-             autowrap_modules: Tuple[str] | None = None,
-             autowrap_leaf_function = None,
-             autowrap_leaf_class = None,
-             leaf_module = None,
-             fake_middle_class = None,
-             concrete_args: Union[Dict[str, Any], Tuple],
-             use_operator_patch: bool = True,
-             operator_patch_backlist: List[str] | None = None,
-             forward_function_name: str = 'forward') -> Graph:
+              autowrap_modules: Tuple[str] | None = None,
+              autowrap_leaf_function = None,
+              autowrap_leaf_class = None,
+              leaf_module = None,
+              fake_middle_class = None,
+              concrete_args: Union[Dict[str, Any], Tuple],
+              use_operator_patch: bool = True,
+              operator_patch_backlist: List[str] | None = None,
+              forward_function_name: str = 'forward') -> Graph:
         """
         similar to _symbolic_trace.Tracer.trace
         different args:
