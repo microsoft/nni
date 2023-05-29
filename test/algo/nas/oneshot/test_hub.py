@@ -223,7 +223,8 @@ def test_hub_oneshot(space_type, strategy_type):
         val_dataloaders=valid_loader,
         max_epochs=1,
         export_onnx=False,
-        gpus=1 if torch.cuda.is_available() else 0,  # 0 for my debug
+        accelerator='auto',
+        devices=1,
         logger=False,  # disable logging and checkpoint to avoid too much log
         enable_checkpointing=False,
         enable_model_summary=False,
@@ -267,7 +268,8 @@ def test_expectation_profiler():
         train_dataloaders=train_loader,
         val_dataloaders=valid_loader,
         max_epochs=1,
-        gpus=1 if torch.cuda.is_available() else 0,
+        accelerator='auto',
+        devices=1,
         num_classes=1000
     )
 
