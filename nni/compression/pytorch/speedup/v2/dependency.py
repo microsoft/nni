@@ -67,18 +67,9 @@ def gcd_list(L):
     return gcd
 
 
-def reshape_break_channel_dependency(node: torch.fx.Node):
+def channel_dependency_breakpoint(node: torch.fx.Node):
     """
-    The reshape operations such as (reshape, view, flatten) may break
-    the channel dependency. We need to check the input parameters of
-    these reshape operations to check if this reshape node will break
-    the channel dependency. However, it's complicated to analyze the the input
-    parameters for each reshape function and infer if it will break the channel
-    dependency. So currently, we just check if the input channel and the output
-    channel is the same, if so, then we can say the original reshape function
-    doesn't want to change the number of the channels, which means the channel
-    dependency is not broken. In contrast, the original reshape operation wants
-    to change the number of channels, so it breaks the channel dependency.
+    Check if this operation will break the channel dependency.
 
     Parameters
     ----------
@@ -89,9 +80,6 @@ def reshape_break_channel_dependency(node: torch.fx.Node):
     bool
         If this operation will break the channel dependency.
     """
-
-    if node.target not in CALL_FUNCTION_RESHAPE and node.target not in CALL_METHOD_RESHAPE:
-        return False
 
     def find_parent(node: torch.fx.Node):
         par_arg = node.all_input_nodes[0]
@@ -155,7 +143,7 @@ def find_adjacent_layers(node: torch.fx.Node,
             if isinstance(target_module, tuple(target_types)):
                 layers.append(node)
                 continue
-        elif reshape_break_channel_dependency(node):
+        elif channel_dependency_breakpoint(node):
             continue
         layers.extend(find_adjacent_layers(node, module, target_types, direction))
     return layers
