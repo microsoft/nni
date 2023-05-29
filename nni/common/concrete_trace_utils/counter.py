@@ -216,19 +216,43 @@ class GraphCounter(Interpreter):
 
         return tabulate(node_summaries, headers=headers, stralign='right')
 
-    def as_dict(self) -> Dict[str, Dict[str, Union[int, None]]]:
+    def as_dict(self, by_type = False) -> Dict[str, Dict[str, Union[int, None]]]:
         """
         Returns the profiled statistics as a dictionary.
+
+        Parameters
+        ----------
+        by_type: bool
+            Whether to return the statistics by module type. If ``False``, the statistics
+            are returned by module name. If ``True``, the statistics are returned by module
+            type.
         """
-        return {
-            'flops':
-            {node.name: NInfo(node).flops for node in self.module.graph.nodes if node.op == 'call_module'},
-            'params':
-            {node.name: NInfo(node).param_size for node in self.module.graph.nodes if node.op == 'call_module'}
-        }
+        if by_type:
+            ret = {'flops': {}, 'params': {}}
+            for node in self.module.graph.nodes:
+                node: Node
+                if node.op == 'call_module':
+                    module = self.fetch_attr(node.target)
+                    if type(module).__name__ not in ret['flops']:
+                        ret['flops'][type(module).__name__] = 0
+                    if type(module) not in ret['params']:
+                        ret['params'][type(module).__name__] = 0
+                    ret['flops'][type(module).__name__] += NInfo(node).flops
+                    ret['params'][type(module).__name__] += NInfo(node).param_size
+            return ret
+        else:
+            return {
+                'flops':
+                {node.name: NInfo(node).flops for node in self.module.graph.nodes if node.op == 'call_module'},
+                'params':
+                {node.name: NInfo(node).param_size for node in self.module.graph.nodes if node.op == 'call_module'}
+            }
 
 
-def counter_pass(module: torch.fx.GraphModule, *args, verbose=False) -> Dict[str, Dict[str, Union[int, None]]]:
+def counter_pass(module: torch.fx.GraphModule,
+                 *args,
+                 verbose = False,
+                 by_type = False) -> Dict[str, Dict[str, Union[int, None]]]:
     """A pass that counts the number of FLOPs and parameters in a model.
 
     Parameters
@@ -247,4 +271,4 @@ def counter_pass(module: torch.fx.GraphModule, *args, verbose=False) -> Dict[str
     interp.run(*args)
     if verbose:
         print(interp.summarize())
-    return interp.as_dict()
+    return interp.as_dict(by_type)
