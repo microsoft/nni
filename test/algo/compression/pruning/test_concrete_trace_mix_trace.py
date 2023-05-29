@@ -50,7 +50,7 @@ def test_torchvision_models(model_fn):
     model = model_fn()
     dummy_inputs = (torch.rand(1, 3, 224, 224), )
     traced = concrete_trace(model, dummy_inputs, use_operator_patch=True, cpu_offload=True)
-    out_orig = model.forward(**dummy_inputs)
-    out_traced = traced.forward(**dummy_inputs)
+    out_orig = model.forward(*dummy_inputs)
+    out_traced = traced.forward(*dummy_inputs)
     assert check_equal(out_orig, out_traced), 'check_equal failure in original inputs'
-    del out_orig, out_orig_traced
+    del out_orig, out_traced
