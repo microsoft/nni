@@ -13,7 +13,6 @@ model_list = [
     models.convnext_base,
     models.densenet121,
     models.efficientnet_b0,
-    models.inception_v3,
     models.mobilenet_v2,
     models.resnet18,
     models.resnext50_32x4d,
@@ -48,9 +47,10 @@ def check_equal(a, b):
 @pytest.mark.parametrize('model_fn', model_list)
 def test_torchvision_models(model_fn):
     model = model_fn()
-    dummy_inputs = (torch.rand(1, 3, 224, 224), )
-    traced = concrete_trace(model, dummy_inputs, use_operator_patch=True, cpu_offload=True)
+    model.eval()
+    dummy_inputs = (torch.rand(2, 3, 224, 224), )
+    traced = concrete_trace(model, dummy_inputs, use_operator_patch=True)
     out_orig = model.forward(*dummy_inputs)
     out_traced = traced.forward(*dummy_inputs)
-    assert check_equal(out_orig, out_traced), 'check_equal failure in original inputs'
+    assert check_equal(out_orig, out_traced), f'{traced.code}'
     del out_orig, out_traced

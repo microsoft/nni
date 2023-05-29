@@ -1510,6 +1510,8 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         fx.GraphModule: a Module created from the recorded operations from ``root``.
     """
     tracer = ConcreteTracer(cpu_offload = cpu_offload)
+    is_training = root.training
+    root.eval()
 
     graph = tracer.trace(root,
         autowrap_leaf_function = autowrap_leaf_function,
@@ -1582,5 +1584,8 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         for node in traced.graph.nodes:
             recursively_check_node(node)
         traced.recompile()
+
+    if is_training:
+        root.train()
 
     return traced
