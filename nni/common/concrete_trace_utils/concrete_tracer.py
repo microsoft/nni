@@ -330,6 +330,8 @@ class ConcreteTracer(TracerBase):
                     result = result.cpu()
                 elif isinstance(result, (list, dict, tuple)):
                     result = tree_map(to_cpu, result)
+                else:
+                    _logger.warning(f"result of target {target} is {type(result)}, which is not a common behavior.")
 
                 torch.cuda.empty_cache()
 
