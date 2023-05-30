@@ -3,7 +3,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import * as component from 'common/component';
+import { IocShim } from 'common/ioc_shim';
 import { getLogger, Logger } from 'common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { getLogLevel } from 'common/utils';
@@ -16,7 +16,6 @@ import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';
 import { SharedStorageService } from '../sharedStorage';
 import { createScriptFile } from 'common/shellUtils';
 
-@component.Singleton
 export class RemoteEnvironmentService extends EnvironmentService {
 
     private readonly initExecutorId = "initConnection";
@@ -162,7 +161,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
     private async releaseEnvironmentResource(environment: EnvironmentInformation): Promise<void> {
         if (environment.useSharedStorage) {
             const executor = await this.getExecutor(environment.id);
-            const remoteUmountCommand = component.get<SharedStorageService>(SharedStorageService).remoteUmountCommand;
+            const remoteUmountCommand = IocShim.get<SharedStorageService>(SharedStorageService).remoteUmountCommand;
             const result = await executor.executeScript(remoteUmountCommand, false, false);
             if (result.exitCode !== 0) {
                 this.log.error(`Umount shared storage on remote machine failed.\n ERROR: ${result.stderr}`);
@@ -231,11 +230,11 @@ export class RemoteEnvironmentService extends EnvironmentService {
             this.environmentExecutorManagerMap.set(environment.id, executorManager);
             const executor = await this.getExecutor(environment.id);
             if (environment.useSharedStorage) {
-                this.remoteExperimentRootDir = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
+                this.remoteExperimentRootDir = IocShim.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
                 if (!this.remoteExperimentRootDir.startsWith('/')) {
                     this.remoteExperimentRootDir = executor.joinPath((await executor.getCurrentPath()).trim(), this.remoteExperimentRootDir);
                 }
-                const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `).replace(/\\\$/g, `\\\\\\$`);
+                const remoteMountCommand = IocShim.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `).replace(/\\\$/g, `\\\\\\$`);
                 const result = await executor.executeScript(remoteMountCommand, false, false);
                 if (result.exitCode !== 0) {
                     throw new Error(`Mount shared storage on remote machine failed.\n ERROR: ${result.stderr}`);

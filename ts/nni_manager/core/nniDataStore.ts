@@ -4,7 +4,7 @@
 import assert from 'assert';
 import { Deferred } from 'ts-deferred';
 
-import * as component from '../common/component';
+import { IocShim } from 'common/ioc_shim';
 import { Database, DataStore, MetricData, MetricDataRecord, MetricType,
     TrialJobEvent, TrialJobEventRecord, TrialJobInfo, HyperParameterFormat,
     ExportedDataFormat } from '../common/datastore';
@@ -16,7 +16,7 @@ import { TrialJobDetail, TrialJobStatus } from '../common/trainingService';
 import { getDefaultDatabaseDir, mkDirP } from '../common/utils';
 
 class NNIDataStore implements DataStore {
-    private db: Database = component.get(Database);
+    private db: Database = IocShim.get(Database);
     private log: Logger = getLogger('NNIDataStore');
     private initTask!: Deferred<void>;
 

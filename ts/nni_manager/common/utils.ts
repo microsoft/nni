@@ -12,11 +12,11 @@ import net from 'net';
 import path from 'path';
 import * as timersPromises from 'timers/promises';
 import { Deferred } from 'ts-deferred';
-import { Container } from 'typescript-ioc';
 
 import { Database, DataStore } from './datastore';
 import globals from './globals';
 import { resetGlobals } from './globals/unittest';  // TODO: this file should not contain unittest helpers
+import { IocShim } from './ioc_shim';
 import { ExperimentConfig, Manager } from './manager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 
@@ -132,10 +132,10 @@ function generateParamFileName(hyperParameters: HyperParameters): string {
  * Must be paired with `cleanupUnitTest()`.
  */
 function prepareUnitTest(): void {
-    Container.snapshot(Database);
-    Container.snapshot(DataStore);
-    Container.snapshot(TrainingService);
-    Container.snapshot(Manager);
+    IocShim.snapshot(Database);
+    IocShim.snapshot(DataStore);
+    IocShim.snapshot(TrainingService);
+    IocShim.snapshot(Manager);
 
     resetGlobals();
 
@@ -152,10 +152,10 @@ function prepareUnitTest(): void {
  * Must be paired with `prepareUnitTest()`.
  */
 function cleanupUnitTest(): void {
-    Container.restore(Manager);
-    Container.restore(TrainingService);
-    Container.restore(DataStore);
-    Container.restore(Database);
+    IocShim.restore(Manager);
+    IocShim.restore(TrainingService);
+    IocShim.restore(DataStore);
+    IocShim.restore(Database);
 }
 
 let cachedIpv4Address: string | null = null;

@@ -4,7 +4,6 @@
 'use strict';
 
 import { Deferred } from 'ts-deferred';
-import { Provider } from 'typescript-ioc';
 
 import { MetricDataRecord, MetricType, TrialJobInfo } from '../../common/datastore';
 import { MethodNotImplementedError } from '../../common/errors';
@@ -15,10 +14,6 @@ import {
 import {
     TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
 } from '../../common/trainingService';
-
-export const testManagerProvider: Provider = {
-    get: (): Manager => { return new MockedNNIManager(); }
-};
 
 export class MockedNNIManager extends Manager {
     public getStatus(): NNIManagerStatus {
