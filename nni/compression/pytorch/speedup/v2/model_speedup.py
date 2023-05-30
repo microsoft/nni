@@ -23,6 +23,7 @@ from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import rand_like_with_shape, torch_integer_dtype
 
 from .container import NodeInfo
+from .dependency import build_channel_dependency, build_group_dependency, build_weight_sharing_dependency
 from .mask_updater import (MaskUpdater,
                            DefaultMaskUpdater,
                            LeafModuleMaskUpdater,
@@ -216,6 +217,9 @@ class ModelSpeedup(torch.fx.Interpreter):
                 return grad
 
         self.node_infos[node].output_grad = tree_map_zip(add_grad, self.node_infos[node].output_grad, outputs)
+    
+    def fix_mask_conflict(self):
+        
 
     def propagate_originally(self):
         """
