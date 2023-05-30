@@ -612,7 +612,7 @@ class LightningEvaluator(Evaluator):
         trainer.num_sanity_val_steps = 0
 
         if max_steps:
-            trainer.fit_loop.max_steps = max_steps
+            trainer.fit_loop.max_steps = max_steps  # type: ignore
         if max_epochs:
             trainer.fit_loop.max_epochs = max_epochs
         trainer.fit(self.model, self.data_module)

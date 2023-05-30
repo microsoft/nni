@@ -6,14 +6,9 @@
 import { assert } from 'chai';
 import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
-import { Provider } from 'typescript-ioc';
 
 import { MethodNotImplementedError } from '../../common/errors';
 import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from '../../common/trainingService';
-
-const testTrainingServiceProvider: Provider = {
-    get: () => { return new MockedTrainingService(''); }
-};
 
 const jobDetailTemplate: TrialJobDetail = {
     id: 'xxxx',
@@ -45,14 +40,14 @@ const idStatusListResume = [
     {id: '1011', status: 'RUNNING'},
     {id: '1112', status: 'RUNNING'}];
 
-class MockedTrainingService implements TrainingService {
+export class MockedTrainingService implements TrainingService {
     private readonly eventEmitter: EventEmitter;
     private mockedMetaDataValue: string = "default";
     private jobDetailList: Map<string, TrialJobDetail>;
     private mode: string;
     private submittedCnt: number = 0;
 
-    constructor(mode: string) {
+    constructor(mode: string = '') {
         this.eventEmitter = new EventEmitter();
         this.mode = mode;
         this.jobDetailList = new Map<string, TrialJobDetail>();
@@ -198,5 +193,3 @@ class MockedTrainingService implements TrainingService {
         throw new MethodNotImplementedError();
     }
 }
-
-export{MockedTrainingService, testTrainingServiceProvider}

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Inject } from 'typescript-ioc';
-import * as component from 'common/component';
 import { ClusterJobRestServer } from '../common/clusterJobRestServer';
 import { KubernetesTrainingService } from './kubernetesTrainingService';
 
@@ -10,10 +8,8 @@ import { KubernetesTrainingService } from './kubernetesTrainingService';
  * Kubeflow Training service Rest server, provides rest API to support kubeflow job metrics update
  *
  */
-@component.Singleton
 export class KubernetesJobRestServer extends ClusterJobRestServer {
-    @Inject
-    private readonly kubernetesTrainingService? : KubernetesTrainingService;
+    private readonly kubernetesTrainingService: KubernetesTrainingService;
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */

@@ -5,7 +5,6 @@
 
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import * as component from '../../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../../common/utils';
 import { WindowsCommands } from '../../../training_service/remote_machine/extends/windowsCommands';
 
@@ -25,7 +24,7 @@ describe('Unit Test for Windows Commands', () => {
     });
 
     beforeEach(() => {
-        windowsCommands = component.get(WindowsCommands);
+        windowsCommands = new WindowsCommands();
     });
 
     afterEach(() => {

@@ -171,6 +171,18 @@ def maxpool2d_formula(module: nn.MaxPool2d | nas_nn.MutableMaxPool2d, input: Sha
     shape[-1] = (shape[-1] + 2 * padding[1] - dilation[1] * (kernel_size[1] - 1) - 1) // stride[1] + 1
     return MutableShape(*shape)
 
+def avgpool2d_formula(module: nn.AvgPool2d , input: ShapeTensor) -> MutableShape:
+    shape = list(input.real_shape)  # type: ignore 
+
+    padding, kernel_size, stride = map(
+        lambda name: _getattr(module, name, expected_type=tuple_2_t),
+        ['padding', 'kernel_size', 'stride']
+    ) 
+  
+    # H_out and W_out
+    shape[-2] = (shape[-2] + 2 * padding[0] -  (kernel_size[0])) // stride[0] + 1
+    shape[-1] = (shape[-1] + 2 * padding[1] -  (kernel_size[1])) // stride[1] + 1
+    return MutableShape(*shape)
 
 def multihead_attention_formula(module: nn.MultiheadAttention | nas_nn.MutableMultiheadAttention,
                                 query: ShapeTensor, key: ShapeTensor, *args: Any, **kwargs) -> tuple[MutableShape, MutableShape | None]:
@@ -268,7 +280,7 @@ def _canonicalize_dims(dims: list[int], n_dims: int, fn: Any) -> list[int]:
     return [d if d >= 0 else d + n_dims for d in dims]
 
 
-def aten_reshape_alias_formula(fn: Any, input: ShapeTensor, size: list[int], stride: list[int]) -> MutableShape:
+def aten_reshape_alias_formula(fn: Any, input: ShapeTensor, size: list[int], stride: list[int] | None = None) -> MutableShape:
     input_shape = ensure_shape(input)
     if input_shape.is_mutable():
         raise RuntimeError(f'Cannot infer the shape of {fn} because the input shape is not determined: {input_shape}, '
@@ -347,6 +359,7 @@ _shape_inference_formulas: dict[Type[nn.Module], Formula] = {
     nn.Linear: linear_formula,
     nn.Conv2d: conv2d_formula,
     nn.MaxPool2d: maxpool2d_formula,
+    nn.AvgPool2d: avgpool2d_formula,
     nn.BatchNorm2d: keep_shape_formula,
     nn.LayerNorm: keep_shape_formula,
     nn.MultiheadAttention: multihead_attention_formula,
@@ -382,6 +395,7 @@ _safe_register_aten_formula('cat.default', aten_cat_formula)
 _safe_register_aten_formula('mean.dim', aten_mean_dim)
 _safe_register_aten_formula('_log_softmax.default', keep_first_shape_formula)
 _safe_register_aten_formula('_reshape_alias.default', aten_reshape_alias_formula)
+_safe_register_aten_formula('view.default', aten_reshape_alias_formula)
 _safe_register_aten_formula('add.Tensor', aten_shape_broadcast)
 _safe_register_aten_formula('mul.Tensor', aten_shape_broadcast)
 _safe_register_aten_formula('slice.Tensor', aten_slice_formula)

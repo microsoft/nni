@@ -63,6 +63,11 @@ steps:
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'gpu'))
 
 - script: |
+    mv dependencies/recommended_gpu_legacy.txt dependencies/recommended.txt
+  displayName: (GPU) Activate CUDA legacy dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'gpu-torch1.x'))
+
+- script: |
     echo '===== develop ====='
     python -m pip install -r dependencies/develop.txt
     echo '===== required ====='

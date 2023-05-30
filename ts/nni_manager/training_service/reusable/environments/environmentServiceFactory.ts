@@ -1,5 +1,4 @@
 import { AMLEnvironmentService } from './amlEnvironmentService';
-import { OpenPaiEnvironmentService } from './openPaiEnvironmentService';
 import { LocalEnvironmentService } from './localEnvironmentService';
 import { RemoteEnvironmentService } from './remoteEnvironmentService';
 import { KubeflowEnvironmentService } from './kubernetes/kubeflowEnvironmentService';
@@ -22,8 +21,6 @@ export async function createEnvironmentService(config: TrainingServiceConfig): P
             return new RemoteEnvironmentService(configAsAny, info);
         case 'aml':
             return new AMLEnvironmentService(configAsAny, info);
-        case 'openpai':
-            return new OpenPaiEnvironmentService(configAsAny, info);
         case 'kubeflow':
             return new KubeflowEnvironmentService(configAsAny, info);
         case 'frameworkcontroller':

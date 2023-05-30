@@ -168,8 +168,13 @@ class EnasLightningModule(BaseOneShotLightningModule):
         return super().set_model(model)
 
     def training_step(self, batch_packed, batch_idx):
-        # The received batch is a tuple of (data, "train" | "val")
-        batch, mode = batch_packed
+        if len(batch_packed) == 2:
+            # Legacy (pytorch-lightning 1.x): The received batch is a tuple of (data, "train" | "val")
+            batch, mode = batch_packed
+        else:
+            # New (pytorch-lightning 2.0+): a tuple of data, batch_idx, and dataloader_idx
+            batch, _, dataloader_idx = batch_packed
+            mode = 'train' if dataloader_idx == 0 else 'val'
 
         assert self._replay_buffer is not None
 
@@ -223,6 +228,9 @@ class EnasLightningModule(BaseOneShotLightningModule):
             self.log_probs(self.export_probs())
 
         if self._trajectory_counter > 0 and self._trajectory_counter % self.batches_per_update == 0:
+            # Export could be just called.
+            # The policy must be in train mode to make update work.
+            self.policy.train()
             update_times = self.update_kwargs.get('update_times', 1)
             for _ in range(update_times):
                 self.policy.update(0, self._replay_buffer, **self.update_kwargs)

@@ -32,7 +32,6 @@
     "tar": "^6.1.13",
     "tree-kill": "^1.2.2",
     "ts-deferred": "^1.0.4",
-    "typescript-ioc": "^1.2.6",
     "typescript-string-operations": "^1.4.1",
     "ws": "^8.13.0",
     "yargs": "^17.7.1"
