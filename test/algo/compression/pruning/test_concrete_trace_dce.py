@@ -6,8 +6,6 @@ import pytest
 import torch
 import torchvision.models as models
 
-import sys
-sys.path.append("/home/v-junliang/DNNGen/nni")
 from nni.common.concrete_trace_utils import concrete_trace
 
 model_list = [
