@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import collections
+import copy
 import sys
 import inspect
 import logging
@@ -26,8 +27,9 @@ from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
 from torch.fx._symbolic_trace import _Patcher, _proxyable_classes
 from torch.fx.graph import Graph
-from torch.fx.node import Target, Node
+from torch.fx.node import Target, Node, Argument
 from torch.fx.proxy import TracerBase
+from torch.fx.operator_schemas import check_for_mutable_operation
 
 try:
     # Scope is a new class to record module path in pytorch 2.0
@@ -41,6 +43,41 @@ except ImportError:
             self.module_path = module_path
             self.module_type = module_type
 
+try:
+    # comes with Scope
+    from torch.fx.proxy import ScopeContextManager
+except ImportError:
+    import copy
+
+    # copy from pytorch 2.0
+    @compatibility(is_backward_compatible=False)
+    class ScopeContextManager:
+        """ A context manager to track the Scope of Node during symbolic tracing.
+        When entering a forward function of a Module, we'll update the scope information of
+        the current module, and when we exit, we'll restore the previous scope information.
+        """
+
+        def __init__(
+            self,
+            scope: Scope,
+            current_scope: Scope,
+        ):
+            super().__init__()
+            # Keep a copy of prev scope to restore on exit
+            self._prev_scope = copy.copy(scope)
+            # Update scope to current scope
+            scope.module_path = current_scope.module_path
+            scope.module_type = current_scope.module_type
+            # Save a reference so we can restore it
+            self._scope = scope
+
+        def __enter__(self):
+            return self._scope
+
+        def __exit__(self, *args):
+            self._scope.module_path = self._prev_scope.module_path
+            self._scope.module_type = self._prev_scope.module_type
+            return
 
 from . import concrete_proxy as ep
 from .operator_patcher import OperatorPatcherContext
@@ -211,10 +248,6 @@ class ConcreteTracer(TracerBase):
         _orig_torch_finfo:          ((), False),
     }
 
-    # add these to record module path information during tracing
-    current_module_qualified_name : str = ''
-    node_to_originating_module : Dict[torch.fx.Node, str] = {}
-
     @compatibility(is_backward_compatible=True)
     def __init__(self, cpu_offload = False):
         """
@@ -339,6 +372,32 @@ class ConcreteTracer(TracerBase):
         return result
 
     @compatibility(is_backward_compatible=True)
+    def create_node(self, kind : str, target : Target,
+                    args : Tuple[Argument, ...], kwargs : Dict[str, Argument], name : Optional[str] = None,
+                    type_expr : Optional[Any] = None) -> Node:
+        """
+        This method is almost the same as the one in `TracerBase` class of Pytorch2.0.
+        Add it here because this method of Pytorch1.13 and older version
+        doesn't have the part related to `module_stack` and `node_name_to_scope`.
+        If we don't add it here, we can not use these two attributes in Pytorch1.13 and older version.
+        """
+        if kind == 'call_function' and self.check_mutable_operations:
+            check_for_mutable_operation(target, args, kwargs)
+
+        node = self.graph.create_node(kind, target, args, kwargs, name, type_expr)
+        # TODO node_name_to_scope will be depricated in favor of
+        # node.meta['nn_module_stack']
+        self.node_name_to_scope[node.name] = (
+            self.scope.module_path,
+            self.scope.module_type,
+        )
+        if self.module_stack:
+            node.meta['nn_module_stack'] = copy.copy(self.module_stack)
+        else:
+            node.meta['nn_module_stack'] = collections.OrderedDict()
+        return node
+
+    @compatibility(is_backward_compatible=True)
     def proxy(self, value: Any, node: Node) -> ep.ConcreteProxy:
         """
         overloaded to use custom 'proxy'.
@@ -371,7 +430,6 @@ class ConcreteTracer(TracerBase):
         node = self.create_node(kind, target, args_, kwargs_, name, type_expr)
 
         proxy = self.proxy(value_unwrapped, node)
-        self.node_to_originating_module[proxy.node] = self.current_module_qualified_name
         return proxy
 
     @compatibility(is_backward_compatible=True)
@@ -713,7 +771,9 @@ class ConcreteTracer(TracerBase):
                     return self.wrapped_leaf[attr_val][1]
                 return attr_val
             elif attr in self.default_module_getattr:
-                return self.create_proxy('get_attr', f'{self.the_path_of_middle_class[id(mod)]}.{attr}', (), {})
+                path = self.the_path_of_middle_class[id(mod)]
+                path = path + '.' if path else ''
+                return self.create_proxy('get_attr', f'{path + attr}', (), {})
             elif _orig_isinstance(attr_val, (_orig_tuple, _orig_list)):
                 if self.the_path_of_middle_class[id(mod)] == '':
                     return self.create_proxy('get_attr', f'{attr}', (), {})
@@ -730,11 +790,10 @@ class ConcreteTracer(TracerBase):
             if self.temp_disable_call:
                 return _orig_module_call(mod, *args, **kwargs)
             else:
-                # corresponding to call_module
-                old_qualname = self.current_module_qualified_name
-                try:
-                    self.current_module_qualified_name = self.path_of_module(mod)
-                    module_qualified_name = self.path_of_module(mod)
+                # codes below corresponds to symbolic tracer's call_module
+                module_qualified_name = self.path_of_module(mod)
+                with ScopeContextManager(self.scope, Scope(module_qualified_name, type(mod))) as _scope:
+                    self.module_stack[_scope.module_path] = _scope.module_type
                     if not self.is_leaf_module(mod, module_qualified_name):
                         _autowrap_check(self,
                                         mod.forward.__globals__,
@@ -746,11 +805,12 @@ class ConcreteTracer(TracerBase):
                                         self._autowrap_function_ids,
                                         self.autowrap_leaf_pairs,
                                         self.agfunc_dict)
-                        return _orig_module_call(mod, *args, **kwargs)
+                        ret_val = _orig_module_call(mod, *args, **kwargs)
                     else:
-                        return self.create_proxy('call_module', module_qualified_name, args, kwargs)
-                finally:
-                    self.current_module_qualified_name = old_qualname
+                        ret_val = self.create_proxy('call_module', module_qualified_name, args, kwargs)
+                    key, _ = self.module_stack.popitem(last=True)
+                    assert key == _scope.module_path, f" Unexpected key {key}"
+                return ret_val
 
         class map_wrapper_clz:
             @functools.wraps(_orig_map)
@@ -1559,9 +1619,6 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
     # TODO: better infomation
     if check_args is not None:
         assert root(**check_args) == traced(**check_args)
-
-    # before returning the traced GraphModule, store module path info
-    setattr(traced, 'module_path', tracer.node_to_originating_module.copy())
 
     # apply dead code elimination according to the switch param `dce`
     if dce:
