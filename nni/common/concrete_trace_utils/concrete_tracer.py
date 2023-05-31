@@ -27,7 +27,7 @@ from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
 from torch.fx._symbolic_trace import _Patcher, _proxyable_classes
 from torch.fx.graph import Graph
-from torch.fx.node import Target, Node, Argument
+from torch.fx.node import Target, Node, Argument, _side_effectful_functions
 from torch.fx.proxy import TracerBase
 from torch.fx.operator_schemas import check_for_mutable_operation
 
@@ -121,8 +121,17 @@ from .utils import (
     _orig_all,
     _orig_min,
     _orig_max,
+
+    _orig_node_is_impure,
 )
 
+# some side effectful functions that should not be deleted during dead code elimination
+# there may be more than listed here
+extra_side_effectful_functions = {
+    operator.setitem,
+    builtins.next,
+}
+_side_effectful_functions = _side_effectful_functions.union(extra_side_effectful_functions)
 
 # pyright: reportGeneralTypeIssues=false
 _logger = logging.getLogger(__name__)
@@ -1086,7 +1095,6 @@ class ConcreteTracer(TracerBase):
         self.submodule_paths = None
         with MagicMethodPatcher():
             GraphModule(self.root, self.graph)  # assign graph.owning_module
-            self.graph.eliminate_dead_code()
         return self.graph
 
 # List of pairs of (global dict, function name) functions
@@ -1428,6 +1436,29 @@ def _retain_weight_consistency(root: torch.nn.Module):
                         ' ``concrete_trace`` may not guarantee the consistency of the traced graph.')
     return root
 
+@functools.wraps(_orig_node_is_impure)
+def node_is_impure_wrapper(node):
+    if node.op in {"placeholder", "output"}:
+        return True
+
+    if node.op == "call_function":
+        return node.target in _side_effectful_functions
+
+    if node.op == "call_method":
+        return node.target.endswith("_")
+
+    if node.op == "call_module":
+        assert (
+            node.graph.owning_module is not None
+        ), "self.graph.owning_module not set for purity check"
+        target_mod = node.graph.owning_module.get_submodule(node.target)
+        assert (
+            target_mod is not None
+        ), f"Did not find expected submodule target {node.target}"
+        return getattr(target_mod, "_is_impure", False)
+
+    return False
+
 def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    concrete_args: Union[Dict[str, Any], Tuple],
                    *,
@@ -1439,8 +1470,9 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    autowrap_leaf_class = None,
                    leaf_module: Tuple | None = None,
                    fake_middle_class = None,
-                   dce = False,
+                   dce = True,
                    cpu_offload = False,
+                   trace_twice = False,
                    ) -> GraphModule:
     """
     Concrete tracing API
@@ -1585,64 +1617,48 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         operator_patch_backlist = operator_patch_backlist,
         forward_function_name = forward_function_name,
     )
-    graph_check = tracer.trace(root,
-        autowrap_leaf_function = autowrap_leaf_function,
-        autowrap_leaf_class = autowrap_leaf_class,
-        leaf_module = leaf_module,
-        fake_middle_class = fake_middle_class,
-        concrete_args = concrete_args,
-        use_operator_patch = use_operator_patch,
-        operator_patch_backlist = operator_patch_backlist,
-        forward_function_name = forward_function_name,
-    )
-    # compare to check equal
-    assert len(graph.nodes) == len(graph_check.nodes), f'number nodes: {len(graph.nodes)} vs {len(graph_check.nodes)}'
-    for node_a, node_b in zip(graph.nodes, graph_check.nodes):
-        node_a: Node
-        node_b: Node
-        target_a = node_a.target
-        target_b = node_b.target
-        if node_a.op == 'get_attr' and node_a.name.startswith('_tensor_constant'):
-            assert node_b.op == 'get_attr' and node_b.name.startswith('_tensor_constant')
-            assert torch.equal(getattr(root, node_a.name), getattr(root, node_b.name))
-        elif node_a.op == 'call_function' and isinstance(target_a, Callable) and target_a.__name__ == 'apply' and\
-            hasattr(target_a, '__self__') and issubclass(target_a.__self__, torch.autograd.Function):
-            assert node_b.op == 'call_function' and isinstance(target_b, Callable) and target_b.__name__ == 'apply' and\
-            hasattr(target_b, '__self__') and issubclass(target_b.__self__, torch.autograd.Function)
-        else:
-            assert node_a.op == node_b.op and target_a == target_b, f'op: {node_a.op} vs {node_b.op}, target: {target_a} vs {target_b}'
+
+    if trace_twice:
+        graph_check = tracer.trace(root,
+            autowrap_leaf_function = autowrap_leaf_function,
+            autowrap_leaf_class = autowrap_leaf_class,
+            leaf_module = leaf_module,
+            fake_middle_class = fake_middle_class,
+            concrete_args = concrete_args,
+            use_operator_patch = use_operator_patch,
+            operator_patch_backlist = operator_patch_backlist,
+            forward_function_name = forward_function_name,
+        )
+        # compare to check equal
+        assert len(graph.nodes) == len(graph_check.nodes), f'number nodes: {len(graph.nodes)} vs {len(graph_check.nodes)}'
+        for node_a, node_b in zip(graph.nodes, graph_check.nodes):
+            node_a: Node
+            node_b: Node
+            target_a = node_a.target
+            target_b = node_b.target
+            if node_a.op == 'get_attr' and node_a.name.startswith('_tensor_constant'):
+                assert node_b.op == 'get_attr' and node_b.name.startswith('_tensor_constant')
+                assert torch.equal(getattr(root, node_a.name), getattr(root, node_b.name))
+            elif node_a.op == 'call_function' and isinstance(target_a, Callable) and target_a.__name__ == 'apply' and\
+                hasattr(target_a, '__self__') and issubclass(target_a.__self__, torch.autograd.Function):
+                assert node_b.op == 'call_function' and isinstance(target_b, Callable) and target_b.__name__ == 'apply' and\
+                hasattr(target_b, '__self__') and issubclass(target_b.__self__, torch.autograd.Function)
+            else:
+                assert node_a.op == node_b.op and target_a == target_b, f'op: {node_a.op} vs {node_b.op}, target: {target_a} vs {target_b}'
 
     with MagicMethodPatcher():
         name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
         traced = GraphModule(tracer.root, graph, name)
 
+        if dce:
+            with _Patcher() as patcher:
+                patcher.patch_method(Node, 'is_impure', node_is_impure_wrapper, deduplicate=False)
+                traced.graph.eliminate_dead_code()
+            traced.recompile()  # this need to be done in MagicMethodPatcher context
+
     # TODO: better infomation
     if check_args is not None:
         assert root(**check_args) == traced(**check_args)
-
-    # apply dead code elimination according to the switch param `dce`
-    if dce:
-        def recursively_check_node(n: torch.fx.Node) -> bool:
-            # !pay attention that the `output` node should be ignored for users checking
-            if n.op == 'output':
-                return False
-            if n.users:
-                users = list(n.users)
-                for user in users:
-                    user_deleted = recursively_check_node(user)
-                    if not user_deleted:
-                        return False
-            if not n.users:
-                for input_node in n.all_input_nodes:
-                    input_node.users.pop(n)
-                n._remove_from_list()
-                return True
-            else:
-                return False
-
-        for node in traced.graph.nodes:
-            recursively_check_node(node)
-        traced.recompile()
 
     if is_training:
         root.train()
