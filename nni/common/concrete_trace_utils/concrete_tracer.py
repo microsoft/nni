@@ -47,8 +47,6 @@ try:
     # comes with Scope
     from torch.fx.proxy import ScopeContextManager
 except ImportError:
-    import copy
-
     # copy from pytorch 2.0
     @compatibility(is_backward_compatible=False)
     class ScopeContextManager:
