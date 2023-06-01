@@ -102,6 +102,7 @@ def channel_dependency_breakpoint(node: torch.fx.Node):
         return True
     in_channel = in_shape[1]
     out_channel = out_shape[1]
+    # TODO: find a better way to check if the channel dependency is broken
     return in_channel != out_channel
 
 
