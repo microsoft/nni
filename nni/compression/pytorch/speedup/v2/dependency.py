@@ -171,18 +171,15 @@ def auto_set_denpendency_group_ids(graph_module: torch.fx.GraphModule,
     config_list : list
         The new config list with dependency group id.
     """
-    def trans_target(target:str):
-        target = target.split('_')
-        return '.'.join(target)
 
     channel_dependency = build_channel_dependency(graph_module, prune_type, prune_axis)
     module2uid = {}
     for d_set in channel_dependency:
         uid = uuid4().hex
-        module2uid.update({trans_target(node.target): uid for node in d_set})
+        module2uid.update({node.target: uid for node in d_set})
 
     group_dependency = build_group_dependency(graph_module)
-    group_dependency = {trans_target(node.target): group_max for node, (group_max, group_min) in group_dependency.items()}
+    group_dependency = {node.target: group_max for node, (group_max, group_min) in group_dependency.items()}
 
     config_list = trans_legacy_config_list(config_list)
     new_config_list = []
@@ -227,7 +224,7 @@ def convert_dependency_to_set(dependency: Dict[Any, Set[Any]]) -> List[Set[Any]]
     return d_sets
 
 
-def build_weight_sharing_dependency(graph_module: torch.fx.GraphModule) -> List[List[torch.fx.Node]]:
+def build_weight_sharing_dependency(graph_module: torch.fx.GraphModule) -> List[List[str]]:
     """
     This model analyze the weight sharing dependencies between the conv
     layers in a model. (e.g. different node refer to same module)
@@ -255,7 +252,7 @@ def build_weight_sharing_dependency(graph_module: torch.fx.GraphModule) -> List[
 
 def build_channel_dependency(graph_module: torch.fx.GraphModule,
                              prune_type: str = 'Filter',
-                             prune_axis: int = 1) -> List[Set[Any]]:
+                             prune_axis: int = 1) -> List[Set[torch.fx.Node]]:
     """
     This model analyze the channel dependencies between the conv
     layers in a model.
@@ -294,7 +291,7 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule,
         node: torch.fx.Node
 
         # input channel dependency
-        if prune_axis == 0:
+        if prune_axis == 1:
             # Some pruners may prune the input channel of the convolutional
             # layers. While pruning the input channel of the convolutional layers,
             # the layers that share the same input tensor should prune the same

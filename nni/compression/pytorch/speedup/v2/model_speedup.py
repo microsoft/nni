@@ -23,7 +23,7 @@ from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import rand_like_with_shape, torch_integer_dtype
 
 from .container import NodeInfo
-from .dependency import build_channel_dependency, build_group_dependency, build_weight_sharing_dependency
+from .mask_conflict import fix_channel_mask_conflict, fix_group_mask_conflict, fix_weight_sharing_mask_conflict
 from .mask_updater import (MaskUpdater,
                            DefaultMaskUpdater,
                            LeafModuleMaskUpdater,
@@ -219,6 +219,9 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.node_infos[node].output_grad = tree_map_zip(add_grad, self.node_infos[node].output_grad, outputs)
     
     def fix_mask_conflict(self):
+        self.masks = fix_group_mask_conflict(self.graph_module, self.masks)
+        self.masks = fix_channel_mask_conflict(self.graph_module, self.masks)
+        self.masks = fix_weight_sharing_mask_conflict(self.graph_module, self.masks)
         
 
     def propagate_originally(self):
@@ -246,7 +249,7 @@ class ModelSpeedup(torch.fx.Interpreter):
             if self.garbage_collect_values:
                 # do memory collect to reduce memory usage
                 for to_delete in self.user_to_last_uses.get(node, []):
-                    del self.node_infos[to_delete]._output_inplace
+                    del self.node_infos[to_delete].output_inplace
 
     def update_direct_sparsity(self):
         # update direct out mask
@@ -395,7 +398,8 @@ class ModelSpeedup(torch.fx.Interpreter):
 
             # TODO: suppose to fix the conflict after the sparsity propagation, which is more elegent
             self.logger.info('Resolve the mask conflict before mask propagate...')
-            fix_mask_conflict(self.masks, self.graph_module, self.dummy_input)
+            # fix_mask_conflict(self.masks, self.graph_module, self.dummy_input)
+            self.fix_mask_conflict()
             self.logger.info('Infer module masks...')
             self.initialize_propagate(self.dummy_input)
             self.propagate_originally()
@@ -403,7 +407,8 @@ class ModelSpeedup(torch.fx.Interpreter):
             self.update_direct_sparsity()
             self.update_indirect_sparsity()
             self.logger.info('Resolve the mask conflict after mask propagate...')
-            fix_mask_conflict(self.masks, self.graph_module, self.dummy_input)
+            # fix_mask_conflict(self.masks, self.graph_module, self.dummy_input)
+            self.fix_mask_conflict()
 
             self.graph_module.load_state_dict(torch.load(ori_state_dict_file.name))
             self.graph_module.train(training)
