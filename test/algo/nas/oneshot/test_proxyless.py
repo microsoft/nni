@@ -69,8 +69,8 @@ def test_proxyless_bp_hook_once():
 
     trainer = Trainer(
         max_epochs=1,
-        accelerator='cpu', devices=1, num_nodes=1, strategy='ddp',
-        replace_sampler_ddp=False,
+        accelerator='cpu', devices=1, num_nodes=1, strategy='ddp_find_unused_parameters_true',
+        use_distributed_sampler=False,
     )
 
     trainer.fit(DistributedModule(), dataloader)
@@ -197,7 +197,7 @@ def test_proxyless_repeat_nested():
                 memo.update(module.resample(memo))
 
         y = repeat(x).sum()
-        optimizer.zero_grad()
+        optimizer.zero_grad(set_to_none=False)
         y.backward()
         optimizer.step()
 
