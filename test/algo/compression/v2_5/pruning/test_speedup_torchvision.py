@@ -4,13 +4,12 @@ import pytest
 import torch
 import torchvision.models as tm
 from nni.common.concrete_trace_utils import concrete_trace
-from torch.fx import symbolic_trace
-from nni.compression.pytorch.pruning import L1NormPruner
+from nni.contrib.compression.pruning import L1NormPruner
 from nni.compression.pytorch.speedup.v2 import ModelSpeedup, auto_set_denpendency_group_ids
 
 models = [
     tm.alexnet,
-    # tm.convnext_base,
+    tm.convnext_tiny,
     tm.densenet121,
     tm.efficientnet_b0,
     tm.inception_v3,
@@ -34,18 +33,16 @@ def test_pruner_speedup(model_fn):
         'op_types': ['Conv2d'],
         'sparsity': 0.5
     }]
-
-    # traced = concrete_trace(model, dummy_inputs, use_operator_patch=True)
-    traced = symbolic_trace(model)
-    # config_list = auto_set_denpendency_group_ids(traced, config_list)
+    traced = concrete_trace(model, dummy_inputs, use_operator_patch=True)
+    config_list = auto_set_denpendency_group_ids(traced, config_list)
     
     pruner = L1NormPruner(model, config_list)
     _, masks = pruner.compress()
-    pruner._unwrap_model()
+    pruner.unwrap_model()
 
     ModelSpeedup(model, dummy_inputs, masks, graph_module=traced).speedup_model()
     model.forward(*dummy_inputs)
     
 
 if __name__ == '__main__':
-    test_pruner_speedup(tm.densenet121)
+    test_pruner_speedup(tm.inception_v3)

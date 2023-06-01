@@ -333,7 +333,7 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule,
                     # To determine if this cat operation will introduce channel
                     # dependency, we need the specific input parameters of the cat
                     # operation.
-                    cat_dim = node.kwargs.get('dim', None)
+                    cat_dim = node.kwargs.get('dim', None) or node.args[1]
                     if cat_dim != 1:
                         d_set = set(find_adjacent_layers(node, graph_module, target_types, 'parent'))
 
