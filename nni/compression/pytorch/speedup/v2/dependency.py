@@ -80,6 +80,8 @@ def channel_dependency_breakpoint(node: torch.fx.Node):
     bool
         If this operation will break the channel dependency.
     """
+    if len(node.all_input_nodes) == 0:
+        return True
 
     def find_parent(node: torch.fx.Node):
         par_arg = node.all_input_nodes[0]
@@ -152,7 +154,7 @@ def find_adjacent_layers(node: torch.fx.Node,
 def auto_set_denpendency_group_ids(graph_module: torch.fx.GraphModule,
                                    config_list: List[Dict[str, Any]],
                                    prune_type: str = 'Filter',
-                                   prune_axis: int = 1) -> List[Dict[str, Any]]:
+                                   prune_axis: int = 0) -> List[Dict[str, Any]]:
     """
     Auto find the output dependency between all 'Conv2d', 'Linear', 'ConvTranspose2d', 'Embedding' modules,
     then set the ``dependency_group_id`` in config list.

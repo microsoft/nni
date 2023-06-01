@@ -219,9 +219,9 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.node_infos[node].output_grad = tree_map_zip(add_grad, self.node_infos[node].output_grad, outputs)
     
     def fix_mask_conflict(self):
-        self.masks = fix_group_mask_conflict(self.graph_module, self.masks)
-        self.masks = fix_channel_mask_conflict(self.graph_module, self.masks)
-        self.masks = fix_weight_sharing_mask_conflict(self.graph_module, self.masks)
+        fix_group_mask_conflict(self.graph_module, self.masks)
+        fix_channel_mask_conflict(self.graph_module, self.masks)
+        fix_weight_sharing_mask_conflict(self.graph_module, self.masks)
         
 
     def propagate_originally(self):
