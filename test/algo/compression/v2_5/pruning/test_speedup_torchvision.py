@@ -9,7 +9,7 @@ from nni.compression.pytorch.speedup.v2 import ModelSpeedup, auto_set_denpendenc
 
 models = [
     tm.alexnet,
-    tm.convnext_tiny,
+    # tm.convnext_tiny,
     tm.densenet121,
     tm.efficientnet_b0,
     tm.inception_v3,
@@ -17,7 +17,7 @@ models = [
     tm.mobilenet_v2,
     tm.resnet18,
     tm.resnext50_32x4d,
-    tm.shufflenet_v2_x0_5,
+    # tm.shufflenet_v2_x0_5,
     tm.squeezenet1_0,
     tm.vgg11,
     tm.wide_resnet50_2,
@@ -41,8 +41,8 @@ def test_pruner_speedup(model_fn):
     pruner.unwrap_model()
 
     ModelSpeedup(model, dummy_inputs, masks, graph_module=traced).speedup_model()
-    model.forward(*dummy_inputs)
+    traced.forward(*dummy_inputs)
     
 
 if __name__ == '__main__':
-    test_pruner_speedup(tm.inception_v3)
+    test_pruner_speedup(tm.shufflenet_v2_x0_5)

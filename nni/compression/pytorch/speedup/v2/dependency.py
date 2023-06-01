@@ -192,7 +192,7 @@ def auto_set_denpendency_group_ids(graph_module: torch.fx.GraphModule,
             if target in module2uid:
                 sub_config['dependency_group_id'] = module2uid[target]
             if target in group_dependency:
-                sub_config['internal_metric_block'] = group_dependency[target]
+                sub_config['internal_metric_block'] = int(group_dependency[target])
             new_config_list.append({
                 'op_names': [target],
                 **sub_config
