@@ -100,7 +100,8 @@ class TargetSpace:
             assert hasattr(self._wrapper.module, self._target_name)
             target = getattr(self._wrapper.module, self._target_name)
             if isinstance(target, torch.nn.parameter.Parameter):
-                self._wrapper.register_parameter(self._target_name, torch.nn.Parameter(target.detach().clone()))
+                self._wrapper.register_parameter(self._target_name, torch.nn.Parameter(target.detach().clone(),
+                                                                                       requires_grad=target.requires_grad))
             elif isinstance(target, torch.Tensor):
                 self._wrapper.register_buffer(self._target_name, target.detach().clone())
             elif target is None:

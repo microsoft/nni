@@ -6,5 +6,6 @@ from .bnn_quantizer import BNNQuantizer
 from .dorefa_quantizer import DoReFaQuantizer
 from .lsq_quantizer import LsqQuantizer
 from .ptq_quantizer import PtqQuantizer
+from .lsqplus_quantizer import LsqPlusQuantizer
 
-__all__ = ["QATQuantizer", "BNNQuantizer", "DoReFaQuantizer", "LsqQuantizer", "PtqQuantizer"]
+__all__ = ["QATQuantizer", "BNNQuantizer", "DoReFaQuantizer", "LsqQuantizer", "PtqQuantizer", "LsqPlusQuantizer"]

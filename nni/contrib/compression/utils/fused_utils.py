@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import List, Dict, Any, Set, Tuple
+from typing import List, Dict, Any, Tuple
 
 import torch
 import torch.nn as nn
