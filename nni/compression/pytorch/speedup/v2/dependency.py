@@ -319,13 +319,13 @@ def build_channel_dependency(graph_module: torch.fx.GraphModule,
 
             elif node.op == 'call_function':
                 if node.target in CALL_FUNCTION_REDUCE:
-                        # refer issue 4540 for more details. Multiplication actually
-                        # will not introduce the channel dependency, cause the misaligned
-                        # channels can propagate to each other. However, when one of the input
-                        # tensor is from skip connection(residual), the channel propagation
-                        # may be failed(the input is also used by another layer and cannot be
-                        # pruned), in this case, we need to fix the conflict maunally.
-                        d_set = set(find_adjacent_layers(node, graph_module, target_types, 'parent'))
+                    # refer issue 4540 for more details. Multiplication actually
+                    # will not introduce the channel dependency, cause the misaligned
+                    # channels can propagate to each other. However, when one of the input
+                    # tensor is from skip connection(residual), the channel propagation
+                    # may be failed(the input is also used by another layer and cannot be
+                    # pruned), in this case, we need to fix the conflict maunally.
+                    d_set = set(find_adjacent_layers(node, graph_module, target_types, 'parent'))
 
                 elif node.target in CALL_FUNCTION_CONCAT:
                     # To determine if this cat operation will introduce channel
