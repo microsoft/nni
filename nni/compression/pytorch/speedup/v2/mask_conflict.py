@@ -213,7 +213,7 @@ def fix_channel_mask_conflict(graph_module: torch.fx.GraphModule, masks: Dict[st
     """
     Fix the mask conflict between channel and group.
     This function will modify the masks in-place.
-    
+
     Parameters
     ----------
     graph_module

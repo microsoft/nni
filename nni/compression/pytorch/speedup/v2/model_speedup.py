@@ -19,7 +19,6 @@ from torch.fx.passes.shape_prop import ShapeProp
 from nni.common.concrete_trace_utils import concrete_trace
 from nni.compression.pytorch.utils import set_nested_attr
 from nni.compression.pytorch.speedup.compress_modules import replace_module
-from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import rand_like_with_shape, torch_integer_dtype
 
 from .container import NodeInfo
@@ -237,12 +236,12 @@ class ModelSpeedup(torch.fx.Interpreter):
                 return grad
 
         self.node_infos[node].output_grad = tree_map_zip(add_grad, self.node_infos[node].output_grad, outputs)
-    
+
     def fix_mask_conflict(self):
         fix_group_mask_conflict(self.graph_module, self.masks)
         fix_channel_mask_conflict(self.graph_module, self.masks)
         fix_weight_sharing_mask_conflict(self.graph_module, self.masks)
-        
+
 
     def propagate_originally(self):
         """
