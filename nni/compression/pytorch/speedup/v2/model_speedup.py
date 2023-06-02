@@ -265,7 +265,7 @@ class ModelSpeedup(torch.fx.Interpreter):
             self.node_infos[node].output_masks = \
                 tree_map_zip(lambda t: torch.ones_like(t).clone().detach() if isinstance(t, torch.Tensor) else None, output)
 
-            sp = f', {sparsity_stats(self.masks[node.target])}' if node.op == 'call_module' else ''
+            sp = f', {sparsity_stats(self.masks.get(node.target, {}))}' if node.op == 'call_module' else ''
             sp += f', {sparsity_stats({"output mask": self.node_infos[node].output_masks})}'
             self.logger.info('Propagate variables for %s: %s%s', node.op, node.name, sp)
 
@@ -285,7 +285,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         for node in self.graph_module.graph.nodes:
             node: Node
             self.node_infos[node].mask_updater.direct_update_process(self, node)
-            sp = f', {sparsity_stats(self.masks[node.target])}' if node.op == 'call_module' else ''
+            sp = f', {sparsity_stats(self.masks.get(node.target, {})))}' if node.op == 'call_module' else ''
             sp += f', {sparsity_stats({"output mask": self.node_infos[node].output_masks})}'
             self.logger.info('Update direct mask for %s: %s%s', node.op, node.name, sp)
 
@@ -304,7 +304,7 @@ class ModelSpeedup(torch.fx.Interpreter):
         for node in reversed(self.graph_module.graph.nodes):
             node: Node
             self.node_infos[node].mask_updater.indirect_update_process(self, node)
-            sp = f', {sparsity_stats(self.masks[node.target])}' if node.op == 'call_module' else ''
+            sp = f', {sparsity_stats(self.masks.get(node.target, {}))}' if node.op == 'call_module' else ''
             sp += f', {sparsity_stats({"output mask": self.node_infos[node].output_masks})}'
             self.logger.info('Update indirect mask for %s: %s%s', node.op, node.name, sp)
 

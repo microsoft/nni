@@ -254,7 +254,7 @@ def build_weight_sharing_dependency(graph_module: torch.fx.GraphModule) -> List[
 
 def build_channel_dependency(graph_module: torch.fx.GraphModule,
                              prune_type: str = 'Filter',
-                             prune_axis: int = 1) -> List[Set[torch.fx.Node]]:
+                             prune_axis: int = 0) -> List[Set[torch.fx.Node]]:
     """
     This model analyze the channel dependencies between the conv
     layers in a model.
