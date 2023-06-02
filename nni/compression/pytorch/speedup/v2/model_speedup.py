@@ -43,6 +43,26 @@ def _normalize_input(dummy_input: Any) -> Any:
     return dummy_input
 
 
+def sparsity_stats(mask: Dict[str, torch.Tensor]) -> str:
+    """
+    Calculate the sparsity of a mask.
+
+    Parameters
+    ----------
+    mask
+        The mask tensor.
+
+    Returns
+    -------
+    str
+        The sparsity of the mask.
+    """
+    ret = ''
+    for k, v in mask.items():
+        if isinstance(v, torch.Tensor):
+            ret += f'{k}: {1 - v.nonzero().size(0) / v.numel(): .4f} '
+    return ret
+
 @compatibility(is_backward_compatible=True)
 class ModelSpeedup(torch.fx.Interpreter):
     """
@@ -233,7 +253,6 @@ class ModelSpeedup(torch.fx.Interpreter):
         self.logger.info("Propagate original variables")
         for node in self.graph_module.graph.nodes:
             node: Node
-            self.logger.info('Propagate variables for %s: %s', node.op, node.name)
 
             args, kwargs = node.args, node.kwargs
             args = tree_map_zip(lambda nd: self.node_infos[nd].output_inplace if isinstance(nd, Node) else nd, args)
@@ -245,6 +264,10 @@ class ModelSpeedup(torch.fx.Interpreter):
                 tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else poss_deepcopy(t, self.logger), output)
             self.node_infos[node].output_masks = \
                 tree_map_zip(lambda t: torch.ones_like(t).clone().detach() if isinstance(t, torch.Tensor) else None, output)
+
+            sp = f', {sparsity_stats(self.masks[node.target])}' if node.op == 'call_module' else ''
+            sp += f', {sparsity_stats({"output mask": self.node_infos[node].output_masks})}'
+            self.logger.info('Propagate variables for %s: %s%s', node.op, node.name, sp)
 
             if self.garbage_collect_values:
                 # do memory collect to reduce memory usage
@@ -261,8 +284,10 @@ class ModelSpeedup(torch.fx.Interpreter):
 
         for node in self.graph_module.graph.nodes:
             node: Node
-            self.logger.info('Update direct mask for %s: %s', node.op, node.name)
             self.node_infos[node].mask_updater.direct_update_process(self, node)
+            sp = f', {sparsity_stats(self.masks[node.target])}' if node.op == 'call_module' else ''
+            sp += f', {sparsity_stats({"output mask": self.node_infos[node].output_masks})}'
+            self.logger.info('Update direct mask for %s: %s%s', node.op, node.name, sp)
 
         for node in self.graph_module.graph.nodes:
             node: Node
@@ -278,8 +303,10 @@ class ModelSpeedup(torch.fx.Interpreter):
 
         for node in reversed(self.graph_module.graph.nodes):
             node: Node
-            self.logger.info('Update indirect mask for %s: %s', node.op, node.name)
             self.node_infos[node].mask_updater.indirect_update_process(self, node)
+            sp = f', {sparsity_stats(self.masks[node.target])}' if node.op == 'call_module' else ''
+            sp += f', {sparsity_stats({"output mask": self.node_infos[node].output_masks})}'
+            self.logger.info('Update indirect mask for %s: %s%s', node.op, node.name, sp)
 
         for node in reversed(self.graph_module.graph.nodes):
             node: Node
