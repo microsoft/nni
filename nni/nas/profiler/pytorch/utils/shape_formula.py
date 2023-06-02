@@ -280,7 +280,7 @@ def _canonicalize_dims(dims: list[int], n_dims: int, fn: Any) -> list[int]:
     return [d if d >= 0 else d + n_dims for d in dims]
 
 
-def aten_reshape_alias_formula(fn: Any, input: ShapeTensor, size: list[int], stride: list[int]) -> MutableShape:
+def aten_reshape_alias_formula(fn: Any, input: ShapeTensor, size: list[int], stride: list[int] | None = None) -> MutableShape:
     input_shape = ensure_shape(input)
     if input_shape.is_mutable():
         raise RuntimeError(f'Cannot infer the shape of {fn} because the input shape is not determined: {input_shape}, '
@@ -395,6 +395,7 @@ _safe_register_aten_formula('cat.default', aten_cat_formula)
 _safe_register_aten_formula('mean.dim', aten_mean_dim)
 _safe_register_aten_formula('_log_softmax.default', keep_first_shape_formula)
 _safe_register_aten_formula('_reshape_alias.default', aten_reshape_alias_formula)
+_safe_register_aten_formula('view.default', aten_reshape_alias_formula)
 _safe_register_aten_formula('add.Tensor', aten_shape_broadcast)
 _safe_register_aten_formula('mul.Tensor', aten_shape_broadcast)
 _safe_register_aten_formula('slice.Tensor', aten_slice_formula)

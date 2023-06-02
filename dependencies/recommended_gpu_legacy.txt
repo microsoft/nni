@@ -1,13 +1,14 @@
-# Recommended because some non-commonly-used modules/examples depend on those packages.
+# A temporary dependency version for compression.
+# Delete it after compression tests are compatible with PyTorch 2.0.
 
 -f https://download.pytorch.org/whl/torch_stable.html
 tensorflow
-torch == 2.0.0+cu117
-torchvision == 0.15.0+cu117
-pytorch-lightning >= 2.0
+torch == 1.13.1+cu117
+torchvision == 0.14.1+cu117
+pytorch-lightning >= 1.6.1, < 2.0
 
 # for full-test-compression 
--f https://download.openmmlab.com/mmcv/dist/cu117/torch2.0/index.html
+-f https://download.openmmlab.com/mmcv/dist/cu117/torch1.13/index.html
 mmcv >= 2.0.0rc4, < 2.1.0
 mmdet >= 3.0
 mmengine

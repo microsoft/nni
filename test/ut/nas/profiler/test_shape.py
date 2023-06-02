@@ -130,7 +130,7 @@ def test_int_proxy():
 def test_error_message(caplog):
     class Net(nn.Module):
         def forward(self, x):
-            return torch.stft(x, 4)
+            return torch.stft(x, 4, return_complex=True)
 
     input = ShapeTensor(torch.randn(10, 8), True)
     with pytest.raises(RuntimeError, match='Shape inference failed because no shape inference formula'):
