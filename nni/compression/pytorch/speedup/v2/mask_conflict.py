@@ -1,13 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 import logging
+from typing import Dict
+
 import numpy as np
 import torch
 import torch.fx
 
-from typing import Dict, List, Optional, Tuple
-
-from .dependency import build_channel_dependency, build_group_dependency, build_weight_sharing_dependency
+from .dependency import (build_channel_dependency, build_group_dependency,
+                         build_weight_sharing_dependency)
 
 _logger = logging.getLogger(__name__)
 
@@ -34,11 +35,11 @@ def fix_group_mask_conflict(graph_module: torch.fx.GraphModule, masks: Dict[str,
         layername = node.target
         if layername not in masks or 'weight' not in masks[layername]:
             continue
-        
+
         w_mask = masks[layername]['weight']
         shape = w_mask.shape
         count = np.prod(shape[1:])
-        
+
         all_ones = (w_mask.flatten(1).sum(-1) == count).nonzero().squeeze(1).tolist()
         all_zeros = (w_mask.flatten(1).sum(-1) == 0).nonzero().squeeze(1).tolist()
         if len(all_ones) + len(all_zeros) < w_mask.size(0):
@@ -46,7 +47,7 @@ def fix_group_mask_conflict(graph_module: torch.fx.GraphModule, masks: Dict[str,
             _logger.info('Layers %s using fine-grained pruning', layername)
             continue
         assert shape[0] % max_group == 0
-        
+
         # Find the number of masked filter for each group (mini_masked).
         # Because we have to keep the pruned filter can still
         # be divided into the same number of groups, so we only can
@@ -103,7 +104,7 @@ def fix_weight_sharing_mask_conflict(graph_module: torch.fx.GraphModule, masks: 
         The fixed masks.
     """
     dependency_sets = build_weight_sharing_dependency(graph_module)
-    
+
     prune_axis = detect_mask_prune_dim(graph_module, masks)
 
     sum_idx = (1, 2, 3) if prune_axis == 0 else (0, 2, 3)
