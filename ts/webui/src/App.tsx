@@ -5,6 +5,7 @@ import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import NavCon from '@components/nav/Nav';
 import { COLUMN } from '@static/const';
 import { isManagerExperimentPage, getPrefix } from '@static/function';
+import { gap15 } from '@components/fluent/ChildrenGap';
 import '@style/App.scss';
 import '@style/common/common.scss';
 import '@style/experiment/trialdetail/trialsDetail.scss';
@@ -164,29 +165,27 @@ class App extends React.Component<{}, AppState> {
                         </div>
                         <Stack className='contentBox'>
                             <Stack className='content'>
-                                {/* if api has error field, show error message */}
-                                {errorList.map(
-                                    (item, key) =>
-                                        item.errorWhere && (
-                                            <div key={key} className='warning'>
-                                                <MessageBar messageBarType={MessageBarType.error}>
+                                <Stack tokens={gap15}>
+                                    {/* if api has error field, show error message */}
+                                    {errorList.map(
+                                        (item, key) =>
+                                            item.errorWhere && (
+                                                <MessageBar key={key} messageBarType={MessageBarType.error}>
                                                     {item.errorMessage}
                                                 </MessageBar>
-                                            </div>
-                                        )
-                                )}
-                                {isillegalFinal && (
-                                    <div className='warning'>
+                                            )
+                                    )}
+                                    {isillegalFinal && (
                                         <MessageBar messageBarType={MessageBarType.warning}>
                                             {expWarningMessage}
                                         </MessageBar>
-                                    </div>
-                                )}
-                                {connectionError !== null && (
-                                    <div className='warning'>
-                                        <MessageBar messageBarType={MessageBarType.error}>{connectionError}</MessageBar>
-                                    </div>
-                                )}
+                                    )}
+                                    {connectionError !== null && (
+                                        <MessageBar isMultiline={true} messageBarType={MessageBarType.severeWarning}>
+                                            {connectionError}
+                                        </MessageBar>
+                                    )}
+                                </Stack>
                                 {/* <AppContext.Provider */}
                                 <AppContext.Provider
                                     value={{
