@@ -1,9 +1,7 @@
-import * as React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-
 import { getPrefix } from '@static/function';
 const activeClassName = 'selected';
-
 const OVERVIEWTABS = (
     <NavLink to='/oview' className={({ isActive }) => (isActive ? `${activeClassName} link` : 'link')}>
         <span className='common-tabs'>Overview</span>
@@ -11,9 +9,9 @@ const OVERVIEWTABS = (
 );
 
 const DETAILTABS = (
-    <NavLink to='/detail' className={({ isActive }) => (isActive ? `${activeClassName} link` : 'link')}>
+    <a href='/detail' className='link'>
         <span className='common-tabs'>Trials detail</span>
-    </NavLink>
+    </a>
 );
 
 const NNILOGO = (
@@ -21,5 +19,22 @@ const NNILOGO = (
         <img src={(getPrefix() || '') + '/logo.png'} alt='NNI logo' style={{ height: 40 }} />
     </NavLink>
 );
+
+export const OVERVIEWTABSNew = () => {
+    const [overview, setOverview] = useState(`${getPrefix() || ''}/icons/overview.png`);
+    return (
+        <NavLink to='/oview' className={({ isActive }) => (isActive ? `${activeClassName} link` : 'link')}>
+            <div
+                className='icon'
+                onClick={() => {
+                    setOverview(`${getPrefix() || ''}/icons/overview-1.png`);
+                }}
+            >
+                {/* <img src={(getPrefix() || '') + '/icons/overview.png'} /> */}
+                <img src={overview} alt='overview' />
+            </div>
+        </NavLink>
+    );
+};
 
 export { OVERVIEWTABS, DETAILTABS, NNILOGO };

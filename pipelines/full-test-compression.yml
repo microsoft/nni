@@ -1,3 +1,10 @@
+resources:
+  repositories:
+  - repository: mmdetRepo
+    type: github
+    endpoint: mmdetection
+    name: open-mmlab/mmdetection
+
 trigger: none
 
 schedules:
@@ -6,15 +13,8 @@ schedules:
     include: [ master ]
   always: true
 
-resources:
-  repositories:
-    - repository: azpfilter
-      type: github
-      name: microsoft/azure-pipeline-filter
-      endpoint: github-filter-connection
-
 variables:
-  filter.modified.globs: 'examples/model_compress/**,nni/algorithms/compression/**,nni/compression/**,pipelines/full-test-compression.yml,test/algo/compression/**'
+  filter.modified.globs: 'examples/model_compress/**,nni/algorithms/compression/**,nni/compression/**,pipelines/full-test-compression.yml,test/algo/compression/**,nni/contrib/compression/**,nni/common/**'
   filter.prbody.heading: '#### Test Options'
   filter.prbody.optionIndex: 3
 
@@ -36,11 +36,18 @@ stages:
     timeoutInMinutes: 60
 
     steps:
+    - checkout: self
+      path: ./s
+
+    - checkout: mmdetRepo
+      fetchTags: true
+      path: ./mmdetection
+
     - template: templates/check-gpu-status.yml
 
     - template: templates/install-dependencies.yml
       parameters:
-        platform: ubuntu-latest-gpu
+        platform: ubuntu-latest-gpu-gpu-torch1.x
         python_env: venv
 
     - template: templates/install-nni.yml
@@ -51,8 +58,5 @@ stages:
         cd test/algo
         python -m pytest compression
       displayName: Compression unit test
-
-    - script: |
-        cd test
-        source scripts/model_compression.sh
-      displayName: Model compression test
+      env:
+        MMDET_DIR: $(Agent.BuildDirectory)/mmdetection

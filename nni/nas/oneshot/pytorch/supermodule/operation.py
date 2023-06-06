@@ -9,7 +9,6 @@ which is commonly known as super-kernel (as in channel search), or weight entang
 from __future__ import annotations
 
 import inspect
-import itertools
 import warnings
 from typing import Any, Type, TypeVar, cast, Union, Tuple, List
 
@@ -18,13 +17,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-import nni.nas.nn.pytorch as nas_nn
-from nni.common.hpo_utils import ParameterSpec
-from nni.common.serializer import is_traceable
-from nni.nas.nn.pytorch.choice import ValueChoiceX
+from nni.mutable import MutableExpression
+from nni.nas.nn.pytorch import (
+    ParametrizedModule,
+    MutableConv2d, MutableLinear, MutableBatchNorm2d, MutableLayerNorm, MutableMultiheadAttention
+)
 
-from .base import BaseSuperNetModule, sub_state_dict
-from ._valuechoice_utils import traverse_all_options, dedup_inner_choices, evaluate_constant
+from .base import BaseSuperNetModule
+from ._expression_utils import traverse_all_options, evaluate_constant
 from ._operation_utils import Slicable as _S, MaybeWeighted as _W, int_or_int_dict, scalar_or_scalar_dict
 
 T = TypeVar('T')
@@ -40,7 +40,7 @@ __all__ = [
     'NATIVE_MIXED_OPERATIONS',
 ]
 
-_diff_not_compatible_error = 'To be compatible with differentiable one-shot strategy, {} in {} must not be ValueChoice.'
+_diff_not_compatible_error = 'To be compatible with differentiable one-shot strategy, {} in {} must not be mutable.'
 
 
 class MixedOperationSamplingPolicy:
@@ -61,7 +61,6 @@ class MixedOperationSamplingPolicy:
         So similar to :meth:`BaseSuperNetModule.mutate`,
         memo should also be managed (read and written) by the policy itself.
         """
-        pass
 
     def resample(self, operation: 'MixedOperation', memo: dict[str, Any]) -> dict[str, Any]:
         """The handler of :meth:`MixedOperation.resample`."""
@@ -84,10 +83,10 @@ class MixedOperationSamplingPolicy:
 
 class MixedOperation(BaseSuperNetModule):
     """This is the base class for all mixed operations.
-    It's what you should inherit to support a new operation with ValueChoice.
+    It's what you should inherit to support a new operation with mutable.
 
-    It contains commonly used utilities that will ease the effort to write customized mixed oeprations,
-    i.e., operations with ValueChoice in its arguments.
+    It contains commonly used utilities that will ease the effort to write customized mixed operations,
+    i.e., operations with mutable in its arguments.
     To customize, please write your own mixed operation, and add the hook into ``mutation_hooks`` parameter when using the strategy.
 
     By design, for a mixed operation to work in a specific algorithm,
@@ -116,20 +115,19 @@ class MixedOperation(BaseSuperNetModule):
 
     sampling_policy: MixedOperationSamplingPolicy
 
-    def super_init_argument(self, name: str, value_choice: ValueChoiceX) -> Any:
+    def super_init_argument(self, name: str, value_choice: MutableExpression) -> Any:
         """Get the initialization argument when constructing super-kernel, i.e., calling ``super().__init__()``.
         This is often related to specific operator, rather than algo.
 
         For example::
 
             def super_init_argument(self, name, value_choice):
-                return max(value_choice.candidates)
+                return max(value_choice.grid())
         """
         raise NotImplementedError()
 
     def __post_init__(self) -> None:
         """Can be used to validate, or to do extra processing after calling ``__init__``."""
-        pass
 
     def forward_with_args(self, *args, **kwargs):
         """To control real fprop. The accepted arguments are ``argument_list``,
@@ -138,8 +136,8 @@ class MixedOperation(BaseSuperNetModule):
 
     def __init__(self, module_kwargs: dict[str, Any]) -> None:
         # Concerned arguments
-        self.mutable_arguments: dict[str, ValueChoiceX] = {}
-        # Useful when retrieving arguments without ValueChoice
+        self.mutable_arguments: dict[str, MutableExpression] = {}
+        # Useful when retrieving arguments without mutable
         self.init_arguments: dict[str, Any] = {**module_kwargs}
         self._fill_missing_init_arguments()
 
@@ -147,20 +145,36 @@ class MixedOperation(BaseSuperNetModule):
         super_init_kwargs = {}
 
         for key, value in module_kwargs.items():
-            if isinstance(value, ValueChoiceX):
+            if isinstance(value, MutableExpression):
                 if key not in self.argument_list:
-                    raise TypeError(f'Unsupported value choice on argument of {self.bound_type}: {key}')
+                    raise TypeError(f'Unsupported mutable argument of "{self.bound_type}": {key}')
                 super_init_kwargs[key] = self.super_init_argument(key, value)
                 self.mutable_arguments[key] = value
             else:
                 super_init_kwargs[key] = value
 
-        # get all inner leaf value choices
-        self._space_spec: dict[str, ParameterSpec] = dedup_inner_choices(list(self.mutable_arguments.values()))
-
         super().__init__(**super_init_kwargs)
 
+        for mutable in self.mutable_arguments.values():
+            self.add_mutable(mutable)
+
         self.__post_init__()
+
+    def freeze(self, sample) -> Any:
+        """Freeze the mixed operation to a specific operation.
+        Weights will be copied from the mixed operation to the frozen operation.
+
+        The returned operation will be of the ``bound_type``.
+        """
+        arguments = {**self.init_arguments}
+        for name, mutable in self.mutable_arguments.items():
+            arguments[name] = mutable.freeze(sample)
+        operation = self.bound_type(**arguments)
+
+        # copy weights
+        state_dict = self.freeze_weight(**arguments)
+        operation.load_state_dict(state_dict)
+        return operation
 
     def resample(self, memo):
         """Delegates to :meth:`MixedOperationSamplingPolicy.resample`."""
@@ -174,21 +188,12 @@ class MixedOperation(BaseSuperNetModule):
         """Delegates to :meth:`MixedOperationSamplingPolicy.export`."""
         return self.sampling_policy.export(self, memo)
 
-    def search_space_spec(self):
-        return self._space_spec
-
     @classmethod
     def mutate(cls, module, name, memo, mutate_kwargs):
         """Find value choice in module's arguments and replace the whole module"""
-        has_valuechoice = False
-        if isinstance(module, cls.bound_type) and is_traceable(module):
-            for arg in itertools.chain(cast(list, module.trace_args), cast(dict, module.trace_kwargs).values()):
-                if isinstance(arg, ValueChoiceX):
-                    has_valuechoice = True
-
-        if has_valuechoice:
+        if isinstance(module, cls.bound_type) and isinstance(module, ParametrizedModule):
             if module.trace_args:
-                raise ValueError('ValueChoice on class arguments cannot appear together with ``trace_args``. '
+                raise ValueError('Mutable on class arguments cannot appear together with ``trace_args``. '
                                  'Please enable ``kw_only`` on nni.trace.')
 
             # save type and kwargs
@@ -232,21 +237,12 @@ class MixedOperation(BaseSuperNetModule):
             if param.default is not param.empty and param.name not in self.init_arguments:
                 self.init_arguments[param.name] = param.default
 
-    def slice_param(self, **kwargs):
+    def freeze_weight(self, **kwargs):
         """Slice the params and buffers for subnet forward and state dict.
-        When there is a `mapping=True` in kwargs, the return result will be wrapped in dict.
-        """
-        raise NotImplementedError()
 
-    def _save_param_buff_to_state_dict(self, destination, prefix, keep_vars):
-        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
-        params_mapping: dict[str, Any] = self.slice_param(**kwargs)
-        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):  # direct children
-            if value is None or name in self._non_persistent_buffers_set:
-                # it won't appear in state dict
-                continue
-            value = params_mapping.get(name, value)
-            destination[prefix + name] = value if keep_vars else value.detach()
+        The arguments are same as the arguments passed to ``__init__``.
+        """
+        raise NotImplementedError('freeze_weight is not implemented.')
 
 
 class MixedLinear(MixedOperation, nn.Linear):
@@ -260,13 +256,13 @@ class MixedLinear(MixedOperation, nn.Linear):
     Prefix of weight and bias will be sliced.
     """
 
-    bound_type = nas_nn.Linear
+    bound_type = MutableLinear
     argument_list = ['in_features', 'out_features']
 
-    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
-        return max(traverse_all_options(value_choice))
+    def super_init_argument(self, name: str, value_choice: MutableExpression):
+        return max(value_choice.grid())
 
-    def slice_param(self, in_features: int_or_int_dict, out_features: int_or_int_dict, **kwargs) -> Any:
+    def freeze_weight(self, in_features: int_or_int_dict, out_features: int_or_int_dict, **kwargs) -> Any:
         in_features_ = _W(in_features)
         out_features_ = _W(out_features)
 
@@ -281,7 +277,7 @@ class MixedLinear(MixedOperation, nn.Linear):
                           out_features: int_or_int_dict,
                           inputs: torch.Tensor) -> torch.Tensor:
 
-        params_mapping = self.slice_param(in_features, out_features)
+        params_mapping = self.freeze_weight(in_features, out_features)
         weight, bias = [params_mapping.get(name) for name in ['weight', 'bias']]
 
         return F.linear(inputs, weight, bias)
@@ -321,7 +317,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         □ □ □ □ □   □ □ □ □ □
     """
 
-    bound_type = nas_nn.Conv2d
+    bound_type = MutableConv2d
     argument_list = [
         'in_channels', 'out_channels', 'kernel_size', 'stride', 'padding', 'dilation', 'groups'
     ]
@@ -332,12 +328,12 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
             return (value, value)
         return value
 
-    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
+    def super_init_argument(self, name: str, mutable_expr: MutableExpression):
         if name not in ['in_channels', 'out_channels', 'groups', 'stride', 'kernel_size', 'padding', 'dilation']:
             raise NotImplementedError(f'Unsupported value choice on argument: {name}')
 
         if name == ['kernel_size', 'padding']:
-            all_sizes = set(traverse_all_options(value_choice))
+            all_sizes = set(traverse_all_options(mutable_expr))
             if any(isinstance(sz, tuple) for sz in all_sizes):
                 # maximum kernel should be calculated on every dimension
                 return (
@@ -351,28 +347,37 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
             if 'in_channels' in self.mutable_arguments:
                 # If the ratio is constant, we don't need to try the maximum groups.
                 try:
-                    constant = evaluate_constant(self.mutable_arguments['in_channels'] / value_choice)
-                    return max(cast(List[float], traverse_all_options(value_choice))) // int(constant)
+                    constant = evaluate_constant(self.mutable_arguments['in_channels'] / mutable_expr)
+                    return max(cast(List[float], traverse_all_options(mutable_expr))) // int(constant)
                 except ValueError:
                     warnings.warn(
-                        'Both input channels and groups are ValueChoice in a convolution, and their relative ratio is not a constant. '
+                        'Both input channels and groups are mutable in a convolution, and their relative ratio is not a constant. '
                         'This can be problematic for most one-shot algorithms. Please check whether this is your intention.',
                         RuntimeWarning
                     )
 
             # minimum groups, maximum kernel
-            return min(traverse_all_options(value_choice))
+            return min(traverse_all_options(mutable_expr))
 
         else:
-            return max(traverse_all_options(value_choice))
+            return max(traverse_all_options(mutable_expr))
 
-    def slice_param(self,
-                    in_channels: int_or_int_dict,
-                    out_channels: int_or_int_dict,
-                    kernel_size: scalar_or_scalar_dict[_int_or_tuple],
-                    groups: int_or_int_dict,
-                    **kwargs
-        ) -> Any:
+    def freeze_weight(self,
+                      in_channels: int_or_int_dict,
+                      out_channels: int_or_int_dict,
+                      kernel_size: scalar_or_scalar_dict[_int_or_tuple],
+                      groups: int_or_int_dict,
+                      **kwargs) -> Any:
+        rv = self._freeze_weight_impl(in_channels, out_channels, kernel_size, groups)
+        rv.pop('in_channels_per_group', None)
+        return rv
+
+    def _freeze_weight_impl(self,
+                            in_channels: int_or_int_dict,
+                            out_channels: int_or_int_dict,
+                            kernel_size: scalar_or_scalar_dict[_int_or_tuple],
+                            groups: int_or_int_dict,
+                            **kwargs) -> Any:
         in_channels_ = _W(in_channels)
         out_channels_ = _W(out_channels)
 
@@ -386,8 +391,8 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
             in_channels_per_group = None
         else:
             assert 'groups' in self.mutable_arguments
-            err_message = 'For differentiable one-shot strategy, when groups is a ValueChoice, ' \
-                'in_channels and out_channels should also be a ValueChoice. ' \
+            err_message = 'For differentiable one-shot strategy, when groups is a mutable, ' \
+                'in_channels and out_channels should also be a mutable. ' \
                 'Also, the ratios of in_channels divided by groups, and out_channels divided by groups ' \
                 'should be constants.'
             if 'in_channels' not in self.mutable_arguments or 'out_channels' not in self.mutable_arguments:
@@ -412,7 +417,6 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
 
         return {'weight': weight, 'bias': bias, 'in_channels_per_group': in_channels_per_group}
 
-
     def forward_with_args(self,
                           in_channels: int_or_int_dict,
                           out_channels: int_or_int_dict,
@@ -426,7 +430,7 @@ class MixedConv2d(MixedOperation, nn.Conv2d):
         if any(isinstance(arg, dict) for arg in [stride, dilation]):
             raise ValueError(_diff_not_compatible_error.format('stride, dilation', 'Conv2d'))
 
-        params_mapping = self.slice_param(in_channels, out_channels, kernel_size, groups)
+        params_mapping = self._freeze_weight_impl(in_channels, out_channels, kernel_size, groups)
         weight, bias, in_channels_per_group = [
             params_mapping.get(name)
             for name in ['weight', 'bias', 'in_channels_per_group']
@@ -478,13 +482,13 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
     PyTorch BatchNorm supports a case where momentum can be none, which is not supported here.
     """
 
-    bound_type = nas_nn.BatchNorm2d
+    bound_type = MutableBatchNorm2d
     argument_list = ['num_features', 'eps', 'momentum']
 
-    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
-        return max(traverse_all_options(value_choice))
+    def super_init_argument(self, name: str, mutable_expr: MutableExpression):
+        return max(traverse_all_options(mutable_expr))
 
-    def slice_param(self, num_features: int_or_int_dict, **kwargs) -> Any:
+    def freeze_weight(self, num_features: int_or_int_dict, **kwargs) -> Any:
         if isinstance(num_features, dict):
             num_features = self.num_features
         weight, bias = self.weight, self.bias
@@ -508,7 +512,7 @@ class MixedBatchNorm2d(MixedOperation, nn.BatchNorm2d):
         if any(isinstance(arg, dict) for arg in [eps, momentum]):
             raise ValueError(_diff_not_compatible_error.format('eps and momentum', 'BatchNorm2d'))
 
-        params_mapping = self.slice_param(num_features)
+        params_mapping = self.freeze_weight(num_features)
         weight, bias, running_mean, running_var = [
             params_mapping.get(name)
             for name in ['weight', 'bias', 'running_mean', 'running_var']
@@ -547,7 +551,7 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
     eps is required to be float.
     """
 
-    bound_type = nas_nn.LayerNorm
+    bound_type = MutableLayerNorm
     argument_list = ['normalized_shape', 'eps']
 
     @staticmethod
@@ -556,10 +560,10 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
             return (value, value)
         return value
 
-    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
+    def super_init_argument(self, name: str, mutable_expr: MutableExpression):
         if name not in ['normalized_shape']:
             raise NotImplementedError(f'Unsupported value choice on argument: {name}')
-        all_sizes = set(traverse_all_options(value_choice))
+        all_sizes = set(traverse_all_options(mutable_expr))
         if any(isinstance(sz, (tuple, list)) for sz in all_sizes):
             # transpose
             all_sizes = list(zip(*all_sizes))
@@ -568,7 +572,12 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
         else:
             return max(all_sizes)
 
-    def slice_param(self, normalized_shape, **kwargs) -> Any:
+    def freeze_weight(self, normalized_shape, **kwargs) -> Any:
+        rv = self._freeze_weight_impl(normalized_shape)
+        rv.pop('normalized_shape')
+        return rv
+
+    def _freeze_weight_impl(self, normalized_shape, **kwargs) -> Any:
         if isinstance(normalized_shape, dict):
             normalized_shape = self.normalized_shape
 
@@ -595,7 +604,7 @@ class MixedLayerNorm(MixedOperation, nn.LayerNorm):
         if any(isinstance(arg, dict) for arg in [eps]):
             raise ValueError(_diff_not_compatible_error.format('eps', 'LayerNorm'))
 
-        params_mapping = self.slice_param(normalized_shape)
+        params_mapping = self._freeze_weight_impl(normalized_shape)
         weight, bias, normalized_shape = [
             params_mapping.get(name)
             for name in ['weight', 'bias', 'normalized_shape']
@@ -633,7 +642,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
     All candidates of ``embed_dim`` should be divisible by all candidates of ``num_heads``.
     """
 
-    bound_type = nas_nn.MultiheadAttention
+    bound_type = MutableMultiheadAttention
     argument_list = ['embed_dim', 'num_heads', 'kdim', 'vdim', 'dropout']
 
     def __post_init__(self):
@@ -671,8 +680,17 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             nn.init.xavier_uniform_(self.k_proj_weight)
             nn.init.xavier_uniform_(self.v_proj_weight)
 
-    def super_init_argument(self, name: str, value_choice: ValueChoiceX):
-        return max(traverse_all_options(value_choice))
+    def super_init_argument(self, name: str, mutable_expr: MutableExpression):
+        return max(traverse_all_options(mutable_expr))
+
+    def freeze_weight(self, embed_dim, kdim, vdim, **kwargs):
+        rv = self._freeze_weight_impl(embed_dim, kdim, vdim, **kwargs)
+        # pop flags and nones, as they won't show in state dict
+        rv.pop('qkv_same_embed_dim')
+        for k in list(rv):
+            if rv[k] is None:
+                rv.pop(k)
+        return rv
 
     def _to_proj_slice(self, embed_dim: _W) -> list[slice]:
         # slice three parts, corresponding to q, k, v respectively
@@ -682,7 +700,7 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             slice(self.embed_dim * 2, self.embed_dim * 2 + embed_dim)
         ]
 
-    def slice_param(self, embed_dim, kdim, vdim, **kwargs):
+    def _freeze_weight_impl(self, embed_dim, kdim, vdim, **kwargs):
         # by default, kdim, vdim can be none
         if kdim is None:
             kdim = embed_dim
@@ -723,31 +741,6 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             'qkv_same_embed_dim': qkv_same_embed_dim
         }
 
-    def _save_param_buff_to_state_dict(self, destination, prefix, keep_vars):
-        kwargs = {name: self.forward_argument(name) for name in self.argument_list}
-        params_mapping = self.slice_param(**kwargs, mapping=True)
-        for name, value in itertools.chain(self._parameters.items(), self._buffers.items()):
-            if value is None or name in self._non_persistent_buffers_set:
-                continue
-            value = params_mapping.get(name, value)
-            destination[prefix + name] = value if keep_vars else value.detach()
-
-        # params of out_proj is handled in ``MixedMultiHeadAttention`` rather than
-        # ``NonDynamicallyQuantizableLinear`` sub-module. We also convert it to state dict here.
-        for name in ["out_proj.weight", "out_proj.bias"]:
-            value = params_mapping.get(name, None)
-            if value is None:
-                continue
-            destination[prefix + name] = value if keep_vars else value.detach()
-
-    def _save_module_to_state_dict(self, destination, prefix, keep_vars):
-        for name, module in self._modules.items():
-            # the weights of ``NonDynamicallyQuantizableLinear`` has been handled in `_save_param_buff_to_state_dict`.
-            if isinstance(module, nn.modules.linear.NonDynamicallyQuantizableLinear):
-                continue
-            if module is not None:
-                sub_state_dict(module, destination=destination, prefix=prefix + name + '.', keep_vars=keep_vars)
-
     def forward_with_args(
         self,
         embed_dim: int_or_int_dict, num_heads: int,
@@ -770,14 +763,14 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
         else:
             used_embed_dim = embed_dim
 
-        params_mapping = self.slice_param(embed_dim, kdim, vdim)
+        params_mapping = self._freeze_weight_impl(embed_dim, kdim, vdim)
         in_proj_bias, in_proj_weight, bias_k, bias_v, \
-        out_proj_weight, out_proj_bias, q_proj, k_proj, v_proj, qkv_same_embed_dim = [
-            params_mapping.get(name)
-            for name in ['in_proj_bias', 'in_proj_weight', 'bias_k', 'bias_v',
-            'out_proj.weight', 'out_proj.bias', 'q_proj_weight', 'k_proj_weight',
-            'v_proj_weight', 'qkv_same_embed_dim']
-        ]
+            out_proj_weight, out_proj_bias, q_proj, k_proj, v_proj, qkv_same_embed_dim = [
+                params_mapping.get(name)
+                for name in ['in_proj_bias', 'in_proj_weight', 'bias_k', 'bias_v',
+                             'out_proj.weight', 'out_proj.bias', 'q_proj_weight', 'k_proj_weight',
+                             'v_proj_weight', 'qkv_same_embed_dim']
+            ]
 
         # The rest part is basically same as pytorch
         attn_output, attn_output_weights = F.multi_head_attention_forward(
@@ -790,12 +783,10 @@ class MixedMultiHeadAttention(MixedOperation, nn.MultiheadAttention):
             attn_mask=attn_mask, use_separate_proj_weight=not qkv_same_embed_dim,
             q_proj_weight=q_proj, k_proj_weight=k_proj, v_proj_weight=v_proj)
 
-
         if getattr(self, 'batch_first', False):  # backward compatibility
             return attn_output.transpose(1, 0), attn_output_weights
         else:
             return attn_output, attn_output_weights
-
 
 
 NATIVE_MIXED_OPERATIONS: list[Type[MixedOperation]] = [

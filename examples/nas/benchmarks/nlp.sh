@@ -35,5 +35,5 @@ cd ..
 echo "Generating database..."
 rm -f ${NASBENCHMARK_DIR}/nlp.db ${NASBENCHMARK_DIR}/nlp.db-journal
 mkdir -p ${NASBENCHMARK_DIR}
-python3 -m nni.nas.benchmarks.nlp.db_gen nlp_data
+python3 -m nni.nas.benchmark.nlp.db_gen nlp_data
 rm -rf nlp_data

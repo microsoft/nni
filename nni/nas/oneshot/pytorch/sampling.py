@@ -1,89 +1,78 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-"""Experimental version of sampling-based one-shot implementation."""
+"""Sampling-based one-shot implementation."""
 
 from __future__ import annotations
 import warnings
 import logging
-from typing import Any, cast, Dict
+from typing import Any, Callable, TYPE_CHECKING
 
 import pytorch_lightning as pl
 import torch
-import torch.nn as nn
-import torch.optim as optim
 
-from .base_lightning import MANUAL_OPTIMIZATION_NOTE, BaseOneShotLightningModule, MutationHook, no_default_hook
-from .supermodule.base import sub_state_dict
-from .supermodule.operation import NATIVE_MIXED_OPERATIONS, NATIVE_SUPPORTED_OP_NAMES
-from .supermodule.sampling import (
-    PathSamplingInput, PathSamplingLayer, MixedOpPathSamplingPolicy,
-    PathSamplingCell, PathSamplingRepeat
-)
-from .enas import ReinforceController, ReinforceField
+from nni.mutable import Sample
+from nni.nas.nn.pytorch import ModelSpace
+
+from .base_lightning import BaseOneShotLightningModule
+from .profiler import ProfilerPenalty, ExpectationProfilerPenalty, SampleProfilerPenalty
+
+try:
+    has_tianshou = True
+    from tianshou.data import ReplayBuffer
+    from tianshou.policy import BasePolicy
+    if TYPE_CHECKING:
+        from nni.nas.strategy._rl_impl import PolicyFactory, TuningTrajectoryGenerator
+except ImportError:
+    has_tianshou = False
 
 
 _logger = logging.getLogger(__name__)
 
 
 class RandomSamplingLightningModule(BaseOneShotLightningModule):
-    _random_note = """
-    Train a super-net with uniform path sampling. See `reference <https://arxiv.org/abs/1904.00420>`__.
+    """Search implementation of :class:`~nni.nas.strategy.RandomOneShot`.
 
-    In each epoch, model parameters are trained after a uniformly random sampling of each choice.
-    Notably, the exporting result is **also a random sample** of the search space.
+    Do not need extra preprocessing of dataloader.
 
-    The supported mutation primitives of RandomOneShot are:
+    See Also
+    --------
+    nni.nas.strategy.RandomOneShot
+    nni.nas.pytorch.oneshot.base_lightning.BaseOneShotLightningModule
+    """
 
-    * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
-    * :class:`nni.retiarii.nn.pytorch.InputChoice`.
-    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in {supported_ops}).
-    * :class:`nni.retiarii.nn.pytorch.Repeat`.
-    * :class:`nni.retiarii.nn.pytorch.Cell`.
-    * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
+    _sampling_patience = 100  # number of resample before giving up
+    _sampling_attempt = 0
 
-    This strategy assumes inner evaluator has set
-    `automatic optimization <https://pytorch-lightning.readthedocs.io/en/stable/common/optimization.html>`__ to true.
-
-    Parameters
-    ----------
-    {{module_params}}
-    {base_params}
-    """.format(
-        base_params=BaseOneShotLightningModule._mutation_hooks_note,
-        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES)
-    )
-
-    __doc__ = _random_note.format(
-        module_params=BaseOneShotLightningModule._inner_module_note,
-    )
+    def __init__(self, training_module: pl.LightningModule, filter: Callable[[Sample], bool] | None = None):  # pylint: disable=redefined-builtin
+        super().__init__(training_module)
+        self.filter = filter
 
     # turn on automatic optimization because nothing interesting is going on here.
     @property
     def automatic_optimization(self) -> bool:
         return True
 
-    def default_mutation_hooks(self) -> list[MutationHook]:
-        """Replace modules with differentiable versions"""
-        hooks = [
-            PathSamplingLayer.mutate,
-            PathSamplingInput.mutate,
-            PathSamplingRepeat.mutate,
-            PathSamplingCell.mutate,
-        ]
-        hooks += [operation.mutate for operation in NATIVE_MIXED_OPERATIONS]
-        hooks.append(no_default_hook)
-        return hooks
+    def _repeat_until_valid(self, func: Callable[[], Sample]) -> Sample:
+        self._sampling_attempt = 0
+        while self._sampling_attempt < self._sampling_patience:
+            self._sampling_attempt += 1
+            sample = func()
+            if self.filter is None or self.filter(sample):
+                return sample
+        raise RuntimeError('Failed to sample a valid architecture after {} attempts.'.format(self._sampling_patience))
 
-    def mutate_kwargs(self):
-        """Use path sampling strategy for mixed-operations."""
-        return {
-            'mixed_op_sampling': MixedOpPathSamplingPolicy
-        }
+    def resample(self):
+        return self._repeat_until_valid(super().resample)
 
-    def training_step(self, *args, **kwargs):
+    def training_step(self, *args: Any, **kwargs: Any):
         self.resample()
-        return self.model.training_step(*args, **kwargs)
+        self.log('sampling_attempt', self._sampling_attempt)
+        return self.training_module.training_step(*args, **kwargs)
+
+    def validation_step(self, *args: Any, **kwargs: Any):
+        self.resample()
+        return self.training_module.validation_step(*args, **kwargs)
 
     def export(self) -> dict[str, Any]:
         """
@@ -97,127 +86,33 @@ class RandomSamplingLightningModule(BaseOneShotLightningModule):
         )
         return super().export()
 
-    def _get_base_model(self):
-        assert isinstance(self.model.model, nn.Module)
-        base_model: nn.Module = self.model.model
-        return base_model
 
-    def state_dict(self, destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
-        base_model = self._get_base_model()
-        state_dict = base_model.state_dict(destination=destination, prefix=prefix, keep_vars=keep_vars)
-        return state_dict
+class EnasLightningModule(BaseOneShotLightningModule):
+    """Sampling-based super-net training but using an RL agent to control the sampling.
 
-    def load_state_dict(self, state_dict, strict: bool=True) -> None:
-        base_model = self._get_base_model()
-        base_model.load_state_dict(state_dict=state_dict, strict=strict)
+    The default implementation for :class:`~nni.nas.strategy.ENAS`.
 
-    def sub_state_dict(self, arch: dict[str, Any], destination: Any=None, prefix: str='', keep_vars: bool=False) -> Dict[str, Any]:
-        """Given the architecture dict, return the state_dict which can be directly loaded by the fixed subnet.
-
-        Parameters
-        ----------
-        arch : dict[str, Any]
-            subnet architecture dict.
-        destination: dict
-            If provided, the state of module will be updated into the dict and the same object is returned.
-            Otherwise, an ``OrderedDict`` will be created and returned.
-        prefix: str
-            A prefix added to parameter and buffer names to compose the keys in state_dict.
-        keep_vars: bool
-            by default the :class:`~torch.Tensor` s returned in the state dict are detached from autograd.
-            If it's set to ``True``, detaching will not be performed.
-
-        Returns
-        -------
-        dict
-            Subnet state dict.
-        """
-        self.resample(memo=arch)
-        base_model = self._get_base_model()
-        state_dict = sub_state_dict(base_model, destination, prefix, keep_vars)
-        return state_dict
-
-class EnasLightningModule(RandomSamplingLightningModule):
-    _enas_note = """
-    RL controller learns to generate the best network on a super-net. See `ENAS paper <https://arxiv.org/abs/1802.03268>`__.
-
-    There are 2 steps in an epoch.
-
-    - Firstly, training model parameters.
-    - Secondly, training ENAS RL agent. The agent will produce a sample of model architecture to get the best reward.
-
-    .. attention::
-
-       ENAS requires the evaluator to report metrics via ``self.log`` in its ``validation_step``.
-       See explanation of ``reward_metric_name`` for details.
-
-    The supported mutation primitives of ENAS are:
-
-    * :class:`nni.retiarii.nn.pytorch.LayerChoice`.
-    * :class:`nni.retiarii.nn.pytorch.InputChoice`.
-    * :class:`nni.retiarii.nn.pytorch.ValueChoice` (only when used in {supported_ops}).
-    * :class:`nni.retiarii.nn.pytorch.Repeat`.
-    * :class:`nni.retiarii.nn.pytorch.Cell`.
-    * :class:`nni.retiarii.nn.pytorch.NasBench201Cell`.
-
-    {{module_notes}}
-
-    {optimization_note}
-
-    Parameters
-    ----------
-    {{module_params}}
-    {base_params}
-    ctrl_kwargs : dict
-        Optional kwargs that will be passed to :class:`~nni.retiarii.oneshot.pytorch.enas.ReinforceController`.
-    entropy_weight : float
-        Weight of sample entropy loss in RL.
-    skip_weight : float
-        Weight of skip penalty loss. See :class:`~nni.retiarii.oneshot.pytorch.enas.ReinforceController` for details.
-    baseline_decay : float
-        Decay factor of reward baseline, which is used to normalize the reward in RL.
-        At each step, the new reward baseline will be equal to ``baseline_decay * baseline_old + reward * (1 - baseline_decay)``.
-    ctrl_steps_aggregate : int
-        Number of steps for which the gradients will be accumulated,
-        before updating the weights of RL controller.
-    ctrl_grad_clip : float
-        Gradient clipping value of controller.
-    log_prob_every_n_step : int
-        Log the probability of choices every N steps. Useful for visualization and debugging.
-    reward_metric_name : str or None
-        The name of the metric which is treated as reward.
-        This will be not effective when there's only one metric returned from evaluator.
-        If there are multiple, by default, it will find the metric with key name ``default``.
-        If reward_metric_name is specified, it will find reward_metric_name.
-        Otherwise it raises an exception indicating multiple metrics are found.
-    """.format(
-        base_params=BaseOneShotLightningModule._mutation_hooks_note,
-        supported_ops=', '.join(NATIVE_SUPPORTED_OP_NAMES),
-        optimization_note=MANUAL_OPTIMIZATION_NOTE
-    )
-
-    __doc__ = _enas_note.format(
-        module_notes='``ENASModule`` should be trained with :class:`nni.retiarii.oneshot.pytorch.dataloader.ConcatLoader`.',
-        module_params=BaseOneShotLightningModule._inner_module_note,
-    )
-
-    @property
-    def automatic_optimization(self) -> bool:
-        return False
+    See Also
+    --------
+    nni.nas.strategy.ENAS
+    RandomSamplingLightningModule
+    """
 
     def __init__(self,
-                 inner_module: pl.LightningModule,
+                 training_module: pl.LightningModule,
                  *,
-                 ctrl_kwargs: dict[str, Any] | None = None,
-                 entropy_weight: float = 1e-4,
-                 skip_weight: float = .8,
-                 baseline_decay: float = .999,
-                 ctrl_steps_aggregate: float = 20,
-                 ctrl_grad_clip: float = 0,
+                 batches_per_update: float = 20,
                  log_prob_every_n_step: int = 10,
+                 replay_buffer_size: int | None = None,
                  reward_metric_name: str | None = None,
-                 mutation_hooks: list[MutationHook] | None = None):
-        super().__init__(inner_module, mutation_hooks)
+                 policy_fn: PolicyFactory | None = None,
+                 update_kwargs: dict | None = None,
+                 warmup_epochs: int = 0,
+                 penalty: ProfilerPenalty | None = None):
+        super().__init__(training_module)
+
+        if not has_tianshou:
+            raise ImportError('ENAS requires tianshou to be installed.')
 
         if reward_metric_name is None:
             _logger.warning(
@@ -226,47 +121,80 @@ class EnasLightningModule(RandomSamplingLightningModule):
                 'Otherwise it will infer the reward based on certain rules.'
             )
 
-        # convert parameter spec to legacy ReinforceField
-        # this part will be refactored
-        self.nas_fields: list[ReinforceField] = []
-        for name, param_spec in self.search_space_spec().items():
-            if param_spec.chosen_size not in (1, None):
-                raise ValueError('ENAS does not support n_chosen to be values other than 1 or None.')
-            self.nas_fields.append(ReinforceField(name, param_spec.size, param_spec.chosen_size == 1))
-        self.controller = ReinforceController(self.nas_fields, **(ctrl_kwargs or {}))
-
-        self.entropy_weight = entropy_weight
-        self.skip_weight = skip_weight
-        self.baseline_decay = baseline_decay
-        self.baseline = 0.
-        self.ctrl_steps_aggregate = ctrl_steps_aggregate
-        self.ctrl_grad_clip = ctrl_grad_clip
+        self.batches_per_update = batches_per_update
+        self.replay_buffer_size = replay_buffer_size
         self.log_prob_every_n_step = log_prob_every_n_step
         self.reward_metric_name = reward_metric_name
 
-    def configure_architecture_optimizers(self):
-        return optim.Adam(self.controller.parameters(), lr=3.5e-4)
+        self.policy_fn = policy_fn
+        self.update_kwargs = update_kwargs or {}
+        self.warmup_epochs = warmup_epochs
+
+        self.penalty = penalty
+
+        self._policy: BasePolicy | None = None
+        self._generator: TuningTrajectoryGenerator | None = None
+        self._replay_buffer: ReplayBuffer | None = None
+        self._trajectory_counter: int = 0
+
+    @property
+    def policy(self) -> BasePolicy:
+        if self._policy is None:
+            raise RuntimeError('Policy is not initialized yet.')
+        return self._policy
+
+    @property
+    def generator(self) -> TuningTrajectoryGenerator:
+        if self._generator is None:
+            raise RuntimeError('Generator is not initialized yet.')
+        return self._generator
+
+    def set_model(self, model: ModelSpace) -> None:
+        if not isinstance(model, ModelSpace):
+            raise TypeError('ModelSpace is required for ENAS.')
+
+        from nni.nas.strategy._rl_impl import TuningTrajectoryGenerator
+        self._generator = TuningTrajectoryGenerator(model, self.policy_fn)
+
+        if self.replay_buffer_size is None:
+            # Refresh the replay buffer every time the model is updated.
+            replay_buffer_size = self._generator.expected_trajectory_length * self.batches_per_update
+        else:
+            replay_buffer_size = self.replay_buffer_size
+
+        self._replay_buffer = ReplayBuffer(replay_buffer_size)
+        self._policy = self._generator.policy
+
+        return super().set_model(model)
 
     def training_step(self, batch_packed, batch_idx):
-        # The received batch is a tuple of (data, "train" | "val")
-        batch, mode = batch_packed
+        if len(batch_packed) == 2:
+            # Legacy (pytorch-lightning 1.x): The received batch is a tuple of (data, "train" | "val")
+            batch, mode = batch_packed
+        else:
+            # New (pytorch-lightning 2.0+): a tuple of data, batch_idx, and dataloader_idx
+            batch, _, dataloader_idx = batch_packed
+            mode = 'train' if dataloader_idx == 0 else 'val'
+
+        assert self._replay_buffer is not None
+
+        step_output = None  # Sometimes step can be skipped
 
         if mode == 'train':
             # train model params
-            with torch.no_grad():
-                self.resample()
-            step_output = self.model.training_step(batch, batch_idx)
+            self.policy.eval()
+            self.resample()
+            step_output = self.training_module.training_step(batch, batch_idx)
             w_step_loss = step_output['loss'] if isinstance(step_output, dict) else step_output
             self.advance_optimization(w_step_loss, batch_idx)
 
-        else:
-            # train ENAS agent
-
+        elif self.warmup_epochs == 0 or self.trainer.current_epoch >= self.warmup_epochs:
             # Run a sample to retrieve the reward
-            self.resample()
-            step_output = self.model.validation_step(batch, batch_idx)
+            self.policy.train()
+            sample = self.resample()
+            step_output = self.training_module.validation_step(batch, batch_idx)
 
-            # use the default metric of self.model as reward function
+            # use the default metric of self.training_module as reward function
             if len(self.trainer.callback_metrics) == 1:
                 _, metric = next(iter(self.trainer.callback_metrics.items()))
             else:
@@ -280,79 +208,60 @@ class EnasLightningModule(RandomSamplingLightningModule):
                 metric = self.trainer.callback_metrics[metric_name]
             reward: float = metric.item()
 
-            # Compute the loss and run back propagation
-            if self.entropy_weight:
-                reward = reward + self.entropy_weight * self.controller.sample_entropy.item()  # type: ignore
-            self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
-            rnn_step_loss = self.controller.sample_log_prob * (reward - self.baseline)
-            if self.skip_weight:
-                rnn_step_loss = rnn_step_loss + self.skip_weight * self.controller.sample_skip_penalty
+            if self.penalty is not None:
+                if isinstance(self.penalty, SampleProfilerPenalty):
+                    reward, details = self.penalty(reward, sample)
+                elif isinstance(self.penalty, ExpectationProfilerPenalty):
+                    reward, details = self.penalty(reward, self.export_probs())
+                else:
+                    raise TypeError(f'Unknown penalty type: {type(self.penalty)}')
+                self.log_dict({f'penalty/{k}': v for k, v in details.items()})
 
-            rnn_step_loss = rnn_step_loss / self.ctrl_steps_aggregate
-            self.manual_backward(rnn_step_loss)
-
-            if (batch_idx + 1) % self.ctrl_steps_aggregate == 0:
-                if self.ctrl_grad_clip > 0:
-                    nn.utils.clip_grad_norm_(self.controller.parameters(), self.ctrl_grad_clip)
-
-                # Update the controller and zero out its gradients
-                arc_opt = cast(optim.Optimizer, self.architecture_optimizers())
-                arc_opt.step()
-                arc_opt.zero_grad()
+            # Put it into replay buffer
+            trajectory = self.generator.send_reward(reward)
+            self._replay_buffer.update(trajectory)
+            self._trajectory_counter += 1
 
         self.advance_lr_schedulers(batch_idx)
 
-        if (batch_idx + 1) % self.log_prob_every_n_step == 0:
-            with torch.no_grad():
-                self.log_dict({'prob/' + k: v for k, v in self.export_probs().items()})
+        if self._trajectory_counter > 0 and self._trajectory_counter % self.log_prob_every_n_step == 0:
+            self.log_probs(self.export_probs())
+
+        if self._trajectory_counter > 0 and self._trajectory_counter % self.batches_per_update == 0:
+            # Export could be just called.
+            # The policy must be in train mode to make update work.
+            self.policy.train()
+            update_times = self.update_kwargs.get('update_times', 1)
+            for _ in range(update_times):
+                self.policy.update(0, self._replay_buffer, **self.update_kwargs)
 
         return step_output
 
-    def on_train_epoch_start(self):
-        # Always zero out the gradients of ENAS controller at the beginning of epochs.
-        arc_opt = self.architecture_optimizers()
-        if not isinstance(arc_opt, optim.Optimizer):
-            raise TypeError(f'Expect arc_opt to be a single Optimizer, but found: {arc_opt}')
-        arc_opt.zero_grad()
-
-        return self.model.on_train_epoch_start()
-
-    def resample(self):
+    def resample(self) -> Sample:
         """Resample the architecture with ENAS controller."""
-        sample = self.controller.resample()
-        result = self._interpret_controller_sampling_result(sample)
-        for module in self.nas_modules:
-            module.resample(memo=result)
-        return result
+        # policy could be either eval or train, depending on where you call it.
+        with torch.no_grad():
+            sample = self.generator.next_sample()
+        for module in self.supernet_modules():
+            module.resample(memo=sample)
+        return sample
 
-    def export_probs(self):
+    def export_probs(self) -> Sample:
         """Export the probability from ENAS controller directly."""
-        sample = self.controller.resample(return_prob=True)
-        result = self._interpret_controller_probability_result(sample)
-        for module in self.nas_modules:
-            module.resample(memo=result)
-        return result
+        self.policy.eval()
+        if self.generator.sample_logits is None:
+            with torch.no_grad():
+                self.generator.next_sample()
+        assert self.generator.sample_logits is not None
+
+        # Convert {'a': [0.2, 0.5, 0.3]} to {'a': {'choice0': 0.2, 'choice1': 0.5, 'choice2': 0.3} }
+        return {
+            label: dict(zip(self.generator.simplified_space[label].values, logits))
+            for label, logits in self.generator.sample_logits.items()
+        }
 
     def export(self):
         """Run one more inference of ENAS controller."""
-        self.controller.eval()
+        self.policy.eval()
         with torch.no_grad():
-            return self._interpret_controller_sampling_result(self.controller.resample())
-
-    def _interpret_controller_sampling_result(self, sample: dict[str, int]) -> dict[str, Any]:
-        """Convert ``{label: index}`` to ``{label: name}``"""
-        space_spec = self.search_space_spec()
-        for key in list(sample.keys()):
-            sample[key] = space_spec[key].values[sample[key]]
-        return sample
-
-    def _interpret_controller_probability_result(self, sample: dict[str, list[float]]) -> dict[str, Any]:
-        """Convert ``{label: [prob1, prob2, prob3]} to ``{label/choice: prob}``"""
-        space_spec = self.search_space_spec()
-        result = {}
-        for key in list(sample.keys()):
-            if len(space_spec[key].values) != len(sample[key]):
-                raise ValueError(f'Expect {space_spec[key].values} to be of the same length as {sample[key]}')
-            for value, weight in zip(space_spec[key].values, sample[key]):
-                result[f'{key}/{value}'] = weight
-        return result
+            return self.generator.next_sample()

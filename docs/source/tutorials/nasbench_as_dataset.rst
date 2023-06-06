@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_tutorials_nasbench_as_dataset.py>`
+        :ref:`Go to the end <sphx_glr_download_tutorials_nasbench_as_dataset.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -50,12 +50,10 @@ As a result, the directory should look like:
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
 
-    ['nasbench101-209f5694.db', 'nasbench201-b2b60732.db', 'nds-5745c235.db']
+    ['nds-5745c235.db', 'nasbench201-b2b60732.db', 'nasbench101-209f5694.db']
 
 
 
@@ -65,9 +63,9 @@ As a result, the directory should look like:
 
     import pprint
 
-    from nni.nas.benchmarks.nasbench101 import query_nb101_trial_stats
-    from nni.nas.benchmarks.nasbench201 import query_nb201_trial_stats
-    from nni.nas.benchmarks.nds import query_nds_trial_stats
+    from nni.nas.benchmark.nasbench101 import query_nb101_trial_stats
+    from nni.nas.benchmark.nasbench201 import query_nb201_trial_stats
+    from nni.nas.benchmark.nds import query_nds_trial_stats
 
 
 
@@ -112,11 +110,8 @@ Use the following architecture as an example:
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    [2022-02-28 13:48:51] INFO (nni.nas.benchmarks.utils/MainThread) "/home/yugzhan/.cache/nni/nasbenchmark/nasbench101-209f5694.db" already exists. Checking hash.
     {'config': {'arch': {'input1': [0],
                          'input2': [1],
                          'input3': [2],
@@ -256,11 +251,8 @@ Use the following architecture as an example:
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    [2022-02-28 13:49:09] INFO (nni.nas.benchmarks.utils/MainThread) "/home/yugzhan/.cache/nni/nasbenchmark/nasbench201-b2b60732.db" already exists. Checking hash.
     {'config': {'arch': {'0_1': 'avg_pool_3x3',
                          '0_2': 'conv_1x1',
                          '0_3': 'conv_1x1',
@@ -368,8 +360,6 @@ Intermediate results are also available.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
     {'id': 4, 'arch': {'0_1': 'avg_pool_3x3', '0_2': 'conv_1x1', '0_3': 'conv_1x1', '1_2': 'skip_connect', '1_3': 'skip_connect', '2_3': 'skip_connect'}, 'num_epochs': 12, 'num_channels': 16, 'num_cells': 5, 'dataset': 'imagenet16-120'}
@@ -432,11 +422,8 @@ Use none as a wildcard.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    [2022-02-28 13:49:36] INFO (nni.nas.benchmarks.utils/MainThread) "/home/yugzhan/.cache/nni/nasbenchmark/nds-5745c235.db" already exists. Checking hash.
     {'best_test_acc': 90.48,
      'best_train_acc': 96.356,
      'best_train_loss': 0.116,
@@ -485,8 +472,6 @@ Use none as a wildcard.
 
 
 .. rst-class:: sphx-glr-script-out
-
- Out:
 
  .. code-block:: none
 
@@ -558,8 +543,6 @@ Use none as a wildcard.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
     {'best_test_acc': 93.58,
@@ -604,8 +587,6 @@ Get the first one.
 
 
 .. rst-class:: sphx-glr-script-out
-
- Out:
 
  .. code-block:: none
 
@@ -701,8 +682,6 @@ Count number.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
     {'best_test_acc': 93.37,
@@ -791,8 +770,6 @@ Count number.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
     NDS (amoeba) count: 5107
@@ -803,28 +780,25 @@ Count number.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  2.214 seconds)
+   **Total running time of the script:** ( 1 minutes  51.444 seconds)
 
 
 .. _sphx_glr_download_tutorials_nasbench_as_dataset.py:
 
+.. only:: html
 
-.. only :: html
-
- .. container:: sphx-glr-footer
-    :class: sphx-glr-footer-example
+  .. container:: sphx-glr-footer sphx-glr-footer-example
 
 
 
-  .. container:: sphx-glr-download sphx-glr-download-python
 
-     :download:`Download Python source code: nasbench_as_dataset.py <nasbench_as_dataset.py>`
+    .. container:: sphx-glr-download sphx-glr-download-python
 
+      :download:`Download Python source code: nasbench_as_dataset.py <nasbench_as_dataset.py>`
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-  .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-     :download:`Download Jupyter notebook: nasbench_as_dataset.ipynb <nasbench_as_dataset.ipynb>`
+      :download:`Download Jupyter notebook: nasbench_as_dataset.ipynb <nasbench_as_dataset.ipynb>`
 
 
 .. only:: html

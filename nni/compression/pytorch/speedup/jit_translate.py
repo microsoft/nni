@@ -11,6 +11,7 @@ if TYPE_CHECKING:  # Only imports the below statements during type checking
     from nni.common.graph_utils import NodePyGroup
 
 import re
+import string
 import logging
 from functools import partial, lru_cache
 import copy
@@ -277,7 +278,7 @@ for enum_value, name in enum_to_dtype_names.items():
     if hasattr(torch, name):
         enum_to_dtype_dict[enum_value] = getattr(torch, name)
 
-def arg_trans_dtype(ivalue: Union[int, torch.dtype]):
+def arg_trans_dtype(ivalue: Union[None, int, torch.dtype]) -> Optional[torch.dtype]:
     """
     Special process for dtype.
     Torch will transform dtype to an enum in cpp, so the value of dtype we get in jit is an int.
@@ -303,7 +304,7 @@ enum_to_memory_format_dict = {
     3: torch.channels_last_3d,
 }
 
-def arg_trans_memory_format(ivalue: Union[int, torch.memory_format]):
+def arg_trans_memory_format(ivalue: Union[None, int, torch.memory_format]) -> Optional[torch.memory_format]:
     """
     Special process for memory_format.
     Torch will transform memory_format to an enum in cpp, so the value of memory_format we get in jit is an int.
@@ -338,7 +339,7 @@ for enum_value, name in enum_to_layout_names.items():
     if hasattr(torch, name):
         enum_to_layout_dict[enum_value] = getattr(torch, name)
 
-def arg_trans_layout(ivalue: Union[int, torch.layout]):
+def arg_trans_layout(ivalue: Union[None, int, torch.layout]) -> torch.layout:
     """
     Special process for layout.
     Torch will transform layout to an enum in cpp, so the value of layout we get in jit is an int.
@@ -350,7 +351,11 @@ def arg_trans_layout(ivalue: Union[int, torch.layout]):
         The value of layout or method to be recovered.
 
     """
-    if ivalue is None or isinstance(ivalue, torch.layout):
+    if ivalue is None:
+        # tips: layout cannot be None with argument 'pin_memory' exist in in pytorch.
+        # tips: the default value of torch.layout is not like torch.dtype or torch.memory_format
+        return torch.strided
+    elif isinstance(ivalue, torch.layout):
         return ivalue
     elif isinstance(ivalue, int):
         if ivalue in enum_to_layout_dict:
@@ -363,48 +368,16 @@ special_treat_dict = {
     'layout': arg_trans_layout,
 }
 
-schema_fix_dict = {
-    # functinon 'to', 'randint', and 'sparse_coo_tensor' has different schema between python and c++.
-    # https://pytorch.org/docs/stable/jit_unsupported.html#ops-with-divergent-schemas-between-torch-python
-    """aten::to.device(Tensor(a) self, Device device, int dtype, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Ten
-    sor(a))""":
-        """aten::to.device(Tensor(a) self, Device device, int dtype, bool non_blocking=False, bool copy=False, *, int? memory_format=None)
-         -> (Tensor(a))""",
-    'aten::to.dtype(Tensor(a) self, int dtype, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Tensor(a))':
-        'aten::to.dtype(Tensor(a) self, int dtype, bool non_blocking=False, bool copy=False, *, int? memory_format=None) -> (Tensor(a))',
-    'aten::to.other(Tensor(a) self, Tensor other, bool non_blocking=False, bool copy=False, int? memory_format=None) -> (Tensor(a))':
-        'aten::to.other(Tensor(a) self, Tensor other, bool non_blocking=False, bool copy=False, *, int? memory_format=None) -> (Tensor(a))',
-
-    # todo: are the arguments 'pin_memory' and 'requires_grad' related?
-    # functions in the python have only 'requires_grad' and functions in the aten have only 'pin_memory'
-
-    # 'aten::randint(int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor)',
-    # """aten::randint.generator(int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? device=None, boo
-    # l? pin_memory=None) -> (Tensor)""",
-    # """aten::randint.low(int low, int high, int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None)
-    # -> (Tensor)""",
-    # """aten::randint.low_generator(int low, int high, int[] size, *, Generator? generator, int? dtype=None, int? layout=None, Device? dev
-    # ice=None, bool? pin_memory=None) -> (Tensor)""",
-
-    # """aten::sparse_coo_tensor.size(int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=False) -> (Te
-    # nsor)""",
-    # """aten::sparse_coo_tensor.indices(Tensor indices, Tensor values, *, int? dtype=None, int? layout=None, Device? device=None, bool? pi
-    # n_memory=None) -> (Tensor)""",
-    # """aten::sparse_coo_tensor.indices_size(Tensor indices, Tensor values, int[] size, *, int? dtype=None, int? layout=None, Device? devi
-    # ce=None, bool? pin_memory=None) -> (Tensor"""'
-}
-
-@lru_cache(maxsize=256)
+@lru_cache
 def parse_aten_schema(schema: str):
     """
     Parse the schema, to positional_num and keyword_list, and detect if the argument should be specially treated.
+    only available on pytorch >= v1.9.0
     """
-    if schema in schema_fix_dict:
-        schema = schema_fix_dict[schema]
 
     positional_num = 0
     keyword_list = list()
-    special_treat = dict() # for dtype and memory_format trans now
+    special_treat = dict()
 
     for arg in torch._C.parse_schema(schema).arguments:
         if not arg.kwarg_only:
@@ -419,6 +392,273 @@ def parse_aten_schema(schema: str):
                 special_treat[key] = [special_treat_dict[arg.name]]
             else:
                 special_treat[key].append(special_treat_dict[arg.name])
+
+    return positional_num, keyword_list, special_treat
+
+@lru_cache
+def parse_aten_schema_version_1_8_x(schema: str):
+    """
+    Parse the schema, to positional_num and keyword_list, and detect if the argument should be specially treated.
+    Cannot use 'torch._C.parse_schema' because 'torch._C.Argument' has no 'kwarg_only' on pytorch v1.8.x
+    Using a lexer-parser like method to parse it.
+    Re-write from torch/csrc/jit/frontend/function_schema_parser.cpp
+    """
+
+    # token types
+    single_solid_tokens = [
+        # no '>=', '<=', '&', '/'
+        # '|' only occurs in 'Tensor(a|b)'
+        '(', ')', '[', ']',
+        '+', '-', '!', '>',
+        '|', '=', ':', '.', ',',
+        '?', '*',
+    ]
+    spec_tokens = [
+        'numdigits', 'string', 'quoted', 'unknown',
+    ]
+    str_chars_first = (*string.ascii_letters, '_')
+    str_chars = (*string.ascii_letters, *string.digits, '_')
+    num_chars_first = (*string.digits,)
+    num_chars_16 = (*string.digits, *string.ascii_lowercase[:6], *string.ascii_uppercase[:6])
+
+    # parse schema from str to token list
+    tokens = list()
+    status = 0 # 1: in ('\'', '"'); 2: in num; 3: in str;
+    status_esc_char = False
+
+    for char in schema:
+        if status == 1:
+            if status_esc_char:
+                status_esc_char = False
+                tokens[-1][1] += char
+            elif char == '\\':
+                status_esc_char = True
+            else:
+                tokens[-1][1] += char
+                if char == tokens[-1][1][0]:
+                    status = 0
+            continue
+        elif status == 2:
+            if char in num_chars_16:
+                tokens[-1][1] += char
+                continue
+            else:
+                status = 0
+        elif status == 3:
+            if char in str_chars:
+                tokens[-1][1] += char
+                continue
+            else:
+                status = 0
+        if status == 0:
+            if char in single_solid_tokens:
+                tokens.append(char)
+            elif char in ('\'', '\"'):
+                tokens.append(['quoted', char])
+                status = 1
+            elif char in num_chars_first:
+                tokens.append(['numdigits', char])
+                status = 2
+            elif char in str_chars_first:
+                tokens.append(['string', char])
+                status = 3
+            elif char not in ('\n', ' ', '\t'):
+                tokens.append(['unknown', char])
+    assert status == 0
+
+    # parse schema from token list to ast
+    index = 0
+    def next_pass(index_diff = 1) -> str:
+        nonlocal index
+        index += index_diff
+        if index_diff == 1:
+            return tokens[index - 1]
+
+    def next_if(tk: str, index_diff=0) -> bool:
+        nonlocal index
+        if tk in spec_tokens:
+            return isinstance(tokens[index + index_diff], list) and tokens[index + index_diff][0] == tk
+        else:
+            return tokens[index + index_diff] == tk
+
+    def next_if_pass_value(tk: str, default_value = None) -> Optional[str]:
+        nonlocal index
+        if tk in spec_tokens:
+            if isinstance(tokens[index], list) and tokens[index][0] == tk:
+                index += 1
+                return tokens[index - 1][1]
+        else:
+            if tokens[index] == tk:
+                index += 1
+                return tk
+        return default_value
+
+    def next_expect_pass_value(tk: str) -> str:
+        nonlocal index
+        if tk in spec_tokens:
+            if not isinstance(tokens[index], list) or tokens[index][0] != tk:
+                raise Exception('aten schema parse error')
+            ret = tokens[index][1]
+        else:
+            if tokens[index] != tk:
+                raise Exception('aten schema parse error')
+            ret = tk
+        index += 1
+        return ret
+
+    def parse_number():
+        if next_if('+') or next_if('-'):
+            value = next_pass() + next_expect_pass_value('numdigits')
+        else:
+            value = next_if_pass_value('numdigits')
+            if value is None:
+                return None
+        if next_if_pass_value('.') is not None:
+            value += '.'
+            res = next_if_pass_value('numdigits')
+            if res:
+                value += res
+        if value[-1] == 'e' and next_if_pass_value('-') is not None:
+            # only occur in versions < 1.9.0
+            # 1e-10
+            value += '-' + next_expect_pass_value('numdigits')
+        return value
+
+    def parse_name():
+        name = next_expect_pass_value('string')
+        if next_if_pass_value(':') is not None:
+            next_expect_pass_value(':')
+            name += '::' + next_expect_pass_value('string')
+        overload_name = ''
+        if next_if_pass_value('.') is not None:
+            overload_name = next_expect_pass_value('string')
+        return name, overload_name
+
+    def parse_list(sep, end, callback):
+        ret = []
+        if end is None or not next_if(end):
+            ret.append(callback())
+            res = next_if_pass_value(sep)
+            while res is not None:
+                ret.append(res)
+                ret.append(callback())
+                res = next_if_pass_value(sep)
+        if end is not None:
+            ret.append(next_expect_pass_value(end))
+        return ret
+
+    def parse_alias_annotation():
+        if next_if_pass_value('(') is not None:
+            def parse_inner():
+                if next_if_pass_value('*') is not None:
+                    return '*'
+                else:
+                    return next_expect_pass_value('string')
+
+            value = '('.join(parse_list('|', None, parse_inner))
+            value += next_if_pass_value('!', '')
+            if next_if('-') and next_if('>', 1):
+                next_pass(2)
+                value += '->'
+                value += ''.join(parse_list('|', None, parse_inner))
+            return value + next_expect_pass_value(')')
+        else:
+            return next_if_pass_value('!', '')
+
+    def parse_type():
+        if next_if_pass_value('(') is not None:
+            value = ''.join(parse_list(',', ')', parse_type))
+        else:
+            value = next_expect_pass_value('string')
+            if value == '__torch__':
+                # only occur in versions < 1.9.0
+                res = next_if_pass_value('.')
+                while res is not None:
+                    value += res + next_expect_pass_value('string')
+                    res = next_if_pass_value('.')
+            if next_if_pass_value('('):
+                the_types = ''.join(parse_list(',', ')', parse_type))
+                value += '(%s)' % the_types
+            value += parse_alias_annotation()
+        while True:
+            if next_if('[') and next_if(']', 1):
+                next_pass(2)
+                value += '[]'
+                value += parse_alias_annotation()
+            elif next_if_pass_value('?') is not None:
+                value += '?'
+            elif next_if_pass_value('-') is not None:
+                # only occur in versions < 1.9.0
+                # t(x -> *)
+                value += '-' + next_expect_pass_value('>') + next_expect_pass_value('*')
+                break
+            else:
+                break
+        return value
+
+    def parse_default_value():
+        if next_if_pass_value('[') is not None:
+            return parse_list(',', ']', parse_default_value)
+        res = parse_number()
+        if res is not None:
+            return res
+        res = next_if_pass_value('quoted')
+        if res is not None:
+            return res
+        return next_expect_pass_value('string')
+
+    def parse_argument():
+        the_type = parse_type()
+        if next_if_pass_value('[') is not None:
+            the_type += '[' + parse_number() + next_expect_pass_value(']')
+            the_type += parse_alias_annotation()
+            the_type += next_if_pass_value('?', '')
+        name = next_expect_pass_value('string')
+        default_value = ''
+        if next_if_pass_value('=') is not None:
+            default_value = parse_default_value()
+        return the_type, name, default_value
+
+    def parse_declaration():
+        name, overload_name = parse_name()
+        arguments = list()
+        kwarg_only = False
+        is_vararg = False
+        next_expect_pass_value('(')
+        def parse_inner():
+            nonlocal kwarg_only
+            nonlocal is_vararg
+            if is_vararg:
+                raise Exception('"..." must be the last element')
+            elif next_if_pass_value('*') is not None:
+                kwarg_only = True
+            elif next_if_pass_value('.') is not None:
+                next_expect_pass_value('.')
+                next_expect_pass_value('.')
+                is_vararg = True
+            else:
+                arguments.append((parse_argument()[1], kwarg_only))
+        parse_list(',', ')', parse_inner)
+        return name, overload_name, arguments, is_vararg
+
+    # parse schema from ast to get needed information
+    positional_num = 0
+    keyword_list = list()
+    special_treat = dict()
+
+    for name, kwarg_only in parse_declaration()[2]:
+        if not kwarg_only:
+            key = positional_num
+            positional_num += 1
+        else:
+            key = name
+            keyword_list.append(key)
+
+        if name in special_treat_dict:
+            if key not in special_treat:
+                special_treat[key] = [special_treat_dict[name]]
+            else:
+                special_treat[key].append(special_treat_dict[name])
 
     return positional_num, keyword_list, special_treat
 
@@ -464,6 +704,94 @@ def special_treat_to_constant_value(positional: List, keyword: Dict[str], undete
             for f in fs: keyword[p] = f(keyword[p])
     return undetermined_special_treat
 
+table_fix_schema = {
+    'to.device': (
+        5, ['memory_format'], {
+            2:                  [arg_trans_dtype],
+            'memory_format':    [arg_trans_memory_format],
+        },
+    ),
+    'to.dtype': (
+        4, ['memory_format'], {
+            1:                  [arg_trans_dtype],
+            'memory_format':    [arg_trans_memory_format],
+        },
+    ),
+    'to.other': (
+        4, ['memory_format'], {
+            'memory_format':    [arg_trans_memory_format],
+        },
+    ),
+    # functinon 'to', 'randint', and 'sparse_coo_tensor' has different schema between python and c++.
+    # https://pytorch.org/docs/stable/jit_unsupported.html#ops-with-divergent-schemas-between-torch-python
+
+    # """aten::sparse_coo_tensor.size(int[] size, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=False) -> (Te
+    # nsor)""",
+    # """aten::sparse_coo_tensor.indices(Tensor indices, Tensor values, *, int? dtype=None, int? layout=None, Device? device=None, bool? pi
+    # n_memory=None) -> (Tensor)""",
+    # """aten::sparse_coo_tensor.indices_size(Tensor indices, Tensor values, int[] size, *, int? dtype=None, int? layout=None, Device? devi
+    # ce=None, bool? pin_memory=None) -> (Tensor"""'
+}
+
+layout_names_to_trans = {
+    'strided':      'to_dense',
+    'sparse_coo':   'to_sparse_coo',
+    'sparse_csr':   'to_sparse_csr',
+    'sparse_csc':   'to_sparse_csc',
+    'sparse_bsr':   'to_sparse_bsr',
+    'sparse_bsc':   'to_sparse_bsc',
+    '_mkldnn':      'to_mkldnn',
+}
+
+layout_names_to_trans_dict = {}
+
+for layout_name, trans_name in layout_names_to_trans.items():
+    if hasattr(torch, layout_name) and hasattr(torch.Tensor, trans_name):
+        layout_names_to_trans_dict[getattr(torch, layout_name)] = getattr(torch.Tensor, trans_name)
+
+def hook_to_dtype_layout(positional, keyword, undetermined, undetermined_special_treat):
+    """
+    there is no function corresponding to 'aten::to.dtype_layout'. so we gen it in another way.
+
+    positional_num = 1 (self)
+    keyword_list = ['dtype', 'layout', 'device', 'pin_memory', 'non_blocking', 'copy', 'memory_format']
+    special_treat = {
+        'dtype': arg_trans_dtype,
+        'layout': arg_trans_layout,
+        'memory_format': arg_trans_memory_format,
+    },
+    """
+    assert 'layout' not in undetermined
+    assert 'pin_memory' not in undetermined
+    assert 'non_blocking' not in undetermined
+
+    to_layout = arg_trans_layout(keyword['layout'])
+    del keyword['layout']
+    del keyword['pin_memory']
+    del keyword['non_blocking']
+    real_to = FuncAdapter(torch.Tensor.to, positional, keyword, undetermined, undetermined_special_treat)
+
+    def ret_func(*args):
+        the_self = args[0]
+        if the_self.layout != to_layout:
+            the_self = layout_names_to_trans_dict[to_layout](the_self)
+        return real_to(the_self, *args[1:])
+
+    return ret_func
+
+def hook_randint(positional, keyword, undetermined, undetermined_special_treat):
+    assert 'pin_memory' not in undetermined
+    del keyword['pin_memory']
+    return FuncAdapter(torch.randint, positional, keyword, undetermined, undetermined_special_treat)
+
+table_gen_hook = {
+    'to.dtype_layout': hook_to_dtype_layout, #TODO: this uncommon 'aten::to' is not tested
+    'randint': hook_randint,
+    'randint.generator': hook_randint,
+    'randint.low': hook_randint,
+    'randint.low_generator': hook_randint,
+}
+
 def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpeedup) -> FuncAdapter:
     """
     parse a Return a callable object to inference the mask according to the node.op_type.
@@ -486,14 +814,23 @@ def generate_aten_to_python(func: Callable, node: NodePyGroup, speedup: ModelSpe
     c_node = node.key_node
 
     schema = c_node.schema()
-    positional_num, keyword_list, special_treat = parse_aten_schema(schema)
+    op_with_overload = schema[6:schema.find('(')] # the magic number 6 means cut off `aten::` or `prim::`
+    if op_with_overload in table_fix_schema:
+        positional_num, keyword_list, special_treat = table_fix_schema[op_with_overload]
+    elif torch.__version__ < '1.9.0':
+        positional_num, keyword_list, special_treat = parse_aten_schema_version_1_8_x(schema)
+    else:
+        positional_num, keyword_list, special_treat = parse_aten_schema(schema)
 
     input_nodes = list(c_node.inputs())
     positional, keyword, undetermined = parse_input_value(speedup, input_nodes, positional_num, keyword_list)
 
     undetermined_special_treat = special_treat_to_constant_value(positional, keyword, undetermined, special_treat)
 
-    return FuncAdapter(func, positional, keyword, undetermined, undetermined_special_treat)
+    if op_with_overload in table_gen_hook:
+        return table_gen_hook[op_with_overload](positional, keyword, undetermined, undetermined_special_treat)
+    else:
+        return FuncAdapter(func, positional, keyword, undetermined, undetermined_special_treat)
 
 trans_func_dict = {
     'aten::slice': slice_python,
@@ -505,6 +842,7 @@ trans_func_dict = {
     'prim::NumToTensor': num2tensor_python,
     'prim::GetAttr': getattr_python,
 }
+
 def init_add_functions(func_from: Union[ModuleType, Type[Any]]):
     """
     Add function/method attributes from a module/class, to the trans_func_dict

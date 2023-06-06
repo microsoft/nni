@@ -8,7 +8,6 @@ import fs from 'fs';
 import path from 'path';
 import { Writable } from 'stream';
 import { String } from 'typescript-string-operations';
-import * as component from 'common/component';
 import { getBasePort, getExperimentId } from 'common/experimentStartupInfo';
 import { LegacyRestServer } from 'common/restServer';
 import { getExperimentRootDir, mkDirPSync } from 'common/utils';
@@ -18,7 +17,6 @@ import { getExperimentRootDir, mkDirPSync } from 'common/utils';
  *
  * FIXME: This should be a router, not a separate REST server.
  */
-@component.Singleton
 export abstract class ClusterJobRestServer extends LegacyRestServer {
     private readonly API_ROOT_URL: string = '/api/v1/nni-pai';
     private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
@@ -97,7 +95,7 @@ export abstract class ClusterJobRestServer extends LegacyRestServer {
                 } catch (err) {
                     this.log.error(`json parse metrics error: ${err}`);
                     res.status(500);
-                    res.send(err.message);
+                    res.send((err as any).message);
                 }
             } else {
                 this.log.info(`Skipping version check!`);
@@ -116,7 +114,7 @@ export abstract class ClusterJobRestServer extends LegacyRestServer {
             } catch (err) {
                 this.log.error(`json parse metrics error: ${err}`);
                 res.status(500);
-                res.send(err.message);
+                res.send((err as any).message);
             }
         });
 
@@ -155,7 +153,7 @@ export abstract class ClusterJobRestServer extends LegacyRestServer {
             } catch (err) {
                 this.log.error(`json parse stdout data error: ${err}`);
                 res.status(500);
-                res.send(err.message);
+                res.send((err as any).message);
             }
         });
 

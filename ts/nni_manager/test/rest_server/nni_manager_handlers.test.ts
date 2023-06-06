@@ -5,21 +5,23 @@
 
 import { assert, expect } from 'chai';
 import request from 'request';
-import { Container } from 'typescript-ioc';
 
-import * as component from '../../common/component';
-import { DataStore } from '../../common/datastore';
+import { IocShim } from 'common/ioc_shim';
+import { Database, DataStore } from '../../common/datastore';
 import { ExperimentProfile, Manager } from '../../common/manager';
 import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
+import { SqlDB } from '../../core/sqlDatabase';
 import { MockedDataStore } from '../mock/datastore';
 import { MockedTrainingService } from '../mock/trainingService';
 import { RestServer, UnitTestHelpers } from 'rest_server';
-import { testManagerProvider } from '../mock/nniManager';
+import { MockedNNIManager } from '../mock/nniManager';
 import { MockedExperimentManager } from '../mock/experimentManager';
 import { TensorboardManager } from '../../common/tensorboardManager';
 import { MockTensorboardManager } from '../mock/mockTensorboardManager';
 import { UnitTestHelpers as ExpsMgrHelpers } from 'extensions/experiments_manager';
+import globals from 'common/globals/unittest';
+import { createRestHandler } from 'rest_server/restHandler';
 
 let restServer: RestServer;
 
@@ -30,14 +32,17 @@ describe('Unit test for rest handler', () => {
     before(async () => {
         ExpsMgrHelpers.setExperimentsManager(new MockedExperimentManager());
         prepareUnitTest();
-        Container.bind(Manager).provider(testManagerProvider);
-        Container.bind(DataStore).to(MockedDataStore);
-        Container.bind(TrainingService).to(MockedTrainingService);
-        Container.bind(TensorboardManager).to(MockTensorboardManager);
+        IocShim.clear();
+        IocShim.bind(Database, SqlDB);
+        IocShim.bind(DataStore, MockedDataStore);
+        IocShim.bind(TrainingService, MockedTrainingService);
+        IocShim.bind(Manager, MockedNNIManager);
+        IocShim.bind(TensorboardManager, MockTensorboardManager);
         restServer = new RestServer(0, '');
         await restServer.start();
         const port = UnitTestHelpers.getPort(restServer);
         ROOT_URL = `http://localhost:${port}/api/v1/nni`;
+        globals.rest.registerExpressRouter('/api/v1/nni', createRestHandler());
     });
 
     after(() => {

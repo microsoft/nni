@@ -23,9 +23,9 @@ os.listdir(os.path.expanduser('~/.cache/nni/nasbenchmark'))
 # %%
 import pprint
 
-from nni.nas.benchmarks.nasbench101 import query_nb101_trial_stats
-from nni.nas.benchmarks.nasbench201 import query_nb201_trial_stats
-from nni.nas.benchmarks.nds import query_nds_trial_stats
+from nni.nas.benchmark.nasbench101 import query_nb101_trial_stats
+from nni.nas.benchmark.nasbench201 import query_nb201_trial_stats
+from nni.nas.benchmark.nds import query_nds_trial_stats
 
 # %%
 # NAS-Bench-101

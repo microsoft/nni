@@ -3,14 +3,12 @@
 
 import { assert, expect } from 'chai';
 import fs from 'fs';
-import { Container, Scope } from 'typescript-ioc';
 import os from 'os';
 import path from 'path';
 
-import * as component from '../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
-import { ExperimentsManager } from 'extensions/experiments_manager';
-import globals from 'common/globals/unittest';
+import { ExperimentsManager } from '../../extensions/experiments_manager';
+import globals from '../../common/globals/unittest';
 
 let tempDir: string | null = null;
 let experimentManager: ExperimentsManager;

@@ -3,10 +3,10 @@
 
 import fs from 'fs';
 import path from 'path';
-import * as component from 'common/component';
-import { getLogger, Logger } from 'common/log';
 import { AmlConfig } from 'common/experimentConfig';
 import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { IocShim } from 'common/ioc_shim';
+import { getLogger, Logger } from 'common/log';
 import { validateCodeDir } from 'training_service/common/util';
 import { AMLClient } from '../aml/amlClient';
 import { AMLEnvironmentInformation } from '../aml/amlConfig';
@@ -18,7 +18,6 @@ import { SharedStorageService } from '../sharedStorage'
 /**
  * Collector AML jobs info from AML cluster, and update aml job status locally
  */
-@component.Singleton
 export class AMLEnvironmentService extends EnvironmentService {
 
     private readonly log: Logger = getLogger('AMLEnvironmentService');
@@ -89,8 +88,8 @@ export class AMLEnvironmentService extends EnvironmentService {
             await fs.promises.mkdir(environmentLocalTempFolder, {recursive: true});
         }
         if (amlEnvironment.useSharedStorage) {
-            const environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
-            const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand;
+            const environmentRoot = IocShim.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
+            const remoteMountCommand = IocShim.get<SharedStorageService>(SharedStorageService).remoteMountCommand;
             amlEnvironment.command = `${remoteMountCommand} && cd ${environmentRoot} && ${amlEnvironment.command}`.replace(/"/g, `\\"`);
         } else {
             amlEnvironment.command = `mv envs outputs/envs && cd outputs && ${amlEnvironment.command}`;

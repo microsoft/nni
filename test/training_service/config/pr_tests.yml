@@ -66,7 +66,7 @@ testCases:
 #########################################################################
 # nni tuners test
 #########################################################################
-- name: tuner-annel
+- name: tuner-anneal
   configFile: test/training_service/config/tuners/anneal.yml
   config:
     maxTrialNum: 2

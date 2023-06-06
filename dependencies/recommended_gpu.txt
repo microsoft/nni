@@ -2,13 +2,24 @@
 
 -f https://download.pytorch.org/whl/torch_stable.html
 tensorflow
-torch == 1.10.0+cu113
-torchvision == 0.11.1+cu113
-pytorch-lightning >= 1.6.1
+torch == 2.0.0+cu117
+torchvision == 0.15.0+cu117
+pytorch-lightning >= 2.0
+
+# for full-test-compression 
+-f https://download.openmmlab.com/mmcv/dist/cu117/torch2.0/index.html
+mmcv >= 2.0.0rc4, < 2.1.0
+mmdet >= 3.0
+mmengine
+
+git+https://github.com/microsoft/nn-Meter.git#egg=nn_meter
 lightgbm
 onnx
+onnxsim
+onnxruntime-gpu
 peewee
 graphviz
 gym
+sympy
 tianshou >= 0.4.1
 timm >= 0.5.4

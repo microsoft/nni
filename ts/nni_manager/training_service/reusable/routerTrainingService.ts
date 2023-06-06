@@ -3,11 +3,9 @@
 
 import { getLogger, Logger } from 'common/log';
 import { MethodNotImplementedError } from 'common/errors';
-import { ExperimentConfig, RemoteConfig, OpenpaiConfig, KubeflowConfig, FrameworkControllerConfig } from 'common/experimentConfig';
+import { ExperimentConfig, RemoteConfig, KubeflowConfig, FrameworkControllerConfig } from 'common/experimentConfig';
 import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from 'common/trainingService';
 import { delay } from 'common/utils';
-import { PAITrainingService } from '../pai/paiTrainingService';
-import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
 import { KubeflowTrainingService } from '../kubernetes/kubeflow/kubeflowTrainingService';
 import { FrameworkControllerTrainingService } from '../kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { TrialDispatcher } from './trialDispatcher';
@@ -26,9 +24,7 @@ class RouterTrainingService implements TrainingService {
         instance.log = getLogger('RouterTrainingService');
         const platform = Array.isArray(config.trainingService) ? 'hybrid' : config.trainingService.platform;
         if (platform === 'remote' && (<RemoteConfig>config.trainingService).reuseMode === false) {
-            instance.internalTrainingService = new RemoteMachineTrainingService(<RemoteConfig>config.trainingService);
-        } else if (platform === 'openpai' && (<OpenpaiConfig>config.trainingService).reuseMode === false) {
-            instance.internalTrainingService = new PAITrainingService(<OpenpaiConfig>config.trainingService);
+            throw new Error('Unexpected: non-reuse remote enters RouterTrainingService');
         } else if (platform === 'kubeflow' && (<KubeflowConfig>config.trainingService).reuseMode === false) {
             instance.internalTrainingService = new KubeflowTrainingService();
         } else if (platform === 'frameworkcontroller' && (<FrameworkControllerConfig>config.trainingService).reuseMode === false) {

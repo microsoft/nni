@@ -26,7 +26,7 @@ To use a built-in assessor you need to specify its name and arguments:
 .. code-block:: python
 
     config.assessor.name = 'Medianstop'
-    config.tuner.class_args = {'optimize_mode': 'maximize'}
+    config.assessor.class_args = {'optimize_mode': 'maximize'}
 
 Built-in Assessors
 ------------------

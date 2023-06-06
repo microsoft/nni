@@ -5,7 +5,6 @@ import assert from 'assert';
 import cpp from 'child-process-promise';
 import fs from 'fs';
 import path from 'path';
-import * as component from 'common/component';
 
 import { getExperimentId } from 'common/experimentStartupInfo';
 import {
@@ -24,13 +23,11 @@ import { KubeflowClusterConfig, KubeflowClusterConfigAzure, KubeflowClusterConfi
     KubeflowTrialConfig, KubeflowTrialConfigFactory, KubeflowTrialConfigPytorch, KubeflowTrialConfigTensorflow
 } from './kubeflowConfig';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
-import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 
 /**
  * Training Service implementation for Kubeflow
  * Refer https://github.com/kubeflow/kubeflow for more info about Kubeflow
  */
-@component.Singleton
 class KubeflowTrainingService extends KubernetesTrainingService implements KubernetesTrainingService {
     private kubeflowClusterConfig?: KubeflowClusterConfig;
     private kubeflowTrialConfig?: KubeflowTrialConfig;
@@ -69,8 +66,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         }
 
         if (this.kubernetesRestServerPort === undefined) {
-            const restServer: KubeflowJobRestServer = new KubeflowJobRestServer(this);
-            this.kubernetesRestServerPort = restServer.clusterRestServerPort;
+            this.kubernetesRestServerPort = this.kubernetesJobRestServer!.clusterRestServerPort;
         }
 
         // upload code Dir to storage
@@ -163,7 +159,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 } catch (error) {
                     this.log.error(error);
 
-                    return Promise.reject(new Error(error));
+                    return Promise.reject(new Error(error as any));
                 }
                 break;
             }

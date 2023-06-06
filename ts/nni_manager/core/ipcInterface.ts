@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { IpcInterface } from './tuner_command_channel/common';
-export { IpcInterface } from './tuner_command_channel/common';
-import * as shim from './tuner_command_channel/shim';
+import { IpcInterface, getTunerServer } from './tuner_command_channel';
+export { IpcInterface } from './tuner_command_channel';
 
 let tunerDisabled: boolean = false;
 
 export async function createDispatcherInterface(): Promise<IpcInterface> {
     if (!tunerDisabled) {
-        return await shim.createDispatcherInterface();
+        return getTunerServer();
     } else {
         return new DummyIpcInterface();
     }

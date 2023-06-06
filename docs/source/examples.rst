@@ -46,7 +46,7 @@ More examples can be found in our :githublink:`GitHub repository <examples>`.
 .. cardlinkitem::
    :header: Get Started with Model Pruning on MNIST
    :description: Familiarize yourself with pruning to compress your model 
-   :link: tutorials/pruning_quick_start_mnist
+   :link: tutorials/pruning_quick_start
    :image: ../img/thumbnails/pruning-tutorial.svg
    :background: blue
    :tags: Compression
@@ -54,7 +54,7 @@ More examples can be found in our :githublink:`GitHub repository <examples>`.
 .. cardlinkitem::
    :header: Get Started with Model Quantization on MNIST
    :description: Familiarize yourself with quantization to compress your model
-   :link: tutorials/quantization_quick_start_mnist
+   :link: tutorials/quantization_quick_start
    :image: ../img/thumbnails/quantization-tutorial.svg
    :background: indigo
    :tags: Compression
@@ -78,7 +78,15 @@ More examples can be found in our :githublink:`GitHub repository <examples>`.
 .. cardlinkitem::
    :header: Pruning Bert on Task MNLI
    :description: An end to end example for how to using NNI pruning transformer and show the real speedup number
-   :link: tutorials/pruning_bert_glue
+   :link: tutorials/new_pruning_bert_glue
    :image: ../img/thumbnails/pruning-tutorial.svg
+   :background: indigo
+   :tags: Compression
+
+.. cardlinkitem::
+   :header: Quantize Bert on Task MNLI
+   :description: An end to end example for how to using NNI to simulate the process of quantize transformer
+   :link: tutorials/quantization_bert_glue
+   :image: ../img/thumbnails/quantization-tutorial.svg
    :background: indigo
    :tags: Compression

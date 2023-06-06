@@ -6,7 +6,7 @@ const joi = require('joi');
 export namespace ValidationSchemas {
     export const SETCLUSTERMETADATA = {
         body: {
-            machine_list: joi.array().items(joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            machine_list: joi.array().items(joi.object({
                 username: joi.string().required(),
                 ip: joi.string().hostname().required(),
                 port: joi.number().min(1).max(65535).required(),
@@ -18,13 +18,13 @@ export namespace ValidationSchemas {
                 useActiveGpu: joi.boolean(),
                 pythonPath: joi.string()
             })),
-            local_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            local_config: joi.object({
                 gpuIndices: joi.string(),
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean(),
                 reuse: joi.boolean()
             }),
-            trial_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            trial_config: joi.object({
                 image: joi.string().min(1),
                 codeDir: joi.string().min(1).required(),
                 dataDir: joi.string(),
@@ -112,13 +112,13 @@ export namespace ValidationSchemas {
                     containerMountPath: joi.string().min(1).required()
                 })
             }),
-            pai_yarn_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            pai_yarn_config: joi.object({
                 userName: joi.string().min(1).required(),
                 passWord: joi.string().min(1),
                 token: joi.string().min(1),
                 host: joi.string().min(1).required()
             }),
-            pai_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            pai_config: joi.object({
                 userName: joi.string().min(1).required(),
                 token: joi.string().min(1),
                 host: joi.string().min(1).required(),
@@ -129,10 +129,10 @@ export namespace ValidationSchemas {
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean(),
             }),
-            adl_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            adl_config: joi.object({
                 // hack for v2 configuration
             }),
-            kubeflow_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            kubeflow_config: joi.object({
                 operator: joi.string().min(1).required(),
                 storage: joi.string().min(1),
                 apiVersion: joi.string().min(1),
@@ -150,7 +150,7 @@ export namespace ValidationSchemas {
                 }),
                 uploadRetryCount: joi.number().min(1)
             }),
-            frameworkcontroller_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            frameworkcontroller_config: joi.object({
                 storage: joi.string().min(1),
                 serviceAccountName: joi.string().min(1),
                 pvc: joi.object({
@@ -172,7 +172,7 @@ export namespace ValidationSchemas {
                 uploadRetryCount: joi.number().min(1),
                 namespace: joi.string().min(1)
             }),
-            dlts_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            dlts_config: joi.object({
                 dashboard: joi.string().min(1),
 
                 cluster: joi.string().min(1),
@@ -181,7 +181,7 @@ export namespace ValidationSchemas {
                 email: joi.string().min(1),
                 password: joi.string().min(1)
             }),
-            aml_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            aml_config: joi.object({
                 subscriptionId: joi.string().min(1),
                 resourceGroup: joi.string().min(1),
                 workspaceName: joi.string().min(1),
@@ -189,18 +189,18 @@ export namespace ValidationSchemas {
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean()
             }),
-            hybrid_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            hybrid_config: joi.object({
                 trainingServicePlatforms: joi.array(),
             }),
-            nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            nni_manager_ip: joi.object({
                 nniManagerIp: joi.string().min(1)
             }),
-            version_check: joi.boolean(), // eslint-disable-line @typescript-eslint/camelcase
-            log_collection: joi.string(), // eslint-disable-line @typescript-eslint/camelcase
-            remote_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            version_check: joi.boolean(),
+            log_collection: joi.string(),
+            remote_config: joi.object({
                 reuse: joi.boolean()
             }),
-            shared_storage_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            shared_storage_config: joi.object({
                 storageType: joi.string(),
                 localMountPoint: joi.string(),
                 remoteMountPoint: joi.string(),
@@ -264,7 +264,6 @@ export namespace ValidationSchemas {
     };
     export const UPDATEEXPERIMENT = {
         query: {
-            /* eslint-disable-next-line @typescript-eslint/camelcase */
             update_type: joi.string().required().valid('TRIAL_CONCURRENCY', 'MAX_EXEC_DURATION', 'SEARCH_SPACE', 'MAX_TRIAL_NUM')
         },
         body: {

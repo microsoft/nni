@@ -7,7 +7,6 @@ import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import fs from 'fs';
 import tmp from 'tmp';
-import * as component from '../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';
 import { KubeflowTrainingService } from '../../training_service/kubernetes/kubeflow/kubeflowTrainingService';
@@ -47,7 +46,7 @@ describe('Unit Test for KubeflowTrainingService', () => {
         if (skip) {
             return;
         }
-        kubeflowTrainingService = component.get(KubeflowTrainingService);
+        kubeflowTrainingService = new KubeflowTrainingService();
     });
 
     afterEach(() => {

@@ -1,4 +1,4 @@
-.. a6a9f0292afa81c7796304ae7da5afcd
+.. 8c555fbacb6b546aef9e1b9cc4e7ec7a
 
 Web 界面
 ========
@@ -26,7 +26,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/summary.png
+.. image:: ../../../img/webui_img/summary.png
    :width: 80%
 
 
@@ -40,8 +40,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/experimentError.png
-   :width: 80%
+.. image:: ../../../img/webui_img/experiment_error.gif
 
 
 
@@ -52,12 +51,12 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/detail/customizedTrialButton.png
+.. image:: ../../../img/webui_img/detail/customized_trial_button.png
    :width: 25%
 
 
 
-.. image:: ../../../img/webui-img/detail/customizedTrial.png
+.. image:: ../../../img/webui_img/detail/customized_trial.png
    :width: 40%
 
 
@@ -70,7 +69,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/detail/log-local.png
+.. image:: ../../../img/webui_img/detail/log_local.png
    :width: 100%
 
 
@@ -79,7 +78,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/detail-pai.png
+.. image:: ../../../img/webui_img/detail_pai.png
    :width: 100%
 
 
@@ -98,7 +97,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/managerExperimentList/experimentListNav.png
+.. image:: ../../../img/webui_img/manage_experiment_list/nav.png
    :width: 100%
 
 
@@ -107,7 +106,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/managerExperimentList/expList.png
+.. image:: ../../../img/webui_img/manage_experiment_list/list.png
    :width: 100%
 
 
@@ -116,7 +115,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/managerExperimentList/toAnotherExp.png
+.. image:: ../../../img/webui_img/manage_experiment_list/to_another_exp.png
    :width: 100%
 
 
@@ -125,7 +124,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/managerExperimentList/expFilter.png
+.. image:: ../../../img/webui_img/manage_experiment_list/filter.png
    :width: 100%
 
 
@@ -142,7 +141,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/full-oview.png
+.. image:: ../../../img/webui_img/full_oview.png
    :width: 100%
 
 
@@ -153,7 +152,7 @@ Q&A
 
 
 
-   .. image:: ../../../img/webui-img/searchSpace.png
+   .. image:: ../../../img/webui_img/search_space.png
       :width: 80%
 
 
@@ -162,7 +161,7 @@ Q&A
 
 
 
-   .. image:: ../../../img/webui-img/config.png
+   .. image:: ../../../img/webui_img/config.png
       :width: 80%
 
 
@@ -171,7 +170,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/review-log.png
+.. image:: ../../../img/webui_img/review_log.png
    :width: 80%
 
 
@@ -180,7 +179,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/refresh-interval.png
+.. image:: ../../../img/webui_img/refresh_interval.png
    :width: 100%
 
 
@@ -189,8 +188,8 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/edit-experiment-param.png
-   :width: 80%
+.. image:: ../../../img/webui_img/edit_experiment_param.gif
+   :width: 50%
 
 
 
@@ -201,7 +200,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/default-metric.png
+.. image:: ../../../img/webui_img/default_metric.png
    :width: 100%
 
 
@@ -210,7 +209,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/best-curve.png
+.. image:: ../../../img/webui_img/best_curve.png
    :width: 100%
 
 
@@ -227,7 +226,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/hyperPara.png
+.. image:: ../../../img/webui_img/hyper_parameter.png
    :width: 100%
 
 
@@ -239,7 +238,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/trial_duration.png
+.. image:: ../../../img/webui_img/trial_duration.png
    :width: 100%
 
 
@@ -251,7 +250,7 @@ Q&A
 
 
 
-.. image:: ../../../img/webui-img/trials_intermeidate.png
+.. image:: ../../../img/webui_img/trials_intermeidate.png
    :width: 100%
 
 
@@ -262,7 +261,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
 
 
 
-.. image:: ../../../img/webui-img/filter-intermediate.png
+.. image:: ../../../img/webui_img/filter_intermediate.png
    :width: 100%
 
 
@@ -277,7 +276,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
 
 
 
-.. image:: ../../../img/webui-img/detail-local.png
+.. image:: ../../../img/webui_img/detail_local.png
    :width: 100%
 
 
@@ -288,7 +287,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
    
 
 
-   .. image:: ../../../img/webui-img/detail/searchId.png
+   .. image:: ../../../img/webui_img/detail/search_id.png
       :width: 80%
 
 
@@ -297,7 +296,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
 
 
 
-   .. image:: ../../../img/webui-img/detail/searchNo.png
+   .. image:: ../../../img/webui_img/detail/search_No.png
       :width: 80%
 
 
@@ -306,7 +305,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
 
 
 
-   .. image:: ../../../img/webui-img/detail/searchStatus.png
+   .. image:: ../../../img/webui_img/detail/search_status.png
       :width: 80%
 
 
@@ -317,7 +316,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
       
 
 
-      .. image:: ../../../img/webui-img/detail/searchParameterChoice.png
+      .. image:: ../../../img/webui_img/detail/search_parameter_choice.png
          :width: 80%
 
 
@@ -326,7 +325,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
       
 
 
-      .. image:: ../../../img/webui-img/detail/searchParameterRange.png
+      .. image:: ../../../img/webui_img/detail/search_parameter_range.png
          :width: 80%
 
 
@@ -335,7 +334,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
 
 
 
-.. image:: ../../../img/webui-img/addColumn.png
+.. image:: ../../../img/webui_img/add_column.png
    :width: 40%
 
 
@@ -344,12 +343,12 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
 
 
 
-.. image:: ../../../img/webui-img/select-trial.png
+.. image:: ../../../img/webui_img/select_trial.png
    :width: 100%
 
 
 
-.. image:: ../../../img/webui-img/compare.png
+.. image:: ../../../img/webui_img/compare.png
    :width: 80%
 
 
@@ -359,7 +358,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
 
 
 
-.. image:: ../../../img/webui-img/copyParameter.png
+.. image:: ../../../img/webui_img/copy_parameter.png
    :width: 100%
 
 
@@ -369,7 +368,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
 
 
 
-.. image:: ../../../img/webui-img/intermediate.png
+.. image:: ../../../img/webui_img/intermediate.png
    :width: 100%
 
 
@@ -379,7 +378,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
 
 
 
-.. image:: ../../../img/webui-img/kill-running.png
+.. image:: ../../../img/webui_img/kill_running.png
    :width: 100%
 
 

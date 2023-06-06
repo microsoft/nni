@@ -96,9 +96,11 @@ function CompareIndex(props: CompareProps): any {
     const _generateTooltipSummary = (row: Item, value: string): string =>
         renderToString(
             <div className='tooldetailAccuracy'>
-                <div>Trial No.: {row.sequenceId}</div>
-                <div>Trial ID: {row.id}</div>
-                <div>Intermediate metric: {value}</div>
+                <div className='main'>
+                    <div>Trial No.: {row.sequenceId}</div>
+                    <div>Trial ID: {row.id}</div>
+                    <div>Intermediate metric: {value}</div>
+                </div>
             </div>
         );
 

@@ -19,27 +19,27 @@ The model spaces provided so far are all built for image classification tasks, t
 
    * - Name
      - Brief Description
-   * - :class:`~nni.retiarii.hub.pytorch.NasBench101`
+   * - :class:`~nni.nas.hub.pytorch.NasBench101`
      - Search space benchmarked by `NAS-Bench-101 <http://proceedings.mlr.press/v97/ying19a/ying19a.pdf>`__
-   * - :class:`~nni.retiarii.hub.pytorch.NasBench201`
+   * - :class:`~nni.nas.hub.pytorch.NasBench201`
      - Search space benchmarked by `NAS-Bench-201 <https://arxiv.org/abs/2001.00326>`__
-   * - :class:`~nni.retiarii.hub.pytorch.NASNet`
+   * - :class:`~nni.nas.hub.pytorch.NASNet`
      - Proposed by `Learning Transferable Architectures for Scalable Image Recognition <https://arxiv.org/abs/1707.07012>`__
-   * - :class:`~nni.retiarii.hub.pytorch.ENAS`
+   * - :class:`~nni.nas.hub.pytorch.ENAS`
      - Proposed by `Efficient neural architecture search via parameter sharing <https://arxiv.org/abs/1802.03268>`__, subtly different from NASNet
-   * - :class:`~nni.retiarii.hub.pytorch.AmoebaNet`
+   * - :class:`~nni.nas.hub.pytorch.AmoebaNet`
      - Proposed by `Regularized evolution for image classifier architecture search <https://arxiv.org/abs/1802.01548>`__, subtly different from NASNet
-   * - :class:`~nni.retiarii.hub.pytorch.PNAS`
+   * - :class:`~nni.nas.hub.pytorch.PNAS`
      - Proposed by `Progressive neural architecture search <https://arxiv.org/abs/1712.00559>`__, subtly different from NASNet
-   * - :class:`~nni.retiarii.hub.pytorch.DARTS`
+   * - :class:`~nni.nas.hub.pytorch.DARTS`
      - Proposed by `Darts: Differentiable architecture search <https://arxiv.org/abs/1806.09055>`__, most popularly used in evaluating one-shot algorithms
-   * - :class:`~nni.retiarii.hub.pytorch.ProxylessNAS`
+   * - :class:`~nni.nas.hub.pytorch.ProxylessNAS`
      - Proposed by `ProxylessNAS <https://arxiv.org/abs/1812.00332>`__, based on MobileNetV2.
-   * - :class:`~nni.retiarii.hub.pytorch.MobileNetV3Space`
+   * - :class:`~nni.nas.hub.pytorch.MobileNetV3Space`
      - The largest space in `TuNAS <https://arxiv.org/abs/2008.06120>`__.
-   * - :class:`~nni.retiarii.hub.pytorch.ShuffleNetSpace`
+   * - :class:`~nni.nas.hub.pytorch.ShuffleNetSpace`
      - Based on ShuffleNetV2, proposed by `Single Path One-shot <https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123610528.pdf>`__
-   * - :class:`~nni.retiarii.hub.pytorch.AutoformerSpace`
+   * - :class:`~nni.nas.hub.pytorch.AutoFormer`
      - Based on ViT, proposed by `Autoformer <https://arxiv.org/abs/2107.00651>`__
 
 .. note::
@@ -59,7 +59,7 @@ One way to use the model space is to directly leverage the searched results. Not
 .. code-block:: python
 
    import torch
-   from nni.retiarii.hub.pytorch import MobileNetV3Space
+   from nni.nas.hub.pytorch import MobileNetV3Space
    from torch.utils.data import DataLoader
    from torchvision import transforms
    from torchvision.datasets import ImageNet
@@ -150,20 +150,20 @@ Here is a short sample code snippet for reference.
 .. code-block:: python
 
    # Create the model space
-   from nni.retiarii.hub.pytorch import MobileNetV3Space
+   from nni.nas.hub.pytorch import MobileNetV3Space
    model_space = MobileNetV3Space()
 
    # Pick a search strategy
-   from nni.retiarii.strategy import Evolution
-   strategy = Evolution()  # It can be any strategy, including one-shot strategies.
+   from nni.nas.strategy import RegularizedEvolution
+   strategy = RegularizedEvolution()  # It can be any strategy, including one-shot strategies.
 
    # Define an evaluator
-   from nni.retiarii.evaluator.pytorch import Classification
+   from nni.nas.evaluator.pytorch import Classification
    evaluator = Classification(train_dataloaders=DataLoader(train_dataset, batch_size=batch_size),
                               val_dataloaders=DataLoader(test_dataset, batch_size=batch_size))
 
    # Launch the experiment, start the search process
-   experiment = RetiariiExperiment(model_space, evaluator, [], strategy)
-   experiment.run(experiment_config)
+   experiment = NasExperiment(model_space, evaluator, strategy)
+   experiment.run()
 
 .. todo: search reproduction results

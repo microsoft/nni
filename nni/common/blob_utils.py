@@ -8,9 +8,9 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
+from shutil import which
 from typing import Optional
 
-import requests
 import tqdm
 
 __all__ = ['NNI_BLOB', 'load_or_download_file', 'upload_file', 'nni_cache_home']
@@ -55,25 +55,44 @@ def load_or_download_file(local_path: str, download_url: str, download: bool = F
         elif download:
             _logger.info('"%s" does not exist. Downloading "%s"', local_path, download_url)
 
-            # Follow download implementation in torchvision:
-            # We deliberately save it in a temp file and move it after
-            # download is complete. This prevents a local working checkpoint
-            # being overridden by a broken download.
             dst_dir = Path(local_path).parent
             dst_dir.mkdir(exist_ok=True, parents=True)
 
-            f = tempfile.NamedTemporaryFile(delete=False, dir=dst_dir)
-            r = requests.get(download_url, stream=True)
-            total_length: Optional[str] = r.headers.get('content-length')
-            assert total_length is not None, f'Content length is not found in the response of {download_url}'
-            with tqdm.tqdm(total=int(total_length), disable=not progress,
-                           unit='B', unit_scale=True, unit_divisor=1024) as pbar:
-                for chunk in r.iter_content(8192):
-                    f.write(chunk)
-                    sha256.update(chunk)
-                    pbar.update(len(chunk))
-                    f.flush()
-            f.close()
+            if which('azcopy') is not None:
+                output_level = []
+                if not progress:
+                    output_level = ['--output-level', 'quiet']
+                subprocess.run(['azcopy', 'copy', download_url, local_path] + output_level, check=True)
+
+                # Update hash as a verification
+                with Path(local_path).open('rb') as fr:
+                    while True:
+                        chunk = fr.read(8192)
+                        if len(chunk) == 0:
+                            break
+                        sha256.update(chunk)
+
+            else:
+                _logger.info('azcopy is not installed. Fall back to use requests.')
+
+                import requests
+
+                # Follow download implementation in torchvision:
+                # We deliberately save it in a temp file and move it after
+                # download is complete. This prevents a local working checkpoint
+                # being overridden by a broken download.
+                f = tempfile.NamedTemporaryFile(delete=False, dir=dst_dir)
+                r = requests.get(download_url, stream=True)
+                total_length: Optional[str] = r.headers.get('content-length')
+                assert total_length is not None, f'Content length is not found in the response of {download_url}'
+                with tqdm.tqdm(total=int(total_length), disable=not progress,
+                               unit='B', unit_scale=True, unit_divisor=1024) as pbar:
+                    for chunk in r.iter_content(8192):
+                        f.write(chunk)
+                        sha256.update(chunk)
+                        pbar.update(len(chunk))
+                        f.flush()
+                f.close()
         else:
             raise FileNotFoundError(
                 'Download is not enabled, and file does not exist: {}. Please set download=True.'.format(local_path)
@@ -81,7 +100,8 @@ def load_or_download_file(local_path: str, download_url: str, download: bool = F
 
         digest = sha256.hexdigest()
         if not digest.startswith(hash_prefix):
-            raise RuntimeError('Invalid hash value (expected "{}", got "{}")'.format(hash_prefix, digest))
+            raise RuntimeError(f'Invalid hash value (expected "{hash_prefix}", got "{digest}") for {local_path}. '
+                               'Please delete the file and try re-downloading.')
 
         if f is not None:
             shutil.move(f.name, local_path)
