@@ -1,6 +1,6 @@
 $buttonsMarginTop: 45px;
 $buttonsMarginBottom: 7px;
-$navBarHeight: 56px;
+$navBarHeight: 64px;
 $navBarMarginBottom: 18px;
 
 .download {
@@ -17,12 +17,16 @@ $navBarMarginBottom: 18px;
     width: 55%;
     background: #fff;
 
+    .ms-Panel-commands {
+        padding-top: 0;
+    }
+
     .ms-Panel-content {
         padding: 0;
     }
 
     .ms-Pivot {
-        line-height: 56px;
+        line-height: $navBarHeight;
         padding: 0 38px;
         background: #f2f2f2;
 
