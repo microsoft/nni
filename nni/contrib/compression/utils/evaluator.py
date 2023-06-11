@@ -16,9 +16,16 @@ from torch.optim import Optimizer
 from torch.utils.hooks import RemovableHandle
 
 try:
-    import pytorch_lightning as pl
+    import lightning as pl
+    from lightning.callbacks import Callback
 except ImportError:
-    LIGHTNING_INSTALLED = False
+    try:
+        import pytorch_lightning as pl
+        from pytorch_lightning.callbacks import Callback
+    except ImportError:
+        LIGHTNING_INSTALLED = False
+    else:
+        LIGHTNING_INSTALLED = True
 else:
     LIGHTNING_INSTALLED = True
 
