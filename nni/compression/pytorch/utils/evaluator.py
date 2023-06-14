@@ -321,10 +321,17 @@ class LightningEvaluator(Evaluator):
     def __init__(self, trainer: pl.Trainer, data_module: pl.LightningDataModule,
                  dummy_input: Any | None = None):
         assert LIGHTNING_INSTALLED, 'pytorch_lightning is not installed.'
-        err_msg_p = 'Only support traced {}, please use nni.trace({}) to initialize the trainer.'
-        err_msg = err_msg_p.format('pytorch_lightning.Trainer', 'pytorch_lightning.Trainer')
+        err_msg_p = (
+            'Only support traced {}, please use nni.trace({}) to initialize the trainer. '
+            'for pytorch_lightning version > 2.0, please using {}'
+        )
+        err_msg = err_msg_p.format('pytorch_lightning.Trainer', 'pytorch_lightning.Trainer', 'lightning.Trainer')
         assert isinstance(trainer, pl.Trainer) and is_traceable(trainer), err_msg
-        err_msg = err_msg_p.format('pytorch_lightning.LightningDataModule', 'pytorch_lightning.LightningDataModule')
+        err_msg = err_msg_p.format(
+            'pytorch_lightning.LightningDataModule',
+            'pytorch_lightning.LightningDataModule',
+            'lightning.LightningDataModule',
+        )
         assert isinstance(data_module, pl.LightningDataModule) and is_traceable(data_module), err_msg
         self.trainer = trainer
         self.data_module = data_module
