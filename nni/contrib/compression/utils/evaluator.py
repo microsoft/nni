@@ -1151,9 +1151,10 @@ class TransformersEvaluator(Evaluator):
 
 
 class DeepspeedTorchEvaluator(Evaluator):
-    def __init__(self, training_func: _TRAINING_FUNC, optimizer: Optimizer | Callable[[List[Tensor]], Optimizer] | None,
-                 training_step: _TRAINING_STEP, lr_scheduler: SCHEDULER | Callable[[Optimizer], SCHEDULER] | None,
-                 deepspeed: str | Dict, resume_from_checkpoint_args: Dict | None = None, dummy_input: Any | None = None,
+    def __init__(self, training_func: _TRAINING_FUNC, training_step: _TRAINING_STEP, deepspeed: str | Dict,
+                 optimizer: Optimizer | Callable[[List[Tensor]], Optimizer] | None = None,
+                 lr_scheduler: SCHEDULER | Callable[[Optimizer], SCHEDULER] | None = None,
+                 resume_from_checkpoint_args: Dict | None = None, dummy_input: Any | None = None,
                  evaluating_func: _EVALUATING_FUNC | None = None):
         assert ACCELERATE_INSTALLED, "accelerate is not installed"
         assert DEEPSPEED_INSTALLED, "deepspeed is not installed"
@@ -1180,7 +1181,6 @@ class DeepspeedTorchEvaluator(Evaluator):
         self.deepspeed_config: DeepSpeedConfig | None = self.process_deepspeed(deepspeed)
 
     def process_deepspeed(self, config_file_or_dict: str | Dict) -> DeepSpeedConfig:
-        print(f"deepspeed_file: ={config_file_or_dict}")
         if config_file_or_dict is None:
             raise ValueError('deepspeed_config should not be None')
         assert isinstance(config_file_or_dict, (Dict, str)), \
@@ -1251,7 +1251,10 @@ class DeepspeedTorchEvaluator(Evaluator):
             _logger.warning('Already bound a model, will unbind it before bind a new model.')
             self.unbind_model()
 
-        self.model = self._rewrap_if_ddp_model(model)
+        is_ddp_model, _ = check_ddp_model(model)
+        assert not is_ddp_model, \
+            "DeepSpeed will automatically initialize the distributed environment during its initialize"
+        self.model = model
         self._param_names_map = param_names_map
         # initialize optimizers & lr_schedulers for the bound model here
         if hasattr(self, '_optimizer_helper'):
