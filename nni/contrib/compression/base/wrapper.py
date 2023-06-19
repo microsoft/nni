@@ -433,7 +433,7 @@ class ModuleWrapper(torch.nn.Module):
             if not hasattr(self, 'bias_element_num'):
                 setattr(self, 'bias_element_num', element_num)
             else:
-                self.bias_element_num += element_num
+                self.bias_element_num: int = self.bias_element_num + element_num
 
         torch.cuda.empty_cache()
 
