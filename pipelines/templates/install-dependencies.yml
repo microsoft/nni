@@ -9,7 +9,7 @@ parameters:
   - noop
   - venv
 
-# variables set on VSO: (for security concern)
+# variables set on VSO:
 #   sas_cache
 #
 # its value should be:
