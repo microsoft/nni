@@ -33,7 +33,7 @@ steps:
 
 - script: |
     set -e
-    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_token)' dependencies.zip
+    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_cache)' dependencies.zip
     python test/vso_tools/unpack_dependencies.py dependencies.zip
     rm dependencies.zip
   displayName: (POSIX) Download cache
@@ -41,7 +41,7 @@ steps:
   continueOnError: true
 
 - powershell: |
-    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_token)' dependencies.zip
+    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_cache)' dependencies.zip
     python test/vso_tools/unpack_dependencies.py dependencies.zip
     Remove-Item dependencies.zip
   displayName: (Windows) Download cache
