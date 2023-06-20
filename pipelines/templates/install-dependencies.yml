@@ -9,6 +9,16 @@ parameters:
   - noop
   - venv
 
+# variables set on VSO: (for security concern)
+#   sas_cache
+#
+# its value should be:
+#   sp=racw&st=2022-04-01T00:00:00Z&se=......
+#
+# how to re-generate:
+#   1. find the storage on azure portal: nni (resource group) -> nni (storage account) -> cache (container)
+#   2. settings - shared access tokens - generate sas token and url
+
 steps:
 - template: config-version.yml
   parameters:
