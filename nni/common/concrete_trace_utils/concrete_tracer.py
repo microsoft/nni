@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import collections
+import copy
 import sys
 import inspect
 import logging
@@ -26,8 +27,9 @@ from torch.fx import GraphModule
 from torch.fx._compatibility import compatibility
 from torch.fx._symbolic_trace import _Patcher, _proxyable_classes
 from torch.fx.graph import Graph
-from torch.fx.node import Target, Node
+from torch.fx.node import Target, Node, Argument, _side_effectful_functions
 from torch.fx.proxy import TracerBase
+from torch.fx.operator_schemas import check_for_mutable_operation
 
 try:
     # Scope is a new class to record module path in pytorch 2.0
@@ -41,6 +43,39 @@ except ImportError:
             self.module_path = module_path
             self.module_type = module_type
 
+try:
+    # comes with Scope
+    from torch.fx.proxy import ScopeContextManager
+except ImportError:
+    # copy from pytorch 2.0
+    @compatibility(is_backward_compatible=False)
+    class ScopeContextManager:
+        """ A context manager to track the Scope of Node during symbolic tracing.
+        When entering a forward function of a Module, we'll update the scope information of
+        the current module, and when we exit, we'll restore the previous scope information.
+        """
+
+        def __init__(
+            self,
+            scope: Scope,
+            current_scope: Scope,
+        ):
+            super().__init__()
+            # Keep a copy of prev scope to restore on exit
+            self._prev_scope = copy.copy(scope)
+            # Update scope to current scope
+            scope.module_path = current_scope.module_path
+            scope.module_type = current_scope.module_type
+            # Save a reference so we can restore it
+            self._scope = scope
+
+        def __enter__(self):
+            return self._scope
+
+        def __exit__(self, *args):
+            self._scope.module_path = self._prev_scope.module_path
+            self._scope.module_type = self._prev_scope.module_type
+            return
 
 from . import concrete_proxy as ep
 from .operator_patcher import OperatorPatcherContext
@@ -84,8 +119,17 @@ from .utils import (
     _orig_all,
     _orig_min,
     _orig_max,
+
+    _orig_node_is_impure,
 )
 
+# some side effectful functions that should not be deleted during dead code elimination
+# there may be more than listed here
+extra_side_effectful_functions = {
+    operator.setitem,
+    builtins.next,
+}
+_side_effectful_functions = _side_effectful_functions.union(extra_side_effectful_functions)
 
 # pyright: reportGeneralTypeIssues=false
 _logger = logging.getLogger(__name__)
@@ -211,10 +255,6 @@ class ConcreteTracer(TracerBase):
         _orig_torch_finfo:          ((), False),
     }
 
-    # add these to record module path information during tracing
-    current_module_qualified_name : str = ''
-    node_to_originating_module : Dict[torch.fx.Node, str] = {}
-
     @compatibility(is_backward_compatible=True)
     def __init__(self, cpu_offload = False):
         """
@@ -339,6 +379,32 @@ class ConcreteTracer(TracerBase):
         return result
 
     @compatibility(is_backward_compatible=True)
+    def create_node(self, kind : str, target : Target,
+                    args : Tuple[Argument, ...], kwargs : Dict[str, Argument], name : Optional[str] = None,
+                    type_expr : Optional[Any] = None) -> Node:
+        """
+        This method is almost the same as the one in `TracerBase` class of Pytorch2.0.
+        Add it here because this method of Pytorch1.13 and older version
+        doesn't have the part related to `module_stack` and `node_name_to_scope`.
+        If we don't add it here, we can not use these two attributes in Pytorch1.13 and older version.
+        """
+        if kind == 'call_function' and self.check_mutable_operations:
+            check_for_mutable_operation(target, args, kwargs)
+
+        node = self.graph.create_node(kind, target, args, kwargs, name, type_expr)
+        # TODO node_name_to_scope will be depricated in favor of
+        # node.meta['nn_module_stack']
+        self.node_name_to_scope[node.name] = (
+            self.scope.module_path,
+            self.scope.module_type,
+        )
+        if self.module_stack:
+            node.meta['nn_module_stack'] = copy.copy(self.module_stack)
+        else:
+            node.meta['nn_module_stack'] = collections.OrderedDict()
+        return node
+
+    @compatibility(is_backward_compatible=True)
     def proxy(self, value: Any, node: Node) -> ep.ConcreteProxy:
         """
         overloaded to use custom 'proxy'.
@@ -371,7 +437,6 @@ class ConcreteTracer(TracerBase):
         node = self.create_node(kind, target, args_, kwargs_, name, type_expr)
 
         proxy = self.proxy(value_unwrapped, node)
-        self.node_to_originating_module[proxy.node] = self.current_module_qualified_name
         return proxy
 
     @compatibility(is_backward_compatible=True)
@@ -713,7 +778,9 @@ class ConcreteTracer(TracerBase):
                     return self.wrapped_leaf[attr_val][1]
                 return attr_val
             elif attr in self.default_module_getattr:
-                return self.create_proxy('get_attr', f'{self.the_path_of_middle_class[id(mod)]}.{attr}', (), {})
+                path = self.the_path_of_middle_class[id(mod)]
+                path = path + '.' if path else ''
+                return self.create_proxy('get_attr', f'{path + attr}', (), {})
             elif _orig_isinstance(attr_val, (_orig_tuple, _orig_list)):
                 if self.the_path_of_middle_class[id(mod)] == '':
                     return self.create_proxy('get_attr', f'{attr}', (), {})
@@ -730,11 +797,10 @@ class ConcreteTracer(TracerBase):
             if self.temp_disable_call:
                 return _orig_module_call(mod, *args, **kwargs)
             else:
-                # corresponding to call_module
-                old_qualname = self.current_module_qualified_name
-                try:
-                    self.current_module_qualified_name = self.path_of_module(mod)
-                    module_qualified_name = self.path_of_module(mod)
+                # codes below corresponds to symbolic tracer's call_module
+                module_qualified_name = self.path_of_module(mod)
+                with ScopeContextManager(self.scope, Scope(module_qualified_name, type(mod))) as _scope:
+                    self.module_stack[_scope.module_path] = _scope.module_type
                     if not self.is_leaf_module(mod, module_qualified_name):
                         _autowrap_check(self,
                                         mod.forward.__globals__,
@@ -746,11 +812,12 @@ class ConcreteTracer(TracerBase):
                                         self._autowrap_function_ids,
                                         self.autowrap_leaf_pairs,
                                         self.agfunc_dict)
-                        return _orig_module_call(mod, *args, **kwargs)
+                        ret_val = _orig_module_call(mod, *args, **kwargs)
                     else:
-                        return self.create_proxy('call_module', module_qualified_name, args, kwargs)
-                finally:
-                    self.current_module_qualified_name = old_qualname
+                        ret_val = self.create_proxy('call_module', module_qualified_name, args, kwargs)
+                    key, _ = self.module_stack.popitem(last=True)
+                    assert key == _scope.module_path, f" Unexpected key {key}"
+                return ret_val
 
         class map_wrapper_clz:
             @functools.wraps(_orig_map)
@@ -1024,9 +1091,6 @@ class ConcreteTracer(TracerBase):
             pass
 
         self.submodule_paths = None
-        with MagicMethodPatcher():
-            GraphModule(self.root, self.graph)  # assign graph.owning_module
-            self.graph.eliminate_dead_code()
         return self.graph
 
 # List of pairs of (global dict, function name) functions
@@ -1368,6 +1432,29 @@ def _retain_weight_consistency(root: torch.nn.Module):
                         ' ``concrete_trace`` may not guarantee the consistency of the traced graph.')
     return root
 
+@functools.wraps(_orig_node_is_impure)
+def node_is_impure_wrapper(node):
+    if node.op in {"placeholder", "output"}:
+        return True
+
+    if node.op == "call_function":
+        return node.target in _side_effectful_functions
+
+    if node.op == "call_method":
+        return node.target.endswith("_")
+
+    if node.op == "call_module":
+        assert (
+            node.graph.owning_module is not None
+        ), "self.graph.owning_module not set for purity check"
+        target_mod = node.graph.owning_module.get_submodule(node.target)
+        assert (
+            target_mod is not None
+        ), f"Did not find expected submodule target {node.target}"
+        return getattr(target_mod, "_is_impure", False)
+
+    return False
+
 def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    concrete_args: Union[Dict[str, Any], Tuple],
                    *,
@@ -1379,8 +1466,9 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
                    autowrap_leaf_class = None,
                    leaf_module: Tuple | None = None,
                    fake_middle_class = None,
-                   dce = False,
+                   dce = True,
                    cpu_offload = False,
+                   trace_twice = False,
                    ) -> GraphModule:
     """
     Concrete tracing API
@@ -1525,67 +1613,48 @@ def concrete_trace(root : Union[torch.nn.Module, Callable[..., Any]],
         operator_patch_backlist = operator_patch_backlist,
         forward_function_name = forward_function_name,
     )
-    graph_check = tracer.trace(root,
-        autowrap_leaf_function = autowrap_leaf_function,
-        autowrap_leaf_class = autowrap_leaf_class,
-        leaf_module = leaf_module,
-        fake_middle_class = fake_middle_class,
-        concrete_args = concrete_args,
-        use_operator_patch = use_operator_patch,
-        operator_patch_backlist = operator_patch_backlist,
-        forward_function_name = forward_function_name,
-    )
-    # compare to check equal
-    assert len(graph.nodes) == len(graph_check.nodes), f'number nodes: {len(graph.nodes)} vs {len(graph_check.nodes)}'
-    for node_a, node_b in zip(graph.nodes, graph_check.nodes):
-        node_a: Node
-        node_b: Node
-        target_a = node_a.target
-        target_b = node_b.target
-        if node_a.op == 'get_attr' and node_a.name.startswith('_tensor_constant'):
-            assert node_b.op == 'get_attr' and node_b.name.startswith('_tensor_constant')
-            assert torch.equal(getattr(root, node_a.name), getattr(root, node_b.name))
-        elif node_a.op == 'call_function' and isinstance(target_a, Callable) and target_a.__name__ == 'apply' and\
-            hasattr(target_a, '__self__') and issubclass(target_a.__self__, torch.autograd.Function):
-            assert node_b.op == 'call_function' and isinstance(target_b, Callable) and target_b.__name__ == 'apply' and\
-            hasattr(target_b, '__self__') and issubclass(target_b.__self__, torch.autograd.Function)
-        else:
-            assert node_a.op == node_b.op and target_a == target_b, f'op: {node_a.op} vs {node_b.op}, target: {target_a} vs {target_b}'
+
+    if trace_twice:
+        graph_check = tracer.trace(root,
+            autowrap_leaf_function = autowrap_leaf_function,
+            autowrap_leaf_class = autowrap_leaf_class,
+            leaf_module = leaf_module,
+            fake_middle_class = fake_middle_class,
+            concrete_args = concrete_args,
+            use_operator_patch = use_operator_patch,
+            operator_patch_backlist = operator_patch_backlist,
+            forward_function_name = forward_function_name,
+        )
+        # compare to check equal
+        assert len(graph.nodes) == len(graph_check.nodes), f'number nodes: {len(graph.nodes)} vs {len(graph_check.nodes)}'
+        for node_a, node_b in zip(graph.nodes, graph_check.nodes):
+            node_a: Node
+            node_b: Node
+            target_a = node_a.target
+            target_b = node_b.target
+            if node_a.op == 'get_attr' and node_a.name.startswith('_tensor_constant'):
+                assert node_b.op == 'get_attr' and node_b.name.startswith('_tensor_constant')
+                assert torch.equal(getattr(root, node_a.name), getattr(root, node_b.name))
+            elif node_a.op == 'call_function' and isinstance(target_a, Callable) and target_a.__name__ == 'apply' and\
+                hasattr(target_a, '__self__') and issubclass(target_a.__self__, torch.autograd.Function):
+                assert node_b.op == 'call_function' and isinstance(target_b, Callable) and target_b.__name__ == 'apply' and\
+                hasattr(target_b, '__self__') and issubclass(target_b.__self__, torch.autograd.Function)
+            else:
+                assert node_a.op == node_b.op and target_a == target_b, f'op: {node_a.op} vs {node_b.op}, target: {target_a} vs {target_b}'
 
     with MagicMethodPatcher():
         name = root.__class__.__name__ if isinstance(root, torch.nn.Module) else root.__name__
         traced = GraphModule(tracer.root, graph, name)
 
+        if dce:
+            with _Patcher() as patcher:
+                patcher.patch_method(Node, 'is_impure', node_is_impure_wrapper, deduplicate=False)
+                traced.graph.eliminate_dead_code()
+            traced.recompile()  # this need to be done in MagicMethodPatcher context
+
     # TODO: better infomation
     if check_args is not None:
         assert root(**check_args) == traced(**check_args)
-
-    # before returning the traced GraphModule, store module path info
-    setattr(traced, 'module_path', tracer.node_to_originating_module.copy())
-
-    # apply dead code elimination according to the switch param `dce`
-    if dce:
-        def recursively_check_node(n: torch.fx.Node) -> bool:
-            # !pay attention that the `output` node should be ignored for users checking
-            if n.op == 'output':
-                return False
-            if n.users:
-                users = list(n.users)
-                for user in users:
-                    user_deleted = recursively_check_node(user)
-                    if not user_deleted:
-                        return False
-            if not n.users:
-                for input_node in n.all_input_nodes:
-                    input_node.users.pop(n)
-                n._remove_from_list()
-                return True
-            else:
-                return False
-
-        for node in traced.graph.nodes:
-            recursively_check_node(node)
-        traced.recompile()
 
     if is_training:
         root.train()
