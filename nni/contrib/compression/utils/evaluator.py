@@ -1094,7 +1094,7 @@ class TransformersEvaluator(Evaluator):
 
     def patch_optimizer_step(self, before_step_tasks: List[Callable], after_step_tasks: List[Callable]):
         def custom_on_train_begin(_, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
-            optimizer = self.trainer.deepspeed if self.trainer.deepspeed else self.trainer.callback_handler.optimizer
+            optimizer = self.trainer.deepspeed if hasattr(self.trainer, "deepspeed") else self.trainer.callback_handler.optimizer
 
             assert optimizer is not None
             old_step = optimizer.step
@@ -1208,6 +1208,10 @@ class DeepspeedTorchEvaluator(Evaluator):
         # case 8: opt = Callback, sche = Scheduler, X
         # case 9: opt = Optim, sche = Scheduler, ok
         assert hasattr(self, "deepspeed_config") and self.deepspeed_config is not None
+        if self._tmp_optimizer is not None and self.deepspeed_config.get_value('optimizer') is not None:
+            raise ValueError("Please provide the optimizer during the evaluator's initialization or in the" +
+                             "deepspeed_config, but don\'t provide both at the same time.")
+
         # case 1: optimizer is None and config is None
         if self._tmp_optimizer is None and self.deepspeed_config.get_value('optimizer') is None:
             raise ValueError("Optimizer and optimizer configuration in deepspeed config" +

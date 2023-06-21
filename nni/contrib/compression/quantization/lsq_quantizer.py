@@ -125,7 +125,7 @@ class LsqQuantizer(Quantizer):
                     except StopIteration:
                         # NOTE: this will have risk in model parallel
                         device = next(self.bound_model.parameters()).device
-                param = torch.nn.Parameter(torch.Tensor([1.0]).to(device))
+                param = torch.nn.Parameter(torch.Tensor([0.01]).to(device))
                 wrapper.register_parameter(f"{target_name}_scale", param)
 
     def patch_optimizer_param_group(self):
