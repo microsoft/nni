@@ -6,7 +6,7 @@ import torch.nn as nn
 import torchmetrics
 from torchvision.datasets import MNIST
 from torchvision import transforms
-from pytorch_lightning.utilities.seed import seed_everything
+from pytorch_lightning import seed_everything
 
 import nni
 from nni.experiment.config import RemoteConfig, RemoteMachineConfig
@@ -114,7 +114,7 @@ class M_2_stem(nn.Module):
         return pool2
 
 
-def create_evaluator(n_models=None):
+def create_evaluator(n_models=None, accelerator='gpu'):
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = nni.trace(MNIST)(root='data/mnist', train=True, download=False, transform=transform)
     test_dataset = nni.trace(MNIST)(root='data/mnist', train=False, download=False, transform=transform)
@@ -127,7 +127,7 @@ def create_evaluator(n_models=None):
 
     lightning = Lightning(
         multi_module,
-        MultiModelTrainer(max_epochs=1, limit_train_batches=0.25, enable_progress_bar=True),
+        MultiModelTrainer(max_epochs=1, limit_train_batches=0.25, enable_progress_bar=True, accelerator=accelerator),
         train_dataloaders=DataLoader(train_dataset, batch_size=100),
         val_dataloaders=DataLoader(test_dataset, batch_size=100)
     )
@@ -191,7 +191,7 @@ def cgo(request):
 
 
 def test_multi_model_trainer_cpu(trial_command_channel):
-    evaluator = create_evaluator(n_models=2)
+    evaluator = create_evaluator(n_models=2, accelerator='cpu')
     evaluator.evaluate(_model_cpu())
 
     result = trial_command_channel.final

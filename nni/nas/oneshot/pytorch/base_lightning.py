@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Iterable, cast, TYPE_CHECKING
+from typing import Any, Iterable, List, cast, TYPE_CHECKING
 
 import torch.optim as optim
 import torch.nn as nn
@@ -279,9 +279,6 @@ class BaseOneShotLightningModule(LightningModule):
         if self.automatic_optimization:
             raise ValueError('This method should not be used when automatic optimization is turned on.')
 
-        if self.trainer.optimizer_frequencies:
-            warnings.warn('optimizer_frequencies is not supported in NAS. It will be ignored.', UserWarning)
-
         # Has to be optimizers() here (to get LightningOptimizer)
         # instead of trainer.optimizers (raw optimizers),
         # because otherwise optim_progress is incorrect.
@@ -289,22 +286,54 @@ class BaseOneShotLightningModule(LightningModule):
         if not isinstance(optimizers, list):
             optimizers = [optimizers]
         # Filter out optimizers for architecture parameters.
-        optimizers = [opt for opt in optimizers if not getattr(opt, 'is_arch_optimizer', False)]
+        optimizers = cast(List[Optimizer], [opt for opt in optimizers if not getattr(opt, 'is_arch_optimizer', False)])
+
+        if hasattr(self.trainer, 'optimizer_frequencies'):  # lightning < 2
+            self._legacy_advance_optimization(loss, batch_idx, optimizers, gradient_clip_val, gradient_clip_algorithm)
+        else:
+            if not self.training_module.automatic_optimization:
+                raise ValueError('Evaluator module with manual optimization is not compatible with one-shot algorithms.')
+            if len(optimizers) != 1:
+                raise ValueError('More than one optimizer returned by evaluator. This is not supported in NAS.')
+            optimizer = optimizers[0]
+
+            # There should be many before/after hooks called here, but they are omitted in this implementation.
+            # 1. zero gradient
+            self.training_module.optimizer_zero_grad(self.trainer.current_epoch, batch_idx, optimizer)
+            # 2. backward
+            self.manual_backward(loss)
+            # 3. grad clip
+            self.training_module.configure_gradient_clipping(optimizer, gradient_clip_val, gradient_clip_algorithm)
+            # 4. optimizer step
+            self.training_module.optimizer_step(self.trainer.current_epoch, batch_idx, optimizer)
+
+        self._optimizer_progress += 1
+
+    def _legacy_advance_optimization(
+        self,
+        loss: Any,
+        batch_idx: int,
+        optimizers: list[Optimizer],
+        gradient_clip_val: int | float | None = None,
+        gradient_clip_algorithm: str | None = None
+    ):
+        """:meth:`advance_optimization` for Lightning 1.x."""
+
+        if self.trainer.optimizer_frequencies:  # type: ignore
+            warnings.warn('optimizer_frequencies is not supported in NAS. It will be ignored.', UserWarning)
 
         opt_idx = self._optimizer_progress % len(optimizers)
         optimizer = cast(Optimizer, optimizers[opt_idx])  # LightningOptimizer has the same interface as Optimizer.
 
         # There should be many before/after hooks called here, but they are omitted in this implementation.
         # 1. zero gradient
-        self.training_module.optimizer_zero_grad(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)
+        self.training_module.optimizer_zero_grad(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)  # type: ignore
         # 2. backward
         self.manual_backward(loss)
         # 3. grad clip
-        self.training_module.configure_gradient_clipping(optimizer, opt_idx, gradient_clip_val, gradient_clip_algorithm)
+        self.training_module.configure_gradient_clipping(optimizer, opt_idx, gradient_clip_val, gradient_clip_algorithm)  # type: ignore
         # 4. optimizer step
-        self.training_module.optimizer_step(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)
-
-        self._optimizer_progress += 1
+        self.training_module.optimizer_step(self.trainer.current_epoch, batch_idx, optimizer, opt_idx)  # type: ignore
 
     def advance_lr_schedulers(self, batch_idx: int):
         """
@@ -329,11 +358,18 @@ class BaseOneShotLightningModule(LightningModule):
         try:
             # lightning >= 1.6
             for config in self.trainer.lr_scheduler_configs:
-                scheduler, opt_idx = config.scheduler, config.opt_idx
+                if hasattr(config, 'opt_idx'):
+                    # lightning < 2.0
+                    scheduler, opt_idx = config.scheduler, config.opt_idx  # type: ignore
+                else:
+                    scheduler, opt_idx = config.scheduler, None
                 if config.reduce_on_plateau:
                     warnings.warn('Reduce-lr-on-plateau is not supported in NAS. It will be ignored.', UserWarning)
                 if config.interval == interval and current_idx % config.frequency == 0:
-                    self.training_module.lr_scheduler_step(cast(Any, scheduler), cast(int, opt_idx), None)
+                    if opt_idx is not None:
+                        self.training_module.lr_scheduler_step(cast(Any, scheduler), cast(int, opt_idx), None)  # type: ignore
+                    else:
+                        self.training_module.lr_scheduler_step(cast(Any, scheduler), None)
         except AttributeError:
             # lightning < 1.6
             for lr_scheduler in self.trainer.lr_schedulers:  # type: ignore
