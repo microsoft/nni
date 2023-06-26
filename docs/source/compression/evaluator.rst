@@ -164,7 +164,7 @@ A complete example of using a trainer with DeepSpeed mode under the Transformers
 
 
 DeepspeedTorchEvaluator
---------------
+-----------------------
 
 :class:`DeepspeedTorchEvaluator <nni.contrib.compression.DeepspeedTorchEvaluator>` is an evaluator designed specifically for native PyTorch users who are utilizing DeepSpeed.
 
