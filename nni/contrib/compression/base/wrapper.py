@@ -37,7 +37,7 @@ OUTPUT_FORMAT = Union[Tensor, Any, Tuple[Tensor, Any], Dict[str, Union[Tensor, A
 
 
 class ModuleWrapper(torch.nn.Module):
-    def __init__(self, module: torch.nn.Module, module_name: str, config: Dict[str, List[Dict[str, Any]]] | None = None, \
+    def __init__(self, module: torch.nn.Module, module_name: str, config: Dict[str, Dict[str, Any]] | None = None, \
                  fused_modules: List[torch.nn.Module] | None = None):
         """
         Two changes will be done during initialization. One is an attribute named ``_nni_wrapper`` will be set to original module,
@@ -66,6 +66,13 @@ class ModuleWrapper(torch.nn.Module):
         self.module_forward = self.module.forward
         self.name = module_name
         self.config = config if config is not None else {}
+        # config storage
+        self.configs = {}
+        for mode, value in self.config.items():
+            if mode not in self.configs:
+                self.configs[mode] = []
+            self.configs[mode].append(value)
+
         assert all(k in ['pruning', 'quantization', 'distillation'] for k in self.config)
 
         # the arguments' name of self.module.forward
@@ -77,11 +84,11 @@ class ModuleWrapper(torch.nn.Module):
         self.distillation_target_spaces: Dict[str, DistillationTargetSpace] = {}
 
         if 'pruning' in self.config:
-            self.extend_target_spaces(self.config['pruning'][-1], 'pruning')
+            self.extend_target_spaces(self.config['pruning'], 'pruning')
         if 'quantization' in self.config:
-            self.extend_target_spaces(self.config['quantization'][-1], 'quantization')
+            self.extend_target_spaces(self.config['quantization'], 'quantization')
         if 'distillation' in self.config:
-            self.extend_target_spaces(self.config['distillation'][-1], 'distillation')
+            self.extend_target_spaces(self.config['distillation'], 'distillation')
 
         self._frozen = False
         # By default, input/output shape will be track during forward,
@@ -545,12 +552,12 @@ def create_module_wrapper(model: nn.Module, module: nn.Module, module_name: str,
             raise ValueError(f'Using two fused_modules_pair for {module_name} is not supported')
         wrapper.unfreeze()
         target_spaces = wrapper.extend_target_spaces(config, mode)
-        wrapper.config = update_config(wrapper.config, {mode: config})  # type: ignore
+        wrapper.configs = update_config(wrapper.configs, {mode: config})
 
         if len(fused_modules_pair) > 0:
             wrapper.fused_modules = fused_modules
     else:
-        wrapper = ModuleWrapper(module, module_name, {mode: [config]}, fused_modules)  # type: ignore
+        wrapper = ModuleWrapper(module, module_name, {mode: config}, fused_modules)
         if mode == 'pruning':
             target_spaces = dict(wrapper.pruning_target_spaces.items())
         elif mode == 'quantization':
