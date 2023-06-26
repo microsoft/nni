@@ -17,7 +17,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_pruning_speedup_thumb.png
-    :alt: Speedup Model with Mask
+    :alt:
 
   :ref:`sphx_glr_tutorials_pruning_speedup.py`
 
@@ -34,7 +34,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_pruning_quick_start_thumb.png
-    :alt: Pruning Quickstart
+    :alt:
 
   :ref:`sphx_glr_tutorials_pruning_quick_start.py`
 
@@ -51,7 +51,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_nasbench_as_dataset_thumb.png
-    :alt: Use NAS Benchmarks as Datasets
+    :alt:
 
   :ref:`sphx_glr_tutorials_nasbench_as_dataset.py`
 
@@ -68,7 +68,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_quantization_quick_start_thumb.png
-    :alt: Quantization Quickstart
+    :alt:
 
   :ref:`sphx_glr_tutorials_quantization_quick_start.py`
 
@@ -85,7 +85,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_quantization_speedup_thumb.png
-    :alt: Speed Up Quantized Model with TensorRT
+    :alt:
 
   :ref:`sphx_glr_tutorials_quantization_speedup.py`
 
@@ -102,7 +102,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_hello_nas_thumb.png
-    :alt: Hello, NAS!
+    :alt:
 
   :ref:`sphx_glr_tutorials_hello_nas.py`
 
@@ -119,7 +119,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_quantization_bert_glue_thumb.png
-    :alt: Quantize BERT on Task GLUE
+    :alt:
 
   :ref:`sphx_glr_tutorials_quantization_bert_glue.py`
 
@@ -136,7 +136,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_darts_thumb.png
-    :alt: Searching in DARTS search space
+    :alt:
 
   :ref:`sphx_glr_tutorials_darts.py`
 
@@ -148,12 +148,12 @@ Tutorials
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="This is a new tutorial on pruning transformer in nni v3.0 (`old tutorial &lt;https://nni.readthedo...">
+    <div class="sphx-glr-thumbcontainer" tooltip="This is a new tutorial on pruning transformer in nni v3.0 (old tutorial). The main difference b...">
 
 .. only:: html
 
   .. image:: /tutorials/images/thumb/sphx_glr_new_pruning_bert_glue_thumb.png
-    :alt: Pruning Bert on Task MNLI
+    :alt:
 
   :ref:`sphx_glr_tutorials_new_pruning_bert_glue.py`
 
@@ -196,7 +196,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/hpo_quickstart_pytorch/images/thumb/sphx_glr_main_thumb.png
-    :alt: HPO Quickstart with PyTorch
+    :alt:
 
   :ref:`sphx_glr_tutorials_hpo_quickstart_pytorch_main.py`
 
@@ -213,7 +213,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/hpo_quickstart_pytorch/images/thumb/sphx_glr_model_thumb.png
-    :alt: Port PyTorch Quickstart to NNI
+    :alt:
 
   :ref:`sphx_glr_tutorials_hpo_quickstart_pytorch_model.py`
 
@@ -242,7 +242,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/hpo_quickstart_tensorflow/images/thumb/sphx_glr_main_thumb.png
-    :alt: HPO Quickstart with TensorFlow
+    :alt:
 
   :ref:`sphx_glr_tutorials_hpo_quickstart_tensorflow_main.py`
 
@@ -259,7 +259,7 @@ Tutorials
 .. only:: html
 
   .. image:: /tutorials/hpo_quickstart_tensorflow/images/thumb/sphx_glr_model_thumb.png
-    :alt: Port TensorFlow Quickstart to NNI
+    :alt:
 
   :ref:`sphx_glr_tutorials_hpo_quickstart_tensorflow_model.py`
 
@@ -277,6 +277,7 @@ Tutorials
 .. toctree::
    :hidden:
    :includehidden:
+
 
    /tutorials/hpo_quickstart_pytorch/index.rst
    /tutorials/hpo_quickstart_tensorflow/index.rst

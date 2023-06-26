@@ -1185,22 +1185,15 @@ class DeepspeedTorchEvaluator(Evaluator):
                               training_step: Callable[[Any, Any], torch.Tensor],
                               lr_schedulers: _LRScheduler | None = None, max_steps: int | None = None,
                               max_epochs: int | None = None, *args, **kwargs):
-
                 ...
-
                 total_epochs = max_epochs if max_epochs else 20
                 total_steps = max_steps if max_steps else 1000000
                 current_steps = 0
-
                 ...
-
                 for epoch in range(total_epochs):
                     ...
-
                     model.backward(loss)
                     model.step()
-
-                    ...
                     if current_steps >= total_steps:
                         return
 
@@ -1211,7 +1204,9 @@ class DeepspeedTorchEvaluator(Evaluator):
     training_step
         A callable function, the first argument of inputs should be ``batch``, and the outputs should contain loss.
         Three kinds of outputs are supported: single loss, tuple with the first element is loss, a dict contains a key ``loss``.
+
         .. code-block:: python
+
             def training_step(batch, model, ...):
                 inputs, labels = batch
                 output = model(inputs)
@@ -1221,26 +1216,26 @@ class DeepspeedTorchEvaluator(Evaluator):
     deepspeed
         Str | dict. The deepspeed configuration which Contains the parameters needed in DeepSpeed, such as train_batch_size, among others.
     optimzier
-        Optional. A single traced optimizer instance or a function that takes the model parameters as input and returns an optimizer instance.
-        NNI may modify the ``torch.optim.Optimizer`` member function ``step`` and/or optimize compressed models,
-        so NNI needs to have the ability to re-initialize the optimizer. ``nni.trace`` can record the initialization parameters
-        of a function/class, which can then be used by NNI to re-initialize the optimizer for a new but structurally similar model.
-        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
+        Optional. A single traced optimizer instance or a function that takes the model parameters
+        as input and returns an optimizer instance. NNI may modify the ``torch.optim.Optimizer`` member function ``step``
+        and/or optimize compressed models, so NNI needs to have the ability to re-initialize the optimizer. ``nni.trace`` can
+        record the initialization parameters of a function/class, which can then be used by NNI to re-initialize the
+        optimizer for a new but structurally similar model. E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
     lr_schedulers
-        Optional. A single traced lr_scheduler instance or a function that takes the model parameters and the optimizer as input and returns an lr_scheduler instance.
-        For the same reason with ``optimizers``, NNI needs the traced lr_scheduler to re-initialize it.
+        Optional. A single traced lr_scheduler instance or a function that takes the model parameters and the optimizer as input
+        and returns an lr_scheduler instance. For the same reason with ``optimizers``, NNI needs the traced lr_scheduler
+        to re-initialize it.
         E.g. ``traced_lr_scheduler = nni.trace(ExponentialLR)(optimizer, 0.1)``.
     resume_from_checkpoint_args
         Dict | None. Used in the deepspeed_init process to load models saved during training with DeepSpeed.
-
         Let's explain these seven elements in the resume_from_checkpoint_args.
 
         * ``load_dir``: The directory to load the checkpoint from.
         * ``tag`` : Checkpoint tag used as a unique identifier for checkpoint, if not provided will attempt to load tag in 'latest' file
         * ``load_module_strict``: Optional. Boolean to strictly enforce that the keys in state_dict of module and checkpoint match.
-        * ``load_optimizer_states``: Optional. Boolean to load the training optimizer states from Checkpoint. Ex. ADAM's momentum and variance.
+        * ``load_optimizer_states``: Optional. Boolean to load the training optimizer states from Checkpoint.
         * ``load_lr_scheduler_states``: Optional. Boolean to add the learning rate scheduler states from Checkpoint.
-        * ``load_module_only``: Optional. Boolean to load only the model weights from the checkpoint. Ex. warmstarting.
+        * ``load_module_only``: Optional. Boolean to load only the model weights from the checkpoint.
         * ``custom_load_fn``: Optional. Custom model load function.
 
     dummy_input
