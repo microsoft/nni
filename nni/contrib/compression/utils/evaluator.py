@@ -1151,6 +1151,123 @@ class TransformersEvaluator(Evaluator):
 
 
 class DeepspeedTorchEvaluator(Evaluator):
+    """
+    The DeepseedTorchEvaluator is an evaluator designed specifically for native PyTorch users who are utilizing DeepSpeed.
+    Please refer to the :doc:`/compression/compression_evaluator` for the evaluator initialization example.
+
+    Parameters
+    ----------
+    training_func
+        The training function is used to train the model, note that this a entire optimization training loop.
+        Training function has three required parameters, ``model``, ``optimizers`` and ``training_step``,
+        and three optional parameters, ``lr_schedulers``, ``max_steps``, ``max_epochs``.
+
+        Let's explain these six parameters NNI passed in, but in most cases, users don't need to care about these.
+        Users only need to treat these six parameters as the original parameters during the training process.
+
+        * The ``model`` is a wrapped model from the original model, it has a similar structure to the model to be pruned,
+          so it can share training function with the original model.
+        * ``optimizers`` are re-initialized from the ``optimizers`` passed to the evaluator and the wrapped model's parameters.
+        * ``training_step`` also based on the ``training_step`` passed to the evaluator,
+          it might be modified by the compressor during model compression.
+        * If users use ``lr_schedulers`` in the ``training_func``, NNI will re-initialize the ``lr_schedulers`` with the re-initialized
+          optimizers.
+        * ``max_steps`` is the NNI training duration limitation. It is for pruner (or quantizer) to control the number of training steps.
+          The user implemented ``training_func`` should respect ``max_steps`` by stopping the training loop after ``max_steps`` is reached.
+          Pruner may pass ``None`` to ``max_steps`` when it only controls ``max_epochs``.
+        * ``max_epochs`` is similar to the ``max_steps``, the only different is that it controls the number of training epochs.
+          The user implemented ``training_func`` should respect ``max_epochs`` by stopping the training loop
+          after ``max_epochs`` is reached. Pruner may pass ``None`` to ``max_epochs`` when it only controls ``max_steps``.
+
+        Note that when the pruner passes ``None`` to both ``max_steps`` and ``max_epochs``,
+        it treats ``training_func`` as a function of model fine-tuning.
+        Users should assign proper values to ``max_steps`` and ``max_epochs``.
+
+        .. code-block:: python
+
+            def training_func(model: DeepSpeedEngine, optimizers: torch.optim.Optimizer,
+                              training_step: Callable[[Any, Any], torch.Tensor],
+                              lr_schedulers: _LRScheduler | None = None, max_steps: int | None = None,
+                              max_epochs: int | None = None, *args, **kwargs):
+
+                ...
+
+                total_epochs = max_epochs if max_epochs else 20
+                total_steps = max_steps if max_steps else 1000000
+                current_steps = 0
+
+                ...
+
+                for epoch in range(total_epochs):
+                    ...
+
+                    model.backward(loss)
+                    model.step()
+
+                    ...
+                    if current_steps >= total_steps:
+                        return
+
+        Note that ``optimizers`` and ``lr_schedulers`` passed to the ``training_func`` have the same type as the ``optimizers``
+        and ``lr_schedulers`` passed to evaluator, a single ``torch.optim.Optimzier``/ ``torch.optim._LRScheduler`` instance or
+        a list of them.
+
+    training_step
+        A callable function, the first argument of inputs should be ``batch``, and the outputs should contain loss.
+        Three kinds of outputs are supported: single loss, tuple with the first element is loss, a dict contains a key ``loss``.
+        .. code-block:: python
+            def training_step(batch, model, ...):
+                inputs, labels = batch
+                output = model(inputs)
+                ...
+                loss = loss_func(output, labels)
+                return loss
+    deepspeed
+        Str | dict. The deepspeed configuration which Contains the parameters needed in DeepSpeed, such as train_batch_size, among others.
+    optimzier
+        Optional. A single traced optimizer instance or a function that takes the model parameters as input and returns an optimizer instance.
+        NNI may modify the ``torch.optim.Optimizer`` member function ``step`` and/or optimize compressed models,
+        so NNI needs to have the ability to re-initialize the optimizer. ``nni.trace`` can record the initialization parameters
+        of a function/class, which can then be used by NNI to re-initialize the optimizer for a new but structurally similar model.
+        E.g. ``traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters())``.
+    lr_schedulers
+        Optional. A single traced lr_scheduler instance or a function that takes the model parameters and the optimizer as input and returns an lr_scheduler instance.
+        For the same reason with ``optimizers``, NNI needs the traced lr_scheduler to re-initialize it.
+        E.g. ``traced_lr_scheduler = nni.trace(ExponentialLR)(optimizer, 0.1)``.
+    resume_from_checkpoint_args
+        Dict | None. Used in the deepspeed_init process to load models saved during training with DeepSpeed.
+
+        Let's explain these seven elements in the resume_from_checkpoint_args.
+
+        * ``load_dir``: The directory to load the checkpoint from.
+        * ``tag`` : Checkpoint tag used as a unique identifier for checkpoint, if not provided will attempt to load tag in 'latest' file
+        * ``load_module_strict``: Optional. Boolean to strictly enforce that the keys in state_dict of module and checkpoint match.
+        * ``load_optimizer_states``: Optional. Boolean to load the training optimizer states from Checkpoint. Ex. ADAM's momentum and variance.
+        * ``load_lr_scheduler_states``: Optional. Boolean to add the learning rate scheduler states from Checkpoint.
+        * ``load_module_only``: Optional. Boolean to load only the model weights from the checkpoint. Ex. warmstarting.
+        * ``custom_load_fn``: Optional. Custom model load function.
+
+    dummy_input
+        Optional. The dummy_input is used to trace the graph, it's same with ``example_inputs`` in
+        `torch.jit.trace <https://pytorch.org/docs/stable/generated/torch.jit.trace.html?highlight=torch%20jit%20trace#torch.jit.trace>`_.
+    evaluating_func
+        Optional. A function that input is model and return the evaluation metric.
+        This is the function used to evaluate the compressed model performance.
+        The input is a model and the output is a ``float`` metric or a ``dict``
+        (``dict`` should contains key ``default`` with a ``float`` value).
+        NNI will take the float number as the model score, and assume the higher score means the better performance.
+        If you want to provide additional information, please put it into a dict
+        and NNI will take the value of key ``default`` as evaluation metric.
+
+    Notes
+    -----
+    It is also worth to note that not all the arguments of ``DeepspeedTorchEvaluator`` must be provided.
+    Some pruners (or quantizers) only require ``evaluating_func`` as they do not train the model,
+    some pruners (or quantizers) only require ``training_func``.
+    Please refer to each pruner's (or quantizer's) doc to check the required arguments.
+    But, it is fine to provide more arguments than the pruner's (or quantizer's) need.
+    """
+
     def __init__(self, training_func: _TRAINING_FUNC, training_step: _TRAINING_STEP, deepspeed: str | Dict,
                  optimizer: Optimizer | Callable[[List[Tensor]], Optimizer] | None = None,
                  lr_scheduler: SCHEDULER | Callable[[Optimizer], SCHEDULER] | None = None,
@@ -1456,20 +1573,29 @@ class DeepspeedTorchEvaluator(Evaluator):
         return self.dummy_input
 
     def save_checkpoint(self, save_dir, tag=None, client_state={}, save_latest=True):
-        """Save training checkpoint
+        """
+        Save training checkpoint
 
-        Arguments:
-            save_dir: Required. Directory for saving the checkpoint
-            tag: Optional. Checkpoint tag used as a unique identifier for the checkpoint, global step is
-                used if not provided. Tag name must be the same across all ranks.
-            client_state: Optional. State dictionary used for saving required training states in the client code.
-            save_latest: Optional. Save a file 'latest' pointing to the latest saved checkpoint.
+        Parameters
+        ----------
+        save_dir
+            Required. Directory for saving the checkpoint
+        tag
+            Optional. Checkpoint tag used as a unique identifier for the checkpoint, global step is
+            used if not provided. Tag name must be the same across all ranks.
+        client_state
+            Optional. State dictionary used for saving required training states in the client code.
+        save_latest
+            Optional. Save a file 'latest' pointing to the latest saved checkpoint.
+
+        Notes
+        -----
         Important: all processes must call this method and not just the process with rank 0. It is
         because each process needs to save its master weights and scheduler+optimizer states. This
         method will hang waiting to synchronize with other processes if it's called just for the
         process with rank 0.
-
         """
+
         # copyed from deepspeed
         assert self.deepspeed_engine is not None
         return self.deepspeed_engine.save_checkpoint(save_dir, tag, client_state=client_state,
@@ -1486,26 +1612,38 @@ class DeepspeedTorchEvaluator(Evaluator):
         """
         Load training checkpoint
 
-        Arguments:
-            load_dir: Required. Directory to load the checkpoint from
-            tag: Checkpoint tag used as a unique identifier for checkpoint, if not provided will attempt to load tag in 'latest' file
-            load_module_strict: Optional. Boolean to strictly enforce that the keys in state_dict of module and checkpoint match.
-            load_optimizer_states: Optional. Boolean to load the training optimizer states from Checkpoint. Ex. ADAM's momentum and variance
-            load_lr_scheduler_states: Optional. Boolean to add the learning rate scheduler states from Checkpoint.
-            load_module_only: Optional. Boolean to load only the model weights from the checkpoint. Ex. warmstarting.
-            custom_load_fn: Optional. Custom model load function.
+        Parameters
+        ----------
+        load_dir
+            Required. Directory to load the checkpoint from
+        tag
+            Checkpoint tag used as a unique identifier for checkpoint, if not provided will attempt to load tag in 'latest' file
+        load_module_strict
+            Optional. Boolean to strictly enforce that the keys in state_dict of module and checkpoint match.
+        load_optimizer_states
+            Optional. Boolean to load the training optimizer states from Checkpoint. Ex. ADAM's momentum and variance
+        load_lr_scheduler_states
+            Optional. Boolean to add the learning rate scheduler states from Checkpoint.
+        load_module_only
+            Optional. Boolean to load only the model weights from the checkpoint. Ex. warmstarting.
+        custom_load_fn
+            Optional. Custom model load function.
 
-        Returns:
-            A tuple of ``load_path`` and ``client_state``.
-            *``load_path``: Path of the loaded checkpoint. ``None`` if loading the checkpoint failed.
-            *``client_state``: State dictionary used for loading required training states in the client code.
+        Returns
+        -------
+        load_path
+            Path of the loaded checkpoint. None if loading the checkpoint failed.
+        client_state
+            State dictionary used for loading required training states in the client code.
 
+        Notes
+        -----
         Important: under ZeRO3, one cannot load checkpoint with ``engine.load_checkpoint()`` right
         after ``engine.save_checkpoint()``. It is because ``engine.module`` is partitioned, and
         ``load_checkpoint()`` wants a pristine model. If insisting to do so, please reinitialize engine
         before ``load_checkpoint()``.
-
         """
+
         # copyed from deepspeed
         assert self.deepspeed_engine is not None
         return self.deepspeed_engine.load_checkpoint(load_dir,
