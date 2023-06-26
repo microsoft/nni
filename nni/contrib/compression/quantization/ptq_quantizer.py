@@ -26,6 +26,7 @@ class PtqQuantizer(Quantizer):
         Please refer :doc:`Compression Config Specification </compression/config_list>` for more information.
     evaluator
         {evaluator_docstring}
+        Please refer :doc:`Compression Evaluator </compression/evaluator>` for more information.
 
     Examples
     --------

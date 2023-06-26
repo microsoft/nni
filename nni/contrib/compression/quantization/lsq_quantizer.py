@@ -35,7 +35,8 @@ class LsqQuantizer(Quantizer):
         A list of dict, each dict configure which module need to be quantized, and how to quantize.
         Please refer :doc:`Compression Config Specification </compression/config_list>` for more information.
     evaluator
-        TODO: {evaluator_docstring}
+        {evaluator_docstring}
+        Please refer :doc:`Compression Evaluator </compression/evaluator>` for more information.
 
     Examples
     --------
