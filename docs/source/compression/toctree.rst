@@ -6,8 +6,9 @@ Compression
     :maxdepth: 2
 
     Overview <overview>
+    Config Specification <config_list>
     Pruning <toctree_pruning>
     Quantization <toctree_quantization>
-    Config Specification <compression_config_list>
-    Evaluator <compression_evaluator>
-    Advanced Usage <advanced_usage>
+    Evaluator <evaluator>
+    Advanced Usage <advance>
+    Enhancement <changes>

@@ -4,7 +4,7 @@
 import assert from 'assert';
 import { ChildProcess, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
-import * as component from '../common/component';
+import { IocShim } from 'common/ioc_shim';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
 import { getExperimentId } from '../common/experimentStartupInfo';
@@ -64,7 +64,7 @@ class NNIManager implements Manager {
         this.readonly = false;
 
         this.log = getLogger('NNIManager');
-        this.dataStore = component.get(DataStore);
+        this.dataStore = IocShim.get(DataStore);
         this.status = {
             status: 'INITIALIZED',
             errors: []
@@ -151,6 +151,7 @@ class NNIManager implements Manager {
                     value: JSON.stringify(packedParameter),
                     index: 0
                 },
+                envId: job.envId,
             };
 
             this.waitingTrials.push(form);
@@ -314,11 +315,6 @@ class NNIManager implements Manager {
                     this.trainingService = new fcModule.FrameworkControllerTrainingService();
                     break;
                 }
-                case 'adl_config': {
-                    const adlModule = await import('../training_service/kubernetes/adl/adlTrainingService');
-                    this.trainingService = new adlModule.AdlTrainingService();
-                    break;
-                }
                 default:
                     throw new Error("Setup training service failed.");
             }
@@ -394,7 +390,7 @@ class NNIManager implements Manager {
         this.setStatus('STOPPED');
         this.log.info('Experiment stopped.');
 
-        await component.get<TensorboardManager>(TensorboardManager).stop();
+        await IocShim.get<TensorboardManager>(TensorboardManager).stop();
         await this.dataStore.close();
     }
 
@@ -491,9 +487,6 @@ class NNIManager implements Manager {
         } else if (platform === 'frameworkcontroller') {
             const module_ = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
             return new module_.FrameworkControllerTrainingService();
-        } else if (platform === 'adl') {
-            const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
-            return new module_.AdlTrainingService();
         } else {
             this.pollInterval = 0.5;
             const module_ = await import('../training_service/v3/compat');

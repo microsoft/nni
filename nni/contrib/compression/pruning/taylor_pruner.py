@@ -35,7 +35,7 @@ class TaylorPruner(Pruner):
         Model to be pruned.
     config_list
         A list of dict, each dict configure which module need to be pruned, and how to prune.
-        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
+        Please refer :doc:`Compression Config Specification </compression/config_list>` for more information.
     evaluator
         {evaluator_docstring}
     training_steps
@@ -43,7 +43,8 @@ class TaylorPruner(Pruner):
 
     Examples
     --------
-        TODO
+        Please refer to
+        :githublink:`examples/compression/pruning/taylor_pruning.py <examples/compression/pruning/taylor_pruning.py>`.
     """.format(evaluator_docstring=_EVALUATOR_DOCSTRING)
 
     @overload

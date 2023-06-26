@@ -1,5 +1,7 @@
-Construct Space with Mutator
-============================
+Construct Space with Mutator (legacy)
+=====================================
+
+.. attention:: This is a legacy document for NNI v2.x. This is now currently no longer maintained.
 
 Besides the mutation primitives demonstrated in the :doc:`basic tutorial <construct_space>`, NNI provides a more general approach to express a model space, i.e., *Mutator*, to cover more complex model spaces. The high-level APIs are also implemented with mutator in the underlying system, which can be seen as a special case of model mutation.
 
@@ -49,7 +51,7 @@ Use placeholder to make mutation easier: :class:`nni.retiarii.nn.pytorch.Placeho
     stride=stride
   )
 
-``label`` is used by mutator to identify this placeholder. The other parameters are the information that is required by mutator. They can be accessed from ``node.operation.parameters`` as a dict, it could include any information that users want to put to pass it to user defined mutator. The complete example code can be found in :githublink:`Mnasnet base model <examples/nas/multi-trial/mnasnet/base_mnasnet.py>`.
+``label`` is used by mutator to identify this placeholder. The other parameters are the information that is required by mutator. They can be accessed from ``node.operation.parameters`` as a dict, it could include any information that users want to put to pass it to user defined mutator. The complete example code can be found in :githublink:`Mnasnet base model <examples/nas/legacy/mnasnet/base_mnasnet.py>`.
 
 Starting an experiment is almost the same as using inline mutation APIs. The only difference is that the applied mutators should be passed to :class:`nni.retiarii.experiment.pytorch.RetiariiExperiment`. Below is a simple example.
 

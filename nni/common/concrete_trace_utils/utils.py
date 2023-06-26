@@ -7,6 +7,7 @@ from typing import Any, Callable, Type
 import functools
 
 import torch
+from torch.fx import Node
 
 # These need to run in global scope to handle nested calls correctly
 _orig_module_call: Callable = torch.nn.Module.__call__
@@ -48,6 +49,8 @@ _orig_index: Callable = operator.index
 _orig_all: Callable = builtins.all
 _orig_min: Callable = builtins.min
 _orig_max: Callable = builtins.max
+
+_orig_node_is_impure: Callable = Node.is_impure
 
 
 def run_onlyif_instance(cond_type: Type[Any], return_orig: bool = True, return_const: Any = None):

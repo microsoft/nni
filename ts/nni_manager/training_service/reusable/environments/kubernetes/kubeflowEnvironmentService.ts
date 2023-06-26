@@ -4,7 +4,6 @@
 import cpp from 'child-process-promise';
 import fs from 'fs';
 import path from 'path';
-import * as component from 'common/component';
 import { KubeflowConfig, toMegaBytes } from 'common/experimentConfig';
 import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
 import { EnvironmentInformation } from 'training_service/reusable/environment';
@@ -13,7 +12,6 @@ import { KubeflowOperatorClientFactory } from 'training_service/kubernetes/kubef
 import { KubeflowClusterConfigAzure } from 'training_service/kubernetes/kubeflow/kubeflowConfig';
 import { KeyVaultConfig, AzureStorage } from 'training_service/kubernetes/kubernetesConfig';
 
-@component.Singleton
 export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
 
     private config: KubeflowConfig;

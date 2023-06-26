@@ -49,10 +49,15 @@ export class LocalTrainingServiceV3 implements TrainingServiceV3 {
         this.trialKeeper.registerDirectory(directoryName, path);
     }
 
-    public async createTrial(_envId: string, trialCommand: string, directoryName: string, sequenceId?: number):
-            Promise<string | null> {
+    public async createTrial(
+        _envId: string,
+        trialCommand: string,
+        directoryName: string,
+        sequenceId: number,
+        trialId?: string
+    ): Promise<string | null> {
 
-        const trialId = uuid();
+        trialId = trialId ?? uuid();
 
         let gpuNumber = this.config.trialGpuNumber;
         if (gpuNumber) {

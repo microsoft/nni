@@ -28,7 +28,7 @@ from .mask_updater import (MaskUpdater,
                            NoMaskUpdater,
                            NoChangeMaskUpdater)
 from .replacer import Replacer, DefaultReplacer
-from .utils import tree_map_zip
+from .utils import tree_map_zip, poss_deepcopy
 
 
 def _normalize_input(dummy_input: Any) -> Any:
@@ -37,6 +37,7 @@ def _normalize_input(dummy_input: Any) -> Any:
     elif isinstance(dummy_input, list):
         dummy_input = tuple(dummy_input)
     return dummy_input
+
 
 @compatibility(is_backward_compatible=True)
 class ModelSpeedup(torch.fx.Interpreter):
@@ -209,9 +210,8 @@ class ModelSpeedup(torch.fx.Interpreter):
     def propagate_originally(self):
         """
         Propagate normally to get informations of intermediate variables such as shape, dtype of tensors.
-        Default action:
-            execute and store output to node_info.output_origin(intermediate variables when assigned),
-                and node_info.output_inplace(intermediate variables after in-place ops)
+        Default action: execute and store output to node_info.output_origin(intermediate variables when assigned),
+        and node_info.output_inplace(intermediate variables after in-place ops).
         """
         self.logger.info("Propagate original variables")
         for node in self.graph_module.graph.nodes:
@@ -225,7 +225,7 @@ class ModelSpeedup(torch.fx.Interpreter):
 
             self.node_infos[node].output_origin = output
             self.node_infos[node].output_inplace = \
-                tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else t, output)
+                tree_map_zip(lambda t: t.clone().detach() if isinstance(t, torch.Tensor) else poss_deepcopy(t, self.logger), output)
             self.node_infos[node].output_masks = \
                 tree_map_zip(lambda t: torch.ones_like(t).clone().detach() if isinstance(t, torch.Tensor) else None, output)
 

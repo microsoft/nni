@@ -45,7 +45,7 @@ class DoferaGradClampRound(torch.autograd.Function):
         target = target / (2 * target.abs().max()) + 0.5
         dequantized_target = ClampRound.apply(target, target_space)
 
-        return 2 * dequantized_target - 1 # type: ignore
+        return 2 * dequantized_target - 1  # type: ignore
 
     @staticmethod
     def dorefa_clamp_round_output(target: torch.Tensor, target_space: QuantizationTargetSpace) -> Any:
@@ -152,7 +152,7 @@ def movement_mul_mask(target: torch.Tensor, target_space: PruningTargetSpace):
         assert target_space.mask is not None and target_space.shape is not None
         if target_space._scaler is not None:
             score = target_space._scaler.expand(score, target_space.shape, keepdim=True, full_expand=False)
-        return torch.mul(target, _StraightThrough.apply(score, target_space.mask))
+        return torch.mul(target, _StraightThrough.apply(score, target_space.mask))  # type: ignore
 
 
 def movement_add_mask(target: torch.Tensor, target_space: PruningTargetSpace):
@@ -164,7 +164,7 @@ def movement_add_mask(target: torch.Tensor, target_space: PruningTargetSpace):
         trans_mask = torch.where(target_space.mask == 1, torch.zeros_like(target_space.mask), SMALL_MASK_VALUE)
         if target_space._scaler is not None:
             score = target_space._scaler.expand(score, target_space.shape, keepdim=True, full_expand=False)
-        return torch.add(target, _StraightThrough.apply(score, trans_mask))
+        return torch.add(target, _StraightThrough.apply(score, trans_mask))  # type: ignore
 
 
 def slim_mul_mask(target: torch.Tensor, target_space: PruningTargetSpace):

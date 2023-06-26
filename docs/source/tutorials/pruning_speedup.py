@@ -27,7 +27,7 @@ thus, we should do shape inference to check are there other unpruned layers shou
 Therefore, in our design, there are two main steps: first, do shape inference to find out all the modules that should be replaced;
 second, replace the modules.
 
-The first step requires topology (i.e., connections) of the model, we use ``jit.trace`` to obtain the model graph for PyTorch.
+The first step requires topology (i.e., connections) of the model, we use a tracer based on ``torch.fx`` to obtain the model graph for PyTorch.
 The new shape of module is auto-inference by NNI, the unchanged parts of outputs during forward and inputs during backward are prepared for reduct.
 For each type of module, we should prepare a function for module replacement.
 The module replacement function returns a newly created module which is smaller.
@@ -65,7 +65,7 @@ print('Original Model - Elapsed Time : ', time.time() - start)
 
 # %%
 # Speedup the model and show the model structure after speedup.
-from nni.compression.pytorch import ModelSpeedup
+from nni.compression.pytorch.speedup.v2 import ModelSpeedup
 ModelSpeedup(model, torch.rand(10, 1, 28, 28).to(device), masks).speedup_model()
 print(model)
 

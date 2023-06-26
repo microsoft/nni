@@ -9,7 +9,6 @@ from typing import Any, Callable, Dict, List, overload
 
 import torch
 import torch.nn.functional as F
-from torch.optim import Adam
 from torch.utils._pytree import tree_map
 
 from ..base.compressor import Compressor, Distiller, _DISTILLATION_TARGET_SPACES
@@ -28,7 +27,7 @@ class TeacherModelBasedDistiller(Distiller):
         The student model to be distilled.
     config_list
         A list of dict, each dict configure which module need to be distilled, and how to distill.
-        Please refer :doc:`Compression Config Specification </compression/compression_config_list>` for more information.
+        Please refer :doc:`Compression Config Specification </compression/config_list>` for more information.
     evaluator
         {evaluator_docstring}
     teacher_model
@@ -166,21 +165,24 @@ class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
         The student model to be distilled.
     config_list
         Config list to configure how to distill.
-        Common keys please refer :doc:`Compression Config Specification </compression/compression_config_list>`.
+        Common keys please refer :doc:`Compression Config Specification </compression/config_list>`.
+
         Specific keys:
-            - 'lambda': By default, 1.
-              This is a scaling factor to control the loss scale, the final loss used during training is
-              ``(origin_loss_lambda * origin_loss + sum(lambda_i * distill_loss_i))``.
-              Here ``i`` represents the ``i-th`` distillation target.
-              The higher the value of lambda, the greater the contribution of the corresponding distillation target to the loss.
-            - 'link': By default, 'auto'.
-              'auto' or a teacher module name or a list of teacher module names,
-              the module name(s) of teacher module(s) will align with student module(s) configured in this config.
-              If 'auto' is set, will use student module name as the link,
-              usually requires the teacher model and the student model to be isomorphic.
-            - 'apply_method': By default, 'mse'.
-              'mse' and 'kl' are supported right now. 'mse' means the MSE loss, usually used to distill hidden states.
-              'kl' means the KL loss, usually used to distill logits.
+
+        * 'lambda': By default, 1.
+          This is a scaling factor to control the loss scale, the final loss used during training is
+          ``(origin_loss_lambda * origin_loss + sum(lambda_i * distill_loss_i))``.
+          Here ``i`` represents the ``i-th`` distillation target.
+          The higher the value of lambda, the greater the contribution of the corresponding distillation target to the loss.
+        * 'link': By default, 'auto'.
+          'auto' or a teacher module name or a list of teacher module names,
+          the module name(s) of teacher module(s) will align with student module(s) configured in this config.
+          If 'auto' is set, will use student module name as the link,
+          usually requires the teacher model and the student model to be isomorphic.
+        * 'apply_method': By default, 'mse'.
+          'mse' and 'kl' are supported right now. 'mse' means the MSE loss, usually used to distill hidden states.
+          'kl' means the KL loss, usually used to distill logits.
+
     evaluator
         {evaluator_docstring}
     teacher_model
@@ -214,7 +216,7 @@ class DynamicLayerwiseDistiller(TeacherModelBasedDistiller):
                             loss_list.append(target_space.lambda_ * \
                                 F.kl_div((stu_hs / 2).log_softmax(dim=-1), (tea_hs / 2).softmax(dim=-1), reduction='batchmean') * (2 ** 2))
                 if loss_list:
-                    distill_loss += min(loss_list)
+                    distill_loss = distill_loss + min(loss_list)
         for _, ts in self._target_spaces.items():
             for _, target_space in ts.items():
                 target_space.clean()
@@ -239,21 +241,24 @@ class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
         The student model to be distilled.
     config_list
         Config list to configure how to distill.
-        Common keys please refer :doc:`Compression Config Specification </compression/compression_config_list>`.
+        Common keys please refer :doc:`Compression Config Specification </compression/config_list>`.
+
         Specific keys:
-            - 'lambda': By default, 1.
-              This is a scaling factor to control the loss scale, the final loss used during training is
-              ``(origin_loss_lambda * origin_loss + sum(lambda_i * distill_loss_i))``.
-              Here ``i`` represents the ``i-th`` distillation target.
-              The higher the value of lambda, the greater the contribution of the corresponding distillation target to the loss.
-            - 'link': By default, 'auto'.
-              'auto' or a teacher module name or a list of teacher module names,
-              the module name(s) of teacher module(s) will align with student module(s) configured in this config.
-              If 'auto' is set, will use student module name as the link,
-              usually requires the teacher model and the student model to be isomorphic.
-            - 'apply_method': By default, 'mse'.
-              'mse' and 'kl' are supported right now. 'mse' means the MSE loss, usually used to distill hidden states.
-              'kl' means the KL loss, usually used to distill logits.
+
+        * 'lambda': By default, 1.
+          This is a scaling factor to control the loss scale, the final loss used during training is
+          ``(origin_loss_lambda * origin_loss + sum(lambda_i * distill_loss_i))``.
+          Here ``i`` represents the ``i-th`` distillation target.
+          The higher the value of lambda, the greater the contribution of the corresponding distillation target to the loss.
+        * 'link': By default, 'auto'.
+          'auto' or a teacher module name or a list of teacher module names,
+          the module name(s) of teacher module(s) will align with student module(s) configured in this config.
+          If 'auto' is set, will use student module name as the link,
+          usually requires the teacher model and the student model to be isomorphic.
+        * 'apply_method': By default, 'mse'.
+          'mse' and 'kl' are supported right now. 'mse' means the MSE loss, usually used to distill hidden states.
+          'kl' means the KL loss, usually used to distill logits.
+
     evaluator
         {evaluator_docstring}
     teacher_model
@@ -296,23 +301,16 @@ class Adaptive1dLayerwiseDistiller(TeacherModelBasedDistiller):
                     self.trans_linears[module_name][target_name] = torch.nn.Linear(stu_hs.shape[-1], tea_hs.shape[-1]).to(stu_hs.device)
 
     def _register_linears_optimization(self, evaluator: Evaluator):
-        linear_params = []
-        for _, linears in self.trans_linears.items():
+        linear_params = {}
+        for module_name, linears in self.trans_linears.items():
             for _, linear in linears.items():
                 if linear is not None:
-                    linear_params.extend(linear.parameters())
+                    linear_params[module_name] = list(linear.parameters())
 
         if not linear_params:
             return
 
-        params = [{"params": linear_params}]
-        optimizer = Adam(params, 1e-2)
-
-        def optimizer_task():
-            optimizer.step()
-            optimizer.zero_grad()
-
-        evaluator.patch_optimizer_step(before_step_tasks=[optimizer_task], after_step_tasks=[])
+        evaluator.patch_optim_param_group(linear_params)
 
     def compute_distill_loss(self):
         distill_loss = 0

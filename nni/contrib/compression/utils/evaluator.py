@@ -220,7 +220,7 @@ class Evaluator:
         raise NotImplementedError
 
     def _optimizer_add_param_group(self, model: Union[torch.nn.Module, pl.LightningModule],
-                                  module_name_param_dict: Dict[str, List[Tensor]], optimizers: Optimizer | List[Optimizer]):
+                                   module_name_param_dict: Dict[str, List[Tensor]], optimizers: Optimizer | List[Optimizer]):
         # used in the bind_model process
         def find_param_group(param_groups: List[Dict], module_name: str):
             for i, param_group in enumerate(param_groups):
@@ -250,13 +250,13 @@ class Evaluator:
                 # copyed from torch.optim to check the validation of param
                 if not isinstance(param, torch.Tensor):
                     raise TypeError("optimizer can only optimize Tensors, "
-                                "but one of the params is " + torch.typename(param))
+                                    "but one of the params is " + torch.typename(param))
                 if not optimizer.defaults.get('differentiable', None) \
                     and not (param.is_leaf or param.retains_grad):  # type: ignore
                     raise ValueError("can't optimize a non-leaf Tensor")
                 target_param_group['params'].append(param)
 
-        assert isinstance(model, (Module, pl.LightningModule))
+        assert isinstance(model, Module)
         param2name_dict = {id(p): name for name, p in model.named_parameters()}
         assert optimizers is not None, "Please provide optimizers for adding param_groups in optimizers"
         optimizers = optimizers if isinstance(optimizers, (list, tuple)) else [optimizers]
@@ -384,7 +384,7 @@ class LightningEvaluator(Evaluator):
     Additionally, please make sure the ``Optimizer`` class and ``LR_Scheduler`` class used in ``LightningModule.configure_optimizers()``
     are also be traced by ``nni.trace``.
 
-    Please refer to the :doc:`/compression/compression_evaluator` for the evaluator initialization example.
+    Please refer to the :doc:`/compression/evaluator` for the evaluator initialization example.
 
     Parameters
     ----------
@@ -645,7 +645,7 @@ class LightningEvaluator(Evaluator):
         trainer.num_sanity_val_steps = 0
 
         if max_steps:
-            trainer.fit_loop.max_steps = max_steps
+            trainer.fit_loop.max_steps = max_steps  # type: ignore
         if max_epochs:
             trainer.fit_loop.max_epochs = max_epochs
         trainer.fit(self.model, self.data_module)
@@ -698,7 +698,7 @@ _TRAINING_FUNC = Callable[[Module, _OPTIMIZERS, _TRAINING_STEP, Optional[_SCHEDU
 class TorchEvaluator(Evaluator):
     """
     TorchEvaluator is the Evaluator for native PyTorch users.
-    Please refer to the :doc:`/compression/compression_evaluator` for the evaluator initialization example.
+    Please refer to the :doc:`/compression/evaluator` for the evaluator initialization example.
 
     Parameters
     ----------
@@ -734,19 +734,13 @@ class TorchEvaluator(Evaluator):
                               training_step: Callable[[Any, Any], torch.Tensor],
                               lr_schedulers: _LRScheduler | None = None, max_steps: int | None = None,
                               max_epochs: int | None = None, *args, **kwargs):
-
                 ...
-
                 total_epochs = max_epochs if max_epochs else 20
                 total_steps = max_steps if max_steps else 1000000
                 current_steps = 0
-
                 ...
-
                 for epoch in range(total_epochs):
-
                     ...
-
                     if current_steps >= total_steps:
                         return
 
@@ -765,13 +759,16 @@ class TorchEvaluator(Evaluator):
     training_step
         A callable function, the first argument of inputs should be ``batch``, and the outputs should contain loss.
         Three kinds of outputs are supported: single loss, tuple with the first element is loss, a dict contains a key ``loss``.
+
         .. code-block:: python
+
             def training_step(batch, model, ...):
                 inputs, labels = batch
                 output = model(inputs)
                 ...
                 loss = loss_func(output, labels)
                 return loss
+
     lr_schedulers
         Optional. A single traced lr_scheduler instance or a list of traced lr_schedulers by ``nni.trace``.
         For the same reason with ``optimizers``, NNI needs the traced lr_scheduler to re-initialize it.
@@ -1059,7 +1056,6 @@ class TransformersEvaluator(Evaluator):
             return
         assert isinstance(self.model, Module)
         assert module_name_param_dict is not None
-
         self._optimizer_add_param_group(self.model, module_name_param_dict, self.trainer.optimizer)
 
     def unbind_model(self):

@@ -3,7 +3,7 @@
 
 import torch
 
-from examples.compression.pruning.models import (
+from examples.compression.models import (
     build_resnet18,
     prepare_dataloader,
     prepare_optimizer,
@@ -32,7 +32,6 @@ if __name__ == '__main__':
 
     config_list = [{
         'op_types': ['Conv2d'],
-        'op_names_re': ['features.*'],
         'sparse_ratio': 0.5
     }]
     dummy_input = torch.rand(8, 3, 224, 224).to(device)
