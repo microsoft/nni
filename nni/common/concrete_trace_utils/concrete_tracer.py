@@ -1091,8 +1091,6 @@ class ConcreteTracer(TracerBase):
             pass
 
         self.submodule_paths = None
-        with MagicMethodPatcher():
-            GraphModule(self.root, self.graph)  # assign graph.owning_module
         return self.graph
 
 # List of pairs of (global dict, function name) functions
