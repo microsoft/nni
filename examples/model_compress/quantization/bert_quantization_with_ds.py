@@ -7,7 +7,6 @@ import numpy as np
 import torch
 from torch.utils.data import ConcatDataset
 
-# sys.path.append("./nni/")
 import nni
 
 from datasets import load_dataset, load_metric

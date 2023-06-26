@@ -1,5 +1,4 @@
 from pathlib import Path
-import argparse
 import os
 import pytest
 
@@ -18,18 +17,8 @@ from transformers.training_args import TrainingArguments
 
 os.environ['RANK'] = '0'
 os.environ['WORLD_SIZE'] = '1'
-task_name = 'mnli'
-finetune_lr = 4e-5
-quant_lr = 1e-5
-quant_method = 'lsq'
-dev_mode = True
 
-if dev_mode:
-    quant_max_epochs = 1
-    finetune_max_epochs = 1
-else:
-    quant_max_epochs = 10
-    finetune_max_epochs = 10
+task_name = 'rte'
 
 
 def build_model(pretrained_model_name_or_path: str, task_name: str):
@@ -109,9 +98,8 @@ def prepare_traced_trainer(model, load_best_model_at_end=False, is_quant=False):
                                       fp16=False,
                                       learning_rate=3e-5,
                                       evaluation_strategy='steps',
-                                      per_device_train_batch_size=128, #128,
-                                      per_device_eval_batch_size=128, #128,
-                                      num_train_epochs=finetune_max_epochs,
+                                      per_device_train_batch_size=128,
+                                      per_device_eval_batch_size=128,
                                       dataloader_num_workers=12,
                                       save_strategy='steps',
                                       save_total_limit=1,
@@ -135,23 +123,12 @@ def prepare_traced_trainer(model, load_best_model_at_end=False, is_quant=False):
     return trainer
 
 
-def build_finetuning_model(state_dict_path: str, is_quant=False):
-    model = build_model('bert-base-uncased', task_name)
-    if Path(state_dict_path).exists():
-        model.load_state_dict(torch.load(state_dict_path))
-    else:
-        trainer = prepare_traced_trainer(model, True, is_quant)
-        trainer.train()
-        torch.save(model.state_dict(), state_dict_path)
-    return model
-
-
 import nni
-from nni.contrib.compression.quantization import QATQuantizer, LsqQuantizer, PtqQuantizer
+from nni.contrib.compression.quantization import LsqQuantizer
 from nni.contrib.compression.utils import TransformersEvaluator
 
 
-def fake_quantize():
+def test_ds_transformers_evaluator():
     config_list = [{
         'op_types': ['Linear'],
         'op_names_re': ['bert.encoder.layer.{}'.format(i) for i in range(12)],
@@ -163,27 +140,9 @@ def fake_quantize():
 
     # create a finetune model
     Path('./output/bert_finetuned/').mkdir(parents=True, exist_ok=True)
-    model: torch.nn.Module = build_finetuning_model(f'./output/{task_name}.bin', is_quant=False)  # type: ignore
+    model: torch.nn.Module = build_model('bert-base-uncased', task_name)  # type: ignore
     traced_trainer = prepare_traced_trainer(model, is_quant=False)
     evaluator = TransformersEvaluator(traced_trainer)
-    if quant_method == 'lsq':
-        quantizer = LsqQuantizer(model, config_list, evaluator)
-        model, calibration_config = quantizer.compress(max_steps=None, max_epochs=quant_max_epochs)
-    elif quant_method == 'qat':
-        quantizer = QATQuantizer(model, config_list, evaluator, 10)
-        model, calibration_config = quantizer.compress(max_steps=None, max_epochs=quant_max_epochs)
-    elif quant_method == 'ptq':
-        quantizer = PtqQuantizer(model, config_list, evaluator)
-        model, calibration_config = quantizer.compress(max_steps=1, max_epochs=None)
-    else:
-        raise ValueError(f"quantization method {quant_method} is not supported")
-    print(calibration_config)
-    # evaluate the performance of the fake quantize model
-    quantizer.evaluator.bind_model(model, quantizer._get_param_names_map())
-
-
-def evaluate():
-    model = build_finetuning_model(f'./output/{task_name}.bin', is_quant=False)
-    trainer = prepare_traced_trainer(model, is_quant=False)
-    metrics = trainer.evaluate()
-    print(f"Evaluate metrics={metrics}")
+    # create the quantizer
+    quantizer = LsqQuantizer(model, config_list, evaluator)
+    model, calibration_config = quantizer.compress(max_steps=10, max_epochs=None)
