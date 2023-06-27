@@ -26,4 +26,4 @@ tianshou >= 0.4.1
 timm >= 0.5.4
 
 datasets==2.13.0
-deepspeed==0.9.4
+deepspeed
