@@ -1149,7 +1149,6 @@ class TransformersEvaluator(Evaluator):
 class DeepspeedTorchEvaluator(Evaluator):
     """
     The DeepseedTorchEvaluator is an evaluator designed specifically for native PyTorch users who are utilizing DeepSpeed.
-    Please refer to the :doc:`/compression/compression_evaluator` for the evaluator initialization example.
 
     Parameters
     ----------
