@@ -13,28 +13,87 @@ def bypass(target: torch.Tensor, target_space: TargetSpace):
 
 
 def lsq_clamp_round(target: torch.Tensor, target_space: QuantizationTargetSpace):
-    def grad_scale(x, scale_factor):
-        y_out = x
-        y_grad = x * scale_factor
-        return (y_out - y_grad).detach() + y_grad
-
-    def round_pass(x):
-        y_out = torch.round(x)
-        y_grad = x
-        return (y_out - y_grad).detach() + y_grad
-
     qmax: int = target_space.qmax
     qmin: int = target_space.qmin
     if target_space._scaler is not None:
         scale = target_space._scaler.expand(target_space.scale, target_space.shape, keepdim=True) # type: ignore
     else:
         scale = target_space.scale
-    #Quantize
-    grad_scale_factor = 1.0 / ((qmax * target.numel()) ** 0.5) if (qmax * target.numel()) ** 0.5 != 0 else 1.0
-    scale = grad_scale(scale, grad_scale_factor)
-    new_target = torch.clamp(target / scale, qmin, qmax)
-    dequantized_target = round_pass(new_target) * scale
-    return dequantized_target
+
+    class LSQClampRound(torch.autograd.Function):
+        @staticmethod
+        def forward(ctx: Any, target: torch.Tensor, scale: torch.Tensor):
+            ctx.save_for_backward(target, scale)
+            quantize_target = torch.clamp(target / scale, qmin, qmax)
+            dequantize_target = torch.round(quantize_target) * scale
+            return dequantize_target
+
+        @staticmethod
+        def backward(ctx: Any, grad_output: Any) -> Any:
+            target, scale = ctx.saved_tensors
+            grad_scale_factor = 1.0 / ((qmax * target.numel()) ** 0.5) if (qmax * target.numel()) ** 0.5 != 0 else 1.0
+
+            q_target = target / scale
+            # compute index
+            ind_neg = (q_target < qmin).float()
+            ind_pos = (q_target > qmax).float()
+            ind_mid = (1.0 - ind_neg.float() - ind_pos.float())
+            # scale gradient
+            grad_scale = (ind_neg * qmin + ind_pos * qmax + ind_mid * (-q_target + torch.round(q_target))) * grad_output * grad_scale_factor
+            if target_space._scaler is None:
+                grad_scale = grad_scale.sum().expand(scale.size())
+            grad_target = grad_output * ind_mid
+
+            return grad_target, grad_scale
+
+    return LSQClampRound.apply(target, scale)
+
+
+def lsq_plus_clamp_round(target: torch.Tensor, target_space: QuantizationTargetSpace):
+    qmax: int = target_space.qmax
+    qmin: int = target_space.qmin
+    if target_space._scaler is not None:
+        scale = target_space._scaler.expand(target_space.scale, target_space.shape, keepdim=True) # type: ignore
+        zero_point = target_space._scaler.expand(target_space.zero_point, target_space.shape, keepdim=True) # type: ignore
+    else:
+        scale = target_space.scale
+        zero_point = target_space.zero_point
+
+    class LSQPlusClampRound(torch.autograd.Function):
+        @staticmethod
+        def forward(ctx: Any, target: torch.Tensor, scale: torch.Tensor, zero_point: torch.Tensor):
+            ctx.save_for_backward(target, scale, zero_point)
+            new_target = torch.clamp(target / scale + zero_point, qmin, qmax)
+            dequantized_target = (torch.round(new_target) - zero_point) * scale
+
+            return dequantized_target
+
+        @staticmethod
+        def backward(ctx: Any, grad_output: Any) -> Any:
+            target, scale, zero_point = ctx.saved_tensors
+            grad_scale_factor = 1.0 / ((qmax * target.numel()) ** 0.5) if (qmax * target.numel()) ** 0.5 != 0 else 1.0
+            #
+            q_target = target / scale
+            # compute index
+            ind_neg = ((q_target + zero_point) < qmin).float()
+            ind_pos = ((q_target + zero_point) > qmax).float()
+            ind_mid = (1.0 - ind_neg.float() - ind_pos.float())
+            # scale gradient
+            grad_scale = (ind_neg * (qmin - zero_point) + ind_pos * (qmax - zero_point) + \
+                          ind_mid * (-q_target - zero_point + \
+                                     torch.round(q_target + zero_point))) * grad_output * grad_scale_factor
+            # zero_point gradient
+            grad_zp = (ind_neg * -scale + ind_pos * -scale + ind_mid * 0.0) * grad_output
+            # target gradient
+            grad_target = grad_output * ind_mid
+
+            if target_space._scaler is None:
+                grad_scale = grad_scale.sum().expand(scale.size())
+                grad_zp = grad_zp.sum().expand(zero_point.size())
+
+            return grad_target, grad_scale, grad_zp
+
+    return LSQPlusClampRound.apply(target, scale, zero_point)
 
 
 class DoferaGradClampRound(torch.autograd.Function):
@@ -196,4 +255,5 @@ quant_apply_methods = {
     'dorefa_clamp_round_output': DoferaGradClampRound.dorefa_clamp_round_output,
     "lsq_clamp_round": lsq_clamp_round,
     'bnn_clamp_round': BNNClampRound.apply,
+    'lsq_plus_clamp_round': lsq_plus_clamp_round
 }

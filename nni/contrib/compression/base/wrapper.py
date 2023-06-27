@@ -65,6 +65,13 @@ class ModuleWrapper(torch.nn.Module):
         self.module_forward = self.module.forward
         self.name = module_name
         self.config = config if config is not None else {}
+        # config storage
+        self.configs = {}
+        for mode, value in self.config.items():
+            if mode not in self.configs:
+                self.configs[mode] = []
+            self.configs[mode].append(value)
+
         assert all(k in ['pruning', 'quantization', 'distillation'] for k in self.config)
 
         # the arguments' name of self.module.forward
@@ -106,7 +113,7 @@ class ModuleWrapper(torch.nn.Module):
             bias = self.module.bias
             self.is_register_bias = True
             if isinstance(bias, nn.parameter.Parameter):
-                self.register_parameter('bias', torch.nn.Parameter(bias.detach().clone()))
+                self.register_parameter('bias', torch.nn.Parameter(bias.detach().clone(), requires_grad=bias.requires_grad))
                 delattr(self.module, 'bias')
                 self.module.register_buffer('bias', bias.data)
             elif isinstance(bias, torch.Tensor):
@@ -160,12 +167,14 @@ class ModuleWrapper(torch.nn.Module):
         for target_name, target_space in self.pruning_target_spaces.items():
             if target_space.type == TargetType.PARAMETER and isinstance(target_space.target, torch.nn.Parameter):
                 delattr(self.module, target_name)
-                self.module.register_parameter(target_name, torch.nn.Parameter(target_space.target.detach().clone()))
+                self.module.register_parameter(target_name, torch.nn.Parameter(target_space.target.detach().clone(), \
+                                                                               requires_grad=target_space.target.requires_grad))
 
         for target_name, target_space in self.quantization_target_spaces.items():
             if target_space.type == TargetType.PARAMETER and isinstance(target_space.target, torch.nn.Parameter):
                 delattr(self.module, target_name)
-                self.module.register_parameter(target_name, torch.nn.Parameter(target_space.target.detach().clone()))
+                self.module.register_parameter(target_name, torch.nn.Parameter(target_space.target.detach().clone(), \
+                                                                               requires_grad=target_space.target.requires_grad))
 
         self.module.forward = self.module_forward
         delattr(self.module, '_nni_wrapper')
@@ -174,7 +183,8 @@ class ModuleWrapper(torch.nn.Module):
             delattr(self.module, 'bias')
             nni_original_bias = self.bias
             if isinstance(nni_original_bias, nn.parameter.Parameter):
-                self.module.register_parameter('bias', torch.nn.Parameter(nni_original_bias.detach().clone()))
+                self.module.register_parameter('bias', torch.nn.Parameter(nni_original_bias.detach().clone(), \
+                                                                          requires_grad=nni_original_bias.requires_grad))
             elif isinstance(nni_original_bias, torch.Tensor):
                 self.module.register_buffer('bias', nni_original_bias.detach().clone())
         if len(self.fused_modules) > 0 and self.is_bias == 'None' and check_bias(self.module) == 'Tensor':
@@ -405,6 +415,8 @@ class ModuleWrapper(torch.nn.Module):
             outputs = activation_module._nni_wrapper.module_forward(outputs)
 
         outputs = self.patch_outputs(outputs)
+        torch.cuda.empty_cache()
+
         return outputs
 
 
@@ -494,7 +506,8 @@ def create_module_wrapper(model: nn.Module, module: nn.Module, module_name: str,
             raise ValueError(f'Using two fused_modules_pair for {module_name} is not supported')
         wrapper.unfreeze()
         target_spaces = wrapper.extend_target_spaces(config, mode)
-        wrapper.config = update_config(wrapper.config, {mode: config})
+        wrapper.configs = update_config(wrapper.configs, {mode: config})
+
         if len(fused_modules_pair) > 0:
             wrapper.fused_modules = fused_modules
     else:

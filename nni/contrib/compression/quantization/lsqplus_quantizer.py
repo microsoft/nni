@@ -11,21 +11,20 @@ from torch import Tensor
 from ..base.compressor import Compressor, Quantizer
 from ..base.wrapper import ModuleWrapper
 from ..utils import Evaluator, _EVALUATOR_DOCSTRING
-from ..base.target_space import TargetType
 
 
 _logger = logging.getLogger(__name__)
 
 
-class LsqQuantizer(Quantizer):
+class LsqPlusQuantizer(Quantizer):
     __doc__ = r'''
-    LsqQuantizer, as defined in: `LEARNED STEP SIZE QUANTIZATION <https://arxiv.org/pdf/1902.08153.pdf>`__,
-    authors Steven K. Esser and Jeffrey L. McKinstry provide an algorithm to train the scales with gradients.
+    LsqPlusQuantizer, as defined in: `LSQ+: Improving low-bit quantization through learnable offsets and better
+initialization <https://arxiv.org/pdf/2004.09576.pdf>`__,
+    authors ybhalgat, jinwonl, markusn, tijmen provide an algorithm to train the scale and zero_point with gradients.
 
     ..
-
-        The authors introduce a novel means to estimate and scale the task loss gradient at each weight and activation
-        layer's quantizer step size, such that it can be learned in conjunction with other network parameters.
+        The proposed LSQ+ (Learnable Step Size Quantization Plus) method introduces learnable offsets and an improved initialization strategy to address limitations of traditional 
+        low-bit quantization techniques, such as gradient mismatch and limited representational capacity. 
 
     Parameters
     ----------
@@ -65,8 +64,8 @@ class LsqQuantizer(Quantizer):
         self.is_init = False
 
         self.check_validation()
-        self.register_scale()
-        self.register_lsq_apply_method()
+        self.register_scale_zp()
+        self.register_lsq_plus_apply_method()
         self.register_track_func()
 
     @classmethod
@@ -76,19 +75,16 @@ class LsqQuantizer(Quantizer):
     def check_validation(self) -> None:
         for ts in self._target_spaces.values():
             for target_space in ts.values():
-                if target_space.quant_scheme != 'symmetric':
-                    warn_msg = f"LsqQuantizer only supports symmetric mode, but got {target_space.quant_scheme}"
-                    _logger.warning(warn_msg)
-                if  target_space.quant_dtype.startswith("uint") and target_space.type is TargetType.PARAMETER:
-                    warn_msg = f"In the LsqQuantizer, quantization of parameters only supports int type"
+                if target_space.quant_scheme != 'affine':
+                    warn_msg = f"LsqPlusQuantizer only supports affine mode, but got {target_space.quant_scheme}"
                     _logger.warning(warn_msg)
 
     def register_track_func(self):
         for module_name, _ in self._target_spaces.items():
             wrapper = self._module_wrappers[module_name]
-            wrapper.register_track_func(self.init_scale)
+            wrapper.register_track_func(self.init_scale_zp)
 
-    def init_scale(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
+    def init_scale_zp(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
         def mean_reduce_func(converted_target: Tensor) -> torch.Tensor:
             return converted_target.detach().mean(dim=-1)
 
@@ -96,38 +92,38 @@ class LsqQuantizer(Quantizer):
             return
         target_space = wrapper.quantization_target_spaces[target_name]
         # init_target = target.data.detach().abs().mean() * 2 / (target_space.qmax ** 0.5)
-        init_target = torch.tensor([0.01]).to(target.device)
+        init_scale_target = torch.tensor([0.01]).to(target.device)
+        init_zp_target = torch.tensor([(target_space.qmax - target_space.qmin) / 2]).to(target.device)
         if not target_space._scaler:
-            target_space.scale.data = init_target.view(1)  # type: ignore
-            target_space.zero_point = torch.tensor(0.0).to(target.device)
+            target_space.scale.data = init_scale_target  # type: ignore
+            target_space.zero_point.data = init_zp_target  # type: ignore
         else:
-            new_target = init_target.expand(target.shape).to(target.device)
-            new_target_scale = target_space._scaler.shrink(new_target, mean_reduce_func, keepdim=True)
-            target_space.scale.data = new_target_scale # type: ignore
-            target_space.zero_point = torch.zeros_like(new_target_scale)
+            # scale
+            new_target_scale = init_scale_target.expand(target.shape).to(target.device)
+            new_target_scale = target_space._scaler.shrink(new_target_scale, mean_reduce_func, keepdim=True)
+            target_space.scale.data = new_target_scale  # type: ignore
+            # zp
+            new_target_zp = init_zp_target.expand(target.shape).to(target.device)
+            new_target_zp = target_space._scaler.shrink(new_target_zp, mean_reduce_func, keepdim=True)
+            target_space.zero_point.data = new_target_zp  # type: ignore
 
-    def register_lsq_apply_method(self):
+    def register_lsq_plus_apply_method(self):
         for _, ts in self._target_spaces.items():
             for _, target_space in ts.items():
-                target_space.apply_method = "lsq_clamp_round"
+                target_space.apply_method = "lsq_plus_clamp_round"
 
-    def register_scale(self):
+    def register_scale_zp(self):
         for module_name, ts in self._target_spaces.items():
             wrapper = self._module_wrappers[module_name]
             for target_name, _ in ts.items():
                 if hasattr(wrapper, f"{target_name}_scale"):
                     delattr(wrapper, f"{target_name}_scale")
-                # for deepspeed
-                try:
-                    device = next(wrapper.parameters()).device
-                except StopIteration:
-                    try:
-                        device = next(wrapper.buffers()).device
-                    except StopIteration:
-                        # NOTE: this will have risk in model parallel
-                        device = next(self.bound_model.parameters()).device
-                param = torch.nn.Parameter(torch.Tensor([0.01]).to(device))
-                wrapper.register_parameter(f"{target_name}_scale", param)
+                scale_param = torch.nn.Parameter()
+                wrapper.register_parameter(f"{target_name}_scale", scale_param)
+                if hasattr(wrapper, f"{target_name}_zero_point"):
+                    delattr(wrapper, f"{target_name}_zero_point")
+                zp_param = torch.nn.Parameter()
+                wrapper.register_parameter(f"{target_name}_zero_point", zp_param)
 
     def patch_optimizer_param_group(self):
         module_name_param_dict = super().patch_optimizer_param_group()
@@ -136,6 +132,7 @@ class LsqQuantizer(Quantizer):
                 if module_name not in module_name_param_dict:
                     module_name_param_dict[module_name] = []
                 module_name_param_dict[module_name].append(target_space.scale)
+                module_name_param_dict[module_name].append(target_space.zero_point)
 
         return module_name_param_dict
 
