@@ -209,7 +209,7 @@ class PPOModel:
         mb_actions = np.asarray(mb_actions)
         mb_values = np.asarray(mb_values, dtype=np.float32)
         mb_neglogpacs = np.asarray(mb_neglogpacs, dtype=np.float32)
-        mb_dones = np.asarray(mb_dones, dtype=np.bool)
+        mb_dones = np.asarray(mb_dones, dtype=bool)
         last_values = self.model.value(np_obs, S=states, M=dones)
 
         return mb_obs, mb_actions, mb_values, mb_neglogpacs, mb_dones, last_values
@@ -231,7 +231,7 @@ class PPOModel:
         mb_returns = np.zeros_like(mb_rewards)
         mb_advs = np.zeros_like(mb_rewards)
         lastgaelam = 0
-        last_dones = np.asarray([True for _ in trials_result], dtype=np.bool) # ugly
+        last_dones = np.asarray([True for _ in trials_result], dtype=bool) # ugly
         for t in reversed(range(self.model_config.nsteps)):
             if t == self.model_config.nsteps - 1:
                 nextnonterminal = 1.0 - last_dones

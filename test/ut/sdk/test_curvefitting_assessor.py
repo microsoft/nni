@@ -35,7 +35,7 @@ class TestCurveFittingAssessor(unittest.TestCase):
         test_model.point_num = 9
         test_model.target_pos = 20
         test_model.trial_history = ([1, 1, 1, 1, 1, 1, 1, 1, 1])
-        test_model.weight_samples = np.ones((test_model.effective_model_num), dtype=np.float) / test_model.effective_model_num
+        test_model.weight_samples = np.ones((test_model.effective_model_num), dtype=float) / test_model.effective_model_num
         self.assertAlmostEqual(test_model.predict_y('vap', 9), 0.5591906328335763)
         self.assertAlmostEqual(test_model.predict_y('logx_linear', 15), 1.0704360293379522)
         self.assertAlmostEqual(test_model.f_comb(9, test_model.weight_samples), 1.1543379521172443)
