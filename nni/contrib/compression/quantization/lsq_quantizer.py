@@ -98,7 +98,7 @@ class LsqQuantizer(Quantizer):
         # init_target = target.data.detach().abs().mean() * 2 / (target_space.qmax ** 0.5)
         init_target = torch.tensor([0.01]).to(target.device)
         if not target_space._scaler:
-            target_space.scale.data = init_target  # type: ignore
+            target_space.scale.data = init_target.view(1)  # type: ignore
             target_space.zero_point = torch.tensor(0.0).to(target.device)
         else:
             new_target = init_target.expand(target.shape).to(target.device)
@@ -117,7 +117,16 @@ class LsqQuantizer(Quantizer):
             for target_name, _ in ts.items():
                 if hasattr(wrapper, f"{target_name}_scale"):
                     delattr(wrapper, f"{target_name}_scale")
-                param = torch.nn.Parameter()
+                # for deepspeed
+                try:
+                    device = next(wrapper.parameters()).device
+                except StopIteration:
+                    try:
+                        device = next(wrapper.buffers()).device
+                    except StopIteration:
+                        # NOTE: this will have risk in model parallel
+                        device = next(self.bound_model.parameters()).device
+                param = torch.nn.Parameter(torch.Tensor([0.01]).to(device))
                 wrapper.register_parameter(f"{target_name}_scale", param)
 
     def patch_optimizer_param_group(self):
