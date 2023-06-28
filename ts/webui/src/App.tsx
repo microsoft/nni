@@ -4,7 +4,8 @@ import { Stack, MessageBar, MessageBarType } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '@static/datamodel';
 import NavCon from '@components/nav/Nav';
 import { COLUMN } from '@static/const';
-import { isManagerExperimentPage } from '@static/function';
+import { isManagerExperimentPage, getPrefix } from '@static/function';
+import { gap15 } from '@components/fluent/ChildrenGap';
 import '@style/App.scss';
 import '@style/common/common.scss';
 import '@style/experiment/trialdetail/trialsDetail.scss';
@@ -70,6 +71,7 @@ interface AppState {
     expandRowIDsDetailTable: Set<string>; // for overview page: open row
     selectedRowIds: string[]; // for detail page: selected trial - checkbox
     timerIdList: number[];
+    connectionError: string | null;
 }
 
 class App extends React.Component<{}, AppState> {
@@ -90,11 +92,21 @@ class App extends React.Component<{}, AppState> {
             expandRowIDs: new Set(),
             expandRowIDsDetailTable: new Set(),
             selectedRowIds: [],
-            timerIdList: []
+            timerIdList: [],
+            connectionError: null
         };
     }
 
     async componentDidMount(): Promise<void> {
+        const prefix = getPrefix();
+        const wsURL =
+            prefix !== undefined
+                ? `ws://${window.location.host}${prefix}/staging`
+                : `ws://${window.location.host}/staging`;
+        const socket = new WebSocket(wsURL);
+        socket.addEventListener('close', event => {
+            this.setState(() => ({ connectionError: `${event.code}: ${event.reason}` }));
+        });
         localStorage.removeItem('columns');
         localStorage.removeItem('paraColumns');
         await Promise.all([EXPERIMENT.init(), TRIALS.init()]);
@@ -120,7 +132,8 @@ class App extends React.Component<{}, AppState> {
             maxDurationUnit,
             expandRowIDs,
             expandRowIDsDetailTable,
-            selectedRowIds
+            selectedRowIds,
+            connectionError
         } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;
@@ -152,24 +165,27 @@ class App extends React.Component<{}, AppState> {
                         </div>
                         <Stack className='contentBox'>
                             <Stack className='content'>
-                                {/* if api has error field, show error message */}
-                                {errorList.map(
-                                    (item, key) =>
-                                        item.errorWhere && (
-                                            <div key={key} className='warning'>
-                                                <MessageBar messageBarType={MessageBarType.error}>
+                                <Stack tokens={gap15}>
+                                    {/* if api has error field, show error message */}
+                                    {errorList.map(
+                                        (item, key) =>
+                                            item.errorWhere && (
+                                                <MessageBar key={key} messageBarType={MessageBarType.error}>
                                                     {item.errorMessage}
                                                 </MessageBar>
-                                            </div>
-                                        )
-                                )}
-                                {isillegalFinal && (
-                                    <div className='warning'>
+                                            )
+                                    )}
+                                    {isillegalFinal && (
                                         <MessageBar messageBarType={MessageBarType.warning}>
                                             {expWarningMessage}
                                         </MessageBar>
-                                    </div>
-                                )}
+                                    )}
+                                    {connectionError !== null && (
+                                        <MessageBar isMultiline={true} messageBarType={MessageBarType.severeWarning}>
+                                            {connectionError}
+                                        </MessageBar>
+                                    )}
+                                </Stack>
                                 {/* <AppContext.Provider */}
                                 <AppContext.Provider
                                     value={{
