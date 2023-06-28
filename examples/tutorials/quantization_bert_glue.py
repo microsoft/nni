@@ -54,18 +54,18 @@ from transformers.trainer import Trainer
 from transformers.training_args import TrainingArguments
 
 
-task_name = 'rte' #'qnli''rte'
+task_name = 'rte' 
 finetune_lr = 4e-5
 quant_lr = 1e-5
-quant_method = 'lsq'# 'lsq' 'ptq'
+quant_method = 'ptq'
 dev_mode = False
 
 if dev_mode:
     quant_max_epochs = 1
     finetune_max_epochs = 1
 else:
-    quant_max_epochs = 10 #10
-    finetune_max_epochs = 10 #10
+    quant_max_epochs = 10
+    finetune_max_epochs = 10 
 
 
 # %%
