@@ -54,22 +54,22 @@ def _handle_gemm(layer, config, out2layer, in2layer):
     LayerType.Constant (bias) -> Shuffle  ->|
     assume quantize input, output, and weight
     """
-    w_bits = config['weight_bits']
+    w_bits = config['weight']['quant_bits']
     layer.precision = Precision_Dict[w_bits]
     # handle the input tensor
     in_tensor = layer.get_input(0)
-    in_tensor.dynamic_range = (config['tracked_min_input'], config['tracked_max_input'])
+    in_tensor.dynamic_range = (config['_input_0']['tracked_min'], config['_input_0']['tracked_max'])
     # handle the output tensor
     out_tensor = layer.get_output(0)
-    out_tensor.dynamic_range = (config['tracked_min_output'], config['tracked_max_output'])
+    out_tensor.dynamic_range = (config['_output_0']['tracked_min'], config['_output_0']['tracked_max'])
     # handle weight
     w_in_tensor = layer.get_input(1)
     weight_layer = out2layer[w_in_tensor.name]
-    assert weight_layer.type == trt.LayerType.CONSTANT
+    # assert weight_layer.type == trt.LayerType.CONSTANT
     weight_layer.precision = Precision_Dict[w_bits]
     weight_layer.set_output_type(0, Precision_Dict[w_bits])
     w_out_tensor = weight_layer.get_output(0)
-    w_out_tensor.dynamic_range = (config['min_weight'], config['max_weight'])
+    w_out_tensor.dynamic_range = (config['weight']['tracked_min'], config['weight']['tracked_max'])
     print('special gemm: ', w_out_tensor.dynamic_range)
     # TODO: handle sum & bias
     # NOTE: a feasible way is setting bias to 0 in quantization algorithm size
@@ -108,6 +108,7 @@ def propagate_from_low_bit_predecessor(layer, out2layer, default_precision=trt.f
         dynamic range of current layer's output tensor
     """
     dynamic_range = None
+
     tensor = layer.get_input(0)
     if tensor is not None:
         predecessor = out2layer[tensor.name]
@@ -123,7 +124,7 @@ def propagate_from_low_bit_predecessor(layer, out2layer, default_precision=trt.f
         return trt.int32, None
     else:
         logger.warning(f'set op {layer.name} to default precision {default_precision}')
-        return default_precision, None
+        return layer.get_output_type(0),None
 
 def config_network_precision(network, config):
     """
@@ -134,42 +135,54 @@ def config_network_precision(network, config):
     # build two auxiliary indices
     out2layer = {}
     in2layer = {}
+
     for layer_idx in range(network.num_layers):
-        layer = network.get_layer(layer_idx)
+        layer = network.get_layer(layer_idx)     
         for i in range(layer.num_outputs):
             output = layer.get_output(i)
-            out2layer[output.name] = layer
+            out2layer[output.name] = layer  
         for i in range(layer.num_inputs):
-            _input = layer.get_input(i)
-            if _input.name in in2layer:
-                in2layer[_input.name].append(layer)
-            else:
-                in2layer[_input.name] = [layer]
+            if layer.get_input(i) != None:
+                _input = layer.get_input(i)
+                if _input.name in in2layer:
+                    in2layer[_input.name].append(layer)
+                else:
+                    in2layer[_input.name] = [layer]
 
-    net_input = network.get_input(0)
-    assert net_input.name in in2layer
+    # fliter out the input_layer
+    input_list = []
+    for i in range(network.num_inputs):
+        net_input = network.get_input(i)
+        assert net_input.name in in2layer
+        input_list.append(net_input.name)
 
     # traverse the network/graph and specify precision and dynamic range
     for layer_idx in range(network.num_layers):
         # assume the traverse order is topological
         layer = network.get_layer(layer_idx)
-        if layer.name in config:
-            if layer.name[0:4] == 'Gemm':
-                _handle_gemm(layer, config[layer.name], out2layer, in2layer)
+        for i in range(layer.num_inputs):
+            if layer.get_input(i) != None:
+                _input = layer.get_input(i)
+                if _input.name in input_list:
+                    break
+        else:   
+            if layer.name in config:
+                if ('Gemm' in layer.name) or ('MatMul' in layer.name):
+                    _handle_gemm(layer, config[layer.name], out2layer, in2layer)
+                else:
+                    apply_precision_to_layer(layer, config[layer.name])
             else:
-                apply_precision_to_layer(layer, config[layer.name])
-        else:
-            precision, dynamic_range = propagate_from_low_bit_predecessor(layer, out2layer)
-            if precision:
-                layer.precision = precision
-                layer.set_output_type(0, precision)
-            if dynamic_range:
-                out_tensor = layer.get_output(0)
-                out_tensor.dynamic_range = dynamic_range
+                precision, dynamic_range = propagate_from_low_bit_predecessor(layer, out2layer)
+                if precision:
+                    layer.precision = precision
+                    layer.set_output_type(0, precision)
+                if dynamic_range:
+                    out_tensor = layer.get_output(0)
+                    out_tensor.dynamic_range = dynamic_range
 
     print_layer_precisions(network)
 
-def build_engine_without_calib(onnx_model_file, config):
+def build_engine_without_calib(onnx_model_file, config, dummy_input,dynamic_shape_setting):
     """
     This function builds an engine from an onnx model following the precisions
     and dynamic range in config without calibrator.
@@ -206,6 +219,15 @@ def build_engine_without_calib(onnx_model_file, config):
             for error in range(parser.num_errors):
                 logger.error(parser.get_error(error))
             raise ValueError('Failed to parse the ONNX file.')
+
+    profile = builder.create_optimization_profile()
+    # #input is a dict
+    for input_name, input_tensor in dummy_input.items():
+        profile.set_shape(input_name, min = dynamic_shape_setting['min_shape'], 
+                          opt = dynamic_shape_setting['opt_shape'], 
+                          max = dynamic_shape_setting['max_shape'])
+    
+    trt_config.add_optimization_profile(profile)
 
     config_network_precision(network, config)
 
@@ -270,16 +292,18 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         The path user want to store onnx model which is converted from pytorch model.
     """
 
-    def __init__(self, model, input_shape, config=None, onnx_path="default_model.onnx"):
+    def __init__(self, model, dummy_input, config=None, onnx_path="default_model.onnx", input_names = ["actual_input_1"],output_names = ["output1"],dynamic_axes=None,dynamic_shape_setting=None):
         super().__init__(model, config)
         self.model = model
-        self.input_shape = input_shape
         self.config = config
         self.onnx_path = onnx_path
+        self.dummy_input = dummy_input
         # Input name of onnx model providing for torch.onnx.export to generate onnx model
         # Output name of onnx model providing for torch.onnx.export to generate onnx model
-        self.input_names = ["actual_input_1"]
-        self.output_names = ["output1"]
+        self.input_names = input_names
+        self.output_names = output_names
+        self.dynamic_axes = dynamic_axes
+        self.dynamic_shape_setting = dynamic_shape_setting
 
         self.engine = None
         self.context = None
@@ -301,10 +325,10 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         """
         assert self.config is not None
         # Convert pytorch model to onnx model and save onnx model in onnx_path
-        _, onnx_config = fonnx.torch_to_onnx(self.model, self.config, input_shape=self.input_shape,
-            model_path=self.onnx_path, input_names=self.input_names, output_names=self.output_names)
+        _, onnx_config = fonnx.torch_to_onnx(self.model, self.config, dummy_input=self.dummy_input,
+            model_path=self.onnx_path, input_names=self.input_names, output_names=self.output_names,dynamic_axes=self.dynamic_axes)
         valid_config(onnx_config)
-        self.engine = build_engine_without_calib(self.onnx_path, onnx_config)
+        self.engine = build_engine_without_calib(self.onnx_path, onnx_config,dummy_input=self.dummy_input,dynamic_shape_setting=self.dynamic_shape_setting)
 
     def compress_with_calibrator(self, calib):
         """
@@ -340,23 +364,30 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         """
         if self.context is None or reset_context:
             self.context = self.engine.create_execution_context()
-            self.inputs, self.outputs, self.bindings, self.stream = common.allocate_buffers(self.engine)
+            self.context.active_optimization_profile = 0 # for dynamic shape
+            self.inputs, self.outputs, self.bindings, self.stream = common.allocate_buffers(self.engine,test_data)
             self.context.set_optimization_profile_async(0, self.stream.handle)
+        
+        # test_data is a dict
+        for input_name,input_tensor in test_data.items():
+            index = self.engine.get_binding_index(input_name)
+            engine_input_shape = self.engine.get_binding_shape(index)
+            for div in range(len(input_tensor.shape)):
+                if (engine_input_shape[div]==-1):
+                    engine_input_shape[div]=input_tensor.shape[div]
+            self.context.set_binding_shape(index,(engine_input_shape))
+            if input_tensor.device != torch.device('cpu'):
+                logger.warning('test_data should be placed on CPU.')
+                input_tensor = input_tensor.to(torch.device('cpu'))
 
-        engine_input_shape = self.engine.get_binding_shape(0)
-        assert engine_input_shape[0] == test_data.size()[0]
-        if test_data.device != torch.device('cpu'):
-            logger.warning('test_data should be placed on CPU.')
-            test_data = test_data.to(torch.device('cpu'))
-        test_data = test_data.numpy()
-        assert test_data.dtype == np.float32
+            input_tensor = input_tensor.numpy()
+            np.copyto(self.inputs[index].host, input_tensor.ravel())
 
-        np.copyto(self.inputs[0].host, test_data.ravel())
         start_time = time.time()
         trt_outputs = common.do_inference_v2(self.context, bindings=self.bindings, inputs=self.inputs,
                                                 outputs=self.outputs, stream=self.stream)
         time_span = time.time() - start_time
-        return torch.as_tensor(trt_outputs[0]), time_span
+        return torch.as_tensor(trt_outputs), time_span
 
     def export_quantized_model(self, path):
         """
