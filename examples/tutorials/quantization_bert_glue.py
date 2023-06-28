@@ -54,18 +54,18 @@ from transformers.trainer import Trainer
 from transformers.training_args import TrainingArguments
 
 
-task_name = 'qnli'
+task_name = 'rte' #'qnli''rte'
 finetune_lr = 4e-5
 quant_lr = 1e-5
-quant_method = 'lsq'
-dev_mode = True
+quant_method = 'lsq'# 'lsq' 'ptq'
+dev_mode = False
 
 if dev_mode:
     quant_max_epochs = 1
     finetune_max_epochs = 1
 else:
-    quant_max_epochs = 10
-    finetune_max_epochs = 10
+    quant_max_epochs = 10 #10
+    finetune_max_epochs = 10 #10
 
 
 # %%
@@ -212,13 +212,42 @@ import nni
 from nni.contrib.compression.quantization import QATQuantizer, LsqQuantizer, PtqQuantizer
 from nni.contrib.compression.utils import TransformersEvaluator
 
+# dummy_input is used for torch2onnx and onnx2trt
+
+# transfer dummy_input type into dict
+def transfer_dummy_input(dummy_input,input_names):
+    dict_dummy_input = {}
+    if isinstance(dummy_input,dict):
+        for input_name,input_tensor in dummy_input.items():
+            if torch.is_tensor(input_tensor):
+                continue
+            else:
+                dummy_input[input_name] = torch.tensor(input_tensor)
+        dict_dummy_input = dummy_input
+    elif isinstance(dummy_input,tuple):
+        for i in range(len(dummy_input)):
+            if torch.is_tensor(dummy_input[i]):
+                continue
+            else:
+                temp_dummy_input = torch.tensor(dummy_input[i])
+                dict_dummy_input[input_names[i]] = temp_dummy_input
+    elif torch.is_tensor(dummy_input):
+        dict_dummy_input[input_names[0]] = dummy_input
+    else :
+        print('the dummy_input type is not allowed !')
+    return dict_dummy_input
+
+dummy_input = ([[101, 11271, 20726, 1010, 1996, 7794, 1997, 1996, 3364, 5696, 20726, 1010, 2038, 2351, 1997, 11192, 4456, 2012, 2287, 4008, 1010, 2429, 2000, 1996, 5696, 20726, 3192, 1012, 102, 5696, 20726, 2018, 2019, 4926, 1012, 102]],[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1]],[[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
+input_names=['input_ids','token_type_ids','attention_mask']
+dummy_input = transfer_dummy_input(dummy_input,input_names)
+
 def fake_quantize():
     config_list = [{
         'op_types': ['Linear'],
         'op_names_re': ['bert.encoder.layer.{}'.format(i) for i in range(12)],
-        'target_names': ['weight', '_output_'],
+        'target_names': ['weight', '_input_','_output_'],
         'quant_dtype': 'int8',
-        'quant_scheme': 'affine',
+        'quant_scheme': 'symmetric',#'affine''symmetric'
         'granularity': 'default',
     }]
 
@@ -243,6 +272,75 @@ def fake_quantize():
     quantizer.evaluator.bind_model(model, quantizer._get_param_names_map())
     print(quantizer.evaluator.evaluate())
 
+    model.eval()
+    model.to('cpu')
+    print('quantized torch-model output: ', model(**dummy_input))
+    model.to('cuda')
+    quantizer.unwrap_model()
+    evaluate()
+
+    # Speed up the model with TensorRT
+    from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
+    engine = ModelSpeedupTensorRT(model, dummy_input=dummy_input, config=calibration_config, onnx_path='bert_rte.onnx',input_names=['input_ids','token_type_ids','attention_mask'],output_names=['output'],
+    dynamic_axes={'input_ids' : {1 : 'seq_len'},
+                'token_type_ids' : {1 : 'seq_len'},
+                'attention_mask' : {1 : 'seq_len'}},
+    dynamic_shape_setting ={'min_shape' : (1,18),
+                            'opt_shape' : (1,72),
+                            'max_shape' : (1,360)})
+    engine.compress()
+    import time
+    start_time = time.time()
+    output, time_span = engine.inference(dummy_input)
+    infer_time = time.time() - start_time
+    print('test dummy_input inference output: ', output)
+    print('test dummy_input inference time: ', time_span, infer_time)
+    test_Accuracy(engine)
+
+def to_numpy(tensor):
+    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+
+def test_Accuracy(engine):
+    tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
+    _, validation_datasets = prepare_datasets(task_name, tokenizer, '')
+    merged_validation_dataset = ConcatDataset([d for d in validation_datasets.values()]) # type: ignore
+    true_cnt = 0
+    total_time = 0
+    for input_data in merged_validation_dataset:
+        for input_name,input_tensor in input_data.items():
+            if 'labels' != input_name:
+                input_data[input_name] = torch.tensor([input_tensor])
+        test_data = {key: input_data[key] for key in list(input_data.keys())[:-1]}
+        output, time_span = engine.inference(test_data,reset_context=True)
+        total_time += time_span
+        prediction = torch.argmax(output,-1)
+        if input_data['labels'] == prediction:
+            true_cnt +=1
+    Accuracy = true_cnt/len(merged_validation_dataset)
+    print('inference time: ', total_time /len(merged_validation_dataset))
+    print('Accuracy of mode #1: ', Accuracy)
+
+def test_onnx_Accuracy(onnx_model):
+    import onnxruntime
+    ort_session = onnxruntime.InferenceSession(onnx_model)
+    tokenizer = BertTokenizerFast.from_pretrained('bert-base-uncased')
+    _, validation_datasets = prepare_datasets(task_name, tokenizer, '')
+    merged_validation_dataset = ConcatDataset([d for d in validation_datasets.values()]) # type: ignore
+    true_cnt = 0
+    for input_data in merged_validation_dataset:
+        for input_name,input_tensor in input_data.items():
+            if 'labels' != input_name:
+                input_data[input_name] = to_numpy(torch.tensor([input_tensor]))
+        test_data = {key: input_data[key] for key in list(input_data.keys())[:-1]}
+        output = ort_session.run(None, test_data)
+        prediction = np.argmax(output,-1)
+        if input_data['labels'] == prediction:
+            true_cnt +=1
+    Accuracy = true_cnt/len(merged_validation_dataset)
+    print('Accuracy of mode #1: ', Accuracy)
+
+
+
 def evaluate():
     model = build_finetuning_model(f'./output/bert_finetuned/{task_name}.bin', is_quant=False)
     trainer = prepare_traced_trainer(model, is_quant=False)
@@ -251,6 +349,7 @@ def evaluate():
 
 
 fake_quantize()
+test_onnx_Accuracy('bert_rte.onnx')
 evaluate()
 
 
