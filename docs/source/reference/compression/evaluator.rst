@@ -21,3 +21,10 @@ TransformersEvaluator
 ---------------------
 
 ..  autoclass:: nni.contrib.compression.TransformersEvaluator
+
+.. _new-deepspeed-torch-evaluator:
+
+DeepspeedTorchEvaluator
+-----------------------
+
+..  autoclass:: nni.contrib.compression.DeepspeedTorchEvaluator
