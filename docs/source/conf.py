@@ -116,6 +116,7 @@ linkcheck_ignore = [
     r'https://docs\.nvidia\.com/deeplearning/',
     r'https://cla\.opensource\.microsoft\.com',
     r'https://www\.docker\.com/',
+    r'https://nlp.stanford.edu/projects/glove/',
 
     # remove after 3.0 release
     r'https://nni\.readthedocs\.io/en/v2\.10/compression/overview\.html',
