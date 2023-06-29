@@ -65,8 +65,8 @@ def load_mnist_data(args):
     '''
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-    x_train = (np.expand_dims(x_train, -1).astype(np.float) / 255.)[:args.num_train]
-    x_test = (np.expand_dims(x_test, -1).astype(np.float) / 255.)[:args.num_test]
+    x_train = (np.expand_dims(x_train, -1).astype(float) / 255.)[:args.num_train]
+    x_test = (np.expand_dims(x_test, -1).astype(float) / 255.)[:args.num_test]
     y_train = keras.utils.to_categorical(y_train, NUM_CLASSES)[:args.num_train]
     y_test = keras.utils.to_categorical(y_test, NUM_CLASSES)[:args.num_test]
 

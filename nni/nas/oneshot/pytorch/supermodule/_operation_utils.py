@@ -70,7 +70,7 @@ def _eliminate_list_slice(shape: tuple, slice_: multidim_slice) -> multidim_slic
     for i in range(len(slice_)):
         if isinstance(slice_[i], list):
             # convert list of slices to mask
-            mask = np.zeros(shape[i], dtype=np.bool)  # type: ignore
+            mask = np.zeros(shape[i], dtype=bool)  # type: ignore
             for sl in cast(List[slice], slice_[i]):
                 mask[sl] = 1
             result.append(mask)
