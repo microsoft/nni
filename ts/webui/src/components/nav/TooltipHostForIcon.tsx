@@ -15,18 +15,19 @@ interface TooltipHostIndexProps {
 const TooltipHostForIcon = (props: TooltipHostIndexProps): any => {
     const { iconName, tooltip, pageURL } = props;
     const [isActivePage, setIsActivePage] = useState(window.location.pathname === pageURL);
+    const prefix = getPrefix() || '';
     const [overview, setOverview] = useState(
-        isActivePage ? `${getPrefix() || ''}/icons/${iconName}-1.png` : `${getPrefix() || ''}/icons/${iconName}.png`
+        isActivePage ? `${prefix}/icons/${iconName}-1.png` : `${prefix}/icons/${iconName}.png`
     );
     const [mouHover, setMouhover] = useState(false);
     useEffect(() => {
         if (mouHover === true) {
-            setOverview(`${getPrefix() || ''}/icons/${iconName}-1.png`);
+            setOverview(`${prefix}/icons/${iconName}-1.png`);
         } else {
             if (window.location.pathname === pageURL) {
-                setOverview(`${getPrefix() || ''}/icons/${iconName}-1.png`);
+                setOverview(`${prefix}/icons/${iconName}-1.png`);
             } else {
-                setOverview(`${getPrefix() || ''}/icons/${iconName}.png`);
+                setOverview(`${prefix}/icons/${iconName}.png`);
             }
         }
     }, [mouHover, isActivePage]);
@@ -46,7 +47,7 @@ const TooltipHostForIcon = (props: TooltipHostIndexProps): any => {
                         onMouseLeave={() => setMouhover(false)}
                         onClick={() => {
                             setIsActivePage(window.location.pathname === pageURL);
-                            setOverview(`${getPrefix() || ''}/icons/${iconName}-1.png`);
+                            setOverview(`${prefix}/icons/${iconName}-1.png`);
                         }}
                     >
                         <img src={overview} alt={iconName.toString()} />
