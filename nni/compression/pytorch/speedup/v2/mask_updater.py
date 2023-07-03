@@ -120,7 +120,7 @@ class DefaultMaskUpdater(MaskUpdater):
         if model_speedup.garbage_collect_values:
             # do memory collect to reduce memory usage
             for to_delete in model_speedup.user_to_last_uses.get(node, []):
-                del model_speedup.node_infos[to_delete]._output_randomize
+                del model_speedup.node_infos[to_delete].output_randomize
 
     def direct_update_postprocess(self, model_speedup: 'ModelSpeedup', node: Node):
         pass
@@ -452,7 +452,7 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
         if model_speedup.garbage_collect_values:
             # do memory collect to reduce memory usage
             for to_delete in model_speedup.user_to_last_uses.get(node, []):
-                del model_speedup.node_infos[to_delete]._output_randomize
+                del model_speedup.node_infos[to_delete].output_randomize
 
     def indirect_update_process(self, model_speedup: 'ModelSpeedup', node: Node):
         node_info = model_speedup.node_infos[node]
