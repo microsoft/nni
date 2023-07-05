@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import List, Dict, Any, Set, Tuple
+from typing import List, Dict, Any, Tuple
 
 import torch
 import torch.nn as nn
@@ -50,22 +50,12 @@ def get_fused_module_list(module_name: str, mode: str, fused_module_names: List[
     return ()
 
 
-def update_config(wrapper_config: Dict[str, Dict[str, Any]], configs: Dict[str, Dict[str, Any]]):
+def update_config(wrapper_config: Dict[str, List[Dict[str, Any]]], configs: Dict[str, Dict[str, Any]]):
     # sourcery skip: merge-duplicate-blocks, remove-redundant-if
-    wrapper_config = wrapper_config if wrapper_config else {}
-    for mode, config in configs.items():
-        if mode not in wrapper_config:
-            wrapper_config[mode] = config
-        else:
-            for name, value in config.items():
-                if name not in wrapper_config[mode]:
-                    wrapper_config[mode][name] = value
-                elif isinstance(value, (Dict, Set)):
-                    wrapper_config[mode][name].update(value)
-                elif isinstance(value, List):
-                    wrapper_config[mode][name] = list(set(wrapper_config[mode][name] + value))
-                else:
-                    wrapper_config[mode][name] = value
+    for key, config in configs.items():
+        if key not in wrapper_config:
+            wrapper_config[key] = []
+        wrapper_config[key].append(config)
 
     return wrapper_config
 

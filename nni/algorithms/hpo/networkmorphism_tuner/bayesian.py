@@ -219,7 +219,7 @@ class IncrementalGaussianProcess:
                 self._l_matrix.shape[0]))
         k_inv = l_inv.dot(l_inv.T)
         # Compute variance of predictive distribution
-        y_var = np.ones(len(train_x), dtype=np.float)
+        y_var = np.ones(len(train_x), dtype=float)
         y_var -= np.einsum("ij,ij->i", np.dot(k_trans, k_inv), k_trans)
 
         # Check if any of the variances is negative because of

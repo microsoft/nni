@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { getPrefix } from '@static/function';
 import { TOOLTIPSTYLE } from '@static/const';
 import { DirectionalHint, TooltipHost } from '@fluentui/react';
+import { getRouter } from './Nav';
 
 // feedback, document, version btns
 type pagesType = 'Overview' | 'Trials detail';
@@ -10,32 +11,29 @@ interface WebRoutersInterface {
     currentPage: pagesType;
     changeCurrentPage: (value: pagesType) => void;
 }
+
 const WebRouters = (props: WebRoutersInterface): any => {
     const { currentPage, changeCurrentPage } = props; // Overview or Trials detail
+    const prefix = getPrefix() || '';
     const [overviewImgsrc, setOverviewImgsrc] = useState(
-        // window.location.pathname === '/oview'
-        currentPage === 'Overview'
-            ? `${getPrefix() || ''}/icons/overview-1.png`
-            : `${getPrefix() || ''}/icons/overivew.png`
+        currentPage === 'Overview' ? `${prefix}/icons/overview-1.png` : `${prefix}/icons/overivew.png`
     );
     const [detailImgsrc, setdetailImgsrc] = useState(
-        // window.location.pathname === '/detail'
-        currentPage === 'Trials detail'
-            ? `${getPrefix() || ''}/icons/detail-1.png`
-            : `${getPrefix() || ''}/icons/detail.png`
+        currentPage === 'Trials detail' ? `${prefix}/icons/detail-1.png` : `${prefix}/icons/detail.png`
     );
     const [overviewMouhover, setOverviewMouhover] = useState(false);
     const [detailMouhover, setDetailMouhover] = useState(false);
     useEffect(() => {
-        if (overviewMouhover === false && window.location.pathname !== '/oview') {
-            setOverviewImgsrc(`${getPrefix() || ''}/icons/overview.png`);
+        const result = getRouter();
+        if (overviewMouhover === false && !(result === '/oview')) {
+            setOverviewImgsrc(`${prefix}/icons/overview.png`);
         } else {
-            setOverviewImgsrc(`${getPrefix() || ''}/icons/overview-1.png`);
+            setOverviewImgsrc(`${prefix}/icons/overview-1.png`);
         }
-        if (detailMouhover === false && window.location.pathname !== '/detail') {
-            setdetailImgsrc(`${getPrefix() || ''}/icons/detail.png`);
+        if (detailMouhover === false && !(result === '/detail')) {
+            setdetailImgsrc(`${prefix}/icons/detail.png`);
         } else {
-            setdetailImgsrc(`${getPrefix() || ''}/icons/detail-1.png`);
+            setdetailImgsrc(`${prefix}/icons/detail-1.png`);
         }
     }, [overviewMouhover, detailMouhover]);
 
@@ -53,8 +51,8 @@ const WebRouters = (props: WebRoutersInterface): any => {
                         onMouseEnter={() => setOverviewMouhover(true)}
                         onMouseLeave={() => setOverviewMouhover(false)}
                         onClick={() => {
-                            setOverviewImgsrc(`${getPrefix() || ''}/icons/overview-1.png`);
-                            setdetailImgsrc(`${getPrefix() || ''}/icons/detail.png`);
+                            setOverviewImgsrc(`${prefix}/icons/overview-1.png`);
+                            setdetailImgsrc(`${prefix}/icons/detail.png`);
                             changeCurrentPage('Overview');
                         }}
                     >
@@ -74,8 +72,8 @@ const WebRouters = (props: WebRoutersInterface): any => {
                         onMouseEnter={() => setDetailMouhover(true)}
                         onMouseLeave={() => setDetailMouhover(false)}
                         onClick={() => {
-                            setdetailImgsrc(`${getPrefix() || ''}/icons/detail-1.png`);
-                            setOverviewImgsrc(`${getPrefix() || ''}/icons/overview.png`);
+                            setdetailImgsrc(`${prefix}/icons/detail-1.png`);
+                            setOverviewImgsrc(`${prefix}/icons/overview.png`);
                             changeCurrentPage('Trials detail');
                         }}
                     >

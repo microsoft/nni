@@ -287,7 +287,7 @@ class CurveModel:
         -------
         None
         """
-        init_weight = np.ones((self.effective_model_num), dtype=np.float) / self.effective_model_num
+        init_weight = np.ones((self.effective_model_num), dtype=float) / self.effective_model_num
         self.weight_samples = np.broadcast_to(init_weight, (NUM_OF_INSTANCE, self.effective_model_num))
         for _ in range(NUM_OF_SIMULATION_TIME):
             # sample new value from Q(i, j)
@@ -298,7 +298,7 @@ class CurveModel:
             # sample u
             u = np.random.rand(NUM_OF_INSTANCE)
             # new value
-            change_value_flag = (u < alpha).astype(np.int)
+            change_value_flag = (u < alpha).astype(int)
             for j in range(NUM_OF_INSTANCE):
                 new_values[j] = self.weight_samples[j] * (1 - change_value_flag[j]) + new_values[j] * change_value_flag[j]
             self.weight_samples = new_values

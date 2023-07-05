@@ -283,10 +283,10 @@ function isManagerExperimentPage(): boolean {
 }
 
 function caclMonacoEditorHeight(height): number {
-    // [Search space 56px] + [marginBottom 18px] +
+    // [Search space 64px] + [marginBottom 18px] +
     // button[height: 32px, marginTop: 45px, marginBottom: 7px]
     // panel own padding-bottom: 20px;
-    return height - 178;
+    return height - 186;
 }
 
 function copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {

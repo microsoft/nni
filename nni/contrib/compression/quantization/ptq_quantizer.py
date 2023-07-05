@@ -9,6 +9,7 @@ from torch import Tensor
 
 from ..base.compressor import Compressor, Quantizer
 from ..base.wrapper import ModuleWrapper
+from ..base.target_space import QuantizationTargetSpace
 from ..utils import Evaluator, _EVALUATOR_DOCSTRING
 
 
@@ -48,10 +49,11 @@ class PtqQuantizer(Quantizer):
         ...
 
     def __init__(self, model: torch.nn.Module, config_list: List[Dict], evaluator: Evaluator, \
-                 existed_wrappers: Dict[str, ModuleWrapper] | None = None):
+                 existed_wrappers: Dict[str, ModuleWrapper] | None = None, is_bias_correction: bool = False):
         super().__init__(model, config_list, evaluator, existed_wrappers)
         self.evaluator: Evaluator
         self.is_compressed = False
+        self.is_bias_correction = is_bias_correction
         self.register_ptq_apply_method()
         self.register_track_func()
 
@@ -68,10 +70,9 @@ class PtqQuantizer(Quantizer):
         for module_name, _ in self._target_spaces.items():
             wrapper = self._module_wrappers[module_name]
             wrapper.register_track_func(self.track_min_max_val)
+            # wrapper.register_track_func(self.update_scale_zp_for_bias_correction)
 
     def track_min_max_val(self, wrapper: ModuleWrapper, target_name: str, target: Tensor):
-        if self.is_compressed:
-            return
         def amin_reduce_func(converted_target: Tensor):
             return converted_target.detach().amin(dim=-1)
 
@@ -97,25 +98,7 @@ class PtqQuantizer(Quantizer):
     def update_scale_zp(self):
         for _, ts in self._target_spaces.items():
             for _, target_space in ts.items():
-                if target_space.tracked_max is None or target_space.tracked_min is None:
-                    return
-                tracked_min = torch.min(target_space.tracked_min, torch.zeros_like(target_space.tracked_min))
-                tracked_max = torch.max(target_space.tracked_max, torch.zeros_like(target_space.tracked_max))
-                zero_point = torch.zeros_like(tracked_min)
-                if target_space.quant_scheme in ['symmetric', None]:
-                    abs_max = torch.max(torch.abs(tracked_min), torch.abs(tracked_max))
-                    scale = abs_max / (float(target_space.qmax - target_space.qmin) / 2)
-                    scale = torch.max(scale, torch.full_like(scale, torch.finfo(torch.float32).eps))
-                    # NOTE: here need to check, +1 because in pytorch, symmetric qint8 zp is 0, quint8 zp is 128.
-                    zero_point_val = (target_space.qmax + target_space.qmin + 1) // 2
-                    zero_point = torch.full_like(zero_point, zero_point_val)
-                elif target_space.quant_scheme == 'affine':
-                    scale = (tracked_max - tracked_min) / float(target_space.qmax - target_space.qmin)
-                    scale = torch.max(scale, torch.full_like(scale, torch.finfo(torch.float32).eps))
-                    zero_point = target_space.qmin - torch.round(tracked_min / scale)
-                else:
-                    raise RuntimeError(f'Unknown quant_scheme {target_space.quant_scheme}')
-                zero_point = torch.clamp(zero_point, target_space.qmin, target_space.qmax)
+                scale, zero_point = compute_scale_zp(target_space)  # type: ignore
                 target_space.scale, target_space.zero_point = scale, zero_point
 
     def _single_compress(self, max_steps: int | None, max_epochs: int | None):
@@ -132,6 +115,50 @@ class PtqQuantizer(Quantizer):
         self.update_scale_zp()
         self.is_compressed = True
         self.register_ptq_apply_method()
+        # bias correction
+        if self.is_bias_correction:
+            self.bias_correction()
+
+    def bias_correction(self):
+        assert self.is_bias_correction, \
+            f"is_bias_correction should be True, but got {self.is_bias_correction}"
+        for module_name, _ in self._target_spaces.items():
+            wrapper = self._module_wrappers[module_name]
+            setattr(wrapper, "is_bias_correction", self.is_bias_correction)
+        # running bias correction process
+        # TODO: add an warning for user to change evaluation dataset
+        self.evaluator.evaluate()
+        for module_name, _ in self._target_spaces.items():
+            wrapper = self._module_wrappers[module_name]
+            wrapper.update_bias()
+            delattr(wrapper, "is_bias_correction")
+            delattr(wrapper, "bias_correction")
+            delattr(wrapper, "bias_element_num")
+        self.evaluator.evaluate()
+        self.update_scale_zp()
+
+
+def compute_scale_zp(target_space: QuantizationTargetSpace):
+    if target_space.tracked_max is None or target_space.tracked_min is None:
+        return
+    tracked_min = torch.min(target_space.tracked_min, torch.zeros_like(target_space.tracked_min))
+    tracked_max = torch.max(target_space.tracked_max, torch.zeros_like(target_space.tracked_max))
+    zero_point = torch.zeros_like(tracked_min)
+    if target_space.quant_scheme in ['symmetric', None]:
+        abs_max = torch.max(torch.abs(tracked_min), torch.abs(tracked_max))
+        scale = abs_max / (float(target_space.qmax - target_space.qmin) / 2)
+        scale = torch.max(scale, torch.full_like(scale, torch.finfo(torch.float32).eps))
+        # NOTE: here need to check, +1 because in pytorch, symmetric qint8 zp is 0, quint8 zp is 128.
+        zero_point_val = (target_space.qmax + target_space.qmin + 1) // 2
+        zero_point = torch.full_like(zero_point, zero_point_val)
+    elif target_space.quant_scheme == 'affine':
+        scale = (tracked_max - tracked_min) / float(target_space.qmax - target_space.qmin)
+        scale = torch.max(scale, torch.full_like(scale, torch.finfo(torch.float32).eps))
+        zero_point = target_space.qmin - torch.round(tracked_min / scale)
+    else:
+        raise RuntimeError(f'Unknown quant_scheme {target_space.quant_scheme}')
+    zero_point = torch.clamp(zero_point, target_space.qmin, target_space.qmax)
+    return scale, zero_point
 
 
 def update_tracked_value(original_val: Union[Tensor, None], current_val: Tensor, mode: str="max"):
