@@ -48,7 +48,7 @@ class HostDeviceMem(object):
     def __repr__(self):
         return self.__str__()
 
-def allocate_buffers(engine):
+def allocate_buffers(engine,test_data):
     """
     Allocates all buffers required for an engine, i.e. host/device inputs/outputs.
     NOTE: currently this function only supports NetworkDefinitionCreationFlag::kEXPLICIT_BATCH flag.
@@ -73,8 +73,17 @@ def allocate_buffers(engine):
     outputs = []
     bindings = []
     stream = cuda.Stream()
+    # find real shape
+    binding_index = 0
+    input_list = list(test_data.keys())
+    #test_data is a dict,which is for setting real input shape while model shape is dynamic 
     for binding in engine:
-        size = trt.volume(engine.get_binding_shape(binding)) # * engine.max_batch_size, batch size already in
+        if  binding_index < len(test_data):#dynamic input shape
+            size = trt.volume(test_data[input_list[binding_index]].shape)
+        else:
+            #static input shape or static output shape
+            size = trt.volume(engine.get_binding_shape(binding)) # * engine.max_batch_size, batch size already in
+
         dtype = trt.nptype(engine.get_binding_dtype(binding))
         # Allocate host and device buffers
         host_mem = cuda.pagelocked_empty(size, dtype)
@@ -86,6 +95,7 @@ def allocate_buffers(engine):
             inputs.append(HostDeviceMem(host_mem, device_mem))
         else:
             outputs.append(HostDeviceMem(host_mem, device_mem))
+        binding_index += 1
     return inputs, outputs, bindings, stream
 
 # This function is generalized for multiple inputs/outputs for full dimension networks.

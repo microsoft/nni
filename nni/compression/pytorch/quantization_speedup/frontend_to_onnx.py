@@ -54,30 +54,52 @@ def unwrapper(model_onnx, index2name, config):
     dict
         The configuration of onnx model layers and calibration parameters
     """
-    # Support Gemm, Conv, Relu, Clip(Relu6) and Maxpool
-    support_op = ['Gemm', 'Conv', 'Relu', 'Clip', 'MaxP']
+    # Support Gemm, Conv, Relu, Clip(Relu6) and Maxpool + MatMul
+    support_op = ['Gemm', 'Conv', 'Relu', 'Clip', 'MaxP', 'MatMul']
     idx = 0
     onnx_config = {}
-    while idx < len(model_onnx.graph.node):
-        nd = model_onnx.graph.node[idx]
-        if nd.name[0:4] in support_op and  idx > 1:
-            # Grad constant node and multiply node
-            const_nd = model_onnx.graph.node[idx-2]
-            mul_nd = model_onnx.graph.node[idx-1]
-            # Get index number which is transferred by constant node
-            index = int(onnx.numpy_helper.to_array(const_nd.attribute[0].t))
-            if index != -1:
-                name = index2name[index]
-                onnx_config[nd.name] = config[name]
-            nd.input[0] = mul_nd.input[0]
-            # Remove constant node and multiply node
-            model_onnx.graph.node.remove(const_nd)
-            model_onnx.graph.node.remove(mul_nd)
-            idx = idx-2
-        idx = idx+1
+    mul_name_list =[]
+    const_name_list = []
+    const_list = []
+    mul_list = []
+    #find mul node output name
+    for node in model_onnx.graph.node:
+        for op in support_op:
+            if op in node.name:
+                for node_input_name in node.input:
+                    if 'Mul_output' in node_input_name:
+                        mul_name_list.append(node_input_name)
+    #find const node output name by mul node output name
+    for node in model_onnx.graph.node:
+        if node.output[0] in mul_name_list:
+            for node_input_name in node.input:
+                if 'Constant_output' in node_input_name:
+                    const_name_list.append(node_input_name)    
+    # find mul node and const node
+    for node in model_onnx.graph.node:
+        for nd_name in mul_name_list:
+            if node.output[0] == nd_name:
+                mul_list.append(node)   
+        for nd_name in const_name_list:
+            if node.output[0] == nd_name:
+                const_list.append(node)
+    for node in model_onnx.graph.node:
+        for mul_node in mul_list:
+            if mul_node.output[0] in node.input:
+                # import pdb;pdb.set_trace()
+                for const_node in const_list:
+                    if const_node.output[0] in mul_node.input:
+                        # import pdb;pdb.set_trace()
+                        index = int(onnx.numpy_helper.to_array(const_node.attribute[0].t))
+                        if index != -1:
+                            name = index2name[index]
+                            onnx_config[node.name] = config[name]
+                        node.input[0] = mul_node.input[0]
+                        model_onnx.graph.node.remove(const_node)
+                        model_onnx.graph.node.remove(mul_node)
     return model_onnx, onnx_config
 
-def torch_to_onnx(model, config, input_shape, model_path, input_names, output_names):
+def torch_to_onnx(model, config, dummy_input, model_path, input_names, output_names,dynamic_axes=None):
     """
     Convert torch model to onnx model and get layer bits config of onnx model.
 
@@ -103,6 +125,8 @@ def torch_to_onnx(model, config, input_shape, model_path, input_names, output_na
     dict
         The configuration of onnx model layers and calibration parameters
     """
+    device = torch.device('cpu')
+    model.to(device)
     # Support Gemm, Conv, Relu, Clip(Relu6) and MaxPool
     support_op = [torch.nn.Conv2d, torch.nn.Linear, torch.nn.ReLU, torch.nn.ReLU6, torch.nn.MaxPool2d]
     # Transfer bits number to onnx layer by using wrapper
@@ -124,14 +148,15 @@ def torch_to_onnx(model, config, input_shape, model_path, input_names, output_na
             set_nested_attr(model, name, wrapper_module)
     # Convert torch model to onnx model and save it in model_path
     device = torch.device('cpu')
-    dummy_input = torch.randn(input_shape)
-    dummy_input = dummy_input.to(device)
-    model.to(device)
-    torch.onnx.export(model, dummy_input, model_path, verbose=False, input_names=input_names, output_names=output_names, export_params=True)
+    if(dynamic_axes == None):
+        dynamic_axes = {'input' : {2 : 'image_height',3:'image_wdith'}, #for image  
+                        'output' : {2 : 'image_height',3:'image_wdith'}}
+    # dummy_input = dummy_input.to(device)
+    # model.to(device)
+    torch.onnx.export(model, dummy_input, model_path, verbose=False, input_names=input_names, output_names=output_names, export_params=True,opset_version=11,dynamic_axes=dynamic_axes)
     # Load onnx model
     model_onnx = onnx.load(model_path)
     model_onnx, onnx_config = unwrapper(model_onnx, index2name, config)
     onnx.save(model_onnx, model_path)
-
     onnx.checker.check_model(model_onnx)
     return model_onnx, onnx_config
