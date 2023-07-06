@@ -18,7 +18,6 @@ from nni.nas.nn.pytorch import LayerChoice, ModelSpace
 from nni.nas.oneshot.pytorch import DartsLightningModule
 
 from ut.nas.nn.models import MODELS
-
 from .test_utils import RandomDataset
 
 
@@ -217,8 +216,9 @@ def test_optimizer_lr_scheduler():
 
         def configure_optimizers(self):
             opt1 = torch.optim.SGD(self.net.layer1.parameters(), lr=0.1)
-            opt2 = torch.optim.Adam(self.net.layer2.parameters(), lr=0.2)
-            return [opt1, opt2], [torch.optim.lr_scheduler.StepLR(opt1, step_size=2, gamma=0.1)]
+            # no longer supported in lightning 2.x
+            # opt2 = torch.optim.Adam(self.net.layer2.parameters(), lr=0.2)
+            return [opt1], [torch.optim.lr_scheduler.StepLR(opt1, step_size=2, gamma=0.1)]
 
         def training_step(self, batch, batch_idx):
             loss = self(batch).sum()

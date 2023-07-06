@@ -137,8 +137,9 @@ class MultiModelTrainer(pytorch_lightning.Trainer):
 
     def __init__(self, use_cgo: bool = True, **trainer_kwargs):
         if use_cgo:
-            if "accelerator" in trainer_kwargs:
-                raise ValueError("accelerator should not be set when cross-graph optimization is enabled.")
+            # Accelerator and strategy can be both set at lightning 2.0.
+            # if "accelerator" in trainer_kwargs:
+            #     raise ValueError("accelerator should not be set when cross-graph optimization is enabled.")
 
             if 'strategy' in trainer_kwargs:
                 raise ValueError("MultiModelTrainer does not support specifying strategy")

@@ -9,6 +9,16 @@ parameters:
   - noop
   - venv
 
+# variables set on VSO:
+#   sas_cache
+#
+# its value should be:
+#   sp=racw&st=2022-04-01T00:00:00Z&se=......
+#
+# how to re-generate:
+#   1. find the storage on azure portal: nni (resource group) -> nni (storage account) -> cache (container)
+#   2. settings - shared access tokens - generate sas token and url
+
 steps:
 - template: config-version.yml
   parameters:
@@ -25,15 +35,7 @@ steps:
 
 - script: |
     set -e
-    brew install 'swig@3'
-    rm /usr/local/bin/swig
-    ln -s '/usr/local/opt/swig@3/bin/swig' /usr/local/bin/swig
-  displayName: (macOS) Downgrade swig
-  condition: and(succeeded(), contains('${{ parameters.platform }}', 'macos'))
-
-- script: |
-    set -e
-    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
+    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_cache)' dependencies.zip
     python test/vso_tools/unpack_dependencies.py dependencies.zip
     rm dependencies.zip
   displayName: (POSIX) Download cache
@@ -41,7 +43,7 @@ steps:
   continueOnError: true
 
 - powershell: |
-    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip' dependencies.zip
+    azcopy copy 'https://nni.blob.core.windows.net/cache/dependencies-${{ parameters.platform }}.zip?$(sas_cache)' dependencies.zip
     python test/vso_tools/unpack_dependencies.py dependencies.zip
     Remove-Item dependencies.zip
   displayName: (Windows) Download cache
@@ -61,6 +63,11 @@ steps:
       mv dependencies/recommended_gpu.txt dependencies/recommended.txt
   displayName: (GPU) Activate CUDA dependencies
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'gpu'))
+
+- script: |
+    mv dependencies/recommended_gpu_legacy.txt dependencies/recommended.txt
+  displayName: (GPU) Activate CUDA legacy dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'gpu-torch1.x'))
 
 - script: |
     echo '===== develop ====='

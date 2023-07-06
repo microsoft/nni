@@ -52,7 +52,7 @@ class TransformerOp(ast.NodeTransformer):
         return super().visit(node)
 
     def visit_Call(self, node: ast.Call):
-        if isinstance(node.func, ast.Name) and node.func.id == 'super' and len(node.args) == 0:
+        if isinstance(node.func, ast.Name) and node.func.id == 'super' and _orig_len(node.args) == 0:
             return self.generic_visit(ast.Call(
                 func=ast.Name(id='super', ctx=ast.Load()),
                 args=[
@@ -173,6 +173,8 @@ class OperatorPatcher:
         self.function_cache_orig: Dict[int, Callable] = {}
 
     def patch_inner(self, func):
+        if _orig_isinstance(func, torch.nn.Module):
+            return self.patch_inner_helper(func)    # better not cache this
         if id(func) not in self.function_cache:
             self.function_cache[id(func)] = self.patch_inner_helper(func)
             self.function_cache_orig[id(func)] = func

@@ -7,7 +7,7 @@ import numpy as np
 from .attr import get_nested_attr
 from .shape_dependency import ChannelDependency, GroupDependency, InputChannelDependency
 # logging.basicConfig(level = logging.DEBUG)
-_logger = logging.getLogger('FixMaskConflict')
+_logger = logging.getLogger(__name__)
 
 
 # TODO: mask conflict need refactor, the current implementation is very unfriendly to the input channel masks.

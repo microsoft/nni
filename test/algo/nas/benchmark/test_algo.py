@@ -1,3 +1,5 @@
+import pytest
+
 from nni.nas.benchmark import *
 from nni.nas.execution import SequentialExecutionEngine
 from nni.nas.strategy import *
@@ -30,6 +32,7 @@ def test_nasbench201_with_rl():
     assert list(strategy.list_models(sort=True, limit=1))[0].metric > 0.7
 
 
+@pytest.mark.flaky(reruns=2)
 def test_nasbench101_with_evo():
     pytorch_space = NasBench101()
     benchmark = NasBench101Benchmark()

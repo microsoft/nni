@@ -47,7 +47,7 @@ stages:
 
     - template: templates/install-dependencies.yml
       parameters:
-        platform: ubuntu-latest-gpu
+        platform: ubuntu-latest-gpu-gpu-torch1.x
         python_env: venv
 
     - template: templates/install-nni.yml

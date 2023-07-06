@@ -13,7 +13,7 @@ def _labeling_from_architecture(architecture, vertices):
 
 
 def _adjancency_matrix_from_architecture(architecture, vertices):
-    matrix = np.zeros((vertices, vertices), dtype=np.bool)  # type: ignore
+    matrix = np.zeros((vertices, vertices), dtype=bool)  # type: ignore
     for i in range(1, vertices):
         for k in architecture['input{}'.format(i)]:
             matrix[k, i] = 1

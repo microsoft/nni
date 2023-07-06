@@ -24,13 +24,22 @@ const navMaintoken: IStackTokens = {
     childrenGap: 16
 };
 
+export const getRouter = (): string => {
+    const page = window.location.pathname;
+    if (page.endsWith('/oview') || page.endsWith('/')) {
+        return '/oview';
+    }
+    if (page.endsWith('/detail')) {
+        return '/detail';
+    }
+    return '';
+};
 const NavCon = (): any => {
     const [version, setVersion] = useState('999' as string);
     const { changeInterval, refreshPage } = useContext(NavContext);
+    const router = getRouter();
     const [currentPage, setcurrentPage] = useState(
-        window.location.pathname === '/oview' || window.location.pathname === '/'
-            ? 'Overview'
-            : ('Trials detail' as 'Overview' | 'Trials detail')
+        router === '/oview' ? 'Overview' : ('Trials detail' as 'Overview' | 'Trials detail')
     );
     const [visibleExperimentPanel, setVisibleExperimentPanel] = useState(false);
     const [refreshBtnDisabled, setRefreshBtnDisabled] = useState(false);
@@ -167,7 +176,7 @@ const NavCon = (): any => {
                             }}
                             allowDisabledFocus
                             disabled={refreshBtnDisabled}
-                            style={{ marginTop: 5 }}
+                            style={{ marginTop: 2 }}
                         />
                         <div className='bar'>|</div>
                         <div className='nav-refresh'>

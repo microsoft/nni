@@ -6,6 +6,7 @@ from __future__ import annotations
 from collections import defaultdict
 import logging
 import inspect
+import functools
 from typing import Any, Callable, Dict, List, Tuple, Type, Union, Literal
 
 import torch
@@ -65,6 +66,13 @@ class ModuleWrapper(torch.nn.Module):
         self.module_forward = self.module.forward
         self.name = module_name
         self.config = config if config is not None else {}
+        # config storage
+        self.configs = {}
+        for mode, value in self.config.items():
+            if mode not in self.configs:
+                self.configs[mode] = []
+            self.configs[mode].append(value)
+
         assert all(k in ['pruning', 'quantization', 'distillation'] for k in self.config)
 
         # the arguments' name of self.module.forward
@@ -106,7 +114,7 @@ class ModuleWrapper(torch.nn.Module):
             bias = self.module.bias
             self.is_register_bias = True
             if isinstance(bias, nn.parameter.Parameter):
-                self.register_parameter('bias', torch.nn.Parameter(bias.detach().clone()))
+                self.register_parameter('bias', torch.nn.Parameter(bias.detach().clone(), requires_grad=bias.requires_grad))
                 delattr(self.module, 'bias')
                 self.module.register_buffer('bias', bias.data)
             elif isinstance(bias, torch.Tensor):
@@ -160,12 +168,14 @@ class ModuleWrapper(torch.nn.Module):
         for target_name, target_space in self.pruning_target_spaces.items():
             if target_space.type == TargetType.PARAMETER and isinstance(target_space.target, torch.nn.Parameter):
                 delattr(self.module, target_name)
-                self.module.register_parameter(target_name, torch.nn.Parameter(target_space.target.detach().clone()))
+                self.module.register_parameter(target_name, torch.nn.Parameter(target_space.target.detach().clone(), \
+                                                                               requires_grad=target_space.target.requires_grad))
 
         for target_name, target_space in self.quantization_target_spaces.items():
             if target_space.type == TargetType.PARAMETER and isinstance(target_space.target, torch.nn.Parameter):
                 delattr(self.module, target_name)
-                self.module.register_parameter(target_name, torch.nn.Parameter(target_space.target.detach().clone()))
+                self.module.register_parameter(target_name, torch.nn.Parameter(target_space.target.detach().clone(), \
+                                                                               requires_grad=target_space.target.requires_grad))
 
         self.module.forward = self.module_forward
         delattr(self.module, '_nni_wrapper')
@@ -174,7 +184,8 @@ class ModuleWrapper(torch.nn.Module):
             delattr(self.module, 'bias')
             nni_original_bias = self.bias
             if isinstance(nni_original_bias, nn.parameter.Parameter):
-                self.module.register_parameter('bias', torch.nn.Parameter(nni_original_bias.detach().clone()))
+                self.module.register_parameter('bias', torch.nn.Parameter(nni_original_bias.detach().clone(), \
+                                                                          requires_grad=nni_original_bias.requires_grad))
             elif isinstance(nni_original_bias, torch.Tensor):
                 self.module.register_buffer('bias', nni_original_bias.detach().clone())
         if len(self.fused_modules) > 0 and self.is_bias == 'None' and check_bias(self.module) == 'Tensor':
@@ -389,6 +400,14 @@ class ModuleWrapper(torch.nn.Module):
         if len(self.fused_modules) > 0:
             params_dict, activation_func_lis = fuse_modules(self, params_dict, *args, **kwargs)
 
+        # obtain original output
+        original_outputs = None
+        if getattr(self, "is_bias_correction", False) and check_bias(self.module) == 'Tensor':
+            for target_name, original_param in params_dict.items():
+                setattr(self.module, target_name, original_param * 1.0)
+
+            original_outputs = self.module_forward(*args, **kwargs)
+
         params_dict = self.patch_params(params_dict)
         for target_name, patched_param in params_dict.items():
             # NOTE: here using copy_ will cause `backward through the graph a second time` error, don't know why.
@@ -403,9 +422,48 @@ class ModuleWrapper(torch.nn.Module):
         #fuse activation func
         for activation_module in activation_func_lis:
             outputs = activation_module._nni_wrapper.module_forward(outputs)
+            if original_outputs is not None:
+                original_outputs = activation_module._nni_wrapper.module_forward(original_outputs)
 
         outputs = self.patch_outputs(outputs)
+
+        if getattr(self, "is_bias_correction", False) and check_bias(self.module) == 'Tensor':
+            assert isinstance(original_outputs, torch.Tensor) and isinstance(outputs, torch.Tensor), \
+                f"Bias correction is only applied to variables with tensor output types, but got {(type(original_outputs), type(outputs))}"
+            element_num = functools.reduce(lambda x,y: x * y, list(original_outputs.shape[:-1]))
+            dim_sum = tuple(range(len(original_outputs.shape[:-1])))
+            bias_correction = torch.sum(original_outputs - outputs, dim=dim_sum)
+            if not hasattr(self, 'bias_correction'):
+                setattr(self, 'bias_correction', bias_correction)
+            else:
+                self.bias_correction += bias_correction
+            if not hasattr(self, 'bias_element_num'):
+                setattr(self, 'bias_element_num', element_num)
+            else:
+                self.bias_element_num: int = self.bias_element_num + element_num
+
+        torch.cuda.empty_cache()
+
         return outputs
+
+    def update_bias(self):
+        assert hasattr(self, "bias_element_num")
+        assert check_bias(self.module) == 'Tensor'
+
+        bias_correction = getattr(self, "bias_correction", None)
+        element_num = getattr(self, "bias_element_num", 0)
+        assert bias_correction is not None
+        assert element_num > 0
+
+        bias_correction /= element_num  ## compute mean
+
+        if 'bias' in self.quantization_target_spaces:
+            target_space = self.quantization_target_spaces['bias']
+            assert target_space.target is not None and \
+                list(target_space.target.size()) == list(bias_correction.size())
+            target_space.target.data += bias_correction.detach().clone()
+        else:
+            self.module.bias.data += bias_correction.detach().clone()
 
 
 class IdentityModuleWrapper(ModuleWrapper): # only aviable for batchnorm
@@ -494,7 +552,8 @@ def create_module_wrapper(model: nn.Module, module: nn.Module, module_name: str,
             raise ValueError(f'Using two fused_modules_pair for {module_name} is not supported')
         wrapper.unfreeze()
         target_spaces = wrapper.extend_target_spaces(config, mode)
-        wrapper.config = update_config(wrapper.config, {mode: config})
+        wrapper.configs = update_config(wrapper.configs, {mode: config})
+
         if len(fused_modules_pair) > 0:
             wrapper.fused_modules = fused_modules
     else:

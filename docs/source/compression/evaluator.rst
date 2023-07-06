@@ -158,3 +158,88 @@ Moreover, if you are utilizing a personalized optimizer or learning rate schedul
 
     optimizer = nni.trace(torch.optim.Adam)(model.parameters(), lr=0.001)
     lr_scheduler = nni.trace(torch.optim.lr_scheduler.LambdaLR)(optimizer, lr_lambda=lambda epoch: 1 / epoch)
+
+
+A complete example of using a trainer with DeepSpeed mode under the TransformersEvaluator can be found: :githublink:`here <examples/model_compress/quantization/bert_quantization_with_ds.py>`.
+
+
+DeepspeedTorchEvaluator
+-----------------------
+
+:class:`DeepspeedTorchEvaluator <nni.compression.DeepspeedTorchEvaluator>` is an evaluator designed specifically for native PyTorch users who are utilizing DeepSpeed.
+
+:class:`DeepspeedTorchEvaluator <nni.compression.TorchEvaluator>` has eight initialization parameters ``training_func``,  ``training_step``, ``deepspeed``, ``optimizer``, ``lr_scheduler``,
+``resume_from_checkpoint_args``, ``dummy_input``, ``evaluating_func``.
+
+* ``training_func`` is the training loop to train the compressed model.
+  It is a callable function with six input parameters ``model``, ``optimizers``,
+  ``training_step``, ``lr_schedulers``, ``max_steps``, ``max_epochs``.
+  Please make sure each input argument of the ``training_func`` is actually used,
+  especially ``max_steps`` and ``max_epochs`` can correctly control the duration of training.
+* ``training_step`` A callable function, the first argument of inputs should be ``batch``, and the outputs should contain loss.
+  Three kinds of outputs are supported: single loss, tuple with the first element is loss, a dict contains a key ``loss``.
+* ``deepspeed`` is the deepspeed configuration which Contains the parameters needed in DeepSpeed, such as train_batch_size, among others.
+* ``optimizer`` is a single traced optimizer instance or a function that takes the model parameters as input and returns an optimizer instance.
+  Please make sure using ``nni.trace`` wrapping the ``Optimizer`` class before initializing it / them if it is a single traced optimizer.
+* ``lr_scheduler`` is a single traced lr_scheduler instance or a function that takes the model parameters and the optimizer as input and returns an lr_scheduler instance.
+  Please make sure using ``nni.trace`` wrapping the ``_LRScheduler`` class before initializing it / them if it is a single traced scheduler.
+* ``resume_from_checkpoint_args`` is used in the deepspeed_init process to load models saved during training with DeepSpeed.
+* ``dummy_input`` is used to trace the model, same as ``example_inputs``
+  in `torch.jit.trace <https://pytorch.org/docs/stable/generated/torch.jit.trace.html?highlight=torch%20jit%20trace#torch.jit.trace>`_.
+* ``evaluating_func`` is a callable function to evaluate the compressed model performance. Its input is a compressed model and its output is metric.
+  The format of metric should be a float number or a dict with key ``default``.
+
+Please refer :class:`DeepspeedTorchEvaluator <nni.compression.DeepspeedTorchEvaluator>` for more details.
+Here is an example of how to initialize a :class:`DeepspeedTorchEvaluator <nni.compression.DeepspeedTorchEvaluator>`.
+
+.. code-block:: python
+
+    def training_step(batch, model, *args, **kwargs):
+        output = model(batch[0])
+        loss = F.cross_entropy(output, batch[1])
+        return loss
+
+    def training_func(model, optimizer, training_step, lr_scheduler, max_steps, max_epochs):
+        # here model is an instance of DeepSpeedEngine
+        assert max_steps is not None or max_epochs is not None
+        total_steps = max_steps if max_steps else max_epochs * len(train_dataloader)
+        total_epochs = total_steps // len(train_dataloader) + (0 if total_steps % len(train_dataloader) == 0 else 1)
+
+        current_step = 0
+        for _ in range(total_epochs):
+            for batch in train_dataloader:
+                loss = training_step(batch, model)
+                model.backward(model)
+                model.step()
+
+                # if reach the total steps, exit from the training loop
+                current_step = current_step + 1
+                if current_step >= total_steps:
+                    return
+
+            # if you are using a epoch-wise scheduler, call it here
+            lr_scheduler.step()
+    
+        ds_config = {
+            "gradient_accumulation_steps": 1,
+            "steps_per_print": 2000,
+            "wall_clock_breakdown": False,
+            "train_batch_size": 128,
+            "train_micro_batch_size_per_gpu": 128,
+            "zero_force_ds_cpu_optimizer": False,
+            "zero_allow_untested_optimizer": True
+        }
+
+    optimizer = nni.trace(torch.optim.Adam)(model.parameters(), lr=0.001)
+    lr_scheduler = nni.trace(torch.optim.lr_scheduler.LambdaLR)(optimizer, lr_lambda=lambda epoch: 1 / epoch)
+
+    evaluator = DeepspeedTorchEvaluator(training_func, training_step, ds_config, lr_scheduler)
+
+.. note::
+    It is also worth to note that not all the arguments of :class:`TorchEvaluator <nni.compression.TorchEvaluator>` must be provided.
+    Some compressors only require ``evaluate_func`` as they do not train the model, some compressors only require ``training_func``.
+    Please refer to each compressor's doc to check the required arguments.
+    But, it is fine to provide more arguments than the compressor's need.
+
+
+A complete example can be found :githublink:`here <examples/model_compress/quantization/quantization_with_deepspeed.py>`.
