@@ -17,9 +17,8 @@ from torch.fx.node import Node, Target
 from torch.fx.passes.shape_prop import ShapeProp
 
 from nni.common.concrete_trace_utils import concrete_trace
-from nni.compression.pytorch.utils import set_nested_attr
-from nni.compression.pytorch.speedup.compress_modules import replace_module
-from nni.compression.pytorch.utils.utils import rand_like_with_shape, torch_integer_dtype
+from nni.compression.utils import set_nested_attr
+from nni.compression.speedup.replacement import replace_module
 
 from .container import NodeInfo
 from .mask_conflict import fix_channel_mask_conflict, fix_group_mask_conflict, fix_weight_sharing_mask_conflict
@@ -31,7 +30,7 @@ from .mask_updater import (MaskUpdater,
 from .replacement import replace_module
 from .replacer import Replacer, DefaultReplacer
 from .utils import tree_map_zip, poss_deepcopy, randomize_like_with_shape, torch_integer_dtype
-from ..utils import fix_mask_conflict, set_nested_attr
+from ..utils import set_nested_attr
 
 
 def _normalize_input(dummy_input: Any) -> Any:
