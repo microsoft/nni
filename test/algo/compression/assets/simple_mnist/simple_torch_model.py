@@ -3,8 +3,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Callable
+from typing import Callable, Tuple
 
 import torch
 from torch.nn import Module
@@ -38,7 +37,14 @@ class SimpleTorchModel(torch.nn.Module):
         return F.log_softmax(x, -1)
 
 
-def training_model(model: Module, optimizer: Optimizer, criterion: Callable, scheduler: SCHEDULER = None,
+def training_step(batch: Tuple, model: Module, device: torch.device = device):
+    x, y = batch[0].to(device), batch[1].to(device)
+    logits = model(x)
+    loss: torch.Tensor = F.nll_loss(logits, y)
+    return loss
+
+
+def training_model(model: Module, optimizer: Optimizer, training_step: Callable, scheduler: SCHEDULER = None,
                    max_steps: int | None = None, max_epochs: int | None = None, device: torch.device = device):
     model.train()
 
@@ -54,11 +60,9 @@ def training_model(model: Module, optimizer: Optimizer, criterion: Callable, sch
 
     # training
     for _ in range(max_epochs):
-        for x, y in train_dataloader:
+        for batch in train_dataloader:
             optimizer.zero_grad()
-            x, y = x.to(device), y.to(device)
-            logits = model(x)
-            loss: torch.Tensor = criterion(logits, y)
+            loss: torch.Tensor = training_step(batch, model, device)
             loss.backward()
             optimizer.step()
             current_steps += 1

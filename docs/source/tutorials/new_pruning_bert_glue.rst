@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_tutorials_new_pruning_bert_glue.py>`
+        :ref:`Go to the end <sphx_glr_download_tutorials_new_pruning_bert_glue.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -300,8 +300,8 @@ The following code creates distillers for distillation.
 
 
 
-    from nni.contrib.compression.distillation import DynamicLayerwiseDistiller, Adaptive1dLayerwiseDistiller
-    from nni.contrib.compression.utils import TransformersEvaluator
+    from nni.compression.distillation import DynamicLayerwiseDistiller, Adaptive1dLayerwiseDistiller
+    from nni.compression.utils import TransformersEvaluator
 
 
 
@@ -452,9 +452,9 @@ You could refer to the experiment results to choose a appropriate ``regular_scal
 
 
 
-    from nni.contrib.compression.pruning import MovementPruner
-    from nni.compression.pytorch.speedup.v2 import ModelSpeedup
-    from nni.compression.pytorch.speedup.v2.external_replacer import TransformersAttentionReplacer
+    from nni.compression.pruning import MovementPruner
+    from nni.compression.speedup import ModelSpeedup
+    from nni.compression.utils.external.external_replacer import TransformersAttentionReplacer
 
 
     def pruning_attn():
@@ -544,7 +544,7 @@ so we use ``AGPPruner`` to schedule the sparse ratio to achieve better pruning p
 
 
 
-    from nni.contrib.compression.pruning import TaylorPruner, AGPPruner
+    from nni.compression.pruning import TaylorPruner, AGPPruner
     from transformers.models.bert.modeling_bert import BertLayer
 
 
@@ -636,7 +636,7 @@ The output masks can be generated and applied after register the setting templat
 
 
 
-    from nni.contrib.compression.base.setting import PruningSetting
+    from nni.compression.base.setting import PruningSetting
 
     output_align_setting = {
         '_output_': {
@@ -858,7 +858,7 @@ Results
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.990 seconds)
+   **Total running time of the script:** ( 0 minutes  0.020 seconds)
 
 
 .. _sphx_glr_download_tutorials_new_pruning_bert_glue.py:
@@ -866,6 +866,8 @@ Results
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

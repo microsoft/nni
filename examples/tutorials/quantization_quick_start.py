@@ -136,8 +136,8 @@ print(f'pure evaluating: {time.time() - start}s    Acc.: {acc}')
 # Detailed about how to write ``config_list`` please refer :doc:`Config Specification <../compression/config_list>`.
 
 import nni
-from nni.contrib.compression.quantization import QATQuantizer
-from nni.contrib.compression.utils import TorchEvaluator
+from nni.compression.quantization import QATQuantizer
+from nni.compression.utils import TorchEvaluator
 
 
 optimizer = nni.trace(SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)

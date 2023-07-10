@@ -13,8 +13,8 @@ from torch import Tensor
 from torchvision import datasets, transforms
 
 import nni
-from nni.contrib.compression.quantization import LsqQuantizer
-from nni.contrib.compression.utils import TorchEvaluator
+from nni.compression.quantization import LsqQuantizer
+from nni.compression.utils import TorchEvaluator
 from nni.common.types import SCHEDULER
 
 torch.manual_seed(0)

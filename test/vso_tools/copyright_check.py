@@ -11,7 +11,7 @@ copyright_headers = [
 whitelist = [
     'nni/version.py',
     'nni/algorithms/hpo/bohb_advisor/config_generator.py',
-    'nni/compression/pytorch/quantization_speedup/trt_pycuda.py',
+    'nni/compression/quantization_speedup/trt_pycuda.py',
 ]
 
 for root, dirs, files in os.walk('nni'):

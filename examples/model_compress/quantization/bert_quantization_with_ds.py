@@ -152,8 +152,8 @@ def build_finetuning_model(state_dict_path: str, is_quant=False):
 
 
 import nni
-from nni.contrib.compression.quantization import QATQuantizer, LsqQuantizer, PtqQuantizer
-from nni.contrib.compression.utils import TransformersEvaluator
+from nni.compression.quantization import QATQuantizer, LsqQuantizer, PtqQuantizer
+from nni.compression.utils import TransformersEvaluator
 
 
 def fake_quantize():

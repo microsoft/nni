@@ -6,25 +6,25 @@ Evaluator
 TorchEvaluator
 --------------
 
-..  autoclass:: nni.contrib.compression.TorchEvaluator
+..  autoclass:: nni.compression.TorchEvaluator
 
 .. _new-lightning-evaluator:
 
 LightningEvaluator
 ------------------
 
-..  autoclass:: nni.contrib.compression.LightningEvaluator
+..  autoclass:: nni.compression.LightningEvaluator
 
 .. _new-transformers-evaluator:
 
 TransformersEvaluator
 ---------------------
 
-..  autoclass:: nni.contrib.compression.TransformersEvaluator
+..  autoclass:: nni.compression.TransformersEvaluator
 
 .. _new-deepspeed-torch-evaluator:
 
 DeepspeedTorchEvaluator
 -----------------------
 
-..  autoclass:: nni.contrib.compression.DeepspeedTorchEvaluator
+..  autoclass:: nni.compression.DeepspeedTorchEvaluator

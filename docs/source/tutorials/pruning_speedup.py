@@ -65,7 +65,7 @@ print('Original Model - Elapsed Time : ', time.time() - start)
 
 # %%
 # Speedup the model and show the model structure after speedup.
-from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+from nni.compression.speedup import ModelSpeedup
 ModelSpeedup(model, torch.rand(10, 1, 28, 28).to(device), masks).speedup_model()
 print(model)
 
@@ -77,7 +77,7 @@ print('Speedup Model - Elapsed Time : ', time.time() - start)
 
 # %%
 # For combining usage of ``Pruner`` masks generation with ``ModelSpeedup``,
-# please refer to :doc:`Pruning Quick Start <pruning_quick_start_mnist>`.
+# please refer to :doc:`Pruning Quick Start <pruning_quick_start>`.
 #
 # NOTE: The current implementation supports PyTorch 1.3.1 or newer.
 #

@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_tutorials_pruning_speedup.py>`
+        :ref:`Go to the end <sphx_glr_download_tutorials_pruning_speedup.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -138,7 +138,7 @@ Roughly test the original model inference speed.
 
  .. code-block:: none
 
-    Original Model - Elapsed Time :  0.16419386863708496
+    Original Model - Elapsed Time :  2.3036391735076904
 
 
 
@@ -151,7 +151,7 @@ Speedup the model and show the model structure after speedup.
 
 .. code-block:: default
 
-    from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+    from nni.compression.speedup import ModelSpeedup
     ModelSpeedup(model, torch.rand(10, 1, 28, 28).to(device), masks).speedup_model()
     print(model)
 
@@ -200,7 +200,7 @@ Roughly test the model after speedup inference speed.
 
  .. code-block:: none
 
-    Speedup Model - Elapsed Time :  0.0038301944732666016
+    Speedup Model - Elapsed Time :  0.09416508674621582
 
 
 
@@ -371,7 +371,7 @@ The latency is measured on one V100 GPU and the input tensor is  ``torch.randn(1
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  16.241 seconds)
+   **Total running time of the script:** ( 0 minutes  10.330 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_speedup.py:
@@ -379,6 +379,8 @@ The latency is measured on one V100 GPU and the input tensor is  ``torch.randn(1
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

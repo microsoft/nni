@@ -12,8 +12,8 @@ from torch import Tensor
 
 from torchvision import datasets, transforms
 from deepspeed import DeepSpeedEngine
-from nni.contrib.compression.quantization import LsqQuantizer
-from nni.contrib.compression.utils import DeepspeedTorchEvaluator
+from nni.compression.quantization import LsqQuantizer
+from nni.compression.utils import DeepspeedTorchEvaluator
 from nni.common.types import SCHEDULER
 
 

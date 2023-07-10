@@ -14,8 +14,8 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 
 import nni
-from nni.contrib.compression.quantization import QATQuantizer
-from nni.contrib.compression.utils import TorchEvaluator
+from nni.compression.quantization import QATQuantizer
+from nni.compression.utils import TorchEvaluator
 from nni.common.types import SCHEDULER
 
 

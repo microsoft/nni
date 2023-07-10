@@ -6,5 +6,5 @@ Compression Utilities
 auto_set_denpendency_group_ids
 ------------------------------
 
-.. autoclass:: nni.contrib.compression.utils.auto_set_denpendency_group_ids
+.. autoclass:: nni.compression.utils.auto_set_denpendency_group_ids
     :members:

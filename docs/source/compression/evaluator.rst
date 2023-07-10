@@ -20,21 +20,21 @@ NNI introduces the ``Evaluator`` as the carrier of the training and evaluation p
     These APIs were maybe tedious in terms of user experience. Users need to exchange the corresponding API frequently if they want to switch compression algorithms.
     ``Evaluator`` is an alternative to the above interface, users only need to create the evaluator once and it can be used in all compressors.
 
-For users of native PyTorch, :class:`TorchEvaluator <nni.contrib.compression.TorchEvaluator>` requires the user to encapsulate the training process as a function and exposes the specified interface,
+For users of native PyTorch, :class:`TorchEvaluator <nni.compression.TorchEvaluator>` requires the user to encapsulate the training process as a function and exposes the specified interface,
 which will bring some complexity. But don't worry, in most cases, this will not change too much code.
 
-For users of `PyTorchLightning <https://www.pytorchlightning.ai/>`__, :class:`LightningEvaluator <nni.contrib.compression.LightningEvaluator>` can be created with only a few lines of code based on your original Lightning code.
+For users of `PyTorchLightning <https://www.pytorchlightning.ai/>`__, :class:`LightningEvaluator <nni.compression.LightningEvaluator>` can be created with only a few lines of code based on your original Lightning code.
 
-For users of `Transformers Trainer <https://huggingface.co/docs/transformers/main_classes/trainer>`__, :class:`TransformersEvaluator <nni.contrib.compression.TransformersEvaluator>` can be created with only a few lines of code.
+For users of `Transformers Trainer <https://huggingface.co/docs/transformers/main_classes/trainer>`__, :class:`TransformersEvaluator <nni.compression.TransformersEvaluator>` can be created with only a few lines of code.
 
 Here we give three examples of how to create an ``Evaluator`` for native PyTorch users, PyTorchLightning users and Huggingface Transformers users.
 
 TorchEvaluator
 --------------
 
-:class:`TorchEvaluator <nni.contrib.compression.TorchEvaluator>` is for the users who work in a native PyTorch environment (If you are using PyTorchLightning, please refer `LightningEvaluator`_).
+:class:`TorchEvaluator <nni.compression.TorchEvaluator>` is for the users who work in a native PyTorch environment (If you are using PyTorchLightning, please refer `LightningEvaluator`_).
 
-:class:`TorchEvaluator <nni.contrib.compression.TorchEvaluator>` has six initialization parameters ``training_func``, ``optimizers``, ``training_step``, ``lr_schedulers``,
+:class:`TorchEvaluator <nni.compression.TorchEvaluator>` has six initialization parameters ``training_func``, ``optimizers``, ``training_step``, ``lr_schedulers``,
 ``dummy_input``, ``evaluating_func``.
 
 * ``training_func`` is the training loop to train the compressed model.
@@ -53,8 +53,8 @@ TorchEvaluator
 * ``evaluating_func`` is a callable function to evaluate the compressed model performance. Its input is a compressed model and its output is metric.
   The format of metric should be a float number or a dict with key ``default``.
 
-Please refer :class:`TorchEvaluator <nni.contrib.compression.TorchEvaluator>` for more details.
-Here is an example of how to initialize a :class:`TorchEvaluator <nni.contrib.compression.TorchEvaluator>`.
+Please refer :class:`TorchEvaluator <nni.compression.TorchEvaluator>` for more details.
+Here is an example of how to initialize a :class:`TorchEvaluator <nni.compression.TorchEvaluator>`.
 
 .. code-block:: python
 
@@ -89,7 +89,7 @@ Here is an example of how to initialize a :class:`TorchEvaluator <nni.contrib.co
     evaluator = TorchEvaluator(training_func, optimizer, training_step, lr_scheduler)
 
 .. note::
-    It is also worth to note that not all the arguments of :class:`TorchEvaluator <nni.contrib.compression.TorchEvaluator>` must be provided.
+    It is also worth to note that not all the arguments of :class:`TorchEvaluator <nni.compression.TorchEvaluator>` must be provided.
     Some compressors only require ``evaluate_func`` as they do not train the model, some compressors only require ``training_func``.
     Please refer to each compressor's doc to check the required arguments.
     But, it is fine to provide more arguments than the compressor's need.
@@ -100,7 +100,7 @@ A complete example can be found :githublink:`here <examples/compression/evaluato
 
 LightningEvaluator
 ------------------
-:class:`LightningEvaluator <nni.contrib.compression.LightningEvaluator>` is for the users who work with PyTorchLightning.
+:class:`LightningEvaluator <nni.compression.LightningEvaluator>` is for the users who work with PyTorchLightning.
 
 Only three parts users need to modify compared with the original pytorch-lightning code:
 
@@ -108,8 +108,8 @@ Only three parts users need to modify compared with the original pytorch-lightni
 2. Wrap the ``LightningModule`` class with ``nni.trace``.
 3. Wrap the ``LightningDataModule`` class with ``nni.trace``.
 
-Please refer :class:`LightningEvaluator <nni.contrib.compression.LightningEvaluator>` for more details.
-Here is an example of how to initialize a :class:`LightningEvaluator <nni.contrib.compression.LightningEvaluator>`.
+Please refer :class:`LightningEvaluator <nni.compression.LightningEvaluator>` for more details.
+Here is an example of how to initialize a :class:`LightningEvaluator <nni.compression.LightningEvaluator>`.
 
 .. code-block:: python
 
@@ -139,7 +139,7 @@ A complete example can be found :githublink:`here <examples/compression/evaluato
 TransformersEvaluator
 ---------------------
 
-:class:`TransformersEvaluator <nni.contrib.compression.TransformersEvaluator>` is for the users who work with Huggingface Transformers Trainer.
+:class:`TransformersEvaluator <nni.compression.TransformersEvaluator>` is for the users who work with Huggingface Transformers Trainer.
 
 The only need is using ``nni.trace`` to wrap the Trainer class.
 
@@ -149,7 +149,7 @@ The only need is using ``nni.trace`` to wrap the Trainer class.
     from transformers.trainer import Trainer
     trainer = nni.trace(Trainer)(model, training_args, ...)
 
-    from nni.contrib.compression.utils import TransformersEvaluator
+    from nni.compression.utils import TransformersEvaluator
     evaluator = TransformersEvaluator(trainer)
 
 Moreover, if you are utilizing a personalized optimizer or learning rate scheduler, kindly use ``nni.trace`` to wrap their class as well.
@@ -166,9 +166,9 @@ A complete example of using a trainer with DeepSpeed mode under the Transformers
 DeepspeedTorchEvaluator
 -----------------------
 
-:class:`DeepspeedTorchEvaluator <nni.contrib.compression.DeepspeedTorchEvaluator>` is an evaluator designed specifically for native PyTorch users who are utilizing DeepSpeed.
+:class:`DeepspeedTorchEvaluator <nni.compression.DeepspeedTorchEvaluator>` is an evaluator designed specifically for native PyTorch users who are utilizing DeepSpeed.
 
-:class:`DeepspeedTorchEvaluator <nni.contrib.compression.TorchEvaluator>` has eight initialization parameters ``training_func``,  ``training_step``, ``deepspeed``, ``optimizer``, ``lr_scheduler``,
+:class:`DeepspeedTorchEvaluator <nni.compression.TorchEvaluator>` has eight initialization parameters ``training_func``,  ``training_step``, ``deepspeed``, ``optimizer``, ``lr_scheduler``,
 ``resume_from_checkpoint_args``, ``dummy_input``, ``evaluating_func``.
 
 * ``training_func`` is the training loop to train the compressed model.
@@ -189,8 +189,8 @@ DeepspeedTorchEvaluator
 * ``evaluating_func`` is a callable function to evaluate the compressed model performance. Its input is a compressed model and its output is metric.
   The format of metric should be a float number or a dict with key ``default``.
 
-Please refer :class:`DeepspeedTorchEvaluator <nni.contrib.compression.DeepspeedTorchEvaluator>` for more details.
-Here is an example of how to initialize a :class:`DeepspeedTorchEvaluator <nni.contrib.compression.DeepspeedTorchEvaluator>`.
+Please refer :class:`DeepspeedTorchEvaluator <nni.compression.DeepspeedTorchEvaluator>` for more details.
+Here is an example of how to initialize a :class:`DeepspeedTorchEvaluator <nni.compression.DeepspeedTorchEvaluator>`.
 
 .. code-block:: python
 
@@ -236,7 +236,7 @@ Here is an example of how to initialize a :class:`DeepspeedTorchEvaluator <nni.c
     evaluator = DeepspeedTorchEvaluator(training_func, training_step, ds_config, lr_scheduler)
 
 .. note::
-    It is also worth to note that not all the arguments of :class:`TorchEvaluator <nni.contrib.compression.TorchEvaluator>` must be provided.
+    It is also worth to note that not all the arguments of :class:`TorchEvaluator <nni.compression.TorchEvaluator>` must be provided.
     Some compressors only require ``evaluate_func`` as they do not train the model, some compressors only require ``training_func``.
     Please refer to each compressor's doc to check the required arguments.
     But, it is fine to provide more arguments than the compressor's need.

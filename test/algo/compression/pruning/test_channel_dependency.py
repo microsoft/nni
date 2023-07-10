@@ -5,7 +5,7 @@ import pytest
 
 import torch
 from nni.common.concrete_trace_utils import concrete_trace
-from nni.compression.pytorch.speedup.v2.dependency import build_channel_dependency
+from nni.compression.speedup.dependency import build_channel_dependency
 
 
 # should have dependency between conv1 and conv2 and conv3 and conv4
