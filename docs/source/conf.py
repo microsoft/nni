@@ -116,9 +116,15 @@ linkcheck_ignore = [
     r'https://docs\.nvidia\.com/deeplearning/',
     r'https://cla\.opensource\.microsoft\.com',
     r'https://www\.docker\.com/',
+    r'https://nlp.stanford.edu/projects/glove/',
 
     # remove after 3.0 release
     r'https://nni\.readthedocs\.io/en/v2\.10/compression/overview\.html',
+    
+    r'https://github.com/google-research/google-research/blob/20736344/tunas/rematlib/mobile_model_v3.py#L453',
+    r'https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/mobile_search_space_v3.py#L728',
+    r'https://github.com/quark0/darts/blob/f276dd346a09ae3160f8e3aca5c7b193fda1da37/cnn/model_search.py#L135',
+    r'https://github.com/rwightman/pytorch-image-models/blob/b7cb8d03/timm/models/efficientnet_blocks.py#L134',
 ]
 
 # Ignore all links located in release.rst

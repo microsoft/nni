@@ -209,8 +209,8 @@ def build_finetuning_model(state_dict_path: str, is_quant=False):
 # 6. Call ``quantizer.compress(max_steps, max_epochs)`` to execute the simulated quantization process
 
 import nni
-from nni.contrib.compression.quantization import QATQuantizer, LsqQuantizer, PtqQuantizer
-from nni.contrib.compression.utils import TransformersEvaluator
+from nni.compression.quantization import QATQuantizer, LsqQuantizer, PtqQuantizer
+from nni.compression.utils import TransformersEvaluator
 
 def fake_quantize():
     config_list = [{
@@ -250,8 +250,10 @@ def evaluate():
     print(f"Evaluate metrics={metrics}")
 
 
-fake_quantize()
-evaluate()
+skip_exec = True
+if not skip_exec:
+    fake_quantize()
+    evaluate()
 
 
 # %%

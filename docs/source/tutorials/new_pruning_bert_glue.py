@@ -199,8 +199,8 @@ if not skip_exec:
 # The following code creates distillers for distillation.
 
 
-from nni.contrib.compression.distillation import DynamicLayerwiseDistiller, Adaptive1dLayerwiseDistiller
-from nni.contrib.compression.utils import TransformersEvaluator
+from nni.compression.distillation import DynamicLayerwiseDistiller, Adaptive1dLayerwiseDistiller
+from nni.compression.utils import TransformersEvaluator
 
 # %%
 # Dynamic distillation is suitable for the situation where the distillation states dimension of the student and the teacher match.
@@ -312,9 +312,9 @@ def adapt_distillation(student_model: BertForSequenceClassification, teacher_mod
 # You could refer to the experiment results to choose a appropriate ``regular_scale`` you like.
 
 
-from nni.contrib.compression.pruning import MovementPruner
-from nni.compression.pytorch.speedup.v2 import ModelSpeedup
-from nni.compression.pytorch.speedup.v2.external_replacer import TransformersAttentionReplacer
+from nni.compression.pruning import MovementPruner
+from nni.compression.speedup import ModelSpeedup
+from nni.compression.utils.external.external_replacer import TransformersAttentionReplacer
 
 
 def pruning_attn():
@@ -378,7 +378,7 @@ if not skip_exec:
 # so we use ``AGPPruner`` to schedule the sparse ratio to achieve better pruning performance.
 
 
-from nni.contrib.compression.pruning import TaylorPruner, AGPPruner
+from nni.compression.pruning import TaylorPruner, AGPPruner
 from transformers.models.bert.modeling_bert import BertLayer
 
 
@@ -444,7 +444,7 @@ if not skip_exec:
 # The output masks can be generated and applied after register the setting template for them.
 
 
-from nni.contrib.compression.base.setting import PruningSetting
+from nni.compression.base.setting import PruningSetting
 
 output_align_setting = {
     '_output_': {

@@ -11,8 +11,8 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
 import nni
-from nni.contrib.compression.quantization import BNNQuantizer
-from nni.contrib.compression.utils import TorchEvaluator
+from nni.compression.quantization import BNNQuantizer
+from nni.compression.utils import TorchEvaluator
 from nni.common.types import SCHEDULER
 
 

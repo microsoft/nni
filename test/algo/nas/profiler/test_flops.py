@@ -1,6 +1,6 @@
 import torch
 
-from nni.compression.pytorch.utils import count_flops_params
+from nni.compression.utils.counter import count_flops_params
 from nni.nas.hub.pytorch import ProxylessNAS, MobileNetV3Space, AutoFormer, ShuffleNetSpace
 from nni.nas.profiler.pytorch.flops import FlopsParamsProfiler
 
@@ -35,7 +35,7 @@ def test_proxylessnas():
         's7_i0': 'k7e6'
     }
     model = net.freeze(proxy_mobile_arch)
-    from nni.compression.pytorch.utils import count_flops_params
+    from nni.compression.utils.counter import count_flops_params
     flops, params, _ = count_flops_params(model, torch.randn(1, 3, 224, 224))
 
     # Hack because expression switch doesn't support lazy evaluation.

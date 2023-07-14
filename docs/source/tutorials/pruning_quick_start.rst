@@ -10,7 +10,7 @@
     .. note::
         :class: sphx-glr-download-link-note
 
-        Click :ref:`here <sphx_glr_download_tutorials_pruning_quick_start.py>`
+        :ref:`Go to the end <sphx_glr_download_tutorials_pruning_quick_start.py>`
         to download the full example code
 
 .. rst-class:: sphx-glr-example-title
@@ -104,9 +104,9 @@ If you are familiar with defining a model and training in pytorch, you can skip 
 
  .. code-block:: none
 
-    Average test loss: 0.6140, Accuracy: 7985/10000 (80%)
-    Average test loss: 0.2676, Accuracy: 9209/10000 (92%)
-    Average test loss: 0.1946, Accuracy: 9424/10000 (94%)
+    Average test loss: 0.7821, Accuracy: 7228/10000 (72%)
+    Average test loss: 0.2444, Accuracy: 9262/10000 (93%)
+    Average test loss: 0.1760, Accuracy: 9493/10000 (95%)
 
 
 
@@ -151,7 +151,7 @@ Pruners usually require `model` and `config_list` as input arguments.
 .. code-block:: default
 
 
-    from nni.contrib.compression.pruning import L1NormPruner
+    from nni.compression.pruning import L1NormPruner
     pruner = L1NormPruner(model, config_list)
 
     # show the wrapped model structure, `PrunerModuleWrapper` have wrapped the layers that configured in the config_list.
@@ -213,10 +213,10 @@ Pruners usually require `model` and `config_list` as input arguments.
 
  .. code-block:: none
 
-    fc2  sparsity :  0.5
+    fc1  sparsity :  0.5
     conv1  sparsity :  0.5
     conv2  sparsity :  0.5
-    fc1  sparsity :  0.5
+    fc2  sparsity :  0.5
 
 
 
@@ -236,7 +236,7 @@ and reaches a higher sparsity ratio because `ModelSpeedup` will propagate the ma
     pruner.unwrap_model()
 
     # speedup the model, for more information about speedup, please refer :doc:`pruning_speedup`.
-    from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+    from nni.compression.speedup import ModelSpeedup
 
     ModelSpeedup(model, torch.rand(3, 1, 28, 28).to(device), masks).speedup_model()
 
@@ -326,7 +326,7 @@ Because speedup will replace the masked big layers with dense small ones.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  20.740 seconds)
+   **Total running time of the script:** ( 1 minutes  1.145 seconds)
 
 
 .. _sphx_glr_download_tutorials_pruning_quick_start.py:
@@ -334,6 +334,8 @@ Because speedup will replace the masked big layers with dense small ones.
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
+
+
 
 
     .. container:: sphx-glr-download sphx-glr-download-python

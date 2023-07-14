@@ -33,85 +33,95 @@ As TensorRT has supported post-training quantization, directly leveraging this f
 import torch
 import torchvision
 import torchvision.transforms as transforms
-def prepare_data_loaders(data_path, batch_size):
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
-    dataset = torchvision.datasets.ImageNet(
-        data_path, split="train",
-        transform=transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            normalize,
-        ]))
 
-    sampler = torch.utils.data.SequentialSampler(dataset)
-    data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size=batch_size,
-        sampler=sampler)
-    return data_loader
 
-data_path = '/data' # replace it with your path of ImageNet dataset
-data_loader = prepare_data_loaders(data_path, batch_size=128)
-calib_data = None
-for image, target in data_loader:
-    calib_data = image.numpy()
-    break
+skip_exec = True
 
-from nni.compression.pytorch.quantization_speedup.calibrator import Calibrator
-# TensorRT processes the calibration data in the batch size of 64
-calib = Calibrator(calib_data, 'data/calib_cache_file.cache', batch_size=64)
+if not skip_exec:
+
+    def prepare_data_loaders(data_path, batch_size):
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                        std=[0.229, 0.224, 0.225])
+        dataset = torchvision.datasets.ImageNet(
+            data_path, split="train",
+            transform=transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                normalize,
+            ]))
+
+        sampler = torch.utils.data.SequentialSampler(dataset)
+        data_loader = torch.utils.data.DataLoader(
+            dataset, batch_size=batch_size,
+            sampler=sampler)
+        return data_loader
+
+    data_path = '/data'  # replace it with your path of ImageNet dataset
+    data_loader = prepare_data_loaders(data_path, batch_size=128)
+    calib_data = None
+    for image, target in data_loader:
+        calib_data = image.numpy()
+        break
+
+    from nni.compression.quantization_speedup.calibrator import Calibrator
+    # TensorRT processes the calibration data in the batch size of 64
+    calib = Calibrator(calib_data, 'data/calib_cache_file.cache', batch_size=64)
 
 # %%
 # Prepare the float32 model MobileNetV2
-from nni_assets.compression.mobilenetv2 import MobileNetV2
-model = MobileNetV2()
-# a checkpoint of MobileNetV2 can be found here
-# https://download.pytorch.org/models/mobilenet_v2-b0353104.pth
-float_model_file = 'mobilenet_pretrained_float.pth'
-state_dict = torch.load(float_model_file)
-model.load_state_dict(state_dict)
-model.eval()
+if not skip_exec:
+    from nni_assets.compression.mobilenetv2 import MobileNetV2
+    model = MobileNetV2()
+    # a checkpoint of MobileNetV2 can be found here
+    # https://download.pytorch.org/models/mobilenet_v2-b0353104.pth
+    float_model_file = 'mobilenet_pretrained_float.pth'
+    state_dict = torch.load(float_model_file)
+    model.load_state_dict(state_dict)
+    model.eval()
 
 # %%
 # Speed up the model with TensorRT
-from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
-# input shape is used for converting to onnx
-engine = ModelSpeedupTensorRT(model, input_shape=(64, 3, 224, 224))
-engine.compress_with_calibrator(calib)
+if not skip_exec:
+    from nni.compression.quantization_speedup import ModelSpeedupTensorRT
+    # input shape is used for converting to onnx
+    engine = ModelSpeedupTensorRT(model, input_shape=(64, 3, 224, 224))
+    engine.compress_with_calibrator(calib)
 
 # %%
 # Test the accuracy of the accelerated model
-from nni_assets.compression.mobilenetv2 import AverageMeter, accuracy
-import time
-def test_accelerated_model(engine, data_loader, neval_batches):
-    top1 = AverageMeter('Acc@1', ':6.2f')
-    top5 = AverageMeter('Acc@5', ':6.2f')
-    cnt = 0
-    total_time = 0
-    for image, target in data_loader:
-        start_time = time.time()
-        output, time_span = engine.inference(image)
-        infer_time = time.time() - start_time
-        print('time: ', time_span, infer_time)
-        total_time += time_span
+if not skip_exec:
+    from nni_assets.compression.mobilenetv2 import AverageMeter, accuracy
+    import time
 
-        start_time = time.time()
-        output = output.view(-1, 1000)
-        cnt += 1
-        acc1, acc5 = accuracy(output, target, topk=(1, 5))
-        top1.update(acc1[0], image.size(0))
-        top5.update(acc5[0], image.size(0))
-        rest_time = time.time() - start_time
-        print('rest time: ', rest_time)
-        if cnt >= neval_batches:
-            break
-    print('inference time: ', total_time / neval_batches)
-    return top1, top5
+    def test_accelerated_model(engine, data_loader, neval_batches):
+        top1 = AverageMeter('Acc@1', ':6.2f')
+        top5 = AverageMeter('Acc@5', ':6.2f')
+        cnt = 0
+        total_time = 0
+        for image, target in data_loader:
+            start_time = time.time()
+            output, time_span = engine.inference(image)
+            infer_time = time.time() - start_time
+            print('time: ', time_span, infer_time)
+            total_time += time_span
 
-data_loader = prepare_data_loaders(data_path, batch_size=64)
-top1, top5 = test_accelerated_model(engine, data_loader, neval_batches=32)
-print('Accuracy of mode #1: ', top1, top5)
+            start_time = time.time()
+            output = output.view(-1, 1000)
+            cnt += 1
+            acc1, acc5 = accuracy(output, target, topk=(1, 5))
+            top1.update(acc1[0], image.size(0))
+            top5.update(acc5[0], image.size(0))
+            rest_time = time.time() - start_time
+            print('rest time: ', rest_time)
+            if cnt >= neval_batches:
+                break
+        print('inference time: ', total_time / neval_batches)
+        return top1, top5
+
+    data_loader = prepare_data_loaders(data_path, batch_size=64)
+    top1, top5 = test_accelerated_model(engine, data_loader, neval_batches=32)
+    print('Accuracy of mode #1: ', top1, top5)
 
 """
 
@@ -124,41 +134,44 @@ In this mode, the post-training quantization within TensorRT is not used, instea
 
 # %%
 # re-instantiate the MobileNetV2 model
-model = MobileNetV2()
-state_dict = torch.load(float_model_file)
-model.load_state_dict(state_dict)
-model.eval()
-device = torch.device('cuda')
-model.to(device)
+if not skip_exec:
+    model = MobileNetV2()
+    state_dict = torch.load(float_model_file)
+    model.load_state_dict(state_dict)
+    model.eval()
+    device = torch.device('cuda')
+    model.to(device)
 
 # %%
 # Prepare Evaluator for PtqQuantizer
 # PtqQuantizer uses eval_for_calibration to collect calibration data 
 # in the current setting, it handles 128 samples
-from nni_assets.compression.mobilenetv2 import evaluate
-from nni.compression.pytorch.utils import TorchEvaluator
-data_loader = prepare_data_loaders(data_path, batch_size=128)
-def eval_for_calibration(model):
-    evaluate(model, data_loader,
-                neval_batches=1, device=device)
+if not skip_exec:
+    from nni_assets.compression.mobilenetv2 import evaluate
+    from nni.compression.utils import TorchEvaluator
+    data_loader = prepare_data_loaders(data_path, batch_size=128)
 
-dummy_input = torch.Tensor(64, 3, 224, 224).to(device)
-predict_func = TorchEvaluator(predicting_func=eval_for_calibration, dummy_input=dummy_input)
+    def eval_for_calibration(model):
+        evaluate(model, data_loader, neval_batches=1, device=device)
+
+    dummy_input = torch.Tensor(64, 3, 224, 224).to(device)
+    predict_func = TorchEvaluator(predicting_func=eval_for_calibration, dummy_input=dummy_input)
 
 # %%
 # Use PtqQuantizer to quantize the model
-from nni.compression.pytorch.quantization import PtqQuantizer
-config_list = [{
-    'quant_types': ['input', 'weight', 'output'],
-    'quant_bits': {'input': 8, 'weight': 8, 'output': 8},
-    'quant_dtype': 'int',
-    'quant_scheme': 'per_tensor_symmetric',
-    'op_types': ['default']
-}]
-quantizer = PtqQuantizer(model, config_list, predict_func, True)
-quantizer.compress()
-calibration_config = quantizer.export_model()
-print('quant result config: ', calibration_config)
+from nni.compression.quantization import PtqQuantizer
+if not skip_exec:
+    config_list = [{
+        'quant_types': ['input', 'weight', 'output'],
+        'quant_bits': {'input': 8, 'weight': 8, 'output': 8},
+        'quant_dtype': 'int',
+        'quant_scheme': 'per_tensor_symmetric',
+        'op_types': ['default']
+    }]
+    quantizer = PtqQuantizer(model, config_list, predict_func, True)
+    quantizer.compress()
+    calibration_config = quantizer.export_model()
+    print('quant result config: ', calibration_config)
 
 # %%
 # Speed up the quantized model following the generated calibration_config
@@ -166,13 +179,14 @@ print('quant result config: ', calibration_config)
 # after applying bn folding. bn folding changes the models structure and weights.
 # As TensorRT does bn folding by itself, we should input an original model to it.
 # For simplicity, we re-instantiate a new model.
-model = MobileNetV2()
-state_dict = torch.load(float_model_file)
-model.load_state_dict(state_dict)
-model.eval()
+if not skip_exec:
+    model = MobileNetV2()
+    state_dict = torch.load(float_model_file)
+    model.load_state_dict(state_dict)
+    model.eval()
 
-engine = ModelSpeedupTensorRT(model, input_shape=(64, 3, 224, 224), config=calibration_config)
-engine.compress()
-data_loader = prepare_data_loaders(data_path, batch_size=64)
-top1, top5 = test_accelerated_model(engine, data_loader, neval_batches=32)
-print('Accuracy of mode #2: ', top1, top5)
+    engine = ModelSpeedupTensorRT(model, input_shape=(64, 3, 224, 224), config=calibration_config)
+    engine.compress()
+    data_loader = prepare_data_loaders(data_path, batch_size=64)
+    top1, top5 = test_accelerated_model(engine, data_loader, neval_batches=32)
+    print('Accuracy of mode #2: ', top1, top5)

@@ -9,42 +9,42 @@ Basic Pruner
 Level Pruner
 ^^^^^^^^^^^^
 
-..  autoclass:: nni.contrib.compression.pruning.LevelPruner
+..  autoclass:: nni.compression.pruning.LevelPruner
 
 .. _new-l1-norm-pruner:
 
 L1 Norm Pruner
 ^^^^^^^^^^^^^^
 
-.. autoclass:: nni.contrib.compression.pruning.L1NormPruner
+.. autoclass:: nni.compression.pruning.L1NormPruner
 
 .. _new-l2-norm-pruner:
 
 L2 Norm Pruner
 ^^^^^^^^^^^^^^
 
-.. autoclass:: nni.contrib.compression.pruning.L2NormPruner
+.. autoclass:: nni.compression.pruning.L2NormPruner
 
 .. _new-fpgm-pruner:
 
 FPGM Pruner
 ^^^^^^^^^^^
 
-.. autoclass:: nni.contrib.compression.pruning.FPGMPruner
+.. autoclass:: nni.compression.pruning.FPGMPruner
 
 .. _new-slim-pruner:
 
 Slim Pruner
 ^^^^^^^^^^^
 
-.. autoclass:: nni.contrib.compression.pruning.SlimPruner
+.. autoclass:: nni.compression.pruning.SlimPruner
 
 .. _new-taylor-pruner:
 
 Taylor FO Weight Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: nni.contrib.compression.pruning.TaylorPruner
+.. autoclass:: nni.compression.pruning.TaylorPruner
 
 Scheduled Pruners
 -----------------
@@ -54,14 +54,14 @@ Scheduled Pruners
 Linear Pruner
 ^^^^^^^^^^^^^
 
-.. autoclass:: nni.contrib.compression.pruning.LinearPruner
+.. autoclass:: nni.compression.pruning.LinearPruner
 
 .. _new-agp-pruner:
 
 AGP Pruner
 ^^^^^^^^^^
 
-.. autoclass:: nni.contrib.compression.pruning.AGPPruner
+.. autoclass:: nni.compression.pruning.AGPPruner
 
 Other Pruner
 ------------
@@ -71,4 +71,4 @@ Other Pruner
 Movement Pruner
 ^^^^^^^^^^^^^^^
 
-.. autoclass:: nni.contrib.compression.pruning.MovementPruner
+.. autoclass:: nni.compression.pruning.MovementPruner

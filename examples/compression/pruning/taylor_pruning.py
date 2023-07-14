@@ -13,10 +13,10 @@ from examples.compression.models import (
     device
 )
 
-from nni.contrib.compression import TorchEvaluator
-from nni.contrib.compression.pruning import TaylorPruner
-from nni.contrib.compression.utils import auto_set_denpendency_group_ids
-from nni.compression.pytorch.speedup.v2 import ModelSpeedup
+from nni.compression import TorchEvaluator
+from nni.compression.pruning import TaylorPruner
+from nni.compression.utils import auto_set_denpendency_group_ids
+from nni.compression.speedup import ModelSpeedup
 
 
 if __name__ == '__main__':

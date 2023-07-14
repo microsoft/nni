@@ -90,6 +90,6 @@ def training_step(batch: Any, model: torch.nn.Module, *args, **kwargs):
 # Init ``TorchEvaluator``
 # -----------------------
 
-from nni.contrib.compression import TorchEvaluator
+from nni.compression import TorchEvaluator
 
 evaluator = TorchEvaluator(training_func, optimizer, training_step, lr_scheduler)
