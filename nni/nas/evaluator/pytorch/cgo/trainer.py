@@ -5,8 +5,8 @@ try:
     import lightning as pl
     from lightning.strategies import SingleDeviceStrategy
 except ImportError:
-        import pytorch_lightning as pl
-        from pytorch_lightning.strategies import SingleDeviceStrategy
+    import pytorch_lightning as pl
+    from pytorch_lightning.strategies import SingleDeviceStrategy
 
 
 class BypassStrategy(SingleDeviceStrategy):
