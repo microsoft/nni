@@ -14,8 +14,12 @@ Please set a ``default`` metric in ``validation_step`` or ``test_step`` if it ne
 NNI may use this metric to compare which model is better.
 
 """
-import pytorch_lightning as pl
-from pytorch_lightning.loggers import TensorBoardLogger
+try:
+    import lightning as pl
+    from lightning.loggers import TensorBoardLogger
+except ImportError:
+    import pytorch_lightning as pl
+    from pytorch_lightning.loggers import TensorBoardLogger
 import torch
 from torchmetrics.functional import accuracy
 

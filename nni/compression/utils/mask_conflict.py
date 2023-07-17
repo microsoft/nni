@@ -47,9 +47,12 @@ def fix_mask_conflict(masks, model, dummy_input, traced=None):
             # only pytorch with version greater than 1.6.0 has the strict option
             kw_args['strict'] = False
         try:
-            import pytorch_lightning as pl
+            import lightning as pl
         except ImportError:
-            is_lightning_module = False
+            try:
+                import pytorch_lightning as pl
+            except ImportError:
+                is_lightning_module = False
         else:
             if isinstance(model, pl.LightningModule):
                 is_lightning_module = True

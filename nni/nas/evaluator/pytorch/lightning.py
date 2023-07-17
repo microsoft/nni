@@ -7,7 +7,10 @@ import warnings
 from pathlib import Path
 from typing import Any, Dict, Union, Optional, List, Type
 
-import pytorch_lightning as pl
+try:
+    import lightning as pl
+except ImportError:
+    import pytorch_lightning as pl
 import torch.nn as nn
 import torch.nn.functional as nn_functional
 import torch.optim as optim

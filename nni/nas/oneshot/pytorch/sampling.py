@@ -8,7 +8,10 @@ import warnings
 import logging
 from typing import Any, Callable, TYPE_CHECKING
 
-import pytorch_lightning as pl
+try:
+    import lightning as pl
+except ImportError:
+        import pytorch_lightning as pl
 import torch
 
 from nni.mutable import Sample
