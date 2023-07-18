@@ -48,7 +48,7 @@ else:
 
 try:
     from accelerate.utils.deepspeed import HfDeepSpeedConfig as DeepSpeedConfig  # type: ignore
-except ImportError:
+except Exception:
     ACCELERATE_INSTALLED = False
     class DeepSpeedConfig:
         def __init__(self, *args, **kwargs):

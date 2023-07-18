@@ -37,7 +37,7 @@ CALL_METHOD_REDUCE = [
 ]
 
 # see https://pytorch.org/docs/stable/torch.html#indexing-slicing-joining-mutating-ops
-CALL_FUNCTION_CONCAT = [torch.cat, torch.concat, torch.concatenate, torch.column_stack, torch.dstack,
+CALL_FUNCTION_CONCAT = [torch.cat, torch.concat, torch.column_stack, torch.dstack,
                      torch.hstack, torch.row_stack, torch.stack]
 CALL_FUNCTION_RESHAPE = [
     *CALL_FUNCTION_CONCAT,
