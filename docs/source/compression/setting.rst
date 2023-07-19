@@ -5,7 +5,7 @@ To enhance the compression compatibility of any type of module, NNI 3.0 introduc
 which is a pre-established template utilized to depict compression information. 
 The primary objective of this pre-established template is to support shorthand writing in the ``config_list``.
 
-The list of NNI default supported module types can be accessed via this `link <https://github.com/microsoft/nni/tree/master/nni/contrib/compression/base/setting.py>`__.
+The list of NNI default supported module types can be accessed via this `link <https://github.com/microsoft/nni/tree/master/nni/compression/base/setting.py>`__.
 Please review the ``registry`` in ``PruningSetting``, ``QuantizationSetting`` and ``DistillationSetting`` to see the supported module type and its default setting.
 It should be noted that ``DistillationSetting`` will automatically register a default output setting for all module types,
 which implies that distilling any module output is available by design.
