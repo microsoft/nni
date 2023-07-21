@@ -37,7 +37,8 @@ class HfDeepSpeedConfig:
                 config = json.loads(config_decoded)
             except (UnicodeDecodeError, AttributeError, ValueError):
                 raise ValueError(
-                    f"Expected a string path to an existing deepspeed config, or a dictionary, or a base64 encoded string. Received: {config_file_or_dict}"
+                    "Expected a string path to an existing deepspeed config, or a dictionary, or a base64 encoded string. " +
+                    f"Received: {config_file_or_dict}"
                 )
 
         self.config = config
