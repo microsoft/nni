@@ -46,27 +46,12 @@ else:
         def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
             pass
 
-try:
-    from accelerate.utils.deepspeed import HfDeepSpeedConfig as DeepSpeedConfig  # type: ignore
-except ImportError:
-    ACCELERATE_INSTALLED = False
-    class DeepSpeedConfig:
-        def __init__(self, *args, **kwargs):
-            raise RuntimeError("Don't use the fake DeepSpeedConfig, please install accelerate")
-        def get_value(self, key: str):
-            raise RuntimeError("Don't use the fake DeepSpeedConfig, please install accelerate")
-        def del_config_sub_tree(self, key: str):
-            raise RuntimeError("Don't use the fake DeepSpeedConfig, please install accelerate")
-        def is_zero3(self):
-            raise RuntimeError("Don't use the fake DeepSpeedConfig, please install accelerate")
-else:
-    ACCELERATE_INSTALLED = True
-
 import nni
 from nni.common import is_traceable
 from nni.common.types import SCHEDULER
 from .constructor_helper import OptimizerConstructHelper, LRSchedulerConstructHelper
 from .check_ddp import check_ddp_model, reset_ddp_model
+from .deepspeed_config import HfDeepSpeedConfig as DeepSpeedConfig
 
 
 _logger = logging.getLogger(__name__)
@@ -1263,7 +1248,6 @@ class DeepspeedTorchEvaluator(Evaluator):
                  lr_scheduler: SCHEDULER | Callable[[Optimizer], SCHEDULER] | None = None,
                  resume_from_checkpoint_args: Dict | None = None, dummy_input: Any | None = None,
                  evaluating_func: _EVALUATING_FUNC | None = None):
-        assert ACCELERATE_INSTALLED, "accelerate is not installed"
         assert DEEPSPEED_INSTALLED, "deepspeed is not installed"
         self.training_func = training_func
         self._ori_training_step = training_step
