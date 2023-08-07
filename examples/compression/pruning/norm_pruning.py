@@ -32,7 +32,7 @@ if __name__ == '__main__':
     # finetuning resnet18 on Cifar10
     model = build_resnet18()
     optimizer = prepare_optimizer(model)
-    # train(model, optimizer, training_step, lr_scheduler=None, max_steps=None, max_epochs=10)
+    train(model, optimizer, training_step, lr_scheduler=None, max_steps=None, max_epochs=10)
     _, test_loader = prepare_dataloader()
     print('Original model paramater number: ', sum([param.numel() for param in model.parameters()]))
     print('Original model after 10 epochs finetuning acc: ', evaluate(model, test_loader), '%')
