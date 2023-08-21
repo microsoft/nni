@@ -40,6 +40,7 @@ Model Compression
   * Fix bug to avoid duplicated replacement for a single target submodule.
 
 * Pruning
+
   * Fix config list in the examples.
 
 * Quantization
