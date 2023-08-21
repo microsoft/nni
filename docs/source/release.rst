@@ -5,6 +5,69 @@
 Change Log
 ==========
 
+
+Release 3.0 - 21/8/2023
+-----------------------
+
+WebUI
+^^^^^
+* Fix nav bar height and their panel's title and bottom style.
+* Fix prefix experiment nav highlight issue.
+
+NAS
+^^^
+
+* Remove Retiarii.
+* Support of PyTorch (and Lightning) 2.0.
+* Add avgpool2_formula to shape_formula.py
+
+Model Compression
+^^^^^^^^^^^^^^^^^
+* Compression framework is refactored, new framework import path is ``nni.contrib.compression``.
+* Model compression support in DeepSpeed mode.
+* Fix example bugs.
+* Fix bugs in the Wrapper.
+
+* Speedup
+
+  * Improve Speedup.
+  * Deleted redundant GraphModule assign.
+  * Fix mask conflict in v2.
+  * Fix bug in dce and add scope.
+  * Fix cpu/gpu mix trace problem.
+  * Add Dependency for pruning in v2.
+  * Add flop counter pass for nni.fx.
+  * Fix bug to avoid duplicated replacement for a single target submodule.
+
+* Pruning
+  * Fix config list in the examples.
+
+* Quantization
+
+  * Bias correction is supported in the Post Training Quantization algorithm.
+  * LSQ+ quantization algorithm is supported.
+  * Fix bug in the module fusion process.
+
+Bugfixes
+^^^^^^^^
+
+* Add token for cache download pipeline.
+* Update Ubuntu version for cache dependencies pipeline.
+* Using the builtin types like int, bool and float.
+
+
+Template
+^^^^^^^^
+
+* Fix several layout issues in sidebar.
+
+
+TrainingService
+^^^^^^^^^^^^^^^
+
+* Get rid of IoC and remove unused training services.
+
+
 Release 3.0 Preview - 5/9/2022
 ------------------------------
 
