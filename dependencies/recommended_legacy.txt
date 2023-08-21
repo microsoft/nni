@@ -5,7 +5,7 @@ torchvision == 0.10.1+cpu
 pytorch-lightning == 1.5
 torchmetrics
 
-lightgbm
+lightgbm<4.0.0
 onnx
 onnxsim
 onnxruntime

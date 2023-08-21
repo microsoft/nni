@@ -14,7 +14,7 @@ mmdet >= 3.0
 mmengine
 
 git+https://github.com/microsoft/nn-Meter.git#egg=nn_meter
-lightgbm
+lightgbm<4.0.0
 onnx
 onnxsim
 onnxruntime-gpu

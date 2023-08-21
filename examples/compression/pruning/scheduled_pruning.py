@@ -1,9 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).absolute().parents[1]))
+
 import torch
 
-from examples.compression.models import (
+from models import (
     build_resnet18,
     prepare_dataloader,
     prepare_optimizer,
