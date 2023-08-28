@@ -26,18 +26,21 @@ Neural Architecture Search
   * Please refer to `quickstart <https://nni.readthedocs.io/en/v3.0rc1/tutorials/hello_nas.html>`_ for more changes.
 
 * A refreshed experience to construct model space.
+
   * Enhanced debuggability via ``freeze()`` and ``simplify()`` APIs.
   * Enhanced expressiveness with ``nni.choice``, ``nni.uniform``, ``nni.normal`` and etc.
   * Enhanced experience of customization with ``MutableModule``, ``ModelSpace`` and ``ParamterizedModule``.
   * Search space with constraints is now supported.
 
 * Improved robustness and stability of strategies.
+
   * Supported search space types are now enriched for PolicyBaseRL, ENAS and Proxyless.
   * Each step of one-shot strategies can be executed alone: model mutation, evaluator mutation and training.
   * Most multi-trial strategies now supports specifying seed for reproducibility.
   * Performance of strategies have been verified on a set of benchmarks.
 
 * Strategy/engine middleware.
+
   * Filtering, replicating, deduplicating or retrying models submitted by any strategy.
   * Merging or transforming models before executing (e.g., CGO).
   * Arbitrarily-long chains of middlewares.
