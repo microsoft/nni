@@ -9,24 +9,95 @@ Change Log
 Release 3.0 - 21/8/2023
 -----------------------
 
-WebUI
-^^^^^
-* Fix nav bar height and their panel's title and bottom style.
-* Fix prefix experiment nav highlight issue.
+Web Portal
+^^^^^^^^^^
 
-NAS
-^^^
+* New look and feel
 
-* Remove Retiarii.
-* Support of PyTorch (and Lightning) 2.0.
-* Add avgpool2_formula to shape_formula.py
+Neural Architecture Search
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* **Breaking change**: ``nni.retiarii`` is no longer maintained and tested. Please migrate to ``nni.nas``.
+
+  * Inherit ``nni.nas.nn.pytorch.ModelSpace``, rather than use ``@model_wrapper``.
+  * Use ``nni.choice``, rather than ``nni.nas.nn.pytorch.ValueChoice``.
+  * Use ``nni.nas.experiment.NasExperiment`` and ``NasExperimentConfig``, rather than ``RetiariiExperiment``.
+  * Use ``nni.nas.model_context``, rather than ``nni.nas.fixed_arch``.
+  * Please refer to `quickstart <https://nni.readthedocs.io/en/v3.0rc1/tutorials/hello_nas.html>`_ for more changes.
+
+* A refreshed experience to construct model space.
+  * Enhanced debuggability via ``freeze()`` and ``simplify()`` APIs.
+  * Enhanced expressiveness with ``nni.choice``, ``nni.uniform``, ``nni.normal`` and etc.
+  * Enhanced experience of customization with ``MutableModule``, ``ModelSpace`` and ``ParamterizedModule``.
+  * Search space with constraints is now supported.
+
+* Improved robustness and stability of strategies.
+  * Supported search space types are now enriched for PolicyBaseRL, ENAS and Proxyless.
+  * Each step of one-shot strategies can be executed alone: model mutation, evaluator mutation and training.
+  * Most multi-trial strategies now supports specifying seed for reproducibility.
+  * Performance of strategies have been verified on a set of benchmarks.
+
+* Strategy/engine middleware.
+  * Filtering, replicating, deduplicating or retrying models submitted by any strategy.
+  * Merging or transforming models before executing (e.g., CGO).
+  * Arbitrarily-long chains of middlewares.
+
+* New execution engine.
+
+  * Improved debuggability via SequentialExecutionEngine: trials can run in a single process and breakpoints are effective.
+  * The old execution engine is now decomposed into execution engine and model format.
+  * Enhanced extensibility of execution engines.
+
+* NAS profiler and hardware-aware NAS.
+
+  * New profilers profile a model space, and quickly compute a profiling result for a sampled architecture or a distribution of architectures (FlopsProfiler, NumParamsProfiler and NnMeterProfiler are officially supported).
+  * Assemble profiler with arbitrary strategies, including both multi-trial and one-shot.
+  * Profiler are extensible. Strategies can be assembled with arbitrary customized profilers.
 
 Model Compression
 ^^^^^^^^^^^^^^^^^
+
 * Compression framework is refactored, new framework import path is ``nni.contrib.compression``.
+
+  * Configure keys are refactored, support more detailed compression configurations.
+  * Support multi compression methods fusion.
+  * Support distillation as a basic compression component.
+  * Support more compression targets, like ``input``, ``ouptut`` and any registered paramters.
+  * Support compressing any module type by customizing module settings.
+
 * Model compression support in DeepSpeed mode.
+
 * Fix example bugs.
-* Fix bugs in the Wrapper.
+
+* Pruning
+
+  * Pruner interfaces have fine-tuned for easy to use.
+  * Support configuring ``granularity`` in pruners.
+  * Support different mask ways, multiply zero or add a large negative value.
+  * Support manully setting dependency group and global group.
+  * A new powerful pruning speedup is released, applicability and robustness have been greatly improved.
+  * The end to end transformer compression tutorial has been updated, achieved more extreme compression performance.
+  * Fix config list in the examples.
+
+* Quantization
+
+  * Support using ``Evaluator`` to handle training/inferencing.
+  * Support more module fusion combinations.
+  * Support configuring ``granularity`` in quantizers.
+  * Bias correction is supported in the Post Training Quantization algorithm.
+  * LSQ+ quantization algorithm is supported.
+
+* Distillation
+
+  * DynamicLayerwiseDistiller and Adaptive1dLayerwiseDistiller are supported.
+
+* Compression documents now updated for the new framework, the old version please view `v2.10 <https://nni.readthedocs.io/en/v2.10/>`_ doc.
+* New compression examples are under `nni/examples/compression <https://github.com/microsoft/nni/tree/v3.0rc1/examples/compression>`_
+
+  * Create a evaluator: `nni/examples/compression/evaluator <https://github.com/microsoft/nni/tree/v3.0rc1/examples/compression/evaluator>`_
+  * Pruning a model: `nni/examples/compression/pruning <https://github.com/microsoft/nni/tree/v3.0rc1/examples/compression/pruning>`_
+  * Quantize a model: `nni/examples/compression/quantization <https://github.com/microsoft/nni/tree/v3.0rc1/examples/compression/quantization>`_
+  * Fusion compression: `nni/examples/compression/fusion <https://github.com/microsoft/nni/tree/v3.0rc1/examples/compression/fusion>`_
 
 * Speedup
 
@@ -39,32 +110,24 @@ Model Compression
   * Add flop counter pass for nni.fx.
   * Fix bug to avoid duplicated replacement for a single target submodule.
 
-* Pruning
+Training Services
+^^^^^^^^^^^^^^^^^
 
-  * Fix config list in the examples.
+* **Breaking change**: NNI v3.0 cannot resume experiments created by NNI v2.x
+* Local training service:
 
-* Quantization
+  * Reduced latency of creating trials
+  * Fixed "GPU metric not found"
+  * Fixed bugs about resuming trials
 
-  * Bias correction is supported in the Post Training Quantization algorithm.
-  * LSQ+ quantization algorithm is supported.
-  * Fix bug in the module fusion process.
+* Remote training service:
 
-Bugfixes
-^^^^^^^^
-
-* Add token for cache download pipeline.
-* Update Ubuntu version for cache dependencies pipeline.
-* Using the builtin types like int, bool and float.
-
-
-Template
-^^^^^^^^
-
-* Fix several layout issues in sidebar.
-
-
-TrainingService
-^^^^^^^^^^^^^^^
+  * ``reuse_mode`` now defaults to ``False``; setting it to ``True`` will fallback to v2.x remote training service
+  * Reduced latency of creating trials
+  * Fixed "GPU metric not found"
+  * Fixed bugs about resuming trials
+  * Supported viewing trial logs on the web portal
+  * Supported automatic recover after temporary server failure (network fluctuation, out of memory, etc)
 
 * Get rid of IoC and remove unused training services.
 
