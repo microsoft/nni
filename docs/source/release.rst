@@ -102,16 +102,6 @@ Model Compression
   * Quantize a model: `nni/examples/compression/quantization <https://github.com/microsoft/nni/tree/v3.0rc1/examples/compression/quantization>`_
   * Fusion compression: `nni/examples/compression/fusion <https://github.com/microsoft/nni/tree/v3.0rc1/examples/compression/fusion>`_
 
-* Speedup
-
-  * Improve Speedup.
-  * Deleted redundant GraphModule assign.
-  * Fix mask conflict in v2.
-  * Fix bug in dce and add scope.
-  * Fix cpu/gpu mix trace problem.
-  * Add Dependency for pruning in v2.
-  * Add flop counter pass for nni.fx.
-  * Fix bug to avoid duplicated replacement for a single target submodule.
 
 Training Services
 ^^^^^^^^^^^^^^^^^
