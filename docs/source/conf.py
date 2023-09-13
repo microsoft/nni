@@ -31,7 +31,7 @@ author = 'Microsoft'
 version = ''
 # The full version, including alpha/beta/rc tags
 # FIXME: this should be written somewhere globally
-release = 'v3.0rc1'
+release = 'v3.0pt1'
 
 # -- General configuration ---------------------------------------------------
 
@@ -117,6 +117,8 @@ linkcheck_ignore = [
     r'https://cla\.opensource\.microsoft\.com',
     r'https://www\.docker\.com/',
     r'https://nlp.stanford.edu/projects/glove/',
+    r'https://code.visualstudio.com/docs/python/editing#_formatting',
+    r'https://dl.acm.org/doi/10.1145/3352020.3352031',
 
     # remove after 3.0 release
     r'https://nni\.readthedocs\.io/en/v2\.10/compression/overview\.html',
