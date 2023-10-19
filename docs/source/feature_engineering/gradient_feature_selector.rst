@@ -24,29 +24,29 @@ Usage
    ...
    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
-   # initlize a selector
+   # initialize a selector
    fgs = FeatureGradientSelector(n_features=10)
    # fit data
    fgs.fit(X_train, y_train)
-   # get improtant features
-   # will return the index with important feature here.
+   # get important features
+   # will return the index with an important feature here.
    print(fgs.get_selected_features())
 
    ...
 
-And you could reference the examples in ``/examples/feature_engineering/gradient_feature_selector/``\ , too.
+And you could reference the examples in ``/examples/feature_engineering/gradient_feature_selector/``\, too.
 
 **Parameters of class FeatureGradientSelector constructor**
 
 
 * 
-  **order** (int, optional, default = 4) - What order of interactions to include. Higher orders may be more accurate but increase the run time. 12 is the maximum allowed order.
+  **order** (int, optional, default = 4) - What order of interactions to include? Higher orders may be more accurate but increase the run time. 12 is the maximum allowed order.
 
 * 
   **penalty** (int, optional, default = 1) - Constant that multiplies the regularization term.
 
 * 
-  **n_features** (int, optional, default = None) - If None, will automatically choose number of features based on search. Otherwise, the number of top features to select.
+  **n_features** (int, optional, default = None) - If None, will automatically choose a number of features based on search. Otherwise, the number of top features to select.
 
 * 
   **max_features** (int, optional, default = None) - If not None, will use the 'elbow method' to determine the number of features with max_features as the upper limit.
@@ -64,7 +64,7 @@ And you could reference the examples in ``/examples/feature_engineering/gradient
   **shuffle** (bool, optional, default = True) - Shuffle "rows" prior to an epoch.
 
 * 
-  **batch_size** (int, optional, default = 1000) - Nnumber of "rows" to process at a time.
+  **batch_size** (int, optional, default = 1000) - N number of "rows" to process at a time.
 
 * 
   **target_batch_size** (int, optional, default = 1000) - Number of "rows" to accumulate gradients over. Useful when many rows will not fit into memory but are needed for accurate estimation.
@@ -94,10 +94,10 @@ And you could reference the examples in ``/examples/feature_engineering/gradient
 
 
 * 
-  **X** (array-like, require) - The training input samples which shape = [n_samples, n_features]. `np.ndarry` recommended.
+  **X** (array-like, require) - The training input samples which shape = [n_samples, n_features]. `np.ndarray` recommended.
 
 * 
-  **y** (array-like, require) - The target values (class labels in classification, real numbers in regression) which shape = [n_samples]. `np.ndarry` recommended.
+  **y** (array-like, require) - The target values (class labels in classification, real numbers in regression) which shape = [n_samples]. `np.ndarray` recommended.
 
 * 
   **groups** (array-like, optional, default = None) - Groups of columns that must be selected as a unit. e.g. [0, 0, 1, 2] specifies the first two columns are part of a group. Which shape is [n_features].
