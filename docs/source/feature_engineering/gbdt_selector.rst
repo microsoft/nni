@@ -12,7 +12,7 @@ For now, we support the ``importance_type`` is ``split`` and ``gain``. But we wi
 Usage
 ^^^^^
 
-First you need to install dependency:
+First you need to install the dependency:
 
 .. code-block:: bash
 
@@ -32,8 +32,8 @@ Then
    fgs = GBDTSelector()
    # fit data
    fgs.fit(X_train, y_train, ...)
-   # get improtant features
-   # will return the index with important feature here.
+   # get important features
+   # will return the index with an important feature here.
    print(fgs.get_selected_features(10))
 
    ...
@@ -53,7 +53,7 @@ And you could reference the examples in ``/examples/feature_engineering/gbdt_sel
   **lgb_params** (dict, require) - The parameters for lightgbm model. The detail you could reference `here <https://lightgbm.readthedocs.io/en/latest/Parameters.html>`__
 
 * 
-  **eval_ratio** (float, require) - The ratio of data size. It's used for split the eval data and train data from self.X.
+  **eval_ratio** (float, require) - The ratio of data size. It's used to split the eval data and train data from self.X.
 
 * 
   **early_stopping_rounds** (int, require) - The early stopping setting in lightgbm. The detail you could reference `here <https://lightgbm.readthedocs.io/en/latest/Parameters.html>`__.
@@ -62,9 +62,9 @@ And you could reference the examples in ``/examples/feature_engineering/gbdt_sel
   **importance_type** (str, require) - could be 'split' or 'gain'. The 'split' means ' result contains numbers of times the feature is used in a model' and the 'gain' means 'result contains total gains of splits which use the feature'. The detail you could reference in `here <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.Booster.html#lightgbm.Booster.feature_importance>`__.
 
 * 
-  **num_boost_round** (int, require) - number of boost round. The detail you could reference `here <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.train.html#lightgbm.train>`__.
+  **num_boost_round** (int, require) - number of boost rounds. The detail you could reference `here <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.train.html#lightgbm.train>`__.
 
 **Requirement of get_selected_features FuncArgs**
 
 
-* **topk** (int, require) - the topK impotance features you want to selected.
+* **topk** (int, require) - the topK important features you want to select.
