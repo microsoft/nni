@@ -159,7 +159,7 @@ def _start_rest_server(nni_manager_args: NniManagerArgs, run_mode: RunMode) -> P
     node_dir = Path(nni_node.__path__[0])  # type: ignore
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'main.js')
-    cmd = [node, '--max-old-space-size=4096', '--trace-uncaught', main_js]
+    cmd = [node, '--max-old-space-size=8192', '--trace-uncaught', main_js]
     cmd += nni_manager_args.to_command_line_args()
 
     if run_mode.value == 'detach':
