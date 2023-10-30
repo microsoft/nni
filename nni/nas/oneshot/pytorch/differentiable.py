@@ -7,7 +7,10 @@ from __future__ import annotations
 
 import logging
 
-import pytorch_lightning as pl
+try:
+    import lightning as pl
+except ImportError:
+    import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.optim as optim
