@@ -39,7 +39,7 @@ $ pip install nni
 
 To update NNI to the latest version, add `--upgrade` flag to the above commands.
 
-## NNI capabilities in a glance
+## NNI capabilities at a glance
 
 <img src="docs/img/overview.svg" width="100%"/>
 
@@ -220,20 +220,20 @@ To update NNI to the latest version, add `--upgrade` flag to the above commands.
 
 ## Contribution guidelines
 
-If you want to contribute to NNI, be sure to review the [contribution guidelines](https://nni.readthedocs.io/en/stable/notes/contributing.html), which includes instructions of submitting feedbacks, best coding practices, and code of conduct.
+If you want to contribute to NNI, be sure to review the [contribution guidelines](https://nni.readthedocs.io/en/stable/notes/contributing.html), which includes instructions for submitting feedback, best coding practices, and code of conduct.
 
 We use [GitHub issues](https://github.com/microsoft/nni/issues) to track tracking requests and bugs.
 Please use [NNI Discussion](https://github.com/microsoft/nni/discussions) for general questions and new ideas.
-For questions of specific use cases, please go to [Stack Overflow](https://stackoverflow.com/questions/tagged/nni).
+For questions about specific use cases, please go to [Stack Overflow](https://stackoverflow.com/questions/tagged/nni).
 
-Participating discussions via the following IM groups is also welcomed.
+Participating in discussions via the following IM groups is also welcomed.
 
 |Gitter||WeChat|
 |----|----|----|
 |![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png)| OR |![image](https://github.com/scarlett2018/nniutil/raw/master/wechat.png)|
 
 Over the past few years, NNI has received thousands of feedbacks on GitHub issues, and pull requests from hundreds of contributors.
-We appreciate all contributions from community to make NNI thrive.
+We appreciate all contributions from the community to make NNI thrive.
 
 <img src="https://img.shields.io/github/contributors-anon/microsoft/nni"/>
 
@@ -266,15 +266,15 @@ We appreciate all contributions from community to make NNI thrive.
 
 ## Related Projects
 
-Targeting at openness and advancing state-of-art technology, [Microsoft Research (MSR)](https://www.microsoft.com/en-us/research/group/systems-and-networking-research-group-asia/) had also released few other open source projects.
+Targeting openness and advancing state-of-art technology, [Microsoft Research (MSR)](https://www.microsoft.com/en-us/research/group/systems-and-networking-research-group-asia/) has also released a few other open-source projects.
 
-* [OpenPAI](https://github.com/Microsoft/pai) : an open source platform that provides complete AI model training and resource management capabilities, it is easy to extend and supports on-premise, cloud and hybrid environments in various scale.
-* [FrameworkController](https://github.com/Microsoft/frameworkcontroller) : an open source general-purpose Kubernetes Pod Controller that orchestrate all kinds of applications on Kubernetes by a single controller.
-* [MMdnn](https://github.com/Microsoft/MMdnn) : A comprehensive, cross-framework solution to convert, visualize and diagnose deep neural network models. The "MM" in MMdnn stands for model management and "dnn" is an acronym for deep neural network.
-* [SPTAG](https://github.com/Microsoft/SPTAG) : Space Partition Tree And Graph (SPTAG) is an open source library for large scale vector approximate nearest neighbor search scenario.
-* [nn-Meter](https://github.com/microsoft/nn-Meter) : An accurate inference latency predictor for DNN models on diverse edge devices.
+* [OpenPAI](https://github.com/Microsoft/pai): an open-source platform that provides complete AI model training and resource management capabilities, it is easy to extend and supports on-premise, cloud, and hybrid environments in various scales.
+* [FrameworkController](https://github.com/Microsoft/frameworkcontroller): an open-source general-purpose Kubernetes Pod Controller that orchestrates all kinds of applications on Kubernetes by a single controller.
+* [MMdnn](https://github.com/Microsoft/MMdnn): A comprehensive, cross-framework solution to convert, visualize and diagnose deep neural network models. The "MM" in MMdnn stands for model management and "dnn" is an acronym for deep neural network.
+* [SPTAG](https://github.com/Microsoft/SPTAG): Space Partition Tree And Graph (SPTAG) is an open-source library for large-scale vector approximate nearest neighbor search scenarios.
+* [nn-Meter](https://github.com/microsoft/nn-Meter): An accurate inference latency predictor for DNN models on diverse edge devices.
 
-We encourage researchers and students leverage these projects to accelerate the AI development and research.
+We encourage researchers and students to leverage these projects to accelerate AI development and research.
 
 ## License
 
