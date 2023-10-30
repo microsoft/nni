@@ -96,7 +96,7 @@ class NNITensorboardManager implements TensorboardManager {
         }
         let logdirCmd = '--logdir';
         if (this.tensorboardVersion >= '2.0') {
-            logdirCmd = '--bind_all --logdir_spec'
+            logdirCmd = '--host 0.0.0.0 --logdir_spec'
         }
         try {
             const logRealPaths: string[] = [];
