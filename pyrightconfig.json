@@ -1,24 +1,28 @@
 {
-    "ignore": [
-        "nni/algorithms/compression/pytorch",
-        "nni/algorithms/compression/tensorflow",
-        "nni/algorithms/compression/v2/pytorch/base/pruner.py",
-        "nni/algorithms/compression/v2/pytorch/pruning/amc_pruner.py",
-        "nni/algorithms/feature_engineering",
-        "nni/algorithms/hpo",
-        "nni/algorithms/nas",
-        "nni/common/device.py",
-        "nni/common/graph_utils.py",
-        "nni/compression",
-        "nni/retiarii",
-        "nni/smartparam.py",
-        "nni/tools/annotation",
-        "nni/tools/gpu_tool",
-        "nni/tools/jupyter_extension",
-        "nni/tools/nni_manager_scripts/collect_gpu_info.py",
-        "nni/tools/nnictl",
-        "nni/tools/trial_tool"
-    ],
-    "reportMissingImports": false,
-    "reportPrivateImportUsage": false
+  "ignore": [
+    "nni/algorithms/compression/pytorch",
+    "nni/algorithms/compression/tensorflow",
+    "nni/algorithms/compression/v2/pytorch/base/pruner.py",
+    "nni/algorithms/compression/v2/pytorch/pruning/amc_pruner.py",
+    "nni/algorithms/feature_engineering",
+    "nni/algorithms/hpo",
+    "nni/algorithms/nas",
+    "nni/common/device.py",
+    "nni/common/graph_utils.py",
+    "nni/compression",
+    "nni/retiarii",
+    "nni/smartparam.py",
+    "nni/tools/annotation",
+    "nni/tools/gpu_tool",
+    "nni/tools/jupyter_extension",
+    "nni/tools/nni_manager_scripts/collect_gpu_info.py",
+    "nni/tools/nnictl",
+    "nni/tools/trial_tool"
+  ],
+  "plugins": [
+    "mypy.plugins.django_plugin",
+    "mypy.plugins.sqlalchemy_plugin"
+  ],
+  "mypy_path": "src",
+  "strict_optional": true
 }
