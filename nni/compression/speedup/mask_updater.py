@@ -258,7 +258,7 @@ class NoMaskUpdater(DefaultMaskUpdater):
         if model_speedup.garbage_collect_values:
             # do memory collect to reduce memory usage
             for to_delete in model_speedup.user_to_last_uses.get(node, []):
-                del model_speedup.node_infos[to_delete]._output_randomize
+                del model_speedup.node_infos[to_delete].output_randomize
 
 
 # in all the following function, the first arg name is `input`, and don't have other tensor as input args.
@@ -397,7 +397,7 @@ class NoChangeMaskUpdater(DefaultMaskUpdater):
 
     def indirect_getitem(self, model_speedup: 'ModelSpeedup', node: Node):
         assert len(node.args) == 2
-        input_grad = tree_map_zip(lambda t, m: (t * m).type_as(t) if isinstance(m, torch.Tensor) else t, \
+        input_grad = tree_map_zip(lambda t, m: (t * m).type_as(t) if isinstance(m, torch.Tensor) and t is not None else t, \
             model_speedup.node_infos[node].output_grad, model_speedup.node_infos[node].output_masks)
         arg_1_val = model_speedup.node_infos[node.args[1]].output_randomize if isinstance(node.args[1], Node) else node.args[1]
 
